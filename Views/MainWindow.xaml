@@ -1,6 +1,8 @@
 ﻿<Window x:Class="GestorSolicitudes.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+        xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification;assembly=Hardcodet.NotifyIcon.Wpf"
         Title="Gestor de candidaturas"
         Height="780" Width="1360"
         MinHeight="600" MinWidth="1080"
@@ -34,6 +36,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -89,6 +92,10 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Importar LinkedIn" Style="{StaticResource BotonSecundario}"
+                            Command="{Binding ImportarLinkedInCommand}" Margin="0,0,8,0" />
+                    <Button Content="Gráfica" Style="{StaticResource BotonSecundario}"
+                            Command="{Binding ConfigurarGraficaCommand}" Margin="0,0,8,0" />
                     <Button Content="Exportar CSV" Style="{StaticResource BotonSecundario}"
                             Command="{Binding ExportarCsvCommand}" Margin="0,0,8,0" />
                     <Button Content="+  Nueva candidatura" Style="{StaticResource BotonPrimario}"
@@ -97,8 +104,35 @@
             </Grid>
         </Border>
 
+        <!-- ===================== GRÁFICA DE EMBUDO ===================== -->
+        <Border Grid.Row="1" Margin="16,12,16,0" Padding="16,12"
+                Background="{StaticResource Panel}"
+                BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8"
+                Visibility="{Binding VerGrafica, Converter={StaticResource BooleanoAVisibilidad}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <TextBlock Text="Embudo del último año, por mes (enviadas → respondidas → entrevistas → ofertas)"
+                               Style="{StaticResource TituloSeccion}" Margin="0" VerticalAlignment="Center" />
+                    <Button Content="Cerrar gráfica" HorizontalAlignment="Right" Padding="10,5" FontSize="12"
+                            Style="{StaticResource BotonSecundario}"
+                            Command="{Binding ConfigurarGraficaCommand}" />
+                </Grid>
+
+                <lvc:CartesianChart Grid.Row="1" Height="270" Margin="0,10,0,0"
+                                    Series="{Binding SerieEmbudo}"
+                                    XAxes="{Binding EjesXEmbudo}"
+                                    YAxes="{Binding EjesYEmbudo}"
+                                    LegendPosition="Top" />
+            </Grid>
+        </Border>
+
         <!-- ===================== CUERPO ===================== -->
-        <Grid Grid.Row="1" Margin="16">
+        <Grid Grid.Row="2" Margin="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="520" />
                 <ColumnDefinition Width="Auto" />
@@ -423,6 +457,63 @@
                                 <TextBlock Text="Notas" Style="{StaticResource Etiqueta}" />
                                 <TextBox Style="{StaticResource CampoMultilinea}" Text="{Binding Notas}" />
 
+                                <TextBlock Text="ADJUNTOS" Style="{StaticResource TituloSeccion}" />
+                                <TextBlock Text="El CV y la carta concretos que enviaste a esta oferta, guardados en copia local."
+                                           FontSize="11" Foreground="{StaticResource TextoSuave}" />
+
+                                <Border BorderBrush="{StaticResource Borde}" BorderThickness="1"
+                                        CornerRadius="6" Padding="10" Margin="0,8,0,0">
+                                    <StackPanel>
+                                        <Grid Margin="0,2,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Curriculum" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding RutaCv}"
+                                                       Text="{Binding NombreCv, TargetNullValue=Sin adjuntar}" />
+                                            <Button Grid.Column="2" Content="Adjuntar…" Margin="0,0,6,0"
+                                                    Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.AdjuntarCvCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Grid.Column="3" Content="Abrir" Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.AbrirCvCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                        </Grid>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Carta de presentación" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding RutaCarta}"
+                                                       Text="{Binding NombreCarta, TargetNullValue=Sin adjuntar}" />
+                                            <Button Grid.Column="2" Content="Adjuntar…" Margin="0,0,6,0"
+                                                    Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.AdjuntarCartaCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Grid.Column="3" Content="Abrir" Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.AbrirCartaCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
                                 <!-- Historial -->
                                 <Grid Margin="0,18,0,2">
                                     <TextBlock Text="HISTORIAL" Style="{StaticResource TituloSeccion}"
@@ -510,5 +601,19 @@
                 </Grid>
             </Border>
         </Grid>
+
+        <!-- ===================== BANDEJA DEL SISTEMA ===================== -->
+        <tb:TaskbarIcon x:Name="IconoBandeja"
+                        ToolTipText="Gestor de candidaturas"
+                        TrayMouseDoubleClick="IconoBandeja_DobleClic">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Abrir Gestor de candidaturas" Click="MenuAbrir_Click" />
+                    <MenuItem Header="Comprobar seguimientos ahora" Click="MenuComprobar_Click" />
+                    <Separator />
+                    <MenuItem Header="Salir" Click="MenuSalir_Click" />
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
     </Grid>
 </Window>

@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 
 namespace GestorSolicitudes.Models;
 
@@ -66,6 +67,13 @@ public class Solicitud
 
     public string? Notas { get; set; }
 
+    // --- Adjuntos (copias en %APPDATA%\GestorSolicitudes\adjuntos) ---
+    [MaxLength(500)]
+    public string? RutaCv { get; set; }
+
+    [MaxLength(500)]
+    public string? RutaCarta { get; set; }
+
     /// <summary>Historial cronológico: cada llamada, prueba o entrevista.</summary>
     public ObservableCollection<Evento> Eventos { get; set; } = new();
 
@@ -101,6 +109,15 @@ public class Solicitud
         (null, int max) => $"hasta {max:N0} €",
         (int min, int max) => $"{min:N0} – {max:N0} €"
     };
+
+    [NotMapped]
+    public string? NombreCv => Archivo(RutaCv);
+
+    [NotMapped]
+    public string? NombreCarta => Archivo(RutaCarta);
+
+    private static string? Archivo(string? ruta) =>
+        string.IsNullOrWhiteSpace(ruta) ? null : Path.GetFileName(ruta);
 
     public override string ToString() => $"{Empresa} — {Puesto}";
 }

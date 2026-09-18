@@ -8,6 +8,8 @@ a quién, cuándo, qué te contestaron y cuándo toca volver a insistir.
 - **.NET 8** + **WPF** (MVVM)
 - **Entity Framework Core 8** sobre **SQLite** (fichero local, sin servidor)
 - **CommunityToolkit.Mvvm** para `ObservableObject` y `RelayCommand` por generadores de código
+- **Hardcodet.NotifyIcon.Wpf** para el icono y los avisos de la bandeja del sistema
+- **LiveCharts2** (skia) para la gráfica de embudo mensual
 
 ## Cómo ejecutarlo
 
@@ -27,6 +29,8 @@ La base de datos se crea sola en el primer arranque en:
 
 Está fuera de `bin/` a propósito: puedes recompilar, mover o reinstalar la app sin perder los datos.
 Ese fichero `.db` es todo tu histórico, así que cópialo de vez en cuando a OneDrive o a un pendrive.
+En el arranque, la app añade con un `ALTER TABLE` las columnas nuevas que no existan en una base
+ya creada por una versión anterior (porque `EnsureCreated()` no versiona el esquema).
 
 ## Qué se guarda de cada candidatura
 
@@ -43,6 +47,11 @@ la entrevista, fecha de cierre, fecha de próximo seguimiento y el texto de la r
 rechazo...). Esto es lo que hace que funcione cuando un proceso tiene tres entrevistas en vez de una:
 el campo "día de la entrevista" te da la próxima de un vistazo y el historial guarda todas.
 
+**Los adjuntos**: el CV y la carta de presentación concretos que enviaste a cada oferta. Al pulsar
+*Adjuntar…* se **copian** al fichero `%APPDATA%\GestorSolicitudes\adjuntos` (no se enlaza el original,
+así que sobreviven aunque muevas o borres el fichero de origen). Se borran juntos si eliminas la
+candidatura o si la cancelas sin llegar a guardarla.
+
 ## Detalles que quizá no se vean a simple vista
 
 - Las filas con **seguimiento vencido** (la fecha de próximo seguimiento ya pasó y el proceso sigue
@@ -54,17 +63,35 @@ el campo "día de la entrevista" te da la próxima de un vistazo y el historial 
 - Las candidaturas cerradas se muestran en gris, y el filtro *Solo abiertas* las esconde.
 - **Exportar CSV** saca todo con `;` y UTF-8 con BOM, así que Excel en español lo abre en columnas
   directamente sin el asistente de importación.
+- **Importar LinkedIn** lee el CSV de "Mis candidaturas" que exporta LinkedIn (Ajustes → Privacidad de
+  datos → *Obtener una copia de tus datos*) y crea candidaturas con empresa, puesto, fecha, ubicación,
+  estado traducido y enlace a la oferta. Las filas que ya existan (misma empresa + puesto + fecha) se
+  omiten y al final te dice cuántas entraron y cuántas se saltaron.
+- **Icono en la bandeja del sistema**: mientras la app está abierta, cada 5 minutos revisa si hay
+  seguimientos vencidos (y también una vez al poco de arrancar). Si hay alguno nuevo, avisa con un
+  globo junto al reloj de Windows; el menú del icono permite reabrir la ventana, comprobar manualmente
+  y salir. Cada candidatura avisa una sola vez por sesión.
+- **Gráfica de embudo** (botón *Gráfica*): enviadas → respondidas → entrevistas → ofertas de los
+  últimos 12 meses, contadas por el historial (hito "Solicitud enviada", primera contestación,
+  hitos de entrevista y de oferta), así cada mes cuenta lo que pasó ese mes.
 - Atajos: `Ctrl+N` nueva candidatura, `Ctrl+S` guardar.
+
+## Qué no hacer una vez (lección aprendida)
+
+El icono de la bandeja usa `System.Drawing`, por eso el proyecto tiene `UseWindowsForms=true` además
+de WPF. Para no arrastrar el infierno de ambigüedades (`Application`, `MessageBox`, `Color`...),
+el `.csproj` quita los usings implícitos de WinForms y de `System.Drawing` con `<Using Remove=...>`.
 
 ## Estructura
 
 ```
 Models/          Solicitud, Evento y enums con [Description] para los textos de la UI
-Data/            AppDbContext (SQLite, EnsureCreated)
-ViewModels/      MainViewModel: filtros, CRUD, métricas y exportación
-Views/           MainWindow: lista maestra + panel de detalle
+Data/            AppDbContext (SQLite, EnsureCreated + ALTER TABLE de columnas nuevas)
+ViewModels/      MainViewModel: filtros, CRUD, métricas, embudo, adjuntos e importación
+Views/           MainWindow: lista maestra + panel de detalle + gráfica + icono de bandeja
 Converters/      enum → texto, null → Visibility, estado → color
 Helpers/         EnumHelper: lee los [Description] por reflexión
+                 AdjuntosHelper: copia/borra CV y carta en %APPDATA%\...\adjuntos
 ```
 
 ## Decisiones que conviene conocer antes de tocarlo
@@ -98,8 +125,5 @@ de portfolio, extraer ese servicio es la primera mejora que un revisor va a busc
 
 ## Ideas para seguir
 
-- Recordatorios en la bandeja del sistema para los seguimientos vencidos
-- Adjuntar el CV y la carta concretos que enviaste a cada oferta
-- Gráfica de embudo (enviadas → respondidas → entrevistas → ofertas) por mes
-- Importar desde el CSV de "Mis candidaturas" de LinkedIn
+- Recordatorios incluso cuando la app está cerrada (arrancar un proceso en segundo plano con Windows)
 - Migrar a Avalonia si algún día quieres ejecutarlo también en macOS o Linux
