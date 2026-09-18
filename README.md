@@ -1,0 +1,105 @@
+# Gestor de candidaturas
+
+Aplicación de escritorio para llevar el control de las ofertas de empleo a las que te inscribes:
+a quién, cuándo, qué te contestaron y cuándo toca volver a insistir.
+
+## Stack
+
+- **.NET 8** + **WPF** (MVVM)
+- **Entity Framework Core 8** sobre **SQLite** (fichero local, sin servidor)
+- **CommunityToolkit.Mvvm** para `ObservableObject` y `RelayCommand` por generadores de código
+
+## Cómo ejecutarlo
+
+```bash
+cd GestorSolicitudes
+dotnet restore
+dotnet run
+```
+
+O abre `GestorSolicitudes.csproj` en Visual Studio y pulsa F5.
+
+La base de datos se crea sola en el primer arranque en:
+
+```
+%APPDATA%\GestorSolicitudes\solicitudes.db
+```
+
+Está fuera de `bin/` a propósito: puedes recompilar, mover o reinstalar la app sin perder los datos.
+Ese fichero `.db` es todo tu histórico, así que cópialo de vez en cuando a OneDrive o a un pendrive.
+
+## Qué se guarda de cada candidatura
+
+**La oferta**: empresa, puesto, enlace directo (con botón para abrirlo en el navegador), portal de
+origen, ubicación, modalidad, tecnologías pedidas, horquilla salarial, tu pretensión y un nivel de
+interés del 1 al 5.
+
+**El proceso**: estado dentro del embudo, fecha de envío, fecha de la primera contestación, día de
+la entrevista, fecha de cierre, fecha de próximo seguimiento y el texto de la respuesta de la empresa.
+
+**El contacto**: nombre y email del recruiter o la persona técnica.
+
+**El historial**: una lista de hitos con fecha y tipo (llamada, prueba técnica, entrevista, oferta,
+rechazo...). Esto es lo que hace que funcione cuando un proceso tiene tres entrevistas en vez de una:
+el campo "día de la entrevista" te da la próxima de un vistazo y el historial guarda todas.
+
+## Detalles que quizá no se vean a simple vista
+
+- Las filas con **seguimiento vencido** (la fecha de próximo seguimiento ya pasó y el proceso sigue
+  abierto) se pintan en ámbar, y hay un filtro para ver solo esas. Es el disparador para escribir
+  el clásico "¿hay alguna novedad sobre el proceso?".
+- La cabecera calcula **tasa de respuesta** y **media de días hasta la primera contestación**. Con
+  treinta o cuarenta candidaturas esos dos números te dicen bastante sobre si el CV está filtrando
+  bien o si estás disparando a ofertas equivocadas.
+- Las candidaturas cerradas se muestran en gris, y el filtro *Solo abiertas* las esconde.
+- **Exportar CSV** saca todo con `;` y UTF-8 con BOM, así que Excel en español lo abre en columnas
+  directamente sin el asistente de importación.
+- Atajos: `Ctrl+N` nueva candidatura, `Ctrl+S` guardar.
+
+## Estructura
+
+```
+Models/          Solicitud, Evento y enums con [Description] para los textos de la UI
+Data/            AppDbContext (SQLite, EnsureCreated)
+ViewModels/      MainViewModel: filtros, CRUD, métricas y exportación
+Views/           MainWindow: lista maestra + panel de detalle
+Converters/      enum → texto, null → Visibility, estado → color
+Helpers/         EnumHelper: lee los [Description] por reflexión
+```
+
+## Decisiones que conviene conocer antes de tocarlo
+
+**Un solo `DbContext` durante toda la sesión.** Es una app monousuario, así que se aprovecha el
+change tracking de EF: el formulario edita la entidad que ya está en seguimiento y *Guardar* es un
+`SaveChanges()` limpio. *Cancelar* desengancha todo el `ChangeTracker` y recarga de disco. Si algún
+día esto se convierte en multiusuario o multiventana, el patrón correcto pasa a ser un contexto por
+operación con `IDbContextFactory`.
+
+**Las entidades son POCOs sin `INotifyPropertyChanged`.** Por eso la lista se recarga entera
+después de cada guardado en vez de refrescar la fila en caliente. Con unos cientos de registros ni
+se nota; si algún día crece, el cambio natural es meter `ObservableObject` en `Solicitud`.
+
+**`EnsureCreated()` en lugar de migraciones.** Va bien para empezar, pero no versiona el esquema:
+si añades una propiedad nueva al modelo, la tabla existente no se actualiza sola. Cuando quieras
+evolucionarlo sin borrar datos:
+
+```bash
+dotnet tool install --global dotnet-ef
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet ef migrations add Inicial
+dotnet ef database update
+```
+
+y cambia `EnsureCreated()` por `db.Database.Migrate()` en `App.xaml.cs`.
+
+**Los `MessageBox` viven en el ViewModel.** No es MVVM de manual; lo ortodoxo sería un
+`IDialogService` inyectado. Para una herramienta personal es ruido, pero si la usas como proyecto
+de portfolio, extraer ese servicio es la primera mejora que un revisor va a buscar.
+
+## Ideas para seguir
+
+- Recordatorios en la bandeja del sistema para los seguimientos vencidos
+- Adjuntar el CV y la carta concretos que enviaste a cada oferta
+- Gráfica de embudo (enviadas → respondidas → entrevistas → ofertas) por mes
+- Importar desde el CSV de "Mis candidaturas" de LinkedIn
+- Migrar a Avalonia si algún día quieres ejecutarlo también en macOS o Linux

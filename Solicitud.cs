@@ -1,0 +1,106 @@
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GestorSolicitudes.Models;
+
+/// <summary>
+/// Una candidatura enviada a una oferta concreta.
+/// </summary>
+public class Solicitud
+{
+    public int Id { get; set; }
+
+    // --- Identificación de la oferta ---
+    [MaxLength(150)]
+    public string Empresa { get; set; } = string.Empty;
+
+    [MaxLength(150)]
+    public string Puesto { get; set; } = string.Empty;
+
+    /// <summary>Enlace directo a la oferta (LinkedIn, InfoJobs, web corporativa...).</summary>
+    [MaxLength(500)]
+    public string? EnlaceOferta { get; set; }
+
+    /// <summary>Dónde se encontró la oferta: LinkedIn, InfoJobs, Tecnoempleo, referido, etc.</summary>
+    [MaxLength(80)]
+    public string? Portal { get; set; }
+
+    [MaxLength(120)]
+    public string? Ubicacion { get; set; }
+
+    public Modalidad Modalidad { get; set; } = Modalidad.SinIndicar;
+
+    /// <summary>Stack pedido en la oferta, separado por comas.</summary>
+    [MaxLength(300)]
+    public string? Tecnologias { get; set; }
+
+    // --- Económico (euros brutos anuales) ---
+    public int? SalarioMin { get; set; }
+    public int? SalarioMax { get; set; }
+    public int? PretensionSalarial { get; set; }
+
+    // --- Fechas clave ---
+    public DateTime FechaSolicitud { get; set; } = DateTime.Today;
+    public DateTime? FechaPrimeraRespuesta { get; set; }
+    public DateTime? FechaEntrevista { get; set; }
+    public DateTime? FechaCierre { get; set; }
+
+    /// <summary>Fecha en la que toca volver a escribir si no hay noticias.</summary>
+    public DateTime? ProximoSeguimiento { get; set; }
+
+    // --- Seguimiento ---
+    public EstadoSolicitud Estado { get; set; } = EstadoSolicitud.Enviada;
+
+    /// <summary>Texto literal o resumen de lo que contestó la empresa.</summary>
+    public string? RespuestaEmpresa { get; set; }
+
+    [MaxLength(120)]
+    public string? ContactoNombre { get; set; }
+
+    [MaxLength(150)]
+    public string? ContactoEmail { get; set; }
+
+    /// <summary>Interés propio en la oferta, de 1 a 5.</summary>
+    public int Interes { get; set; } = 3;
+
+    public string? Notas { get; set; }
+
+    /// <summary>Historial cronológico: cada llamada, prueba o entrevista.</summary>
+    public ObservableCollection<Evento> Eventos { get; set; } = new();
+
+    // --- Calculadas (no se guardan en base de datos) ---
+
+    [NotMapped]
+    public int DiasDesdeSolicitud => (int)(DateTime.Today - FechaSolicitud.Date).TotalDays;
+
+    [NotMapped]
+    public int? DiasHastaRespuesta => FechaPrimeraRespuesta.HasValue
+        ? (int)(FechaPrimeraRespuesta.Value.Date - FechaSolicitud.Date).TotalDays
+        : null;
+
+    [NotMapped]
+    public bool EstaAbierta => Estado is not (EstadoSolicitud.OfertaAceptada
+        or EstadoSolicitud.OfertaRechazada
+        or EstadoSolicitud.Rechazada
+        or EstadoSolicitud.Retirada);
+
+    [NotMapped]
+    public bool HuboRespuesta => FechaPrimeraRespuesta.HasValue;
+
+    [NotMapped]
+    public bool SeguimientoPendiente => EstaAbierta
+        && ProximoSeguimiento.HasValue
+        && ProximoSeguimiento.Value.Date <= DateTime.Today;
+
+    [NotMapped]
+    public string RangoSalarial => (SalarioMin, SalarioMax) switch
+    {
+        (null, null) => "—",
+        (int min, null) => $"desde {min:N0} €",
+        (null, int max) => $"hasta {max:N0} €",
+        (int min, int max) => $"{min:N0} – {max:N0} €"
+    };
+
+    public override string ToString() => $"{Empresa} — {Puesto}";
+}
