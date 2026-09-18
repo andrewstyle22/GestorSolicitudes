@@ -8,6 +8,7 @@
         <conv:EnumDescripcionConverter x:Key="EnumDescripcion" />
         <conv:NuloAVisibilidadConverter x:Key="NuloAVisibilidad" />
         <conv:EstadoAColorConverter x:Key="EstadoAColor" />
+        <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 
         <!-- ============ Paleta ============ -->
         <SolidColorBrush x:Key="Fondo"       Color="#F1F5F9" />

@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -8,9 +9,13 @@ using CommunityToolkit.Mvvm.Input;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Win32;
+using SkiaSharp;
 
 namespace GestorSolicitudes.ViewModels;
 
@@ -92,9 +97,20 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string tasaRespuesta = "—";
     [ObservableProperty] private string mediaDiasRespuesta = "—";
 
+    // ---------------------------------------------------------------- Gráfica de embudo
+
+    [ObservableProperty] private bool verGrafica;
+    [ObservableProperty] private ISeries[] serieEmbudo = Array.Empty<ISeries>();
+    [ObservableProperty] private Axis[] ejesXEmbudo = Array.Empty<Axis>();
+    [ObservableProperty] private Axis[] ejesYEmbudo = Array.Empty<Axis>();
+
     // ---------------------------------------------------------------- Carga
 
-    private void Recargar()
+    /// <summary>
+    /// Recarga la lista, los filtros y las estadísticas. Público: la ventana lo
+    /// usa para refrescar los contadores tras avisar de seguimientos vencidos.
+    /// </summary>
+    public void Recargar()
     {
         IQueryable<Solicitud> consulta = _db.Solicitudes.Include(s => s.Eventos);
 
@@ -161,6 +177,432 @@ public partial class MainViewModel : ObservableObject
     // ---------------------------------------------------------------- Comandos
 
     [RelayCommand]
+    private void ConfigurarGrafica()
+    {
+        VerGrafica = !VerGrafica;
+        if (VerGrafica)
+            ActualizarEmbudo();
+    }
+
+    /// <summary>
+    /// Embudo enviadas → respondidas → entrevistas → ofertas de los últimos 12 meses.
+    /// Se apoya en el historial (Eventos) para fechar cada hito con precisión.
+    /// </summary>
+    private void ActualizarEmbudo()
+    {
+        var meses = new List<DateTime>();
+        var inicioMesActual = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        for (int i = 11; i >= 0; i--)
+            meses.Add(inicioMesActual.AddMonths(-i));
+
+        List<Solicitud> todas = _db.Solicitudes.Include(s => s.Eventos).ToList();
+
+        double[] enviadas = Repetir(meses.Count, 0.0);
+        double[] respondidas = Repetir(meses.Count, 0.0);
+        double[] entrevistas = Repetir(meses.Count, 0.0);
+        double[] ofertas = Repetir(meses.Count, 0.0);
+
+        for (int m = 0; m < meses.Count; m++)
+        {
+            DateTime inicio = meses[m];
+            DateTime fin = inicio.AddMonths(1);
+
+            foreach (Solicitud s in todas)
+            {
+                bool tieneHitoEnvio = s.Eventos.Any(e =>
+                    e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha >= inicio && e.Fecha < fin);
+
+                bool enviadaSinHito = !s.Eventos.Any(e => e.Tipo == TipoEvento.SolicitudEnviada)
+                    && s.FechaSolicitud >= inicio && s.FechaSolicitud < fin;
+
+                if (tieneHitoEnvio || enviadaSinHito) enviadas[m]++;
+
+                if (s.FechaPrimeraRespuesta >= inicio && s.FechaPrimeraRespuesta < fin)
+                    respondidas[m]++;
+            }
+
+            entrevistas[m] = todas
+                .SelectMany(s => s.Eventos)
+                .Count(e => e.Tipo == TipoEvento.Entrevista && e.Fecha >= inicio && e.Fecha < fin);
+
+            ofertas[m] = todas
+                .SelectMany(s => s.Eventos)
+                .Count(e => e.Tipo == TipoEvento.Oferta && e.Fecha >= inicio && e.Fecha < fin);
+        }
+
+        string[] etiquetas = meses
+            .Select(m => m.ToString("MMM yyyy", CultureInfo.CurrentCulture))
+            .ToArray();
+
+        SerieEmbudo = new ISeries[]
+        {
+            new ColumnSeries<double> { Name = "Enviadas",     Values = enviadas,     Fill = new SolidColorPaint(SKColor.Parse("#94A3B8")) },
+            new ColumnSeries<double> { Name = "Respondidas",  Values = respondidas,  Fill = new SolidColorPaint(SKColor.Parse("#2563EB")) },
+            new ColumnSeries<double> { Name = "Entrevistas",  Values = entrevistas,  Fill = new SolidColorPaint(SKColor.Parse("#7C3AED")) },
+            new ColumnSeries<double> { Name = "Ofertas",      Values = ofertas,      Fill = new SolidColorPaint(SKColor.Parse("#059669")) }
+        };
+
+        EjesXEmbudo = new[] { new Axis { Labels = etiquetas, LabelsRotation = 45, TextSize = 11 } };
+        EjesYEmbudo = new[] { new Axis { MinLimit = 0, TextSize = 11 } };
+    }
+
+    private static T[] Repetir<T>(int cantidad, T valor)
+    {
+        var resultado = new T[cantidad];
+        Array.Fill(resultado, valor);
+        return resultado;
+    }
+
+    /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
+    public List<Solicitud> SeguimientosVencidosAhora()
+    {
+        DateTime hoy = DateTime.Today;
+        return _db.Solicitudes
+            .Where(s => s.ProximoSeguimiento != null && s.ProximoSeguimiento.Value.Date <= hoy)
+            .ToList()
+            .Where(s => s.EstaAbierta)
+            .ToList();
+    }
+
+    // ---------------------------------------------------------------- Adjuntos
+
+    [RelayCommand]
+    private void AdjuntarCv() => AdjuntarAdjunto(
+        "Selecciona el CV que enviaste", "cv", e => e.RutaCv, (e, r) => e.RutaCv = r);
+
+    [RelayCommand]
+    private void AdjuntarCarta() => AdjuntarAdjunto(
+        "Selecciona la carta de presentación", "carta", e => e.RutaCarta, (e, r) => e.RutaCarta = r);
+
+    private void AdjuntarAdjunto(
+        string titulo, string etiqueta, Func<Solicitud, string?> obtener, Action<Solicitud, string> asignar)
+    {
+        Solicitud? editar = Edicion;
+        if (editar is null) return;
+
+        var dialogo = new OpenFileDialog
+        {
+            Title = titulo,
+            Filter = "Documentos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Currículos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Todos los archivos (*.*)|*.*"
+        };
+
+        if (dialogo.ShowDialog() != true) return;
+
+        try
+        {
+            string nuevaRuta = AdjuntosHelper.Copiar(dialogo.FileName, etiqueta);
+            AdjuntosHelper.Eliminar(obtener(editar));
+            asignar(editar, nuevaRuta);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"No se pudo adjuntar el fichero:\n\n{ex.Message}",
+                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        // Las entidades son POCOs sin INotifyPropertyChanged: se reasigna Edicion
+        // al mismo objeto para que el panel de detalle repinte el nombre del adjunto.
+        RefrescarPanelDetalle();
+    }
+
+    private void RefrescarPanelDetalle()
+    {
+        Solicitud? actual = Edicion;
+        Edicion = null;
+        Edicion = actual;
+    }
+
+    [RelayCommand]
+    private void AbrirCv() => AbrirAdjunto(Edicion?.RutaCv);
+
+    [RelayCommand]
+    private void AbrirCarta() => AbrirAdjunto(Edicion?.RutaCarta);
+
+    private static void AbrirAdjunto(string? ruta)
+    {
+        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
+        {
+            MessageBox.Show("No hay un fichero adjunto, o ya no existe en disco.",
+                "Adjunto", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(ruta.Trim()) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"No se pudo abrir el fichero: {ex.Message}",
+                "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    // ---------------------------------------------------------------- Importación LinkedIn
+
+    [RelayCommand]
+    private void ImportarLinkedIn()
+    {
+        var dialogo = new OpenFileDialog
+        {
+            Title = "Importar el CSV de 'Mis candidaturas' de LinkedIn",
+            Filter = "CSV (*.csv)|*.csv"
+        };
+
+        if (dialogo.ShowDialog() != true) return;
+
+        List<List<string>> lineas;
+        try
+        {
+            lineas = LeerCsv(dialogo.FileName);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"No se pudo leer el fichero:\n\n{ex.Message}",
+                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        if (lineas.Count < 2)
+        {
+            MessageBox.Show("El fichero parece no tener filas de datos.",
+                "Importar", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var columnas = IdentificarColumnas(lineas[0]);
+        if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
+        {
+            MessageBox.Show(
+                "No se reconocen las columnas de empresa o puesto en la cabecera.\n\n" +
+                "Se espera el CSV que exporta LinkedIn en Ajustes → Privacidad de datos → " +
+                "'Obtener una copia de tus datos' (fichero Jobs).",
+                "Importar", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        int maximoIndice = columnas.Values.Max();
+        var vistas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int importadas = 0, duplicadas = 0, omitidas = 0;
+
+        foreach (List<string> campos in lineas.Skip(1))
+        {
+            if (campos.Count <= maximoIndice) continue;
+
+            string empresa = ObtenerCampo(campos, columnas, "empresa").Trim();
+            string puesto = ObtenerCampo(campos, columnas, "puesto").Trim();
+            if (empresa.Length == 0 || puesto.Length == 0)
+            {
+                omitidas++;
+                continue;
+            }
+
+            DateTime fecha = ParsearFecha(ObtenerCampo(campos, columnas, "fecha"));
+            string clave = $"{empresa}|{puesto}|{fecha:yyyy-MM-dd}";
+
+            bool existe = vistas.Contains(clave) || _db.Solicitudes.Any(s =>
+                s.Empresa == empresa && s.Puesto == puesto && s.FechaSolicitud == fecha);
+
+            if (existe)
+            {
+                duplicadas++;
+                continue;
+            }
+
+            vistas.Add(clave);
+
+            string evento = ObtenerCampo(campos, columnas, "evento");
+            string uuid = ObtenerCampo(campos, columnas, "uuid");
+
+            var solicitud = new Solicitud
+            {
+                Empresa = empresa,
+                Puesto = puesto,
+                FechaSolicitud = fecha,
+                Ubicacion = Nulo(ObtenerCampo(campos, columnas, "ubicacion")),
+                Portal = "LinkedIn",
+                Estado = MapearEstadoLinkedIn(ObtenerCampo(campos, columnas, "estado")),
+                EnlaceOferta = uuid.Length > 0 ? $"https://www.linkedin.com/jobs/view/{uuid}" : null,
+                Notas = evento.Length > 0 ? $"Evento LinkedIn: {evento}" : null
+            };
+
+            solicitud.Eventos.Add(new Evento
+            {
+                Fecha = fecha,
+                Tipo = TipoEvento.SolicitudEnviada,
+                Descripcion = "Importada desde LinkedIn"
+            });
+
+            _db.Solicitudes.Add(solicitud);
+            importadas++;
+        }
+
+        if (importadas > 0)
+            _db.SaveChanges();
+
+        Recargar();
+
+        string resumen = $"Se importaron {importadas} candidaturas desde LinkedIn.";
+        if (duplicadas > 0) resumen += $"\nSe omitieron {duplicadas} ya existentes.";
+        if (omitidas > 0) resumen += $"\nSe saltaron {omitidas} filas sin empresa o puesto.";
+
+        MessageBox.Show(resumen,
+            "Importación completada", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private static EstadoSolicitud MapearEstadoLinkedIn(string estado)
+    {
+        string s = estado.Trim().ToLowerInvariant();
+
+        if (s.Contains("applied") || s.Contains("sent") || s.Contains("don't know")) return EstadoSolicitud.Enviada;
+        if (s.Contains("progress")) return EstadoSolicitud.EnRevision;
+        if (s.Contains("interview")) return EstadoSolicitud.EntrevistaRrhh;
+        if (s.Contains("offer")) return EstadoSolicitud.OfertaRecibida;
+        if (s.Contains("hired") || s.Contains("accepted")) return EstadoSolicitud.OfertaAceptada;
+        if (s.Contains("reject") || s.Contains("not selected") || s.Contains("not moving")) return EstadoSolicitud.Rechazada;
+        if (s.Contains("withdrawn") || s.Contains("withdrew") || s.Contains("archived")) return EstadoSolicitud.Retirada;
+
+        return EstadoSolicitud.Enviada;
+    }
+
+    private static DateTime ParsearFecha(string valor)
+    {
+        var formatos = new[]
+        {
+            "yyyy-MM-dd", "dd/MM/yyyy", "M/d/yyyy", "yyyy-MM-ddTHH:mm:ss", "yyyy-MM-dd HH:mm:ss"
+        };
+
+        if (DateTime.TryParseExact(valor, formatos, CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out DateTime exacta))
+            return exacta;
+
+        if (DateTime.TryParse(valor, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime local))
+            return local;
+
+        if (DateTime.TryParse(valor, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime invariante))
+            return invariante;
+
+        return DateTime.Today;
+    }
+
+    /// <summary>Localiza cada columna útil del CSV de LinkedIn por el nombre de la cabecera.</summary>
+    private static Dictionary<string, int> IdentificarColumnas(List<string> cabecera)
+    {
+        var resultado = new Dictionary<string, int>();
+
+        for (int i = 0; i < cabecera.Count; i++)
+        {
+            string col = NormalizarCabecera(cabecera[i]);
+            if (col.Length == 0) continue;
+
+            if (!resultado.ContainsKey("empresa") && col.Contains("company")) resultado["empresa"] = i;
+            if (!resultado.ContainsKey("puesto") && (col.Contains("title") || col == "puesto")) resultado["puesto"] = i;
+            if (!resultado.ContainsKey("fecha") && (col.Contains("application") && col.Contains("date") || col == "fecha")) resultado["fecha"] = i;
+            if (!resultado.ContainsKey("estado") && (col.Contains("status") || col.Contains("estado"))) resultado["estado"] = i;
+            if (!resultado.ContainsKey("ubicacion") && (col.Contains("location") || col.Contains("ubicacion"))) resultado["ubicacion"] = i;
+            if (!resultado.ContainsKey("evento") && (col == "event" || col.Contains("evento"))) resultado["evento"] = i;
+            if (!resultado.ContainsKey("uuid") && col.Contains("uuid")) resultado["uuid"] = i;
+        }
+
+        return resultado;
+    }
+
+    private static string NormalizarCabecera(string valor)
+    {
+        var sb = new StringBuilder(valor.Length);
+        foreach (char c in valor.ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c)) sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    private static string ObtenerCampo(List<string> campos, Dictionary<string, int> columnas, string nombre) =>
+        columnas.TryGetValue(nombre, out int indice) && indice >= 0 && indice < campos.Count
+            ? campos[indice]
+            : string.Empty;
+
+    private static string? Nulo(string valor) => valor.Length == 0 ? null : valor;
+
+    /// <summary>Lee un CSV respetando comillas y detecta si el separador es ';' o ','.</summary>
+    private static List<List<string>> LeerCsv(string ruta)
+    {
+        var lineas = new List<List<string>>();
+        char delimitador = ',';
+
+        using var lector = new StreamReader(ruta, Encoding.UTF8, true);
+
+        string? linea;
+        bool primera = true;
+        while ((linea = lector.ReadLine()) is not null)
+        {
+            if (primera)
+            {
+                delimitador = DelimitadorDe(linea);
+                primera = false;
+            }
+
+            lineas.Add(DividirLinea(linea, delimitador));
+        }
+
+        return lineas;
+    }
+
+    private static char DelimitadorDe(string linea)
+    {
+        int puntoYComa = 0, coma = 0;
+        bool dentroDeComillas = false;
+
+        foreach (char c in linea)
+        {
+            if (c == '"') dentroDeComillas = !dentroDeComillas;
+            else if (!dentroDeComillas && c == ';') puntoYComa++;
+            else if (!dentroDeComillas && c == ',') coma++;
+        }
+
+        return puntoYComa > coma ? ';' : ',';
+    }
+
+    private static List<string> DividirLinea(string linea, char delimitador)
+    {
+        var campos = new List<string>();
+        var actual = new StringBuilder();
+        bool dentroDeComillas = false;
+
+        for (int i = 0; i < linea.Length; i++)
+        {
+            char c = linea[i];
+
+            if (c == '"')
+            {
+                if (dentroDeComillas && i + 1 < linea.Length && linea[i + 1] == '"')
+                {
+                    // Comillas dobles escapadas dentro de un campo ("" → ")
+                    actual.Append('"');
+                    i++;
+                }
+                else
+                {
+                    dentroDeComillas = !dentroDeComillas;
+                }
+            }
+            else if (c == delimitador && !dentroDeComillas)
+            {
+                campos.Add(actual.ToString().Trim());
+                actual.Clear();
+            }
+            else
+            {
+                actual.Append(c);
+            }
+        }
+
+        campos.Add(actual.ToString().Trim());
+        return campos;
+    }
+
+    [RelayCommand]
     private void Nueva()
     {
         SolicitudSeleccionada = null;
@@ -223,6 +665,14 @@ public partial class MainViewModel : ObservableObject
 
         int id = Edicion.Id;
 
+        // Si la candidatura nunca se guardó, los adjuntos copiados se quedan
+        // huérfanos: los borramos antes de soltar la edición.
+        if (id == 0)
+        {
+            AdjuntosHelper.Eliminar(Edicion.RutaCv);
+            AdjuntosHelper.Eliminar(Edicion.RutaCarta);
+        }
+
         // Desenganchamos todo lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
         foreach (EntityEntry entrada in _db.ChangeTracker.Entries().ToList())
@@ -246,8 +696,15 @@ public partial class MainViewModel : ObservableObject
 
         if (confirmacion != MessageBoxResult.Yes) return;
 
+        string? cv = Edicion.RutaCv;
+        string? carta = Edicion.RutaCarta;
+
         _db.Solicitudes.Remove(Edicion);
         _db.SaveChanges();
+
+        AdjuntosHelper.Eliminar(cv);
+        AdjuntosHelper.Eliminar(carta);
+
         Edicion = null;
         Recargar();
     }
