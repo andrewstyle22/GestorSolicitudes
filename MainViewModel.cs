@@ -112,17 +112,6 @@ public partial class MainViewModel : ObservableObject
     {
         IQueryable<Solicitud> consulta = _db.Solicitudes.Include(s => s.Eventos);
 
-        if (!string.IsNullOrWhiteSpace(TextoBusqueda))
-        {
-            string texto = TextoBusqueda.Trim();
-            consulta = consulta.Where(s =>
-                s.Empresa.Contains(texto) ||
-                s.Puesto.Contains(texto) ||
-                (s.Tecnologias != null && s.Tecnologias.Contains(texto)) ||
-                (s.Ubicacion != null && s.Ubicacion.Contains(texto)) ||
-                (s.Portal != null && s.Portal.Contains(texto)));
-        }
-
         if (EstadoFiltroItem?.Valor is EstadoSolicitud estado)
             consulta = consulta.Where(s => s.Estado == estado);
 
@@ -130,6 +119,19 @@ public partial class MainViewModel : ObservableObject
             .OrderByDescending(s => s.FechaSolicitud)
             .ThenByDescending(s => s.Id)
             .ToList();
+
+        // La búsqueda de texto se hace en memoria porque SQLite no sabe ignorar
+        // acentos: normalizamos (minúsculas y sin tildes) el texto y los campos.
+        if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+        {
+            string texto = NormalizarBusqueda(TextoBusqueda);
+            lista = lista.Where(s =>
+                NormalizarBusqueda(s.Empresa).Contains(texto) ||
+                NormalizarBusqueda(s.Puesto).Contains(texto) ||
+                (s.Tecnologias != null && NormalizarBusqueda(s.Tecnologias).Contains(texto)) ||
+                (s.Ubicacion != null && NormalizarBusqueda(s.Ubicacion).Contains(texto)) ||
+                (s.Portal != null && NormalizarBusqueda(s.Portal).Contains(texto))).ToList();
+        }
 
         // EstaAbierta y SeguimientoPendiente son [NotMapped]: se filtran en memoria.
         if (SoloAbiertas)
@@ -140,6 +142,25 @@ public partial class MainViewModel : ObservableObject
 
         Solicitudes = new ObservableCollection<Solicitud>(lista);
         ActualizarEstadisticas();
+    }
+
+    /// <summary>
+    /// Minúsculas y sin tildes, para que la búsqueda ignore mayúsculas y acentos:
+    /// teclear "metrica" encuentra "Métrica". Se aplica igual al texto buscado y a
+    /// los campos, así la comparación es estable.
+    /// </summary>
+    private static string NormalizarBusqueda(string valor)
+    {
+        string descompuesto = valor.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(descompuesto.Length);
+
+        foreach (char c in descompuesto)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark) continue;
+            sb.Append(c);
+        }
+
+        return sb.ToString();
     }
 
     private void ActualizarEstadisticas()
