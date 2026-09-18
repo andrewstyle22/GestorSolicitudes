@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 
 namespace GestorSolicitudes.Helpers;
 
@@ -6,6 +6,8 @@ namespace GestorSolicitudes.Helpers;
 /// Copia y borra los adjuntos (CV, carta) en %APPDATA%\GestorSolicitudes\adjuntos.
 /// Se copian al adjuntar para que sobrevivan aunque se mueva o borre el original,
 /// y solo se borran ficheros que están dentro de esta carpeta: jamás uno arbitrario.
+/// El nombre en disco es solo un GUID (evita colisiones y problemas con caracteres raros);
+/// el nombre "bonito" que ve el usuario se guarda aparte, en Solicitud.NombreOriginalCv/Carta.
 /// </summary>
 public static class AdjuntosHelper
 {
@@ -20,7 +22,7 @@ public static class AdjuntosHelper
         Directory.CreateDirectory(Carpeta);
 
         string extension = Path.GetExtension(origen);
-        string nombre = $"{etiqueta}-{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid():N}{extension}";
+        string nombre = $"{etiqueta}-{Guid.NewGuid():N}{extension}";
         string destino = Path.Combine(Carpeta, nombre);
 
         File.Copy(origen, destino);

@@ -30,7 +30,6 @@ public partial class MainViewModel : ObservableObject
         Estados = EnumHelper.Valores<EstadoSolicitud>();
         Modalidades = EnumHelper.Valores<Modalidad>();
         TiposEvento = EnumHelper.Valores<TipoEvento>();
-        NivelesInteres = new[] { 1, 2, 3, 4, 5 };
 
         EstadosFiltro = new List<EnumItem> { new(null, "Todos los estados") }
             .Concat(Estados)
@@ -48,7 +47,6 @@ public partial class MainViewModel : ObservableObject
     public IReadOnlyList<EnumItem> EstadosFiltro { get; }
     public IReadOnlyList<EnumItem> Modalidades { get; }
     public IReadOnlyList<EnumItem> TiposEvento { get; }
-    public IReadOnlyList<int> NivelesInteres { get; }
 
     [ObservableProperty]
     private ObservableCollection<Solicitud> solicitudes = new();
@@ -184,6 +182,13 @@ public partial class MainViewModel : ObservableObject
             ActualizarEmbudo();
     }
 
+    /// <summary>Si el panel de la gráfica está abierto, la refresca con los datos actuales.</summary>
+    private void RecargarEmbudoSiVisible()
+    {
+        if (VerGrafica)
+            ActualizarEmbudo();
+    }
+
     /// <summary>
     /// Embudo enviadas → respondidas → entrevistas → ofertas de los últimos 12 meses.
     /// Se apoya en el historial (Eventos) para fechar cada hito con precisión.
@@ -264,18 +269,36 @@ public partial class MainViewModel : ObservableObject
             .ToList();
     }
 
+    // ---------------------------------------------------------------- Interés (estrellas)
+
+    /// <summary>Fija el nivel de interés (1 a 5) al pulsar una estrella del panel de detalle.</summary>
+    [RelayCommand]
+    private void EstablecerInteres(string parametro)
+    {
+        if (Edicion is null || !int.TryParse(parametro, out int valor)) return;
+
+        Edicion.Interes = valor;
+        RefrescarPanelDetalle();
+    }
+
     // ---------------------------------------------------------------- Adjuntos
 
     [RelayCommand]
     private void AdjuntarCv() => AdjuntarAdjunto(
-        "Selecciona el CV que enviaste", "cv", e => e.RutaCv, (e, r) => e.RutaCv = r);
+        "Selecciona el CV que enviaste", "cv",
+        obtenerRuta: e => e.RutaCv,
+        asignar: (e, ruta, nombre) => { e.RutaCv = ruta; e.NombreOriginalCv = nombre; });
 
     [RelayCommand]
     private void AdjuntarCarta() => AdjuntarAdjunto(
-        "Selecciona la carta de presentación", "carta", e => e.RutaCarta, (e, r) => e.RutaCarta = r);
+        "Selecciona la carta de presentación", "carta",
+        obtenerRuta: e => e.RutaCarta,
+        asignar: (e, ruta, nombre) => { e.RutaCarta = ruta; e.NombreOriginalCarta = nombre; });
 
     private void AdjuntarAdjunto(
-        string titulo, string etiqueta, Func<Solicitud, string?> obtener, Action<Solicitud, string> asignar)
+        string titulo, string etiqueta,
+        Func<Solicitud, string?> obtenerRuta,
+        Action<Solicitud, string, string> asignar)
     {
         Solicitud? editar = Edicion;
         if (editar is null) return;
@@ -291,8 +314,8 @@ public partial class MainViewModel : ObservableObject
         try
         {
             string nuevaRuta = AdjuntosHelper.Copiar(dialogo.FileName, etiqueta);
-            AdjuntosHelper.Eliminar(obtener(editar));
-            asignar(editar, nuevaRuta);
+            AdjuntosHelper.Eliminar(obtenerRuta(editar));
+            asignar(editar, nuevaRuta, Path.GetFileName(dialogo.FileName));
         }
         catch (Exception ex)
         {
@@ -303,6 +326,23 @@ public partial class MainViewModel : ObservableObject
 
         // Las entidades son POCOs sin INotifyPropertyChanged: se reasigna Edicion
         // al mismo objeto para que el panel de detalle repinte el nombre del adjunto.
+        RefrescarPanelDetalle();
+    }
+
+    [RelayCommand]
+    private void QuitarCv() => QuitarAdjunto(
+        e => e.RutaCv, e => { e.RutaCv = null; e.NombreOriginalCv = null; });
+
+    [RelayCommand]
+    private void QuitarCarta() => QuitarAdjunto(
+        e => e.RutaCarta, e => { e.RutaCarta = null; e.NombreOriginalCarta = null; });
+
+    private void QuitarAdjunto(Func<Solicitud, string?> obtenerRuta, Action<Solicitud> limpiar)
+    {
+        if (Edicion is null) return;
+
+        AdjuntosHelper.Eliminar(obtenerRuta(Edicion));
+        limpiar(Edicion);
         RefrescarPanelDetalle();
     }
 
@@ -442,6 +482,7 @@ public partial class MainViewModel : ObservableObject
             _db.SaveChanges();
 
         Recargar();
+        RecargarEmbudoSiVisible();
 
         string resumen = $"Se importaron {importadas} candidaturas desde LinkedIn.";
         if (duplicadas > 0) resumen += $"\nSe omitieron {duplicadas} ya existentes.";
@@ -508,13 +549,24 @@ public partial class MainViewModel : ObservableObject
         return resultado;
     }
 
+    /// <summary>
+    /// Deja la cabecera en minúsculas y solo con letras/dígitos ASCII, quitando también
+    /// las tildes: así "Ubicación" y "Ubicacion" identifican la misma columna.
+    /// </summary>
     private static string NormalizarCabecera(string valor)
     {
-        var sb = new StringBuilder(valor.Length);
-        foreach (char c in valor.ToLowerInvariant())
+        string descompuesto = valor.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(descompuesto.Length);
+
+        foreach (char c in descompuesto)
         {
-            if (char.IsLetterOrDigit(c)) sb.Append(c);
+            var categoria = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (categoria == UnicodeCategory.NonSpacingMark) continue;
+
+            char minuscula = char.ToLowerInvariant(c);
+            if (char.IsLetterOrDigit(minuscula)) sb.Append(minuscula);
         }
+
         return sb.ToString();
     }
 
@@ -578,7 +630,7 @@ public partial class MainViewModel : ObservableObject
             {
                 if (dentroDeComillas && i + 1 < linea.Length && linea[i + 1] == '"')
                 {
-                    // Comillas dobles escapadas dentro de un campo ("" → ")
+                    // Comillas dobles escapadas dentro de un campo ("" -> ")
                     actual.Append('"');
                     i++;
                 }
@@ -613,6 +665,39 @@ public partial class MainViewModel : ObservableObject
         };
     }
 
+    /// <summary>
+    /// Crea una candidatura nueva a partir de la seleccionada: util para volver a
+    /// aplicar a la misma empresa (otro puesto) o a una oferta muy parecida.
+    /// No copia fechas de proceso, contacto, adjuntos ni el enlace, porque casi
+    /// seguro cambian; si copia lo que describe la oferta en si.
+    /// </summary>
+    [RelayCommand]
+    private void Duplicar()
+    {
+        if (Edicion is null || Edicion.Id == 0) return;
+
+        Solicitud origen = Edicion;
+        var copia = new Solicitud
+        {
+            Empresa = origen.Empresa,
+            Puesto = origen.Puesto,
+            Portal = origen.Portal,
+            Ubicacion = origen.Ubicacion,
+            Modalidad = origen.Modalidad,
+            Tecnologias = origen.Tecnologias,
+            SalarioMin = origen.SalarioMin,
+            SalarioMax = origen.SalarioMax,
+            PretensionSalarial = origen.PretensionSalarial,
+            Interes = origen.Interes,
+            FechaSolicitud = DateTime.Today,
+            Estado = EstadoSolicitud.Enviada,
+            Notas = $"Duplicada de la candidatura #{origen.Id} ({origen.Empresa}, {origen.FechaSolicitud:dd/MM/yyyy})."
+        };
+
+        SolicitudSeleccionada = null;
+        Edicion = copia;
+    }
+
     [RelayCommand]
     private void Guardar()
     {
@@ -624,6 +709,13 @@ public partial class MainViewModel : ObservableObject
                 "Faltan datos", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
+
+        // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
+        // escribir, proponemos +7 dias desde el envio. Sin esto, el aviso de
+        // "seguimiento pendiente" nunca llega a dispararse salvo que el usuario
+        // recuerde rellenarlo a mano cada vez.
+        if (Edicion.EstaAbierta && Edicion.ProximoSeguimiento is null)
+            Edicion.ProximoSeguimiento = Edicion.FechaSolicitud.AddDays(7);
 
         bool esNueva = Edicion.Id == 0;
         if (esNueva)
@@ -655,6 +747,7 @@ public partial class MainViewModel : ObservableObject
 
         int id = Edicion.Id;
         Recargar();
+        RecargarEmbudoSiVisible();
         SolicitudSeleccionada = Solicitudes.FirstOrDefault(s => s.Id == id);
     }
 
@@ -707,6 +800,7 @@ public partial class MainViewModel : ObservableObject
 
         Edicion = null;
         Recargar();
+        RecargarEmbudoSiVisible();
     }
 
     [RelayCommand]

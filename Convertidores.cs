@@ -60,3 +60,33 @@ public class EstadoAColorConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// <summary>
+/// Colorea una estrella del selector de interés: ámbar si su posición (ConverterParameter,
+/// 1 a 5) está dentro del valor actual de Interés, gris claro en caso contrario.
+/// </summary>
+public class InteresAColorEstrellaConverter : IValueConverter
+{
+    private static readonly SolidColorBrush Rellena = new((Color)ColorConverter.ConvertFromString("#F59E0B"));
+    private static readonly SolidColorBrush Vacia = new((Color)ColorConverter.ConvertFromString("#CBD5E1"));
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        int interes = value is int i ? i : 0;
+        int posicion = parameter is string s && int.TryParse(s, out int p) ? p : 0;
+        return interes >= posicion ? Rellena : Vacia;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Texto del botón que muestra/oculta el panel de la gráfica de embudo.</summary>
+public class VerGraficaATextoConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is true ? "Ocultar gráfica" : "Ver gráfica";
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

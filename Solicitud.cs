@@ -74,6 +74,14 @@ public class Solicitud
     [MaxLength(500)]
     public string? RutaCarta { get; set; }
 
+    /// <summary>Nombre "bonito" del CV tal como lo eligió el usuario (el fichero en disco es un GUID).</summary>
+    [MaxLength(260)]
+    public string? NombreOriginalCv { get; set; }
+
+    /// <summary>Nombre "bonito" de la carta tal como la eligió el usuario.</summary>
+    [MaxLength(260)]
+    public string? NombreOriginalCarta { get; set; }
+
     /// <summary>Historial cronológico: cada llamada, prueba o entrevista.</summary>
     public ObservableCollection<Evento> Eventos { get; set; } = new();
 
@@ -96,6 +104,10 @@ public class Solicitud
     [NotMapped]
     public bool HuboRespuesta => FechaPrimeraRespuesta.HasValue;
 
+    /// <summary>Ya tiene fila en la base de datos (frente a un borrador recién creado con "Nueva").</summary>
+    [NotMapped]
+    public bool EstaGuardada => Id != 0;
+
     [NotMapped]
     public bool SeguimientoPendiente => EstaAbierta
         && ProximoSeguimiento.HasValue
@@ -110,11 +122,13 @@ public class Solicitud
         (int min, int max) => $"{min:N0} – {max:N0} €"
     };
 
+    /// <summary>Nombre a mostrar del CV: el original si se conserva, o el del disco si no.</summary>
     [NotMapped]
-    public string? NombreCv => Archivo(RutaCv);
+    public string? NombreCv => NombreOriginalCv ?? Archivo(RutaCv);
 
+    /// <summary>Nombre a mostrar de la carta: el original si se conserva, o el del disco si no.</summary>
     [NotMapped]
-    public string? NombreCarta => Archivo(RutaCarta);
+    public string? NombreCarta => NombreOriginalCarta ?? Archivo(RutaCarta);
 
     private static string? Archivo(string? ruta) =>
         string.IsNullOrWhiteSpace(ruta) ? null : Path.GetFileName(ruta);

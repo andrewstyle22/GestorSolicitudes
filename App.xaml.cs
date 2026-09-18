@@ -44,6 +44,9 @@ public partial class App : Application
 
         // Creamos la ventana aquí en lugar de con StartupUri: así el fallo de arriba
         // aborta de verdad el arranque y no dependemos de resolver una URI de recurso.
+        // ShutdownMode="OnExplicitShutdown" en App.xaml hace que cerrar esta ventana
+        // (o minimizarla a la bandeja) no cierre la aplicación: solo lo hace el
+        // comando "Salir" del icono de la bandeja, que llama a Shutdown() a mano.
         var ventana = new Views.MainWindow();
         MainWindow = ventana;
         ventana.Show();
@@ -67,7 +70,7 @@ public partial class App : Application
                 columnas.Add(Convert.ToString(lector["name"]) ?? string.Empty);
         }
 
-        foreach (string columna in new[] { "RutaCv", "RutaCarta" })
+        foreach (string columna in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta" })
         {
             if (columnas.Contains(columna)) continue;
 
