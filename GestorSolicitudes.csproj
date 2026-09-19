@@ -12,6 +12,15 @@
     <AssemblyName>GestorSolicitudes</AssemblyName>
     <LangVersion>latest</LangVersion>
 
+    <!-- Genera el XML de documentación: StyleCop lo necesita para analizar los comentarios
+         (si no, avisa con SA0001). Como la documentación no es obligatoria en este proyecto,
+         no avisamos por miembros sin documentar (CS1573/CS1591/CS1712). -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1573;1591;1712</NoWarn>
+
+    <!-- La carpeta de tests es su propio proyecto: no debe compilarse dentro de la app. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);GestorSolicitudes.Tests\**</DefaultItemExcludes>
+
     <!-- Declaramos los XAML a mano: si el IDE los marca como None o Content,
          no se compilan a BAML y la app revienta buscando el recurso. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
@@ -28,6 +37,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+
+    <Page Include="Views\VentanaRequisitos.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +49,16 @@
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Configuración de StyleCop (companyName, reglas documentadas, etc.).
+       Sin esta línea el archivo stylecop.json se ignora y el analizador usa las reglas por defecto. -->
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
 
   <!-- WinForms solo se usa para el icono de la bandeja (System.Drawing):

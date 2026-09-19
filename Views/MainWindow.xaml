@@ -191,7 +191,8 @@
                               BorderThickness="0"
                               RowHeight="38"
                               FontSize="13"
-                              VerticalScrollBarVisibility="Auto">
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Visible">
 
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
@@ -207,7 +208,7 @@
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Empresa" Binding="{Binding Empresa}" Width="1.3*">
+                            <DataGridTextColumn Header="Empresa" Binding="{Binding Empresa}" Width="260" MinWidth="260">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="SemiBold" />
@@ -218,7 +219,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Puesto" Binding="{Binding Puesto}" Width="1.5*">
+                            <DataGridTextColumn Header="Puesto" Binding="{Binding Puesto}" Width="300" MinWidth="300">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center" />
@@ -228,7 +229,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="Estado" Width="160">
+                            <DataGridTemplateColumn Header="Estado" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="10" Padding="8,3"
@@ -244,21 +245,21 @@
 
                             <DataGridTextColumn Header="Enviada"
                                                 Binding="{Binding FechaSolicitud, StringFormat=dd/MM/yyyy}"
-                                                Width="90" />
+                                                Width="100" />
 
                             <DataGridTextColumn Header="Días"
                                                 Binding="{Binding DiasDesdeSolicitud}"
-                                                Width="55" />
+                                                Width="60" />
 
                             <DataGridTextColumn Header="1ª respuesta"
                                                 Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
-                                                Width="100" />
+                                                Width="110" />
 
                             <DataGridTextColumn Header="Entrevista"
                                                 Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
-                                                Width="95" />
+                                                Width="105" />
 
-                            <DataGridTextColumn Header="Portal" Binding="{Binding Portal}" Width="110" />
+                            <DataGridTextColumn Header="Portal" Binding="{Binding Portal}" Width="150" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -381,6 +382,22 @@
                                     </StackPanel>
                                 </Grid>
 
+                                <TextBlock Text="Requisitos del cargo" Style="{StaticResource Etiqueta}" />
+                                <Grid Margin="0,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Style="{StaticResource CampoMultilinea}"
+                                             MinHeight="90"
+                                             Text="{Binding Requisitos}"
+                                             ToolTip="Requisitos, responsabilidades y funciones del puesto" />
+                                    <Button Grid.Column="1" Content="Leer" Margin="8,0,0,0"
+                                            Padding="12,8" VerticalAlignment="Center"
+                                            Style="{StaticResource BotonSecundario}"
+                                            Click="VerRequisitos_Click" />
+                                </Grid>
+
                                 <TextBlock Text="PROCESO" Style="{StaticResource TituloSeccion}" />
 
                                 <TextBlock Text="Estado actual" Style="{StaticResource Etiqueta}" />
@@ -470,6 +487,7 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Curriculum" FontWeight="SemiBold"
                                                        VerticalAlignment="Center" />
@@ -482,7 +500,12 @@
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AdjuntarCvCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Grid.Column="3" Content="Abrir" Padding="10,4" FontSize="12"
+                                            <Button Grid.Column="3" Content="Quitar" Margin="0,0,6,0"
+                                                    Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.QuitarCvCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Grid.Column="4" Content="Abrir" Padding="10,4" FontSize="12"
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AbrirCvCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
@@ -492,6 +515,7 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
@@ -506,7 +530,12 @@
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AdjuntarCartaCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Grid.Column="3" Content="Abrir" Padding="10,4" FontSize="12"
+                                            <Button Grid.Column="3" Content="Quitar" Margin="0,0,6,0"
+                                                    Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.QuitarCartaCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Grid.Column="4" Content="Abrir" Padding="10,4" FontSize="12"
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AbrirCartaCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
@@ -579,6 +608,7 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
@@ -588,11 +618,15 @@
                                         Style="{StaticResource BotonPeligro}"
                                         Command="{Binding EliminarCommand}" />
 
-                                <Button Grid.Column="2" Content="Cancelar" Margin="0,0,8,0"
+                                <Button Grid.Column="1" Content="Duplicar" Margin="8,0,0,0"
+                                        Style="{StaticResource BotonSecundario}"
+                                        Command="{Binding DuplicarCommand}" />
+
+                                <Button Grid.Column="3" Content="Cancelar" Margin="0,0,8,0"
                                         Style="{StaticResource BotonSecundario}"
                                         Command="{Binding CancelarCommand}" />
 
-                                <Button Grid.Column="3" Content="Guardar"
+                                <Button Grid.Column="4" Content="Guardar"
                                         Style="{StaticResource BotonPrimario}"
                                         Command="{Binding GuardarCommand}" />
                             </Grid>

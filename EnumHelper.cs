@@ -1,7 +1,7 @@
-﻿using System.ComponentModel;
-using System.Reflection;
+﻿namespace GestorSolicitudes.Helpers;
 
-namespace GestorSolicitudes.Helpers;
+using System.ComponentModel;
+using System.Reflection;
 
 /// <summary>Par valor/texto para alimentar los ComboBox de la interfaz.</summary>
 public record EnumItem(object? Valor, string Descripcion);
@@ -17,8 +17,11 @@ public static class EnumHelper
     }
 
     /// <summary>Todos los valores de un enum ya traducidos, listos para enlazar.</summary>
-    public static IReadOnlyList<EnumItem> Valores<T>() where T : struct, Enum =>
-        Enum.GetValues<T>()
+    public static IReadOnlyList<EnumItem> Valores<T>()
+        where T : struct, Enum
+    {
+        return Enum.GetValues<T>()
             .Select(v => new EnumItem(v, Descripcion(v)))
             .ToList();
+    }
 }

@@ -1,13 +1,16 @@
 ﻿<Application x:Class="GestorSolicitudes.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:conv="clr-namespace:GestorSolicitudes.Converters">
+             xmlns:conv="clr-namespace:GestorSolicitudes.Converters"
+             ShutdownMode="OnMainWindowClose">
     <Application.Resources>
 
         <!-- ============ Convertidores ============ -->
         <conv:EnumDescripcionConverter x:Key="EnumDescripcion" />
         <conv:NuloAVisibilidadConverter x:Key="NuloAVisibilidad" />
         <conv:EstadoAColorConverter x:Key="EstadoAColor" />
+        <conv:InteresAColorEstrellaConverter x:Key="InteresAEstrella" />
+        <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 
         <!-- ============ Paleta ============ -->
@@ -19,6 +22,7 @@
         <SolidColorBrush x:Key="Acento"      Color="#2563EB" />
         <SolidColorBrush x:Key="Peligro"     Color="#DC2626" />
         <SolidColorBrush x:Key="Aviso"       Color="#FEF3C7" />
+        <SolidColorBrush x:Key="Estrella"    Color="#F59E0B" />
 
         <!-- ============ Texto ============ -->
         <Style x:Key="Etiqueta" TargetType="TextBlock">
@@ -110,6 +114,29 @@
             <Setter Property="Background" Value="{StaticResource Panel}" />
             <Setter Property="BorderBrush" Value="{StaticResource Peligro}" />
             <Setter Property="Foreground" Value="{StaticResource Peligro}" />
+        </Style>
+
+        <!-- Botón "fantasma": sin chrome propio, para iconos y estrellas donde solo
+             debe pintar el símbolo (glifo) con el color que le diga el converter. -->
+        <Style x:Key="BotonGlifo" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="2,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Botón secundario compacto, para acciones de un renglón (adjuntar, importar...) -->
+        <Style x:Key="BotonSecundarioCompacto" TargetType="Button" BasedOn="{StaticResource BotonSecundario}">
+            <Setter Property="Padding" Value="9,5" />
+            <Setter Property="FontSize" Value="12" />
         </Style>
 
     </Application.Resources>

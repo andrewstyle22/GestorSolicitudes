@@ -1,16 +1,17 @@
-﻿using System.IO;
+﻿namespace GestorSolicitudes.Data;
+
+using System.IO;
 using GestorSolicitudes.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace GestorSolicitudes.Data;
-
 public class AppDbContext : DbContext
 {
-    public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
-    public DbSet<Evento> Eventos => Set<Evento>();
+    public DbSet<Solicitud> Solicitudes => this.Set<Solicitud>();
+
+    public DbSet<Evento> Eventos => this.Set<Evento>();
 
     /// <summary>
-    /// %APPDATA%\GestorSolicitudes\solicitudes.db — fuera de la carpeta del ejecutable,
+    /// Gets %APPDATA%\GestorSolicitudes\solicitudes.db — fuera de la carpeta del ejecutable,
     /// para que recompilar o mover la app no se lleve los datos por delante.
     /// </summary>
     public static string RutaBaseDatos { get; } = Path.Combine(
@@ -18,13 +19,28 @@ public class AppDbContext : DbContext
         "GestorSolicitudes",
         "solicitudes.db");
 
+    private readonly string rutaBaseDatos;
+
+    public AppDbContext()
+        : this(RutaBaseDatos)
+    {
+    }
+
+    /// <summary>Apunta a una base de datos concreta (p. ej. una temporal, en los tests).</summary>
+    public AppDbContext(string rutaBaseDatos)
+    {
+        this.rutaBaseDatos = rutaBaseDatos;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var carpeta = Path.GetDirectoryName(RutaBaseDatos);
+        var carpeta = Path.GetDirectoryName(this.rutaBaseDatos);
         if (!string.IsNullOrEmpty(carpeta))
+        {
             Directory.CreateDirectory(carpeta);
+        }
 
-        optionsBuilder.UseSqlite($"Data Source={RutaBaseDatos}");
+        optionsBuilder.UseSqlite($"Data Source={this.rutaBaseDatos}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

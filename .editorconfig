@@ -1,0 +1,20 @@
+# Reglas de estilo del proyecto (StyleCop y código).
+root = true
+
+[*.cs]
+
+# StyleCop: documentación obligatoria (familia SA1600-SA1699): no se exige.
+# Los comentarios XML existentes se conservan; el analizador simplemente no los impone.
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = none
+# Cabecera de copyright obligatoria al inicio de cada archivo.
+dotnet_diagnostic.SA1633.severity = none
+# Orden de miembros por accesibilidad/por estáticos: no encaja con la estructura por secciones del código.
+dotnet_diagnostic.SA1201.severity = none
+dotnet_diagnostic.SA1202.severity = none
+dotnet_diagnostic.SA1203.severity = none
+dotnet_diagnostic.SA1204.severity = none
+# SA1117/SA1137: no obligar a que los parámetros/argumentos quepan en una sola línea.
+dotnet_diagnostic.SA1117.severity = none
+dotnet_diagnostic.SA1137.severity = none
+# SA1402: varios convertidores/helpers pequeños en un único archivo (elección del proyecto).
+dotnet_diagnostic.SA1402.severity = none

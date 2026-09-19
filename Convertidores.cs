@@ -1,11 +1,11 @@
-﻿using System.Globalization;
+﻿namespace GestorSolicitudes.Converters;
+
+using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Converters;
 
 /// <summary>Muestra el [Description] de un enum en lugar de su nombre en código.</summary>
 public class EnumDescripcionConverter : IValueConverter
@@ -24,7 +24,10 @@ public class NuloAVisibilidadConverter : IValueConverter
     {
         bool visible = value is not null;
         if (string.Equals(parameter as string, "invertir", StringComparison.OrdinalIgnoreCase))
+        {
             visible = !visible;
+        }
+
         return visible ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -51,11 +54,41 @@ public class EstadoAColorConverter : IValueConverter
             EstadoSolicitud.Rechazada => "#DC2626",
             EstadoSolicitud.Retirada => "#B45309",
             EstadoSolicitud.SinRespuesta => "#94A3B8",
-            _ => "#64748B"
+            _ => "#64748B",
         };
 
         return new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
     }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>
+/// Colorea una estrella del selector de interés: ámbar si su posición (ConverterParameter,
+/// 1 a 5) está dentro del valor actual de Interés, gris claro en caso contrario.
+/// </summary>
+public class InteresAColorEstrellaConverter : IValueConverter
+{
+    private static readonly SolidColorBrush Rellena = new((Color)ColorConverter.ConvertFromString("#F59E0B"));
+    private static readonly SolidColorBrush Vacia = new((Color)ColorConverter.ConvertFromString("#CBD5E1"));
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        int interes = value is int i ? i : 0;
+        int posicion = parameter is string s && int.TryParse(s, out int p) ? p : 0;
+        return interes >= posicion ? Rellena : Vacia;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Texto del botón que muestra/oculta el panel de la gráfica de embudo.</summary>
+public class VerGraficaATextoConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is true ? "Ocultar gráfica" : "Ver gráfica";
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
