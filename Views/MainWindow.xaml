@@ -316,33 +316,40 @@
                     <!-- Formulario -->
                     <Grid Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="18,14,18,14">
-                            <StackPanel DataContext="{Binding Edicion}">
+                        <!-- Cabecera fija: lo mínimo que siempre debe verse -->
+                        <StackPanel Grid.Row="0" DataContext="{Binding Edicion}" Margin="18,14,18,10">
 
-                                <TextBlock Text="LA OFERTA" Style="{StaticResource TituloSeccion}" Margin="0,0,0,2" />
+                            <TextBlock Text="Empresa *" Style="{StaticResource Etiqueta}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Style="{StaticResource Campo}" Text="{Binding Empresa}" />
+                                <Button Grid.Column="1" Content="Ver todas" Margin="6,0,0,0"
+                                        Style="{StaticResource BotonSecundario}"
+                                        ToolTip="Filtra la lista a todas las candidaturas de esta empresa"
+                                        Command="{Binding DataContext.VerCandidaturasDeEstaEmpresaCommand,
+                                                  RelativeSource={RelativeSource AncestorType=Window}}" />
+                            </Grid>
 
-                                <TextBlock Text="Empresa *" Style="{StaticResource Etiqueta}" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" Style="{StaticResource Campo}" Text="{Binding Empresa}" />
-                                    <Button Grid.Column="1" Content="Ver todas" Margin="6,0,0,0"
-                                            Style="{StaticResource BotonSecundario}"
-                                            ToolTip="Filtra la lista a todas las candidaturas de esta empresa"
-                                            Command="{Binding DataContext.VerCandidaturasDeEstaEmpresaCommand,
-                                                      RelativeSource={RelativeSource AncestorType=Window}}" />
-                                </Grid>
+                            <TextBlock Text="Puesto *" Style="{StaticResource Etiqueta}" />
+                            <TextBox Style="{StaticResource Campo}" Text="{Binding Puesto}" />
+                        </StackPanel>
 
-                                <TextBlock Text="Puesto *" Style="{StaticResource Etiqueta}" />
-                                <TextBox Style="{StaticResource Campo}" Text="{Binding Puesto}" />
+                        <!-- Pestañas: Oferta / Seguimiento / Adjuntos e historial -->
+                        <TabControl Grid.Row="1" Style="{StaticResource Pestanas}">
 
-                                <TextBlock Text="Enlace de la oferta" Style="{StaticResource Etiqueta}" />
+                            <TabItem Header="Oferta" Style="{StaticResource Pestana}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel DataContext="{Binding Edicion}">
+
+                                        <TextBlock Text="Enlace de la oferta" Style="{StaticResource Etiqueta}" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -451,9 +458,15 @@
                                             Click="VerRequisitos_Click" />
                                 </Grid>
 
-                                <TextBlock Text="PROCESO" Style="{StaticResource TituloSeccion}" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </TabItem>
 
-                                <TextBlock Text="Estado actual" Style="{StaticResource Etiqueta}" />
+                            <TabItem Header="Seguimiento" Style="{StaticResource Pestana}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel DataContext="{Binding Edicion}">
+
+                                        <TextBlock Text="Estado actual" Style="{StaticResource Etiqueta}" />
                                 <ComboBox Style="{StaticResource CampoCombo}"
                                           ItemsSource="{Binding DataContext.Estados,
                                                         RelativeSource={RelativeSource AncestorType=Window}}"
@@ -543,7 +556,15 @@
                                 <TextBlock Text="Notas" Style="{StaticResource Etiqueta}" />
                                 <TextBox Style="{StaticResource CampoMultilinea}" Text="{Binding Notas}" />
 
-                                <TextBlock Text="ADJUNTOS" Style="{StaticResource TituloSeccion}" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </TabItem>
+
+                            <TabItem Header="Adjuntos e historial" Style="{StaticResource Pestana}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel DataContext="{Binding Edicion}">
+
+                                        <TextBlock Text="ADJUNTOS" Style="{StaticResource TituloSeccion}" />
                                 <TextBlock Text="El CV y la carta concretos que enviaste a esta oferta, guardados en copia local."
                                            FontSize="11" Foreground="{StaticResource TextoSuave}" />
 
@@ -668,11 +689,14 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                            </StackPanel>
-                        </ScrollViewer>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </TabItem>
+
+                        </TabControl>
 
                         <!-- Acciones -->
-                        <Border Grid.Row="1" BorderBrush="{StaticResource Borde}" BorderThickness="0,1,0,0"
+                        <Border Grid.Row="2" BorderBrush="{StaticResource Borde}" BorderThickness="0,1,0,0"
                                 Padding="18,12">
                             <Grid>
                                 <Grid.ColumnDefinitions>

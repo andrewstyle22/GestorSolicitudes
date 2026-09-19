@@ -92,6 +92,9 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   y todas sus columnas se pueden ordenar clicando la cabecera.
 - El botón **Ver todas** junto al campo *Empresa* filtra la lista a todas las candidaturas de esa
   empresa, reutilizando la búsqueda de texto.
+- El panel de detalle está en **tres pestañas** —*Oferta*, *Seguimiento* y *Adjuntos e historial*—
+  para no tener que hacer scroll de quince bloques seguidos: *Empresa* y *Puesto* quedan siempre a la
+  vista arriba y los botones de *Eliminar/Duplicar/Cancelar/Guardar* abajo. Se abre siempre en *Oferta*.
 - **Exportar CSV** saca todo con `;` y UTF-8 con BOM, así que Excel en español lo abre en columnas
   directamente sin el asistente de importación.
 - **Importar LinkedIn** lee el CSV de "Mis candidaturas" que exporta LinkedIn (Ajustes → Privacidad de
