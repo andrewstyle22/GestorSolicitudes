@@ -12,6 +12,9 @@
     <AssemblyName>GestorSolicitudes</AssemblyName>
     <LangVersion>latest</LangVersion>
 
+    <!-- La carpeta de tests es su propio proyecto: no debe compilarse dentro de la app. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);GestorSolicitudes.Tests\**</DefaultItemExcludes>
+
     <!-- Declaramos los XAML a mano: si el IDE los marca como None o Content,
          no se compilan a BAML y la app revienta buscando el recurso. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>

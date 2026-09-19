@@ -23,10 +23,15 @@ public partial class MainViewModel : ObservableObject
 {
     // Una sola instancia viva durante toda la sesión: es una app monousuario,
     // así que aprovechamos el change tracking de EF Core para editar en sitio.
-    private readonly AppDbContext _db = new();
+    private readonly AppDbContext _db;
 
-    public MainViewModel()
+    public MainViewModel() : this(new AppDbContext()) { }
+
+    // Constructor con base de datos propia, para que los tests usen una base temporal.
+    internal MainViewModel(AppDbContext db)
     {
+        _db = db;
+
         Estados = EnumHelper.Valores<EstadoSolicitud>();
         Modalidades = EnumHelper.Valores<Modalidad>();
         TiposEvento = EnumHelper.Valores<TipoEvento>();
@@ -152,7 +157,7 @@ public partial class MainViewModel : ObservableObject
     /// teclear "metrica" encuentra "Métrica". Se aplica igual al texto buscado y a
     /// los campos, así la comparación es estable.
     /// </summary>
-    private static string NormalizarBusqueda(string valor)
+    internal static string NormalizarBusqueda(string valor)
     {
         string descompuesto = valor.ToLowerInvariant().Normalize(NormalizationForm.FormD);
         var sb = new StringBuilder(descompuesto.Length);
@@ -516,7 +521,7 @@ public partial class MainViewModel : ObservableObject
             "Importación completada", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    private static EstadoSolicitud MapearEstadoLinkedIn(string estado)
+    internal static EstadoSolicitud MapearEstadoLinkedIn(string estado)
     {
         string s = estado.Trim().ToLowerInvariant();
 
@@ -531,7 +536,7 @@ public partial class MainViewModel : ObservableObject
         return EstadoSolicitud.Enviada;
     }
 
-    private static DateTime ParsearFecha(string valor)
+    internal static DateTime ParsearFecha(string valor)
     {
         var formatos = new[]
         {
@@ -552,7 +557,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Localiza cada columna útil del CSV de LinkedIn por el nombre de la cabecera.</summary>
-    private static Dictionary<string, int> IdentificarColumnas(List<string> cabecera)
+    internal static Dictionary<string, int> IdentificarColumnas(List<string> cabecera)
     {
         var resultado = new Dictionary<string, int>();
 
@@ -577,7 +582,7 @@ public partial class MainViewModel : ObservableObject
     /// Deja la cabecera en minúsculas y solo con letras/dígitos ASCII, quitando también
     /// las tildes: así "Ubicación" y "Ubicacion" identifican la misma columna.
     /// </summary>
-    private static string NormalizarCabecera(string valor)
+    internal static string NormalizarCabecera(string valor)
     {
         string descompuesto = valor.Normalize(NormalizationForm.FormD);
         var sb = new StringBuilder(descompuesto.Length);
@@ -594,15 +599,15 @@ public partial class MainViewModel : ObservableObject
         return sb.ToString();
     }
 
-    private static string ObtenerCampo(List<string> campos, Dictionary<string, int> columnas, string nombre) =>
+    internal static string ObtenerCampo(List<string> campos, Dictionary<string, int> columnas, string nombre) =>
         columnas.TryGetValue(nombre, out int indice) && indice >= 0 && indice < campos.Count
             ? campos[indice]
             : string.Empty;
 
-    private static string? Nulo(string valor) => valor.Length == 0 ? null : valor;
+    internal static string? Nulo(string valor) => valor.Length == 0 ? null : valor;
 
     /// <summary>Lee un CSV respetando comillas y detecta si el separador es ';' o ','.</summary>
-    private static List<List<string>> LeerCsv(string ruta)
+    internal static List<List<string>> LeerCsv(string ruta)
     {
         var lineas = new List<List<string>>();
         char delimitador = ',';
@@ -625,7 +630,7 @@ public partial class MainViewModel : ObservableObject
         return lineas;
     }
 
-    private static char DelimitadorDe(string linea)
+    internal static char DelimitadorDe(string linea)
     {
         int puntoYComa = 0, coma = 0;
         bool dentroDeComillas = false;
@@ -640,7 +645,7 @@ public partial class MainViewModel : ObservableObject
         return puntoYComa > coma ? ';' : ',';
     }
 
-    private static List<string> DividirLinea(string linea, char delimitador)
+    internal static List<string> DividirLinea(string linea, char delimitador)
     {
         var campos = new List<string>();
         var actual = new StringBuilder();
@@ -923,7 +928,7 @@ public partial class MainViewModel : ObservableObject
             "Exportación completada", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    private static string Escapar(string? valor)
+    internal static string Escapar(string? valor)
     {
         if (string.IsNullOrEmpty(valor)) return string.Empty;
         string limpio = valor.Replace("\"", "\"\"").Replace("\r", " ").Replace("\n", " ");

@@ -17,25 +17,31 @@ public static class AdjuntosHelper
         "adjuntos");
 
     /// <summary>Copia el fichero elegido a la carpeta de adjuntos y devuelve su nueva ruta.</summary>
-    public static string Copiar(string origen, string etiqueta)
+    public static string Copiar(string origen, string etiqueta) => CopiarEn(origen, etiqueta, Carpeta);
+
+    /// <summary>Copia a una carpeta concreta (sobrecarga interna usada por los tests).</summary>
+    internal static string CopiarEn(string origen, string etiqueta, string carpeta)
     {
-        Directory.CreateDirectory(Carpeta);
+        Directory.CreateDirectory(carpeta);
 
         string extension = Path.GetExtension(origen);
         string nombre = $"{etiqueta}-{Guid.NewGuid():N}{extension}";
-        string destino = Path.Combine(Carpeta, nombre);
+        string destino = Path.Combine(carpeta, nombre);
 
         File.Copy(origen, destino);
         return destino;
     }
 
     /// <summary>Borra un adjunto solo si es de nuestra carpeta. Los errores se ignoran.</summary>
-    public static void Eliminar(string? ruta)
+    public static void Eliminar(string? ruta) => EliminarDe(ruta, Carpeta);
+
+    /// <summary>Borra de una carpeta concreta (sobrecarga interna usada por los tests).</summary>
+    internal static void EliminarDe(string? ruta, string carpeta)
     {
         if (string.IsNullOrWhiteSpace(ruta)) return;
 
         bool esNuestraCarpeta = ruta.StartsWith(
-            Carpeta + Path.DirectorySeparatorChar,
+            carpeta + Path.DirectorySeparatorChar,
             StringComparison.OrdinalIgnoreCase);
 
         if (!esNuestraCarpeta) return;

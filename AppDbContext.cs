@@ -18,13 +18,23 @@ public class AppDbContext : DbContext
         "GestorSolicitudes",
         "solicitudes.db");
 
+    private readonly string _rutaBaseDatos;
+
+    public AppDbContext() : this(RutaBaseDatos) { }
+
+    /// <summary>Permite apuntar a otra base (p. ej. una temporal, en los tests).</summary>
+    public AppDbContext(string rutaBaseDatos)
+    {
+        _rutaBaseDatos = rutaBaseDatos;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var carpeta = Path.GetDirectoryName(RutaBaseDatos);
+        var carpeta = Path.GetDirectoryName(_rutaBaseDatos);
         if (!string.IsNullOrEmpty(carpeta))
             Directory.CreateDirectory(carpeta);
 
-        optionsBuilder.UseSqlite($"Data Source={RutaBaseDatos}");
+        optionsBuilder.UseSqlite($"Data Source={_rutaBaseDatos}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

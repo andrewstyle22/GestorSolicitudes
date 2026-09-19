@@ -55,9 +55,11 @@ public partial class App : Application
     /// Añade las columnas nuevas del modelo a bases de datos creadas por versiones
     /// anteriores. Más adelante, si el esquema crece, lo natural es pasar a migraciones.
     /// </summary>
-    private static void VerificarColumnasFaltantes()
+    private static void VerificarColumnasFaltantes() => VerificarColumnasFaltantes(AppDbContext.RutaBaseDatos);
+
+    internal static void VerificarColumnasFaltantes(string ruta)
     {
-        using var conexion = new SqliteConnection($"Data Source={AppDbContext.RutaBaseDatos}");
+        using var conexion = new SqliteConnection($"Data Source={ruta}");
         conexion.Open();
 
         var columnas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
