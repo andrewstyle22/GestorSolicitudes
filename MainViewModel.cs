@@ -48,6 +48,9 @@ public partial class MainViewModel : ObservableObject
     public IReadOnlyList<EnumItem> Modalidades { get; }
     public IReadOnlyList<EnumItem> TiposEvento { get; }
 
+    /// <summary>Valores posibles del interés (1 a 5), para el desplegable del panel de detalle.</summary>
+    public IReadOnlyList<int> NivelesInteres { get; } = new[] { 1, 2, 3, 4, 5 };
+
     [ObservableProperty]
     private ObservableCollection<Solicitud> solicitudes = new();
 

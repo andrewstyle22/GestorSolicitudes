@@ -471,6 +471,7 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="Curriculum" FontWeight="SemiBold"
                                                        VerticalAlignment="Center" />
@@ -483,7 +484,12 @@
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AdjuntarCvCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Grid.Column="3" Content="Abrir" Padding="10,4" FontSize="12"
+                                            <Button Grid.Column="3" Content="Quitar" Margin="0,0,6,0"
+                                                    Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.QuitarCvCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Grid.Column="4" Content="Abrir" Padding="10,4" FontSize="12"
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AbrirCvCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
@@ -493,6 +499,7 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
@@ -507,7 +514,12 @@
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AdjuntarCartaCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Grid.Column="3" Content="Abrir" Padding="10,4" FontSize="12"
+                                            <Button Grid.Column="3" Content="Quitar" Margin="0,0,6,0"
+                                                    Padding="10,4" FontSize="12"
+                                                    Style="{StaticResource BotonSecundario}"
+                                                    Command="{Binding DataContext.QuitarCartaCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Grid.Column="4" Content="Abrir" Padding="10,4" FontSize="12"
                                                     Style="{StaticResource BotonSecundario}"
                                                     Command="{Binding DataContext.AbrirCartaCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}" />
@@ -580,6 +592,7 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
@@ -589,11 +602,15 @@
                                         Style="{StaticResource BotonPeligro}"
                                         Command="{Binding EliminarCommand}" />
 
-                                <Button Grid.Column="2" Content="Cancelar" Margin="0,0,8,0"
+                                <Button Grid.Column="1" Content="Duplicar" Margin="8,0,0,0"
+                                        Style="{StaticResource BotonSecundario}"
+                                        Command="{Binding DuplicarCommand}" />
+
+                                <Button Grid.Column="3" Content="Cancelar" Margin="0,0,8,0"
                                         Style="{StaticResource BotonSecundario}"
                                         Command="{Binding CancelarCommand}" />
 
-                                <Button Grid.Column="3" Content="Guardar"
+                                <Button Grid.Column="4" Content="Guardar"
                                         Style="{StaticResource BotonPrimario}"
                                         Command="{Binding GuardarCommand}" />
                             </Grid>
