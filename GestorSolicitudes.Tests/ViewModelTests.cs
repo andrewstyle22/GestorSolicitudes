@@ -1,4 +1,5 @@
 using Xunit;
+using System.Globalization;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
@@ -231,6 +232,39 @@ public class ViewModelTests
         Assert.Equal(0, vm.OfertasRecibidas);
         Assert.Equal("50 %", vm.TasaRespuesta);
         Assert.Equal("3 días", vm.MediaDiasRespuesta);
+    }
+
+    [Fact]
+    public void Estadisticas_NoDependenDeLaCulturaDelHilo()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        var baseFecha = new DateTime(2026, 1, 10);
+
+        db.Solicitudes.Add(new Solicitud
+        {
+            Empresa = "A",
+            Puesto = "P",
+            FechaSolicitud = baseFecha,
+            FechaPrimeraRespuesta = baseFecha.AddDays(3)
+        });
+        db.Solicitudes.Add(new Solicitud { Empresa = "B", Puesto = "P", FechaSolicitud = baseFecha });
+        db.SaveChanges();
+        vm.Recargar();
+
+        // En GitHub Actions el hilo corre con en-US (o invariable); si el ViewModel
+        // formateara con la cultura del hilo daría "50%". Debe dar siempre es-ES.
+        CultureInfo actual = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+        try
+        {
+            Assert.Equal("50 %", vm.TasaRespuesta);
+            Assert.Equal("3 días", vm.MediaDiasRespuesta);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = actual;
+        }
     }
 
     [Fact]

@@ -21,6 +21,11 @@ using SkiaSharp;
 
 public partial class MainViewModel : ObservableObject
 {
+    // La app fija es-ES en OnStartup, pero los tests no pasan por ahí: formateamos
+    // los números con la cultura de manera explícita para que la salida ("50 %",
+    // decimales con coma) sea estable sea cual sea la cultura del hilo.
+    private static readonly CultureInfo CulturaEspanola = CultureInfo.GetCultureInfo("es-ES");
+
     // Una sola instancia viva durante toda la sesión: es una app monousuario,
     // así que aprovechamos el change tracking de EF Core para editar en sitio.
     private readonly AppDbContext db;
@@ -226,7 +231,7 @@ public partial class MainViewModel : ObservableObject
         int conRespuesta = todas.Count(s => s.HuboRespuesta);
         this.TasaRespuesta = todas.Count == 0
             ? "—"
-            : $"{(double)conRespuesta / todas.Count:P0}";
+            : ((double)conRespuesta / todas.Count).ToString("P0", CulturaEspanola);
 
         List<int> dias = todas
             .Where(s => s.DiasHastaRespuesta.HasValue)
@@ -235,7 +240,7 @@ public partial class MainViewModel : ObservableObject
 
         this.MediaDiasRespuesta = dias.Count == 0
             ? "—"
-            : $"{dias.Average():0.#} días";
+            : $"{dias.Average().ToString("0.#", CulturaEspanola)} días";
     }
 
     // ---------------------------------------------------------------- Comandos
