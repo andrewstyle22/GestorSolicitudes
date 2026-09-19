@@ -27,6 +27,9 @@ public class Solicitud
     [MaxLength(80)]
     public string? Portal { get; set; }
 
+    /// <summary>Gets or sets cómo se originó el contacto (distinto de dónde estaba publicada la oferta).</summary>
+    public Origen Origen { get; set; } = Origen.AplicacionDirecta;
+
     [MaxLength(120)]
     public string? Ubicacion { get; set; }
 
@@ -62,6 +65,9 @@ public class Solicitud
     // --- Seguimiento ---
     public EstadoSolicitud Estado { get; set; } = EstadoSolicitud.Enviada;
 
+    /// <summary>Gets or sets por qué se cerró en falso, cuando <see cref="Estado"/> es un rechazo.</summary>
+    public MotivoRechazo? MotivoRechazo { get; set; }
+
     /// <summary>Gets or sets texto literal o resumen de lo que contestó la empresa.</summary>
     public string? RespuestaEmpresa { get; set; }
 
@@ -70,6 +76,10 @@ public class Solicitud
 
     [MaxLength(150)]
     public string? ContactoEmail { get; set; }
+
+    /// <summary>Gets or sets teléfono de la persona de contacto (recruiter, hiring manager...).</summary>
+    [MaxLength(40)]
+    public string? ContactoTelefono { get; set; }
 
     /// <summary>Gets or sets interés propio en la oferta, de 1 a 5.</summary>
     public int Interes { get; set; } = 3;
@@ -97,6 +107,16 @@ public class Solicitud
     // --- Calculadas (no se guardan en base de datos) ---
     [NotMapped]
     public int DiasDesdeSolicitud => (int)(DateTime.Today - this.FechaSolicitud.Date).TotalDays;
+
+    /// <summary>
+    /// Gets días desde el envío mientras el proceso sigue abierto; una vez cerrado,
+    /// en vez de seguir contando hasta hoy (lo que ya no dice nada), muestra cuánto
+    /// duró en total hasta <see cref="FechaCierre"/>.
+    /// </summary>
+    [NotMapped]
+    public int DiasProceso => this.EstaAbierta
+        ? this.DiasDesdeSolicitud
+        : (int)((this.FechaCierre ?? DateTime.Today).Date - this.FechaSolicitud.Date).TotalDays;
 
     [NotMapped]
     public int? DiasHastaRespuesta => this.FechaPrimeraRespuesta.HasValue

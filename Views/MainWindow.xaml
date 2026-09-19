@@ -248,8 +248,15 @@
                                                 Width="100" />
 
                             <DataGridTextColumn Header="Días"
-                                                Binding="{Binding DiasDesdeSolicitud}"
-                                                Width="60" />
+                                                Binding="{Binding DiasProceso}"
+                                                Width="60">
+                                <DataGridTextColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="ToolTip"
+                                                Value="Días desde el envío; si el proceso ya se cerró, cuánto duró hasta el cierre" />
+                                    </Style>
+                                </DataGridTextColumn.HeaderStyle>
+                            </DataGridTextColumn>
 
                             <DataGridTextColumn Header="1ª respuesta"
                                                 Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
@@ -258,6 +265,21 @@
                             <DataGridTextColumn Header="Entrevista"
                                                 Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
                                                 Width="105" />
+
+                            <DataGridTextColumn Header="Seguimiento"
+                                                Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
+                                                Width="105" />
+
+                            <DataGridTextColumn Header="Interés"
+                                                Binding="{Binding Interes, Converter={StaticResource InteresATextoEstrellas}}"
+                                                Width="90">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource Estrella}" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Portal" Binding="{Binding Portal}" Width="150" />
                         </DataGrid.Columns>
@@ -293,7 +315,18 @@
                                 <TextBlock Text="LA OFERTA" Style="{StaticResource TituloSeccion}" Margin="0,0,0,2" />
 
                                 <TextBlock Text="Empresa *" Style="{StaticResource Etiqueta}" />
-                                <TextBox Style="{StaticResource Campo}" Text="{Binding Empresa}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Style="{StaticResource Campo}" Text="{Binding Empresa}" />
+                                    <Button Grid.Column="1" Content="Ver todas" Margin="6,0,0,0"
+                                            Style="{StaticResource BotonSecundario}"
+                                            ToolTip="Filtra la lista a todas las candidaturas de esta empresa"
+                                            Command="{Binding DataContext.VerCandidaturasDeEstaEmpresaCommand,
+                                                      RelativeSource={RelativeSource AncestorType=Window}}" />
+                                </Grid>
 
                                 <TextBlock Text="Puesto *" Style="{StaticResource Etiqueta}" />
                                 <TextBox Style="{StaticResource Campo}" Text="{Binding Puesto}" />
@@ -324,8 +357,14 @@
                                                  ToolTip="LinkedIn, InfoJobs, Tecnoempleo, web de la empresa, referido..." />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Ubicación" Style="{StaticResource Etiqueta}" />
-                                        <TextBox Style="{StaticResource Campo}" Text="{Binding Ubicacion}" />
+                                        <TextBlock Text="Vía de contacto" Style="{StaticResource Etiqueta}" />
+                                        <ComboBox Style="{StaticResource CampoCombo}"
+                                                  ItemsSource="{Binding DataContext.Origenes,
+                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  DisplayMemberPath="Descripcion"
+                                                  SelectedValuePath="Valor"
+                                                  SelectedValue="{Binding Origen}"
+                                                  ToolTip="Cómo llegó el contacto: distinto de dónde estaba publicada la oferta" />
                                     </StackPanel>
                                 </Grid>
 
@@ -336,6 +375,10 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Ubicación" Style="{StaticResource Etiqueta}" />
+                                        <TextBox Style="{StaticResource Campo}" Text="{Binding Ubicacion}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
                                         <TextBlock Text="Modalidad" Style="{StaticResource Etiqueta}" />
                                         <ComboBox Style="{StaticResource CampoCombo}"
                                                   ItemsSource="{Binding DataContext.Modalidades,
@@ -344,14 +387,13 @@
                                                   SelectedValuePath="Valor"
                                                   SelectedValue="{Binding Modalidad}" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Interés (1-5)" Style="{StaticResource Etiqueta}" />
-                                        <ComboBox Style="{StaticResource CampoCombo}"
-                                                  ItemsSource="{Binding DataContext.NivelesInteres,
-                                                                RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  SelectedItem="{Binding Interes}" />
-                                    </StackPanel>
                                 </Grid>
+
+                                <TextBlock Text="Interés (1-5)" Style="{StaticResource Etiqueta}" />
+                                <ComboBox Style="{StaticResource CampoCombo}" HorizontalAlignment="Left" MinWidth="120"
+                                          ItemsSource="{Binding DataContext.NivelesInteres,
+                                                        RelativeSource={RelativeSource AncestorType=Window}}"
+                                          SelectedItem="{Binding Interes}" />
 
                                 <TextBlock Text="Tecnologías de la oferta" Style="{StaticResource Etiqueta}" />
                                 <TextBox Style="{StaticResource Campo}" Text="{Binding Tecnologias}"
@@ -408,6 +450,16 @@
                                           SelectedValuePath="Valor"
                                           SelectedValue="{Binding Estado}" />
 
+                                <StackPanel Visibility="{Binding Estado, Converter={StaticResource EstadoEsRechazadaAVisibilidad}}">
+                                    <TextBlock Text="Motivo del rechazo" Style="{StaticResource Etiqueta}" />
+                                    <ComboBox Style="{StaticResource CampoCombo}"
+                                              ItemsSource="{Binding DataContext.MotivosRechazo,
+                                                            RelativeSource={RelativeSource AncestorType=Window}}"
+                                              DisplayMemberPath="Descripcion"
+                                              SelectedValuePath="Valor"
+                                              SelectedValue="{Binding MotivoRechazo}" />
+                                </StackPanel>
+
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -458,7 +510,9 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
@@ -468,6 +522,10 @@
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Email" Style="{StaticResource Etiqueta}" />
                                         <TextBox Style="{StaticResource Campo}" Text="{Binding ContactoEmail}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="Teléfono" Style="{StaticResource Etiqueta}" />
+                                        <TextBox Style="{StaticResource Campo}" Text="{Binding ContactoTelefono}" />
                                     </StackPanel>
                                 </Grid>
 

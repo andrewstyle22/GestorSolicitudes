@@ -66,3 +66,44 @@ public enum TipoEvento
     [Description("Rechazo")]
     Rechazo = 8,
 }
+
+/// <summary>
+/// Por qué se cerró en falso una candidatura. Solo tiene sentido cuando
+/// <see cref="EstadoSolicitud.Rechazada"/>; con suficientes candidaturas es el dato
+/// que más dice sobre qué ajustar (CV, pretensión salarial, a qué perfiles aplicar).
+/// </summary>
+public enum MotivoRechazo
+{
+    [Description("Salario / pretensión")]
+    Salario = 0,
+    [Description("Experiencia insuficiente")]
+    ExperienciaInsuficiente = 1,
+    [Description("Seleccionaron a otro candidato")]
+    SeleccionaronOtroCandidato = 2,
+    [Description("No encajaba con el equipo/cultura")]
+    CulturalFit = 3,
+    [Description("Puesto cancelado o pausado")]
+    PuestoCanceladoOPausado = 4,
+    [Description("Otro motivo")]
+    Otro = 5,
+}
+
+/// <summary>
+/// Cómo llegó la candidatura a existir: distinto de <see cref="Solicitud.Portal"/>,
+/// que dice dónde estaba publicada la oferta, no cómo se inició el contacto.
+/// </summary>
+public enum Origen
+{
+    [Description("Aplicación directa")]
+    AplicacionDirecta = 0,
+    [Description("Recruiter me contactó")]
+    RecruiterMeContacto = 1,
+    [Description("Referido por alguien")]
+    Referido = 2,
+    [Description("Networking / evento")]
+    Networking = 3,
+    [Description("Feria de empleo")]
+    FeriaDeEmpleo = 4,
+    [Description("Otro")]
+    Otro = 5,
+}

@@ -90,4 +90,45 @@ public class ConvertidorTests
         var fuera = (SolidColorBrush)conversor.Convert(3, typeof(Brush), "4", null!);
         Assert.Equal((byte)0xCB, fuera.Color.R); // gris #CBD5E1
     }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, Visibility.Visible)]
+    [InlineData(EstadoSolicitud.Enviada, Visibility.Collapsed)]
+    [InlineData(EstadoSolicitud.EnRevision, Visibility.Collapsed)]
+    [InlineData(EstadoSolicitud.OfertaAceptada, Visibility.Collapsed)]
+    [InlineData(EstadoSolicitud.Retirada, Visibility.Collapsed)]
+    public void EstadoEsRechazadaAVisibilidad_SoloRechazadaEsVisible(EstadoSolicitud estado, Visibility esperado)
+    {
+        var conversor = new EstadoEsRechazadaAVisibilidadConverter();
+        Assert.Equal(esperado, conversor.Convert(estado, typeof(Visibility), null, null!));
+    }
+
+    [Fact]
+    public void EstadoEsRechazadaAVisibilidad_ConValorNuloColapsado()
+    {
+        var conversor = new EstadoEsRechazadaAVisibilidadConverter();
+        Assert.Equal(Visibility.Collapsed, conversor.Convert(null, typeof(Visibility), null, null!));
+    }
+
+    [Theory]
+    [InlineData(1, "★☆☆☆☆")]
+    [InlineData(2, "★★☆☆☆")]
+    [InlineData(3, "★★★☆☆")]
+    [InlineData(4, "★★★★☆")]
+    [InlineData(5, "★★★★★")]
+    public void InteresATextoEstrellas_UnaEstrellaPorPunto(int interes, string esperado)
+    {
+        var conversor = new InteresATextoEstrellasConverter();
+        Assert.Equal(esperado, conversor.Convert(interes, typeof(string), null, null!));
+    }
+
+    [Fact]
+    public void InteresATextoEstrellas_AcotaFueraDeRangoYNulos()
+    {
+        var conversor = new InteresATextoEstrellasConverter();
+
+        Assert.Equal("☆☆☆☆☆", conversor.Convert(0, typeof(string), null, null!));
+        Assert.Equal("★★★★★", conversor.Convert(9, typeof(string), null, null!));
+        Assert.Equal("☆☆☆☆☆", conversor.Convert(null, typeof(string), null, null!));
+    }
 }
