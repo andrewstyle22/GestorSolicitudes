@@ -44,9 +44,8 @@ public partial class App : Application
 
         // Creamos la ventana aquí en lugar de con StartupUri: así el fallo de arriba
         // aborta de verdad el arranque y no dependemos de resolver una URI de recurso.
-        // ShutdownMode="OnExplicitShutdown" en App.xaml hace que cerrar esta ventana
-        // (o minimizarla a la bandeja) no cierre la aplicación: solo lo hace el
-        // comando "Salir" del icono de la bandeja, que llama a Shutdown() a mano.
+        // ShutdownMode="OnMainWindowClose" en App.xaml hace que cerrar la ventana
+        // (con la X o con el menú "Salir" de la bandeja) termine la aplicación.
         var ventana = new Views.MainWindow();
         MainWindow = ventana;
         ventana.Show();
