@@ -32,11 +32,24 @@ Ese fichero `.db` es todo tu histórico, así que cópialo de vez en cuando a On
 En el arranque, la app añade con un `ALTER TABLE` las columnas nuevas que no existan en una base
 ya creada por una versión anterior (porque `EnsureCreated()` no versiona el esquema).
 
+## Tests
+
+```bash
+dotnet test
+```
+
+xUnit sobre el código que admite pruebas sin abrir ventanas: validaciones y modelo de `Solicitud`,
+helpers (enum → texto, CSV de LinkedIn, adjuntos), el `AppDbContext` contra una base SQLite temporal,
+la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas).
+La app se abre a los tests con `[assembly: InternalsVisibleTo("GestorSolicitudes.Tests")]` y el
+ViewModel se construye con un contexto apuntando a una base temporal, para no tocar tu histórico.
+
 ## Qué se guarda de cada candidatura
 
 **La oferta**: empresa, puesto, enlace directo (con botón para abrirlo en el navegador), portal de
-origen, ubicación, modalidad, tecnologías pedidas, horquilla salarial, tu pretensión y un nivel de
-interés del 1 al 5 (con estrellas clicables).
+origen, ubicación, modalidad, tecnologías pedidas, horquilla salarial, tu pretensión, un nivel de
+interés del 1 al 5 (con estrellas clicables) y los requisitos del cargo (con botón *Leer* que los
+abre en una ventana más grande, con texto seleccionable y scroll, para leerlos con comodidad).
 
 **El proceso**: estado dentro del embudo, fecha de envío, fecha de la primera contestación, día de
 la entrevista, fecha de cierre, fecha de próximo seguimiento y el texto de la respuesta de la empresa.
@@ -75,11 +88,11 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   datos → *Obtener una copia de tus datos*) y crea candidaturas con empresa, puesto, fecha, ubicación,
   estado traducido y enlace a la oferta. Las filas que ya existan (misma empresa + puesto + fecha) se
   omiten y al final te dice cuántas entraron y cuántas se saltaron.
-- **Icono en la bandeja del sistema**: cerrar la ventana (la X, Alt+F4) no cierra la aplicación, la
-  oculta a la bandeja — solo *Salir* desde el menú del icono la cierra de verdad. Cada 5 minutos (y a
-  los pocos segundos de arrancar) revisa si hay seguimientos vencidos y avisa con un globo junto al
-  reloj de Windows; el menú del icono permite reabrir la ventana, comprobar manualmente y salir. Cada
-  candidatura avisa una sola vez por sesión.
+- **Icono en la bandeja del sistema**: cerrar la ventana (la X o Alt+F4) termina la aplicación del
+  todo; el menú del icono permite reabrir la ventana, comprobar seguimientos y *Salir*. Mientras la
+  app está abierta, cada 5 minutos (y a los pocos segundos de arrancar) revisa si hay seguimientos
+  vencidos y avisa con un globo junto al reloj de Windows. Cada candidatura avisa una sola vez por
+  sesión.
 - **Gráfica de embudo** (botón *Ver gráfica* de la cabecera): enviadas → respondidas → entrevistas →
   ofertas de los últimos 12 meses, contadas por el historial (hito "Solicitud enviada", primera
   contestación, hitos de entrevista y de oferta), así cada mes cuenta lo que pasó ese mes. Se refresca
@@ -102,6 +115,7 @@ Views/           MainWindow: lista maestra + panel de detalle + gráfica + icono
 Converters/      enum → texto, null → Visibility, estado → color, interés → color de estrella
 Helpers/         EnumHelper: lee los [Description] por reflexión
                  AdjuntosHelper: copia/borra CV y carta en %APPDATA%\...\adjuntos
+GestorSolicitudes.Tests/  xUnit: modelo, helpers, CSV, contexto SQLite y lógica del ViewModel
 ```
 
 ## Decisiones que conviene conocer antes de tocarlo
@@ -134,6 +148,11 @@ y cambia `EnsureCreated()` por `db.Database.Migrate()` en `App.xaml.cs`.
 **Los `MessageBox` viven en el ViewModel.** No es MVVM de manual; lo ortodoxo sería un
 `IDialogService` inyectado. Para una herramienta personal es ruido, pero si la usas como proyecto
 de portfolio, extraer ese servicio es la primera mejora que un revisor va a buscar.
+
+**Estilo guiado por StyleCop.** El analizador `StyleCop.Analyzers` corre sobre la app con un juego
+mínimo de reglas activas (ver `.editorconfig` y `stylecop.json`): nada de documentación XML
+obligatoria ni cabeceras de copyright. `dotnet format` deja el código formateado y
+`dotnet format --verify-no-changes` verifica que no haya nada pendiente.
 
 ## Ideas para seguir
 
