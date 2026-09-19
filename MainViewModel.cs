@@ -918,6 +918,10 @@ public partial class MainViewModel : ObservableObject
         this.TextoBusqueda = this.Edicion.Empresa;
     }
 
+    /// <summary>Borra el texto de búsqueda para volver a mostrar la lista completa.</summary>
+    [RelayCommand]
+    private void LimpiarBusqueda() => this.TextoBusqueda = string.Empty;
+
     [RelayCommand]
     private void Guardar()
     {

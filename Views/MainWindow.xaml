@@ -156,9 +156,20 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBox Grid.Column="0" Style="{StaticResource Campo}"
-                                 Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged, Delay=250}"
-                                 ToolTip="Busca por empresa, puesto, tecnología, ubicación o portal" />
+                        <Grid Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Style="{StaticResource Campo}"
+                                     Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged, Delay=250}"
+                                     ToolTip="Busca por empresa, puesto, tecnología, ubicación o portal" />
+                            <Button Grid.Column="1" Content="✕" Margin="6,0,0,0"
+                                    Padding="9,2" VerticalAlignment="Center"
+                                    Style="{StaticResource BotonSecundario}"
+                                    ToolTip="Borrar la búsqueda"
+                                    Command="{Binding LimpiarBusquedaCommand}" />
+                        </Grid>
 
                         <ComboBox Grid.Column="1" Width="190" Margin="8,0,0,0"
                                   Style="{StaticResource CampoCombo}"

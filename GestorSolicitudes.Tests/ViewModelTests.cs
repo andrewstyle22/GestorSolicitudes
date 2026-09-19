@@ -189,6 +189,26 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void LimpiarBusqueda_VaciaElTextoYRestauraLaListaCompleta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        db.Solicitudes.Add(new Solicitud { Empresa = "Grupo Métricas", Puesto = "Data" });
+        db.Solicitudes.Add(new Solicitud { Empresa = "Otra empresa", Puesto = "Dev" });
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.TextoBusqueda = "metricas";
+        Assert.Single(vm.Solicitudes);
+
+        vm.LimpiarBusquedaCommand.Execute(null);
+
+        Assert.Equal(string.Empty, vm.TextoBusqueda);
+        Assert.Equal(2, vm.Solicitudes.Count);
+    }
+
+    [Fact]
     public void Estadisticas_CalculanTasaYMediaDeRespuesta()
     {
         using var db = TestDb.NuevoContexto();
