@@ -1,6 +1,10 @@
-﻿using System.IO;
+﻿// <copyright file="AdjuntosHelper.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace GestorSolicitudes.Helpers;
+
+using System.IO;
 
 /// <summary>
 /// Copia y borra los adjuntos (CV, carta) en %APPDATA%\GestorSolicitudes\adjuntos.
@@ -17,9 +21,11 @@ public static class AdjuntosHelper
         "adjuntos");
 
     /// <summary>Copia el fichero elegido a la carpeta de adjuntos y devuelve su nueva ruta.</summary>
+    /// <returns></returns>
     public static string Copiar(string origen, string etiqueta) => CopiarEn(origen, etiqueta, Carpeta);
 
     /// <summary>Copia a una carpeta concreta (sobrecarga interna usada por los tests).</summary>
+    /// <returns></returns>
     internal static string CopiarEn(string origen, string etiqueta, string carpeta)
     {
         Directory.CreateDirectory(carpeta);
@@ -38,17 +44,26 @@ public static class AdjuntosHelper
     /// <summary>Borra de una carpeta concreta (sobrecarga interna usada por los tests).</summary>
     internal static void EliminarDe(string? ruta, string carpeta)
     {
-        if (string.IsNullOrWhiteSpace(ruta)) return;
+        if (string.IsNullOrWhiteSpace(ruta))
+        {
+            return;
+        }
 
         bool esNuestraCarpeta = ruta.StartsWith(
             carpeta + Path.DirectorySeparatorChar,
             StringComparison.OrdinalIgnoreCase);
 
-        if (!esNuestraCarpeta) return;
+        if (!esNuestraCarpeta)
+        {
+            return;
+        }
 
         try
         {
-            if (File.Exists(ruta)) File.Delete(ruta);
+            if (File.Exists(ruta))
+            {
+                File.Delete(ruta);
+            }
         }
         catch
         {

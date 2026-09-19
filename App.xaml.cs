@@ -1,11 +1,15 @@
-﻿using System.Globalization;
+﻿// <copyright file="App.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace GestorSolicitudes;
+
+using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
 using GestorSolicitudes.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-
-namespace GestorSolicitudes;
 
 public partial class App : Application
 {
@@ -38,7 +42,7 @@ public partial class App : Application
             MessageBox.Show(
                 $"No se pudo preparar la base de datos:\n\n{ex.Message}\n\nRuta: {AppDbContext.RutaBaseDatos}",
                 "Error al iniciar", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown();
+            this.Shutdown();
             return;
         }
 
@@ -47,7 +51,7 @@ public partial class App : Application
         // ShutdownMode="OnMainWindowClose" en App.xaml hace que cerrar la ventana
         // (con la X o con el menú "Salir" de la bandeja) termine la aplicación.
         var ventana = new Views.MainWindow();
-        MainWindow = ventana;
+        this.MainWindow = ventana;
         ventana.Show();
     }
 
@@ -68,15 +72,20 @@ public partial class App : Application
             command.CommandText = "PRAGMA table_info(Solicitudes);";
             using var lector = command.ExecuteReader();
             while (lector.Read())
+            {
                 columnas.Add(Convert.ToString(lector["name"]) ?? string.Empty);
+            }
         }
 
         foreach (string columna in new[]
 {
-    "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos"
+    "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos",
 })
         {
-            if (columnas.Contains(columna)) continue;
+            if (columnas.Contains(columna))
+            {
+                continue;
+            }
 
             using var command = conexion.CreateCommand();
             command.CommandText = $"ALTER TABLE Solicitudes ADD COLUMN \"{columna}\" TEXT NULL;";

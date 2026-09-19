@@ -1,31 +1,35 @@
-﻿using System.Windows;
+﻿// <copyright file="MainWindow.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace GestorSolicitudes.Views;
+
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Hardcodet.Wpf.TaskbarNotification;
 
-namespace GestorSolicitudes.Views;
-
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _vm;
-    private readonly HashSet<int> _idsVencidosAvisados = new();
-    private DispatcherTimer? _temporizadorRecordatorios;
+    private readonly MainViewModel vm;
+    private readonly HashSet<int> idsVencidosAvisados = new();
+    private DispatcherTimer? temporizadorRecordatorios;
 
     public MainWindow()
     {
-        InitializeComponent();
+        this.InitializeComponent();
 
-        _vm = new MainViewModel();
-        DataContext = _vm;
+        this.vm = new MainViewModel();
+        this.DataContext = this.vm;
 
         // Ctrl+N nueva candidatura, Ctrl+S guardar.
-        InputBindings.Add(new KeyBinding(_vm.NuevaCommand, Key.N, ModifierKeys.Control));
-        InputBindings.Add(new KeyBinding(_vm.GuardarCommand, Key.S, ModifierKeys.Control));
+        this.InputBindings.Add(new KeyBinding(this.vm.NuevaCommand, Key.N, ModifierKeys.Control));
+        this.InputBindings.Add(new KeyBinding(this.vm.GuardarCommand, Key.S, ModifierKeys.Control));
 
-        IconoBandeja.Icon = System.Drawing.SystemIcons.Application;
-        ArrancarRecordatorios();
+        this.IconoBandeja.Icon = System.Drawing.SystemIcons.Application;
+        this.ArrancarRecordatorios();
     }
 
     // ------------------------------------------------------------ Recordatorios
@@ -40,64 +44,69 @@ public partial class MainWindow : Window
         primera.Tick += (_, _) =>
         {
             primera.Stop();
-            ComprobarSeguimientosVencidos();
+            this.ComprobarSeguimientosVencidos();
         };
         primera.Start();
 
-        _temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
-        _temporizadorRecordatorios.Tick += (_, _) => ComprobarSeguimientosVencidos();
-        _temporizadorRecordatorios.Start();
+        this.temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+        this.temporizadorRecordatorios.Tick += (_, _) => this.ComprobarSeguimientosVencidos();
+        this.temporizadorRecordatorios.Start();
     }
 
     private void ComprobarSeguimientosVencidos()
     {
-        List<Solicitud> vencidos = _vm.SeguimientosVencidosAhora();
+        List<Solicitud> vencidos = this.vm.SeguimientosVencidosAhora();
         List<Solicitud> nuevos = vencidos
-            .Where(s => _idsVencidosAvisados.Add(s.Id))
+            .Where(s => this.idsVencidosAvisados.Add(s.Id))
             .ToList();
 
-        if (nuevos.Count == 0) return;
+        if (nuevos.Count == 0)
+        {
+            return;
+        }
 
         if (nuevos.Count == 1)
         {
             Solicitud s = nuevos[0];
-            IconoBandeja.ShowBalloonTip(
+            this.IconoBandeja.ShowBalloonTip(
                 "Seguimiento vencido",
                 $"{s.Empresa} — {s.Puesto}. Pendiente desde el {s.ProximoSeguimiento:dd/MM/yyyy}.",
                 BalloonIcon.Info);
         }
         else
         {
-            IconoBandeja.ShowBalloonTip(
+            this.IconoBandeja.ShowBalloonTip(
                 $"{nuevos.Count} seguimientos vencidos",
                 string.Join("\n", nuevos.Take(4).Select(s => $"• {s.Empresa} — {s.Puesto}")),
                 BalloonIcon.Warning);
         }
 
         // Refresca también el contador y el filtro de la cabecera.
-        _vm.Recargar();
+        this.vm.Recargar();
     }
 
     // ------------------------------------------------------------ Bandeja
+    private void IconoBandeja_DobleClic(object? sender, RoutedEventArgs e) => this.MostrarVentana();
 
-    private void IconoBandeja_DobleClic(object? sender, RoutedEventArgs e) => MostrarVentana();
+    private void MenuAbrir_Click(object? sender, RoutedEventArgs e) => this.MostrarVentana();
 
-    private void MenuAbrir_Click(object? sender, RoutedEventArgs e) => MostrarVentana();
-
-    private void MenuComprobar_Click(object? sender, RoutedEventArgs e) => ComprobarSeguimientosVencidos();
+    private void MenuComprobar_Click(object? sender, RoutedEventArgs e) => this.ComprobarSeguimientosVencidos();
 
     private void MenuSalir_Click(object? sender, RoutedEventArgs e)
     {
-        IconoBandeja.Visibility = Visibility.Hidden;
-        Close();
+        this.IconoBandeja.Visibility = Visibility.Hidden;
+        this.Close();
     }
 
     private void MostrarVentana()
     {
-        Show();
-        if (WindowState == WindowState.Minimized)
-            WindowState = WindowState.Normal;
-        Activate();
+        this.Show();
+        if (this.WindowState == WindowState.Minimized)
+        {
+            this.WindowState = WindowState.Normal;
+        }
+
+        this.Activate();
     }
 
     // ------------------------------------------------------------ Detalle
@@ -115,7 +124,7 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(System.EventArgs e)
     {
-        IconoBandeja.Visibility = Visibility.Hidden;
+        this.IconoBandeja.Visibility = Visibility.Hidden;
         base.OnClosed(e);
     }
 }

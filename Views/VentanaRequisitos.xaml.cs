@@ -1,15 +1,19 @@
-using System.Windows;
+// <copyright file="VentanaRequisitos.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace GestorSolicitudes.Views;
+
+using System.Windows;
 
 public partial class VentanaRequisitos : Window
 {
     public VentanaRequisitos(string texto)
     {
-        InitializeComponent();
-        TextoRequisitos.Text = texto;
-        Owner = Application.Current.MainWindow;
+        this.InitializeComponent();
+        this.TextoRequisitos.Text = texto;
+        this.Owner = Application.Current.MainWindow;
     }
 
-    private void Cerrar_Click(object? sender, RoutedEventArgs e) => Close();
+    private void Cerrar_Click(object? sender, RoutedEventArgs e) => this.Close();
 }

@@ -1,11 +1,15 @@
-﻿using System.Globalization;
+﻿// <copyright file="Convertidores.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace GestorSolicitudes.Converters;
+
+using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Converters;
 
 /// <summary>Muestra el [Description] de un enum en lugar de su nombre en código.</summary>
 public class EnumDescripcionConverter : IValueConverter
@@ -24,7 +28,10 @@ public class NuloAVisibilidadConverter : IValueConverter
     {
         bool visible = value is not null;
         if (string.Equals(parameter as string, "invertir", StringComparison.OrdinalIgnoreCase))
+        {
             visible = !visible;
+        }
+
         return visible ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -51,7 +58,7 @@ public class EstadoAColorConverter : IValueConverter
             EstadoSolicitud.Rechazada => "#DC2626",
             EstadoSolicitud.Retirada => "#B45309",
             EstadoSolicitud.SinRespuesta => "#94A3B8",
-            _ => "#64748B"
+            _ => "#64748B",
         };
 
         return new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
