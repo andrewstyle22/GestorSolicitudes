@@ -12,6 +12,12 @@
     <AssemblyName>GestorSolicitudes</AssemblyName>
     <LangVersion>latest</LangVersion>
 
+    <!-- Genera el XML de documentación: StyleCop lo necesita para analizar los comentarios
+         (si no, avisa con SA0001). Como la documentación no es obligatoria en este proyecto,
+         no avisamos por miembros sin documentar (CS1573/CS1591/CS1712). -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1573;1591;1712</NoWarn>
+
     <!-- La carpeta de tests es su propio proyecto: no debe compilarse dentro de la app. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);GestorSolicitudes.Tests\**</DefaultItemExcludes>
 
@@ -47,6 +53,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <!-- Configuración de StyleCop (companyName, reglas documentadas, etc.).
+       Sin esta línea el archivo stylecop.json se ignora y el analizador usa las reglas por defecto. -->
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
 
   <!-- WinForms solo se usa para el icono de la bandeja (System.Drawing):

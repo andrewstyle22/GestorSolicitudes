@@ -1,8 +1,4 @@
-﻿// <copyright file="App.xaml.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes;
+﻿namespace GestorSolicitudes;
 
 using System.Globalization;
 using System.Windows;
@@ -77,10 +73,8 @@ public partial class App : Application
             }
         }
 
-        foreach (string columna in new[]
-{
-    "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos",
-})
+        string[] nuevas = { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos" };
+        foreach (string columna in nuevas)
         {
             if (columnas.Contains(columna))
             {

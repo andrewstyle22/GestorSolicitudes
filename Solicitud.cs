@@ -1,8 +1,4 @@
-﻿// <copyright file="Solicitud.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes.Models;
+﻿namespace GestorSolicitudes.Models;
 
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;

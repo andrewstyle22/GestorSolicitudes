@@ -1,8 +1,4 @@
-﻿// <copyright file="Convertidores.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes.Converters;
+﻿namespace GestorSolicitudes.Converters;
 
 using System.Globalization;
 using System.Windows;

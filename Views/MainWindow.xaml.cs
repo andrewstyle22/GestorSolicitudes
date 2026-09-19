@@ -1,8 +1,4 @@
-﻿// <copyright file="MainWindow.xaml.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes.Views;
+﻿namespace GestorSolicitudes.Views;
 
 using System.Windows;
 using System.Windows.Input;

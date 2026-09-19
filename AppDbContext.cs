@@ -1,8 +1,4 @@
-﻿// <copyright file="AppDbContext.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes.Data;
+﻿namespace GestorSolicitudes.Data;
 
 using System.IO;
 using GestorSolicitudes.Models;
@@ -30,7 +26,7 @@ public class AppDbContext : DbContext
     {
     }
 
-    /// <summary>Initializes a new instance of the <see cref="AppDbContext"/> class.Permite apuntar a otra base (p. ej. una temporal, en los tests).</summary>
+    /// <summary>Apunta a una base de datos concreta (p. ej. una temporal, en los tests).</summary>
     public AppDbContext(string rutaBaseDatos)
     {
         this.rutaBaseDatos = rutaBaseDatos;

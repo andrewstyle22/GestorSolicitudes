@@ -1,8 +1,4 @@
-﻿// <copyright file="MainViewModel.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes.ViewModels;
+﻿namespace GestorSolicitudes.ViewModels;
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -183,7 +179,6 @@ public partial class MainViewModel : ObservableObject
     /// teclear "metrica" encuentra "Métrica". Se aplica igual al texto buscado y a
     /// los campos, así la comparación es estable.
     /// </summary>
-    /// <returns></returns>
     internal static string NormalizarBusqueda(string valor)
     {
         string descompuesto = valor.ToLowerInvariant().Normalize(NormalizationForm.FormD);
@@ -329,7 +324,6 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
-    /// <returns></returns>
     public List<Solicitud> SeguimientosVencidosAhora()
     {
         DateTime hoy = DateTime.Today;
@@ -360,15 +354,21 @@ public partial class MainViewModel : ObservableObject
     private void AdjuntarCv() => this.AdjuntarAdjunto(
         "Selecciona el CV que enviaste", "cv",
         obtenerRuta: e => e.RutaCv,
-        asignar: (e, ruta, nombre) => { e.RutaCv = ruta;
-            e.NombreOriginalCv = nombre; });
+        asignar: (e, ruta, nombre) =>
+        {
+            e.RutaCv = ruta;
+            e.NombreOriginalCv = nombre;
+        });
 
     [RelayCommand]
     private void AdjuntarCarta() => this.AdjuntarAdjunto(
         "Selecciona la carta de presentación", "carta",
         obtenerRuta: e => e.RutaCarta,
-        asignar: (e, ruta, nombre) => { e.RutaCarta = ruta;
-            e.NombreOriginalCarta = nombre; });
+        asignar: (e, ruta, nombre) =>
+        {
+            e.RutaCarta = ruta;
+            e.NombreOriginalCarta = nombre;
+        });
 
     private void AdjuntarAdjunto(
         string titulo, string etiqueta,
@@ -413,13 +413,19 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void QuitarCv() => this.QuitarAdjunto(
-        e => e.RutaCv, e => { e.RutaCv = null;
-            e.NombreOriginalCv = null; });
+        e => e.RutaCv, e =>
+        {
+            e.RutaCv = null;
+            e.NombreOriginalCv = null;
+        });
 
     [RelayCommand]
     private void QuitarCarta() => this.QuitarAdjunto(
-        e => e.RutaCarta, e => { e.RutaCarta = null;
-            e.NombreOriginalCarta = null; });
+        e => e.RutaCarta, e =>
+        {
+            e.RutaCarta = null;
+            e.NombreOriginalCarta = null;
+        });
 
     private void QuitarAdjunto(Func<Solicitud, string?> obtenerRuta, Action<Solicitud> limpiar)
     {
@@ -667,7 +673,6 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Localiza cada columna útil del CSV de LinkedIn por el nombre de la cabecera.</summary>
-    /// <returns></returns>
     internal static Dictionary<string, int> IdentificarColumnas(List<string> cabecera)
     {
         var resultado = new Dictionary<string, int>();
@@ -723,7 +728,6 @@ public partial class MainViewModel : ObservableObject
     /// Deja la cabecera en minúsculas y solo con letras/dígitos ASCII, quitando también
     /// las tildes: así "Ubicación" y "Ubicacion" identifican la misma columna.
     /// </summary>
-    /// <returns></returns>
     internal static string NormalizarCabecera(string valor)
     {
         string descompuesto = valor.Normalize(NormalizationForm.FormD);
@@ -755,7 +759,6 @@ public partial class MainViewModel : ObservableObject
     internal static string? Nulo(string valor) => valor.Length == 0 ? null : valor;
 
     /// <summary>Lee un CSV respetando comillas y detecta si el separador es ';' o ','.</summary>
-    /// <returns></returns>
     internal static List<List<string>> LeerCsv(string ruta)
     {
         var lineas = new List<List<string>>();

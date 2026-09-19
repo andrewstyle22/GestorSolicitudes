@@ -1,8 +1,4 @@
-﻿// <copyright file="AdjuntosHelper.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes.Helpers;
+﻿namespace GestorSolicitudes.Helpers;
 
 using System.IO;
 
@@ -21,11 +17,9 @@ public static class AdjuntosHelper
         "adjuntos");
 
     /// <summary>Copia el fichero elegido a la carpeta de adjuntos y devuelve su nueva ruta.</summary>
-    /// <returns></returns>
     public static string Copiar(string origen, string etiqueta) => CopiarEn(origen, etiqueta, Carpeta);
 
     /// <summary>Copia a una carpeta concreta (sobrecarga interna usada por los tests).</summary>
-    /// <returns></returns>
     internal static string CopiarEn(string origen, string etiqueta, string carpeta)
     {
         Directory.CreateDirectory(carpeta);

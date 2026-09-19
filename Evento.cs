@@ -1,8 +1,4 @@
-﻿// <copyright file="Evento.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace GestorSolicitudes.Models;
+﻿namespace GestorSolicitudes.Models;
 
 using System.ComponentModel.DataAnnotations;
 
