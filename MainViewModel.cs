@@ -38,6 +38,11 @@ public partial class MainViewModel : ObservableObject
         this.Estados = EnumHelper.Valores<EstadoSolicitud>();
         this.Modalidades = EnumHelper.Valores<Modalidad>();
         this.TiposEvento = EnumHelper.Valores<TipoEvento>();
+        this.Origenes = EnumHelper.Valores<Origen>();
+
+        this.MotivosRechazo = new List<EnumItem> { new(null, "Sin especificar") }
+            .Concat(EnumHelper.Valores<MotivoRechazo>())
+            .ToList();
 
         this.EstadosFiltro = new List<EnumItem> { new(null, "Todos los estados") }
             .Concat(this.Estados)
@@ -57,6 +62,12 @@ public partial class MainViewModel : ObservableObject
     public IReadOnlyList<EnumItem> Modalidades { get; }
 
     public IReadOnlyList<EnumItem> TiposEvento { get; }
+
+    /// <summary>Gets vías de contacto (aplicación directa, recruiter, referido...), para el desplegable.</summary>
+    public IReadOnlyList<EnumItem> Origenes { get; }
+
+    /// <summary>Gets motivos de rechazo, con un valor "sin especificar" al principio para poder dejarlo en blanco.</summary>
+    public IReadOnlyList<EnumItem> MotivosRechazo { get; }
 
     /// <summary>Gets valores posibles del interés (1 a 5), para el desplegable del panel de detalle.</summary>
     public IReadOnlyList<int> NivelesInteres { get; } = new[] { 1, 2, 3, 4, 5 };
@@ -890,6 +901,26 @@ public partial class MainViewModel : ObservableObject
         this.SolicitudSeleccionada = null;
         this.Edicion = copia;
     }
+
+    /// <summary>
+    /// Filtra la lista a todas las candidaturas de la misma empresa (usando la
+    /// búsqueda de texto ya existente): la forma más barata de "agrupar por
+    /// empresa" sin construir una vista nueva.
+    /// </summary>
+    [RelayCommand]
+    private void VerCandidaturasDeEstaEmpresa()
+    {
+        if (this.Edicion is null || string.IsNullOrWhiteSpace(this.Edicion.Empresa))
+        {
+            return;
+        }
+
+        this.TextoBusqueda = this.Edicion.Empresa;
+    }
+
+    /// <summary>Borra el texto de búsqueda para volver a mostrar la lista completa.</summary>
+    [RelayCommand]
+    private void LimpiarBusqueda() => this.TextoBusqueda = string.Empty;
 
     [RelayCommand]
     private void Guardar()

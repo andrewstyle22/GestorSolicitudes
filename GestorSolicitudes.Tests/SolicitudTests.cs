@@ -13,6 +13,53 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void DiasProceso_AbiertaCoincideConDiasDesdeSolicitud()
+    {
+        var s = new Solicitud
+        {
+            Estado = EstadoSolicitud.Enviada,
+            FechaSolicitud = DateTime.Today.AddDays(-5)
+        };
+        Assert.Equal(s.DiasDesdeSolicitud, s.DiasProceso);
+    }
+
+    [Fact]
+    public void DiasProceso_CerradaMuestraLaDuracionHastaElCierre()
+    {
+        var s = new Solicitud
+        {
+            Estado = EstadoSolicitud.Rechazada,
+            FechaSolicitud = new DateTime(2026, 1, 10),
+            FechaCierre = new DateTime(2026, 1, 21)
+        };
+        Assert.Equal(11, s.DiasProceso);
+    }
+
+    [Fact]
+    public void DiasProceso_CerradaSinFechaDeCierreCaeAHoy()
+    {
+        var s = new Solicitud
+        {
+            Estado = EstadoSolicitud.Rechazada,
+            FechaSolicitud = DateTime.Today.AddDays(-3),
+            FechaCierre = null
+        };
+        Assert.Equal(3, s.DiasProceso);
+    }
+
+    [Fact]
+    public void MotivoRechazo_PorDefectoEsNulo()
+    {
+        Assert.Null(new Solicitud().MotivoRechazo);
+    }
+
+    [Fact]
+    public void Origen_PorDefectoEsAplicacionDirecta()
+    {
+        Assert.Equal(Origen.AplicacionDirecta, new Solicitud().Origen);
+    }
+
+    [Fact]
     public void DiasHastaRespuesta_ConRespuesta_DevuelveDias()
     {
         var baseFecha = new DateTime(2026, 1, 10);

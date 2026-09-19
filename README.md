@@ -47,17 +47,21 @@ ViewModel se construye con un contexto apuntando a una base temporal, para no to
 ## Qué se guarda de cada candidatura
 
 **La oferta**: empresa, puesto, enlace directo (con botón para abrirlo en el navegador), portal de
-origen, ubicación, modalidad, tecnologías pedidas, horquilla salarial, tu pretensión, un nivel de
-interés del 1 al 5 (con estrellas clicables) y los requisitos del cargo (con botón *Leer* que los
-abre en una ventana más grande, con texto seleccionable y scroll, para leerlos con comodidad).
+origen, vía de contacto (cómo llegó el contacto: aplicación directa, recruiter, referido, networking,
+feria de empleo...), ubicación, modalidad, tecnologías pedidas, horquilla salarial, tu pretensión, un
+nivel de interés del 1 al 5 (con estrellas clicables) y los requisitos del cargo (con botón *Leer*
+que los abre en una ventana más grande, con texto seleccionable y scroll, para leerlos con comodidad).
 
 **El proceso**: estado dentro del embudo, fecha de envío, fecha de la primera contestación, día de
-la entrevista, fecha de cierre, fecha de próximo seguimiento y el texto de la respuesta de la empresa.
+la entrevista, fecha de cierre, fecha de próximo seguimiento y el texto de la respuesta de la empresa. Al marcar el
+estado como *Descartado por la empresa* aparece un desplegable para anotar el motivo del rechazo
+(salario, experiencia insuficiente, otro candidato, ajuste cultural, puesto cancelado u otro), el dato
+que con suficientes candidaturas mejor dice qué ajustar.
 Si dejas el próximo seguimiento en blanco, al guardar se propone automáticamente una fecha 7 días
 después del envío, para que el aviso de "seguimiento pendiente" no dependa de que te acuerdes de
 rellenarlo a mano.
 
-**El contacto**: nombre y email del recruiter o la persona técnica.
+**El contacto**: nombre, email y teléfono del recruiter o la persona técnica.
 
 **El historial**: una lista de hitos con fecha y tipo (llamada, prueba técnica, entrevista, oferta,
 rechazo...). Esto es lo que hace que funcione cuando un proceso tiene tres entrevistas en vez de una:
@@ -82,6 +86,15 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   los mismos datos de la oferta —empresa, puesto, ubicación, tecnologías, salario, interés— pero sin
   fechas de proceso, contacto ni adjuntos: pensado para reaplicar a la misma empresa en otro puesto,
   o a una oferta calcada de otra fuente.
+- La columna **Días** de la tabla cuenta desde el envío mientras el proceso sigue abierto; en cuanto
+  lo cierras se congela y muestra cuánto duró en total hasta la fecha de cierre.
+- La tabla muestra además **Seguimiento** (la próxima fecha de contacto) e **Interés** en estrellas,
+  y todas sus columnas se pueden ordenar clicando la cabecera.
+- El botón **Ver todas** junto al campo *Empresa* filtra la lista a todas las candidaturas de esa
+  empresa, reutilizando la búsqueda de texto.
+- El panel de detalle está en **tres pestañas** —*Oferta*, *Seguimiento* y *Adjuntos e historial*—
+  para no tener que hacer scroll de quince bloques seguidos: *Empresa* y *Puesto* quedan siempre a la
+  vista arriba y los botones de *Eliminar/Duplicar/Cancelar/Guardar* abajo. Se abre siempre en *Oferta*.
 - **Exportar CSV** saca todo con `;` y UTF-8 con BOM, así que Excel en español lo abre en columnas
   directamente sin el asistente de importación.
 - **Importar LinkedIn** lee el CSV de "Mis candidaturas" que exporta LinkedIn (Ajustes → Privacidad de

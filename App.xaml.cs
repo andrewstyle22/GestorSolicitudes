@@ -85,5 +85,27 @@ public partial class App : Application
             command.CommandText = $"ALTER TABLE Solicitudes ADD COLUMN \"{columna}\" TEXT NULL;";
             command.ExecuteNonQuery();
         }
+
+        // Los enums se guardan como entero; Origen es NOT NULL con valor por defecto
+        // (0 = AplicacionDirecta) para que las filas ya existentes queden con un
+        // valor válido en vez de nulo.
+        (string Columna, string Definicion)[] nuevasTipadas =
+        {
+            ("MotivoRechazo", "INTEGER NULL"),
+            ("Origen", "INTEGER NOT NULL DEFAULT 0"),
+            ("ContactoTelefono", "TEXT NULL"),
+        };
+
+        foreach ((string columna, string definicion) in nuevasTipadas)
+        {
+            if (columnas.Contains(columna))
+            {
+                continue;
+            }
+
+            using var command = conexion.CreateCommand();
+            command.CommandText = $"ALTER TABLE Solicitudes ADD COLUMN \"{columna}\" {definicion};";
+            command.ExecuteNonQuery();
+        }
     }
 }
