@@ -69,7 +69,10 @@ public partial class App : Application
                 columnas.Add(Convert.ToString(lector["name"]) ?? string.Empty);
         }
 
-        foreach (string columna in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta" })
+        foreach (string columna in new[]
+{
+    "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos"
+})
         {
             if (columnas.Contains(columna)) continue;
 

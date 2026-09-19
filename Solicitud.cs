@@ -36,6 +36,10 @@ public class Solicitud
     [MaxLength(300)]
     public string? Tecnologias { get; set; }
 
+    /// <summary>Requisitos, obligaciones y responsabilidades del puesto, tal como los publicó la empresa.</summary>
+    [MaxLength(4000)]
+    public string? Requisitos { get; set; }
+
     // --- Económico (euros brutos anuales) ---
     public int? SalarioMin { get; set; }
     public int? SalarioMax { get; set; }

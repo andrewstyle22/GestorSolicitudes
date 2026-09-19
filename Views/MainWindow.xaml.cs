@@ -100,6 +100,19 @@ public partial class MainWindow : Window
         Activate();
     }
 
+    // ------------------------------------------------------------ Detalle
+
+    /// <summary>Muestra los requisitos del cargo en una ventana grande si hay texto.</summary>
+    private void VerRequisitos_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Solicitud solicitud }
+            && !string.IsNullOrWhiteSpace(solicitud.Requisitos))
+        {
+            var ventana = new VentanaRequisitos(solicitud.Requisitos) { Owner = this };
+            ventana.ShowDialog();
+        }
+    }
+
     protected override void OnClosed(System.EventArgs e)
     {
         IconoBandeja.Visibility = Visibility.Hidden;

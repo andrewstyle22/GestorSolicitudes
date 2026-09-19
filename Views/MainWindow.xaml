@@ -382,6 +382,22 @@
                                     </StackPanel>
                                 </Grid>
 
+                                <TextBlock Text="Requisitos del cargo" Style="{StaticResource Etiqueta}" />
+                                <Grid Margin="0,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Style="{StaticResource CampoMultilinea}"
+                                             MinHeight="90"
+                                             Text="{Binding Requisitos}"
+                                             ToolTip="Requisitos, responsabilidades y funciones del puesto" />
+                                    <Button Grid.Column="1" Content="Leer" Margin="8,0,0,0"
+                                            Padding="12,8" VerticalAlignment="Center"
+                                            Style="{StaticResource BotonSecundario}"
+                                            Click="VerRequisitos_Click" />
+                                </Grid>
+
                                 <TextBlock Text="PROCESO" Style="{StaticResource TituloSeccion}" />
 
                                 <TextBlock Text="Estado actual" Style="{StaticResource Etiqueta}" />
