@@ -42,6 +42,9 @@ xUnit sobre el código que admite pruebas sin abrir ventanas: validaciones y mod
 helpers (enum → texto, CSV de LinkedIn, adjuntos), la localización (cobertura y paridad de claves
 entre los tres idiomas), el `AppDbContext` contra una base SQLite temporal,
 la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas).
+También corre **ArchUnitNET**: reglas de arquitectura que vigilan que las capas solo dependan
+"hacia abajo" (lo típico: los ViewModels no tocan las Vistas, las Vistas solo se usan desde el
+arranque). Un `MessageBox` nuevo en el ViewModel o un using de más a una capa prohibida se cae en el CI.
 La app se abre a los tests con `[assembly: InternalsVisibleTo("GestorSolicitudes.Tests")]` y el
 ViewModel se construye con un contexto apuntando a una base temporal, para no tocar tu histórico.
 
