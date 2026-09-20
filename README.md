@@ -39,7 +39,8 @@ dotnet test
 ```
 
 xUnit sobre el código que admite pruebas sin abrir ventanas: validaciones y modelo de `Solicitud`,
-helpers (enum → texto, CSV de LinkedIn, adjuntos), el `AppDbContext` contra una base SQLite temporal,
+helpers (enum → texto, CSV de LinkedIn, adjuntos), la localización (cobertura y paridad de claves
+entre los tres idiomas), el `AppDbContext` contra una base SQLite temporal,
 la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas).
 La app se abre a los tests con `[assembly: InternalsVisibleTo("GestorSolicitudes.Tests")]` y el
 ViewModel se construye con un contexto apuntando a una base temporal, para no tocar tu histórico.
@@ -81,6 +82,10 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
 - La cabecera calcula **tasa de respuesta** y **media de días hasta la primera contestación**. Con
   treinta o cuarenta candidaturas esos dos números te dicen bastante sobre si el CV está filtrando
   bien o si estás disparando a ofertas equivocadas.
+- La interfaz está en **español, inglés y alemán**, con un selector de banderas en la cabecera. El
+  cambio es inmediato —textos, fechas y números incluidos— y no hace falta reiniciar. La preferencia
+  se guarda en `%APPDATA%\GestorSolicitudes\idioma.txt`; en el primer arranque, si no hay
+  preferencia, se detecta el idioma del sistema y todo lo que no sea inglés o alemán cae a español.
 - Las candidaturas cerradas se muestran en gris, y el filtro *Solo abiertas* las esconde.
 - **Duplicar** (en el panel de detalle de una candidatura ya guardada) crea una candidatura nueva con
   los mismos datos de la oferta —empresa, puesto, ubicación, tecnologías, salario, interés— pero sin
@@ -106,7 +111,7 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   app está abierta, cada 5 minutos (y a los pocos segundos de arrancar) revisa si hay seguimientos
   vencidos y avisa con un globo junto al reloj de Windows. Cada candidatura avisa una sola vez por
   sesión.
-- **Gráfica de embudo** (botón *Ver gráfica* de la cabecera): enviadas → respondidas → entrevistas →
+- **Gráfica de embudo** (botón *Gráfico* de la cabecera): enviadas → respondidas → entrevistas →
   ofertas de los últimos 12 meses, contadas por el historial (hito "Solicitud enviada", primera
   contestación, hitos de entrevista y de oferta), así cada mes cuenta lo que pasó ese mes. Se refresca
   sola si guardas, borras o importas candidaturas mientras está abierta.
@@ -122,11 +127,12 @@ el `.csproj` quita los usings implícitos de WinForms y de `System.Drawing` con 
 
 ```
 Models/          Solicitud, Evento y enums con [Description] para los textos de la UI
+Localizacion.cs  Traducciones de la interfaz (es/en/de): textos, cultura, selector y preferencia
 Data/            AppDbContext (SQLite, EnsureCreated + ALTER TABLE de columnas nuevas)
 ViewModels/      MainViewModel: filtros, CRUD, métricas, embudo, adjuntos, duplicar e importación
 Views/           MainWindow: lista maestra + panel de detalle + gráfica + icono de bandeja
 Converters/      enum → texto, null → Visibility, estado → color, interés → color de estrella
-Helpers/         EnumHelper: lee los [Description] por reflexión
+Helpers/         EnumHelper: enum → texto traducido (cae a [Description] si falta la clave)
                  AdjuntosHelper: copia/borra CV y carta en %APPDATA%\...\adjuntos
 GestorSolicitudes.Tests/  xUnit: modelo, helpers, CSV, contexto SQLite y lógica del ViewModel
 ```
