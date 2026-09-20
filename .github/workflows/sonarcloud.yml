@@ -27,7 +27,7 @@ jobs:
 
       - name: Iniciar análisis
         env:
-          SONAR_TOKEN: "cf7013ea92fe5a7c985bc591b5260f7a7053c3bb""
+          SONAR_TOKEN: "cf7013ea92fe5a7c985bc591b5260f7a7053c3bb"
         run: >
           dotnet-sonarscanner begin
           /k:"andrewstyle22" /o:"andrewstyle22"
@@ -46,5 +46,5 @@ jobs:
 
       - name: Terminar análisis
         env:
-          SONAR_TOKEN: "cf7013ea92fe5a7c985bc591b5260f7a7053c3bb""
-        run: dotnet-sonarscanner end /d:sonar.token="cf7013ea92fe5a7c985bc591b5260f7a7053c3bb""
+          SONAR_TOKEN: "cf7013ea92fe5a7c985bc591b5260f7a7053c3bb"
+        run: dotnet-sonarscanner end /d:sonar.token="cf7013ea92fe5a7c985bc591b5260f7a7053c3bb"
