@@ -21,13 +21,8 @@ using SkiaSharp;
 
 public partial class MainViewModel : ObservableObject
 {
-    // La app fija es-ES en OnStartup, pero los tests no pasan por ahí: formateamos
-    // los números con la cultura de manera explícita para que la salida ("50 %",
-    // decimales con coma) sea estable sea cual sea la cultura del hilo.
-    private static readonly CultureInfo CulturaEspanola = CultureInfo.GetCultureInfo("es-ES");
-
-    // Una sola instancia viva durante toda la sesión: es una app monousuario,
-    // así que aprovechamos el change tracking de EF Core para editar en sitio.
+    // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
+    // por el arranque de la app se apoyan en que por defecto el idioma es el castellano.
     private readonly AppDbContext db;
 
     public MainViewModel()
@@ -40,42 +35,99 @@ public partial class MainViewModel : ObservableObject
     {
         this.db = db;
 
-        this.Estados = EnumHelper.Valores<EstadoSolicitud>();
-        this.Modalidades = EnumHelper.Valores<Modalidad>();
-        this.TiposEvento = EnumHelper.Valores<TipoEvento>();
-        this.Origenes = EnumHelper.Valores<Origen>();
-
-        this.MotivosRechazo = new List<EnumItem> { new(null, "Sin especificar") }
-            .Concat(EnumHelper.Valores<MotivoRechazo>())
-            .ToList();
-
-        this.EstadosFiltro = new List<EnumItem> { new(null, "Todos los estados") }
-            .Concat(this.Estados)
-            .ToList();
+        this.CargarTextosLocalizados();
 
         // Asignación directa al campo para no disparar la recarga dos veces.
         this.estadoFiltroItem = this.EstadosFiltro[0];
+
+        Localizacion.IdiomaCambiado += this.CuandoCambiaIdioma;
 
         this.Recargar();
     }
 
     // ---------------------------------------------------------------- Listas
-    public IReadOnlyList<EnumItem> Estados { get; }
+    [ObservableProperty]
+    private IReadOnlyList<EnumItem> estados = Array.Empty<EnumItem>();
 
-    public IReadOnlyList<EnumItem> EstadosFiltro { get; }
+    [ObservableProperty]
+    private IReadOnlyList<EnumItem> estadosFiltro = Array.Empty<EnumItem>();
 
-    public IReadOnlyList<EnumItem> Modalidades { get; }
+    [ObservableProperty]
+    private IReadOnlyList<EnumItem> modalidades = Array.Empty<EnumItem>();
 
-    public IReadOnlyList<EnumItem> TiposEvento { get; }
+    [ObservableProperty]
+    private IReadOnlyList<EnumItem> tiposEvento = Array.Empty<EnumItem>();
 
     /// <summary>Gets vías de contacto (aplicación directa, recruiter, referido...), para el desplegable.</summary>
-    public IReadOnlyList<EnumItem> Origenes { get; }
+    [ObservableProperty]
+    private IReadOnlyList<EnumItem> origenes = Array.Empty<EnumItem>();
 
     /// <summary>Gets motivos de rechazo, con un valor "sin especificar" al principio para poder dejarlo en blanco.</summary>
-    public IReadOnlyList<EnumItem> MotivosRechazo { get; }
+    [ObservableProperty]
+    private IReadOnlyList<EnumItem> motivosRechazo = Array.Empty<EnumItem>();
 
     /// <summary>Gets valores posibles del interés (1 a 5), para el desplegable del panel de detalle.</summary>
     public IReadOnlyList<int> NivelesInteres { get; } = new[] { 1, 2, 3, 4, 5 };
+
+    // ---------------------------------------------------------------- Idioma
+    [ObservableProperty]
+    private Idioma idiomaActual = Localizacion.IdiomaActual;
+
+    [ObservableProperty]
+    private IReadOnlyList<IdiomaItem> idiomasDisponibles = Localizacion.IdiomasDisponibles();
+
+    partial void OnIdiomaActualChanged(Idioma value) => Localizacion.Cambiar(value);
+
+    /// <summary>
+    /// Reconstruye los desplegables y nombres de idioma con los textos del idioma activo.
+    /// Los enums se guardan por valor numérico, así que solo cambia el texto mostrado.
+    /// </summary>
+    private void CargarTextosLocalizados()
+    {
+        this.Estados = EnumHelper.Valores<EstadoSolicitud>();
+        this.Modalidades = EnumHelper.Valores<Modalidad>();
+        this.TiposEvento = EnumHelper.Valores<TipoEvento>();
+        this.Origenes = EnumHelper.Valores<Origen>();
+
+        this.MotivosRechazo = new List<EnumItem> { new(null, Localizacion.Texto("Filtro.SinEspecificar")) }
+            .Concat(EnumHelper.Valores<MotivoRechazo>())
+            .ToList();
+
+        this.EstadosFiltro = new List<EnumItem> { new(null, Localizacion.Texto("Filtro.TodosLosEstados")) }
+            .Concat(this.Estados)
+            .ToList();
+
+        // IdiomasDisponibles no se toca aquí a propósito: los tres nombres son fijos
+        // (cada uno en su propia lengua), y reconstruir la lista forzaría al ComboBox
+        // del selector a re-sincronizar su selección.
+    }
+
+    /// <summary>
+    /// Al cambiar de idioma: se refrescan los desplegables, la lista, las estadísticas y la
+    /// gráfica para que todo lo que no se repinta solo (combos, celdas del DataGrid) lo haga.
+    /// </summary>
+    private void CuandoCambiaIdioma(object? sender, Idioma idioma)
+    {
+        EstadoSolicitud? filtro = this.EstadoFiltroItem?.Valor as EstadoSolicitud?;
+
+        this.CargarTextosLocalizados();
+
+        // El item seleccionado del filtro pertenecía a la lista anterior: se reencuentra por
+        // valor en la nueva (los objetos son distintos aunque representen lo mismo).
+        this.EstadoFiltroItem = this.EstadosFiltro.FirstOrDefault(i => Equals(i.Valor, filtro))
+            ?? this.EstadosFiltro[0];
+
+        // Los botones de la gráfica usan un convertidor: se notifica para que se re-evalúen.
+        this.OnPropertyChanged(nameof(this.VerGrafica));
+
+        if (this.VerGrafica)
+        {
+            this.ActualizarEmbudo();
+        }
+
+        this.Recargar();
+        this.RefrescarPanelDetalle();
+    }
 
     [ObservableProperty]
     private ObservableCollection<Solicitud> solicitudes = new();
@@ -231,7 +283,7 @@ public partial class MainViewModel : ObservableObject
         int conRespuesta = todas.Count(s => s.HuboRespuesta);
         this.TasaRespuesta = todas.Count == 0
             ? "—"
-            : ((double)conRespuesta / todas.Count).ToString("P0", CulturaEspanola);
+            : ((double)conRespuesta / todas.Count).ToString("P0", Localizacion.CulturaActual);
 
         List<int> dias = todas
             .Where(s => s.DiasHastaRespuesta.HasValue)
@@ -240,7 +292,7 @@ public partial class MainViewModel : ObservableObject
 
         this.MediaDiasRespuesta = dias.Count == 0
             ? "—"
-            : $"{dias.Average().ToString("0.#", CulturaEspanola)} días";
+            : $"{dias.Average().ToString("0.#", Localizacion.CulturaActual)} {Localizacion.Texto("Metrica.Dias")}";
     }
 
     // ---------------------------------------------------------------- Comandos
@@ -317,15 +369,15 @@ public partial class MainViewModel : ObservableObject
         }
 
         string[] etiquetas = meses
-            .Select(m => m.ToString("MMM yyyy", CultureInfo.CurrentCulture))
+            .Select(m => m.ToString("MMM yyyy", Localizacion.CulturaActual))
             .ToArray();
 
         this.SerieEmbudo = new ISeries[]
         {
-            new ColumnSeries<double> { Name = "Enviadas",     Values = enviadas,     Fill = new SolidColorPaint(SKColor.Parse("#94A3B8")) },
-            new ColumnSeries<double> { Name = "Respondidas",  Values = respondidas,  Fill = new SolidColorPaint(SKColor.Parse("#2563EB")) },
-            new ColumnSeries<double> { Name = "Entrevistas",  Values = entrevistas,  Fill = new SolidColorPaint(SKColor.Parse("#7C3AED")) },
-            new ColumnSeries<double> { Name = "Ofertas",      Values = ofertas,      Fill = new SolidColorPaint(SKColor.Parse("#059669")) },
+            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Enviadas"),    Values = enviadas,    Fill = new SolidColorPaint(SKColor.Parse("#94A3B8")) },
+            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Respondidas"), Values = respondidas, Fill = new SolidColorPaint(SKColor.Parse("#2563EB")) },
+            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Entrevistas"), Values = entrevistas, Fill = new SolidColorPaint(SKColor.Parse("#7C3AED")) },
+            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Ofertas"),     Values = ofertas,     Fill = new SolidColorPaint(SKColor.Parse("#059669")) },
         };
 
         this.EjesXEmbudo = new[] { new Axis { Labels = etiquetas, LabelsRotation = 45, TextSize = 11 } };
@@ -368,7 +420,7 @@ public partial class MainViewModel : ObservableObject
     // ---------------------------------------------------------------- Adjuntos
     [RelayCommand]
     private void AdjuntarCv() => this.AdjuntarAdjunto(
-        "Selecciona el CV que enviaste", "cv",
+        Localizacion.Texto("Dialogo.SeleccionaCv"), "cv",
         obtenerRuta: e => e.RutaCv,
         asignar: (e, ruta, nombre) =>
         {
@@ -378,7 +430,7 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void AdjuntarCarta() => this.AdjuntarAdjunto(
-        "Selecciona la carta de presentación", "carta",
+        Localizacion.Texto("Dialogo.SeleccionaCarta"), "carta",
         obtenerRuta: e => e.RutaCarta,
         asignar: (e, ruta, nombre) =>
         {
@@ -400,7 +452,7 @@ public partial class MainViewModel : ObservableObject
         var dialogo = new OpenFileDialog
         {
             Title = titulo,
-            Filter = "Documentos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Currículos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Todos los archivos (*.*)|*.*",
+            Filter = Localizacion.Texto("Dialogo.FiltroAdjuntos"),
         };
 
         if (dialogo.ShowDialog() != true)
@@ -417,8 +469,8 @@ public partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se pudo adjuntar el fichero:\n\n{ex.Message}",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoAdjuntar"), ex.Message),
+                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -473,8 +525,8 @@ public partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
         {
             MessageBox.Show(
-                "No hay un fichero adjunto, o ya no existe en disco.",
-                "Adjunto", MessageBoxButton.OK, MessageBoxImage.Information);
+                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
+                Localizacion.Texto("Titulo.Adjunto"), MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -485,8 +537,8 @@ public partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se pudo abrir el fichero: {ex.Message}",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
+                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -496,7 +548,7 @@ public partial class MainViewModel : ObservableObject
     {
         var dialogo = new OpenFileDialog
         {
-            Title = "Importar el CSV de 'Mis candidaturas' de LinkedIn",
+            Title = Localizacion.Texto("Dialogo.ImportarCsvLinkedIn"),
             Filter = "CSV (*.csv)|*.csv",
         };
 
@@ -513,16 +565,16 @@ public partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se pudo leer el fichero:\n\n{ex.Message}",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoLeerFichero"), ex.Message),
+                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         if (lineas.Count < 2)
         {
             MessageBox.Show(
-                "El fichero parece no tener filas de datos.",
-                "Importar", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto("Mensaje.CsvSinFilas"),
+                Localizacion.Texto("Titulo.Importar"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -530,10 +582,8 @@ public partial class MainViewModel : ObservableObject
         if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
         {
             MessageBox.Show(
-                "No se reconocen las columnas de empresa o puesto en la cabecera.\n\n" +
-                "Se espera el CSV que exporta LinkedIn en Ajustes → Privacidad de datos → " +
-                "'Obtener una copia de tus datos' (fichero Jobs).",
-                "Importar", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto("Mensaje.CsvColumnas"),
+                Localizacion.Texto("Titulo.Importar"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -582,14 +632,14 @@ public partial class MainViewModel : ObservableObject
                 Portal = "LinkedIn",
                 Estado = MapearEstadoLinkedIn(ObtenerCampo(campos, columnas, "estado")),
                 EnlaceOferta = uuid.Length > 0 ? $"https://www.linkedin.com/jobs/view/{uuid}" : null,
-                Notas = evento.Length > 0 ? $"Evento LinkedIn: {evento}" : null,
+                Notas = evento.Length > 0 ? string.Format(Localizacion.Texto("Importar.EventoLinkedIn"), evento) : null,
             };
 
             solicitud.Eventos.Add(new Evento
             {
                 Fecha = fecha,
                 Tipo = TipoEvento.SolicitudEnviada,
-                Descripcion = "Importada desde LinkedIn",
+                Descripcion = Localizacion.Texto("Evento.ImportadaLinkedIn"),
             });
 
             this.db.Solicitudes.Add(solicitud);
@@ -604,20 +654,20 @@ public partial class MainViewModel : ObservableObject
         this.Recargar();
         this.RecargarEmbudoSiVisible();
 
-        string resumen = $"Se importaron {importadas} candidaturas desde LinkedIn.";
+        string resumen = string.Format(Localizacion.Texto("Importar.ResumenImportadas"), importadas);
         if (duplicadas > 0)
         {
-            resumen += $"\nSe omitieron {duplicadas} ya existentes.";
+            resumen += "\n" + string.Format(Localizacion.Texto("Importar.ResumenDuplicadas"), duplicadas);
         }
 
         if (omitidas > 0)
         {
-            resumen += $"\nSe saltaron {omitidas} filas sin empresa o puesto.";
+            resumen += "\n" + string.Format(Localizacion.Texto("Importar.ResumenOmitidas"), omitidas);
         }
 
         MessageBox.Show(
             resumen,
-            "Importación completada", MessageBoxButton.OK, MessageBoxImage.Information);
+            Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     internal static EstadoSolicitud MapearEstadoLinkedIn(string estado)
@@ -900,7 +950,9 @@ public partial class MainViewModel : ObservableObject
             Interes = origen.Interes,
             FechaSolicitud = DateTime.Today,
             Estado = EstadoSolicitud.Enviada,
-            Notas = $"Duplicada de la candidatura #{origen.Id} ({origen.Empresa}, {origen.FechaSolicitud:dd/MM/yyyy}).",
+            Notas = string.Format(
+                Localizacion.Texto("Duplicar.Nota"),
+                origen.Id, origen.Empresa, origen.FechaSolicitud.ToString("dd/MM/yyyy")),
         };
 
         this.SolicitudSeleccionada = null;
@@ -938,8 +990,8 @@ public partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(this.Edicion.Empresa) || string.IsNullOrWhiteSpace(this.Edicion.Puesto))
         {
             MessageBox.Show(
-                "La empresa y el puesto son obligatorios.",
-                "Faltan datos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto("Mensaje.FaltanDatos"),
+                Localizacion.Texto("Titulo.FaltanDatos"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -964,7 +1016,7 @@ public partial class MainViewModel : ObservableObject
                 {
                     Fecha = this.Edicion.FechaSolicitud,
                     Tipo = TipoEvento.SolicitudEnviada,
-                    Descripcion = "Candidatura enviada",
+                    Descripcion = Localizacion.Texto("Evento.CandidaturaEnviada"),
                 });
             }
         }
@@ -976,8 +1028,8 @@ public partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se pudo guardar: {ex.Message}",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
+                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -1030,8 +1082,8 @@ public partial class MainViewModel : ObservableObject
         }
 
         var confirmacion = MessageBox.Show(
-            $"¿Eliminar la candidatura de {this.Edicion.Empresa} ({this.Edicion.Puesto})?",
-            "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            string.Format(Localizacion.Texto("Mensaje.ConfirmarEliminar"), this.Edicion.Empresa, this.Edicion.Puesto),
+            Localizacion.Texto("Titulo.Confirmar"), MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (confirmacion != MessageBoxResult.Yes)
         {
@@ -1068,8 +1120,8 @@ public partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se pudo abrir el enlace: {ex.Message}",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirEnlace"), ex.Message),
+                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1104,7 +1156,7 @@ public partial class MainViewModel : ObservableObject
     {
         var dialogo = new SaveFileDialog
         {
-            Title = "Exportar candidaturas",
+            Title = Localizacion.Texto("Dialogo.ExportarCandidaturas"),
             FileName = $"solicitudes-{DateTime.Today:yyyy-MM-dd}.csv",
             Filter = "CSV (*.csv)|*.csv",
         };
@@ -1117,11 +1169,28 @@ public partial class MainViewModel : ObservableObject
         var sb = new StringBuilder();
         sb.AppendLine(string.Join(';', new[]
         {
-            "Empresa", "Puesto", "Estado", "Portal", "Ubicacion", "Modalidad",
-            "Fecha solicitud", "Primera respuesta", "Dias hasta respuesta",
-            "Entrevista", "Cierre", "Proximo seguimiento",
-            "Salario min", "Salario max", "Pretension", "Interes",
-            "Tecnologias", "Contacto", "Email contacto", "Respuesta empresa", "Notas", "Enlace",
+            Localizacion.Texto("Csv.Empresa"),
+            Localizacion.Texto("Csv.Puesto"),
+            Localizacion.Texto("Csv.Estado"),
+            Localizacion.Texto("Csv.Portal"),
+            Localizacion.Texto("Csv.Ubicacion"),
+            Localizacion.Texto("Csv.Modalidad"),
+            Localizacion.Texto("Csv.FechaSolicitud"),
+            Localizacion.Texto("Csv.PrimeraRespuesta"),
+            Localizacion.Texto("Csv.DiasHastaRespuesta"),
+            Localizacion.Texto("Csv.Entrevista"),
+            Localizacion.Texto("Csv.Cierre"),
+            Localizacion.Texto("Csv.ProximoSeguimiento"),
+            Localizacion.Texto("Csv.SalarioMin"),
+            Localizacion.Texto("Csv.SalarioMax"),
+            Localizacion.Texto("Csv.Pretension"),
+            Localizacion.Texto("Csv.Interes"),
+            Localizacion.Texto("Csv.Tecnologias"),
+            Localizacion.Texto("Csv.Contacto"),
+            Localizacion.Texto("Csv.EmailContacto"),
+            Localizacion.Texto("Csv.RespuestaEmpresa"),
+            Localizacion.Texto("Csv.Notas"),
+            Localizacion.Texto("Csv.Enlace"),
         }));
 
         foreach (Solicitud s in this.db.Solicitudes.OrderByDescending(x => x.FechaSolicitud).ToList())
@@ -1157,8 +1226,8 @@ public partial class MainViewModel : ObservableObject
         File.WriteAllText(dialogo.FileName, sb.ToString(), new UTF8Encoding(true));
 
         MessageBox.Show(
-            $"Exportadas {this.TotalSolicitudes} candidaturas.",
-            "Exportación completada", MessageBoxButton.OK, MessageBoxImage.Information);
+            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
+            Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     internal static string Escapar(string? valor)

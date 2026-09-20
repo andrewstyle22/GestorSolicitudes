@@ -1,8 +1,6 @@
 ﻿namespace GestorSolicitudes;
 
-using System.Globalization;
 using System.Windows;
-using System.Windows.Markup;
 using GestorSolicitudes.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -13,16 +11,9 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Fechas y números en formato español, también dentro de los bindings de WPF.
-        var cultura = new CultureInfo("es-ES");
-        CultureInfo.DefaultThreadCurrentCulture = cultura;
-        CultureInfo.DefaultThreadCurrentUICulture = cultura;
-        Thread.CurrentThread.CurrentCulture = cultura;
-        Thread.CurrentThread.CurrentUICulture = cultura;
-
-        FrameworkElement.LanguageProperty.OverrideMetadata(
-            typeof(FrameworkElement),
-            new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(cultura.IetfLanguageTag)));
+        // Idioma de la interfaz: preferencia guardada (o el idioma del sistema la primera vez),
+        // cultura de fechas/números e inyección de los textos como recursos de aplicación.
+        Localizacion.Inicializar();
 
         try
         {
@@ -36,8 +27,8 @@ public partial class App : Application
         catch (Exception ex)
         {
             MessageBox.Show(
-                $"No se pudo preparar la base de datos:\n\n{ex.Message}\n\nRuta: {AppDbContext.RutaBaseDatos}",
-                "Error al iniciar", MessageBoxButton.OK, MessageBoxImage.Error);
+                string.Format(Localizacion.Texto("Mensaje.ErrorBaseDatos"), ex.Message, AppDbContext.RutaBaseDatos),
+                Localizacion.Texto("Titulo.ErrorAlIniciar"), MessageBoxButton.OK, MessageBoxImage.Error);
             this.Shutdown();
             return;
         }

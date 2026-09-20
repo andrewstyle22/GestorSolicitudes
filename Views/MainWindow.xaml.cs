@@ -65,15 +65,20 @@ public partial class MainWindow : Window
         {
             Solicitud s = nuevos[0];
             this.IconoBandeja.ShowBalloonTip(
-                "Seguimiento vencido",
-                $"{s.Empresa} — {s.Puesto}. Pendiente desde el {s.ProximoSeguimiento:dd/MM/yyyy}.",
+                Localizacion.Texto("Bandeja.SeguimientoVencido"),
+                string.Format(
+                    Localizacion.Texto("Bandeja.VencidoTexto"),
+                    s.Empresa,
+                    s.Puesto,
+                    s.ProximoSeguimiento?.ToString("dd/MM/yyyy")),
                 BalloonIcon.Info);
         }
         else
         {
             this.IconoBandeja.ShowBalloonTip(
-                $"{nuevos.Count} seguimientos vencidos",
-                string.Join("\n", nuevos.Take(4).Select(s => $"• {s.Empresa} — {s.Puesto}")),
+                string.Format(Localizacion.Texto("Bandeja.VencidosMultiples"), nuevos.Count),
+                string.Join("\n", nuevos.Take(4).Select(s => string.Format(
+                    Localizacion.Texto("Bandeja.RecordatorioLinea"), s.Empresa, s.Puesto))),
                 BalloonIcon.Warning);
         }
 

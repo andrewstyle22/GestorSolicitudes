@@ -45,7 +45,7 @@ public class ConvertidorTests
 
     [Theory]
     [InlineData(true, "Ocultar gráfica")]
-    [InlineData(false, "Ver gráfica")]
+    [InlineData(false, "Gráfico")]
     public void VerGraficaATexto_DevuelveElTextoDelBoton(bool visible, string esperado)
     {
         var conversor = new VerGraficaATextoConverter();

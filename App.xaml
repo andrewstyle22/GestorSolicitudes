@@ -13,6 +13,7 @@
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
         <conv:EstadoEsRechazadaAVisibilidadConverter x:Key="EstadoEsRechazadaAVisibilidad" />
         <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
+        <conv:NuloACadenaConverter x:Key="NuloACadena" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 
         <!-- ============ Paleta ============ -->
