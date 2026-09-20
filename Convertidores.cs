@@ -7,7 +7,7 @@ using System.Windows.Media;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
-/// <summary>Muestra el [Description] de un enum en lugar de su nombre en código.</summary>
+/// <summary>Muestra la descripción traducida de un enum en lugar de su nombre en código.</summary>
 public class EnumDescripcionConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -88,7 +88,19 @@ public class InteresAColorEstrellaConverter : IValueConverter
 public class VerGraficaATextoConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is true ? "Ocultar gráfica" : "Ver gráfica";
+        value is true ? Localizacion.Texto("Grafica.Ocultar") : Localizacion.Texto("Grafica.Ver");
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Si el valor es una cadena no vacía la devuelve; si no, el texto de la clave localizada que llega por parámetro.</summary>
+public class NuloACadenaConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is string s && !string.IsNullOrEmpty(s)
+            ? s
+            : Localizacion.Texto(parameter as string ?? string.Empty);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

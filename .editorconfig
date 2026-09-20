@@ -16,5 +16,10 @@ dotnet_diagnostic.SA1204.severity = none
 # SA1117/SA1137: no obligar a que los parámetros/argumentos quepan en una sola línea.
 dotnet_diagnostic.SA1117.severity = none
 dotnet_diagnostic.SA1137.severity = none
+# SA1114/SA1115/SA1515: los diccionarios de traducciones (Localizacion.cs) son listas
+# de tuplas una por línea; estas reglas de "parámetro en su propia línea" no aportan ahí.
+dotnet_diagnostic.SA1114.severity = none
+dotnet_diagnostic.SA1115.severity = none
+dotnet_diagnostic.SA1515.severity = none
 # SA1402: varios convertidores/helpers pequeños en un único archivo (elección del proyecto).
 dotnet_diagnostic.SA1402.severity = none
