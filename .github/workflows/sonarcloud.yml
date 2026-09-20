@@ -1,0 +1,53 @@
+name: SonarCloud
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  sonar:
+    runs-on: windows-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GITHUB_TOKEN: ${{ github.token }}
+      # Tienes que rellenar estos dos con los datos de tu proyecto en sonarcloud.io
+      # (Organization key y Project key). El token se configura en Settings → Secrets.
+      SONAR_ORGANIZATION: "tu_organizacion_sonarcloud"
+      SONAR_PROJECT_KEY: "tu_project_key_sonarcloud"
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0  # necesario para el análisis de código nuevo por commit
+
+    - name: Set up JDK 17 (el analizador de SonarCloud lo requiere)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install .NET 8
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Instalar el escáner de SonarCloud y la herramienta de cobertura
+      run: |
+        dotnet tool install --global dotnet-sonarscanner
+        dotnet tool install --global dotnet-coverage
+
+    - name: SonarCloud begin
+      run: dotnet sonarscanner begin /k:"$env:SONAR_PROJECT_KEY" /o:"$env:SONAR_ORGANIZATION" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.exclusions="**/bin/**,**/obj/**,**/*.g.cs"
+
+    - name: Compilar y correr los tests midiendo cobertura
+      run: dotnet-coverage collect "dotnet test" -f xml -o coverage.xml
+
+    - name: SonarCloud end
+      run: dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
+
+    - name: Quality Gate
+      uses: SonarSource/sonarqube-quality-gate-action@master
+      env:
+        SONAR_HOST_URL: https://sonarcloud.io
