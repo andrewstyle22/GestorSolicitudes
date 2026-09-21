@@ -1,5 +1,6 @@
 ﻿namespace GestorSolicitudes.Views;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -7,6 +8,9 @@ using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Hardcodet.Wpf.TaskbarNotification;
 
+// Code-behind de la ventana: cableado de eventos, bandeja y temporizadores WPF.
+// No hay UI automatizable de la app, así que se excluye de la cobertura.
+[ExcludeFromCodeCoverage]
 public partial class MainWindow : Window
 {
     private readonly MainViewModel vm;
