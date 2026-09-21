@@ -755,19 +755,8 @@ public static class Localizacion
         _ => CultureInfo.GetCultureInfo("es-ES"),
     };
 
-    /// <summary>Código corto de un idioma (es / en / de).</summary>
-    public static string Codigo(Idioma idioma) => idioma switch
-    {
-        Idioma.Ingles => "en",
-        Idioma.Aleman => "de",
-        _ => "es",
-    };
-
     /// <summary>Traduce una clave con el idioma activo. Si falta, cae al castellano y, en último caso, a la propia clave.</summary>
-    public static string Texto(string clave) =>
-        Tablas[IdiomaActual].TryGetValue(clave, out string? traducido)
-            ? traducido
-            : TextoCastellano.TryGetValue(clave, out string? espanol) ? espanol : clave;
+    public static string Texto(string clave) => Texto(IdiomaActual, clave);
 
     /// <summary>Traduce una clave a un idioma concreto, sin tocar el idioma activo.</summary>
     public static string Texto(Idioma idioma, string clave) =>
@@ -821,9 +810,9 @@ public static class Localizacion
     /// Reconstruye el diccionario de textos inyectado en Application.Resources a partir de los
     /// diccionarios C#. Los {DynamicResource} resuelven contra él y se actualizan al cambiarlo.
     /// </summary>
-    public static void AplicarRecursosDeApplication(ResourceDictionary? recursosAplicacion = null)
+    public static void AplicarRecursosDeApplication()
     {
-        ResourceDictionary? recursos = recursosAplicacion ?? Application.Current?.Resources;
+        ResourceDictionary? recursos = Application.Current?.Resources;
         if (recursos is null)
         {
             return;

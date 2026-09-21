@@ -11,13 +11,9 @@ using CommunityToolkit.Mvvm.Input;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Win32;
-using SkiaSharp;
 
 public partial class MainViewModel : ObservableObject
 {
@@ -187,12 +183,10 @@ public partial class MainViewModel : ObservableObject
     // ---------------------------------------------------------------- Gráfica de embudo
     [ObservableProperty]
     private bool verGrafica;
+
+    /// <summary>Filas del embudo (una por mes) con las cuatro series ya escaladas a porcentaje.</summary>
     [ObservableProperty]
-    private ISeries[] serieEmbudo = Array.Empty<ISeries>();
-    [ObservableProperty]
-    private Axis[] ejesXEmbudo = Array.Empty<Axis>();
-    [ObservableProperty]
-    private Axis[] ejesYEmbudo = Array.Empty<Axis>();
+    private IReadOnlyList<EmbudoMes> mesesEmbudo = new List<EmbudoMes>();
 
     // ---------------------------------------------------------------- Carga
 
@@ -330,10 +324,10 @@ public partial class MainViewModel : ObservableObject
 
         List<Solicitud> todas = this.db.Solicitudes.Include(s => s.Eventos).ToList();
 
-        double[] enviadas = Repetir(meses.Count, 0.0);
-        double[] respondidas = Repetir(meses.Count, 0.0);
-        double[] entrevistas = Repetir(meses.Count, 0.0);
-        double[] ofertas = Repetir(meses.Count, 0.0);
+        double[] enviadas = new double[meses.Count];
+        double[] respondidas = new double[meses.Count];
+        double[] entrevistas = new double[meses.Count];
+        double[] ofertas = new double[meses.Count];
 
         for (int m = 0; m < meses.Count; m++)
         {
@@ -368,27 +362,14 @@ public partial class MainViewModel : ObservableObject
                 .Count(e => e.Tipo == TipoEvento.Oferta && e.Fecha >= inicio && e.Fecha < fin);
         }
 
-        string[] etiquetas = meses
-            .Select(m => m.ToString("MMM yyyy", Localizacion.CulturaActual))
-            .ToArray();
-
-        this.SerieEmbudo = new ISeries[]
-        {
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Enviadas"),    Values = enviadas,    Fill = new SolidColorPaint(SKColor.Parse("#94A3B8")) },
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Respondidas"), Values = respondidas, Fill = new SolidColorPaint(SKColor.Parse("#2563EB")) },
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Entrevistas"), Values = entrevistas, Fill = new SolidColorPaint(SKColor.Parse("#7C3AED")) },
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Ofertas"),     Values = ofertas,     Fill = new SolidColorPaint(SKColor.Parse("#059669")) },
-        };
-
-        this.EjesXEmbudo = new[] { new Axis { Labels = etiquetas, LabelsRotation = 45, TextSize = 11 } };
-        this.EjesYEmbudo = new[] { new Axis { MinLimit = 0, TextSize = 11 } };
-    }
-
-    private static T[] Repetir<T>(int cantidad, T valor)
-    {
-        var resultado = new T[cantidad];
-        Array.Fill(resultado, valor);
-        return resultado;
+        this.MesesEmbudo = meses
+            .Select((m, i) => new EmbudoMes(
+                m.ToString("MMM yyyy", Localizacion.CulturaActual),
+                enviadas[i],
+                respondidas[i],
+                entrevistas[i],
+                ofertas[i]))
+            .ToList();
     }
 
     /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
@@ -796,21 +777,14 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     internal static string NormalizarCabecera(string valor)
     {
-        string descompuesto = valor.Normalize(NormalizationForm.FormD);
+        string descompuesto = NormalizarBusqueda(valor);
         var sb = new StringBuilder(descompuesto.Length);
 
         foreach (char c in descompuesto)
         {
-            var categoria = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (categoria == UnicodeCategory.NonSpacingMark)
+            if (char.IsLetterOrDigit(c))
             {
-                continue;
-            }
-
-            char minuscula = char.ToLowerInvariant(c);
-            if (char.IsLetterOrDigit(minuscula))
-            {
-                sb.Append(minuscula);
+                sb.Append(c);
             }
         }
 
@@ -1240,4 +1214,23 @@ public partial class MainViewModel : ObservableObject
         string limpio = valor.Replace("\"", "\"\"").Replace("\r", " ").Replace("\n", " ");
         return $"\"{limpio}\"";
     }
+}
+
+/// <summary>
+/// Una fila del embudo: un mes con las cuatro series (enviadas, respondidas, entrevistas,
+/// ofertas) y la altura de cada barra, ya escalada a porcentaje del valor máximo del mes.
+/// </summary>
+public record EmbudoMes(string Etiqueta, double Enviadas, double Respondidas, double Entrevistas, double Ofertas)
+{
+    public double AlturaEnviadas => this.Altura(this.Enviadas);
+
+    public double AlturaRespondidas => this.Altura(this.Respondidas);
+
+    public double AlturaEntrevistas => this.Altura(this.Entrevistas);
+
+    public double AlturaOfertas => this.Altura(this.Ofertas);
+
+    private double Maximo => Math.Max(Math.Max(this.Enviadas, this.Respondidas), Math.Max(this.Entrevistas, this.Ofertas));
+
+    private double Altura(double valor) => this.Maximo == 0 ? 0 : valor / this.Maximo * 100.0;
 }

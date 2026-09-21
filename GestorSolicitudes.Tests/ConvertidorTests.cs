@@ -79,18 +79,6 @@ public class ConvertidorTests
         Assert.Equal((byte)0x64, pincel.Color.R);
     }
 
-    [StaFact]
-    public void InteresDeEstrella_RellenaSoloLasPosicionesDentroDelValor()
-    {
-        var conversor = new InteresAColorEstrellaConverter();
-
-        var dentro = (SolidColorBrush)conversor.Convert(3, typeof(Brush), "2", null!);
-        Assert.Equal((byte)0xF5, dentro.Color.R); // ámbar #F59E0B
-
-        var fuera = (SolidColorBrush)conversor.Convert(3, typeof(Brush), "4", null!);
-        Assert.Equal((byte)0xCB, fuera.Color.R); // gris #CBD5E1
-    }
-
     [Theory]
     [InlineData(EstadoSolicitud.Rechazada, Visibility.Visible)]
     [InlineData(EstadoSolicitud.Enviada, Visibility.Collapsed)]

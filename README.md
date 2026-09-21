@@ -9,7 +9,7 @@ a quién, cuándo, qué te contestaron y cuándo toca volver a insistir.
 - **Entity Framework Core 8** sobre **SQLite** (fichero local, sin servidor)
 - **CommunityToolkit.Mvvm** para `ObservableObject` y `RelayCommand` por generadores de código
 - **Hardcodet.NotifyIcon.Wpf** para el icono y los avisos de la bandeja del sistema
-- **LiveCharts2** (skia) para la gráfica de embudo mensual
+- Barras WPF nativas para la gráfica de embudo mensual (sin dependencia de gráficos)
 
 ## Cómo ejecutarlo
 

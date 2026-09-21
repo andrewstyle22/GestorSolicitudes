@@ -90,12 +90,8 @@ public class LocalizacionTests
     }
 
     [Fact]
-    public void Codigo_Y_TextoDeLasEstadisticasDependenDelIdioma()
+    public void TextoDeLasEstadisticasDependenDelIdioma()
     {
-        Assert.Equal("es", Localizacion.Codigo(Idioma.Castellano));
-        Assert.Equal("en", Localizacion.Codigo(Idioma.Ingles));
-        Assert.Equal("de", Localizacion.Codigo(Idioma.Aleman));
-
         Assert.Equal("3 días", $"{3} {Localizacion.Texto(Idioma.Castellano, "Metrica.Dias")}");
         Assert.Equal("3 days", $"{3} {Localizacion.Texto(Idioma.Ingles, "Metrica.Dias")}");
         Assert.Equal("3 Tage", $"{3} {Localizacion.Texto(Idioma.Aleman, "Metrica.Dias")}");

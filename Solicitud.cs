@@ -132,23 +132,10 @@ public class Solicitud
     [NotMapped]
     public bool HuboRespuesta => this.FechaPrimeraRespuesta.HasValue;
 
-    /// <summary>Gets a value indicating whether ya tiene fila en la base de datos (frente a un borrador recién creado con "Nueva").</summary>
-    [NotMapped]
-    public bool EstaGuardada => this.Id != 0;
-
     [NotMapped]
     public bool SeguimientoPendiente => this.EstaAbierta
         && this.ProximoSeguimiento.HasValue
         && this.ProximoSeguimiento.Value.Date <= DateTime.Today;
-
-    [NotMapped]
-    public string RangoSalarial => (this.SalarioMin, this.SalarioMax) switch
-    {
-        (null, null) => "—",
-        (int min, null) => $"desde {min:N0} €",
-        (null, int max) => $"hasta {max:N0} €",
-        (int min, int max) => $"{min:N0} – {max:N0} €",
-    };
 
     /// <summary>Gets nombre a mostrar del CV: el original si se conserva, o el del disco si no.</summary>
     [NotMapped]

@@ -9,10 +9,9 @@
         <conv:EnumDescripcionConverter x:Key="EnumDescripcion" />
         <conv:NuloAVisibilidadConverter x:Key="NuloAVisibilidad" />
         <conv:EstadoAColorConverter x:Key="EstadoAColor" />
-        <conv:InteresAColorEstrellaConverter x:Key="InteresAEstrella" />
+        <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
         <conv:EstadoEsRechazadaAVisibilidadConverter x:Key="EstadoEsRechazadaAVisibilidad" />
-        <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:NuloACadenaConverter x:Key="NuloACadena" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 

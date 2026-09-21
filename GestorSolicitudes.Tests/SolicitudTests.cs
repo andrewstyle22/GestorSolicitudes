@@ -140,33 +140,6 @@ public class SolicitudTests
     }
 
     [Fact]
-    public void RangoSalarial_SinDatos_EsGuion()
-    {
-        Assert.Equal("—", new Solicitud().RangoSalarial);
-    }
-
-    [Fact]
-    public void RangoSalarial_SoloMinimo()
-    {
-        var s = new Solicitud { SalarioMin = 30000 };
-        Assert.Equal($"desde {30000:N0} €", s.RangoSalarial);
-    }
-
-    [Fact]
-    public void RangoSalarial_SoloMaximo()
-    {
-        var s = new Solicitud { SalarioMax = 45000 };
-        Assert.Equal($"hasta {45000:N0} €", s.RangoSalarial);
-    }
-
-    [Fact]
-    public void RangoSalarial_ConRango()
-    {
-        var s = new Solicitud { SalarioMin = 30000, SalarioMax = 45000 };
-        Assert.Equal($"{30000:N0} – {45000:N0} €", s.RangoSalarial);
-    }
-
-    [Fact]
     public void NombreCv_UsaNombreOriginalSiExiste()
     {
         var s = new Solicitud { NombreOriginalCv = "mi-cv-final.pdf", RutaCv = @"C:\cualquier\cosa\a1b2.pdf" };
@@ -184,12 +157,5 @@ public class SolicitudTests
     public void NombreCv_SinRutaEsNull()
     {
         Assert.Null(new Solicitud().NombreCv);
-    }
-
-    [Fact]
-    public void EstaGuardada_SoloConIdDistintoDeCero()
-    {
-        Assert.False(new Solicitud().EstaGuardada);
-        Assert.True(new Solicitud { Id = 1 }.EstaGuardada);
     }
 }

@@ -47,7 +47,6 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.1.0-dev-798" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.31" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <PrivateAssets>all</PrivateAssets>

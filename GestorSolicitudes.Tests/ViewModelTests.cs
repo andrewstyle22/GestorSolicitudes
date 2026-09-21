@@ -313,7 +313,8 @@ public class ViewModelTests
         vm.ConfigurarGraficaCommand.Execute(null);
 
         Assert.True(vm.VerGrafica);
-        Assert.Equal(4, vm.SerieEmbudo.Length);
-        Assert.Equal(12, vm.EjesXEmbudo[0].Labels!.Count);
+        Assert.Equal(12, vm.MesesEmbudo.Count);
+        Assert.All(vm.MesesEmbudo, m =>
+            Assert.InRange(m.AlturaEnviadas, 0, 100));
     }
 }
