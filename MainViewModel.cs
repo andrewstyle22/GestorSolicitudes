@@ -99,7 +99,7 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// Al cambiar de idioma: se refrescan los desplegables, la lista, las estadísticas y la
-    /// gráfica para que todo lo que no se repinta solo (combos, celdas del DataGrid) lo haga.
+    /// gráfica para que lo que no se repinta solo (combos, celdas del DataGrid) lo haga.
     /// </summary>
     private void CuandoCambiaIdioma(object? sender, Idioma idioma)
     {
@@ -760,7 +760,7 @@ public partial class MainViewModel : ObservableObject
             AdjuntosHelper.Eliminar(this.Edicion.RutaCarta);
         }
 
-        // Desenganchamos todo lo que EF tenía en seguimiento: los cambios pendientes
+        // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
         foreach (EntityEntry entrada in this.db.ChangeTracker.Entries().ToList())
         {

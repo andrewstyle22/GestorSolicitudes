@@ -67,13 +67,15 @@ public partial class App : Application
         // Los enums se guardan como entero; Origen es NOT NULL con valor por defecto
         // (0 = AplicacionDirecta) para que las filas ya existentes queden con un
         // valor válido en vez de nulo.
+        const string TextoNulo = "TEXT NULL";
+
         (string Columna, string Definicion)[] nuevas =
         {
-            ("RutaCv", "TEXT NULL"),
-            ("RutaCarta", "TEXT NULL"),
-            ("NombreOriginalCv", "TEXT NULL"),
-            ("NombreOriginalCarta", "TEXT NULL"),
-            ("Requisitos", "TEXT NULL"),
+            ("RutaCv", TextoNulo),
+            ("RutaCarta", TextoNulo),
+            ("NombreOriginalCv", TextoNulo),
+            ("NombreOriginalCarta", TextoNulo),
+            ("Requisitos", TextoNulo),
             ("MotivoRechazo", "INTEGER NULL"),
             ("Origen", "INTEGER NOT NULL DEFAULT 0"),
             ("ContactoTelefono", "TEXT NULL"),
