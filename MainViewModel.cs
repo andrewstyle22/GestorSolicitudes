@@ -508,28 +508,38 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (lineas.Count < 2)
+        string? aviso = this.ValidarImportacion(lineas);
+        if (aviso is not null)
         {
             MessageBox.Show(
-                Localizacion.Texto("Mensaje.CsvSinFilas"),
+                aviso,
                 Localizacion.Texto("Titulo.Importar"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         var columnas = CsvHelper.IdentificarColumnas(lineas[0]);
-        if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
-        {
-            MessageBox.Show(
-                Localizacion.Texto("Mensaje.CsvColumnas"),
-                Localizacion.Texto("Titulo.Importar"), MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
 
         (int importadas, int duplicadas, int omitidas) = this.ImportarLineas(lineas, columnas);
 
         MessageBox.Show(
             ResumenImportacion(importadas, duplicadas, omitidas),
             Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    internal string? ValidarImportacion(List<List<string>> lineas)
+    {
+        if (lineas.Count < 2)
+        {
+            return Localizacion.Texto("Mensaje.CsvSinFilas");
+        }
+
+        var columnas = CsvHelper.IdentificarColumnas(lineas[0]);
+        if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
+        {
+            return Localizacion.Texto("Mensaje.CsvColumnas");
+        }
+
+        return null;
     }
 
     internal (int Importadas, int Duplicadas, int Omitidas) ImportarLineas(

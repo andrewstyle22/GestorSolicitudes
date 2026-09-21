@@ -397,6 +397,71 @@ public class ViewModelTests
         Assert.Equal("https://www.linkedin.com/jobs/view/abc", Assert.Single(vm.Solicitudes).EnlaceOferta);
     }
 
+    [Fact]
+    public void ImportarLineas_TodoDuplicadoNoGuardaNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev", FechaSolicitud = new DateTime(2024, 5, 1) });
+        db.SaveChanges();
+
+        var lineas = new List<List<string>>
+        {
+            new() { "Company", "Title", "Application date", "Status", "Location", "event", "UUID" },
+            new() { "ACME", "Dev", "2024-05-01", "Applied", "Madrid", "", "abc" },
+            new() { "ACME", "Dev", "2024-05-01", "Applied", "Madrid", "", "abc" },
+        };
+
+        (int Importadas, int Duplicadas, int Omitidas) resultado =
+            vm.ImportarLineas(lineas, CsvHelper.IdentificarColumnas(lineas[0]));
+
+        Assert.Equal((0, 2, 0), resultado);
+        Assert.Equal(1, vm.TotalSolicitudes);
+    }
+
+    [Fact]
+    public void ValidarImportacion_ConMenosDeDosLineasDevuelveAviso()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        string? aviso = vm.ValidarImportacion(new List<List<string>> { new() { "Company" } });
+
+        Assert.Equal(Localizacion.Texto("Mensaje.CsvSinFilas"), aviso);
+    }
+
+    [Fact]
+    public void ValidarImportacion_SinColumnasDeEmpresaOPuestoTambienAvisa()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        string? aviso = vm.ValidarImportacion(new List<List<string>>
+        {
+            new() { "FechaSolicitud", "Notas" },
+            new() { "2024-05-01", "sin empresa ni puesto" },
+        });
+
+        Assert.Equal(Localizacion.Texto("Mensaje.CsvColumnas"), aviso);
+    }
+
+    [Fact]
+    public void ValidarImportacion_ConLineasValidasDevuelveNulo()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        var lineas = new List<List<string>>
+        {
+            new() { "Company", "Title", "Application date", "Status", "Location", "event", "UUID" },
+            new() { "ACME", "Dev", "2024-05-01", "Applied", "Madrid", "", "abc" },
+        };
+
+        string? aviso = vm.ValidarImportacion(lineas);
+
+        Assert.Null(aviso);
+    }
+
     // ---------------- Exportación CSV ----------------
 
     [Fact]
