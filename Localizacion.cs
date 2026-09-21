@@ -764,10 +764,15 @@ public static class Localizacion
     public static string Texto(string clave) => Texto(IdiomaActual, clave);
 
     /// <summary>Traduce una clave a un idioma concreto, sin tocar el idioma activo.</summary>
-    public static string Texto(Idioma idioma, string clave) =>
-        Tablas[idioma].TryGetValue(clave, out string? traducido)
-            ? traducido
-            : TextoCastellano.TryGetValue(clave, out string? espanol) ? espanol : clave;
+    public static string Texto(Idioma idioma, string clave)
+    {
+        if (Tablas[idioma].TryGetValue(clave, out string? traducido))
+        {
+            return traducido;
+        }
+
+        return TextoCastellano.TryGetValue(clave, out string? espanol) ? espanol : clave;
+    }
 
     /// <summary>Indica si una clave existe en las traducciones.</summary>
     public static bool Contiene(string clave) =>
