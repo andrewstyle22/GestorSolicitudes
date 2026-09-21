@@ -30,59 +30,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: >
           dotnet-sonarscanner begin
-          /k:"TU_CLAVE_DE_PROYECTO" /o:"andrewstyle22"
-          /d:sonar.host.url="https://sonarcloud.io"
-          /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-          /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
-
-      - run: dotnet build --no-incremental
-
-      - name: Ejecutar tests con cobertura
-        run: >
-          dotnet test
-          /p:CollectCoverage=true
-          /p:CoverletOutputFormat=opencover
-          /p:CoverletOutput=./coverage.opencover.xml
-
-      - name: Terminar analisis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-EOF
-Salida
-
-name: SonarCloud
-on:
-  push:
-    branches: [master]
-  pull_request:
-    types: [opened, synchronize, reopened]
-
-jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: 21
-
-      - name: Instalar el scanner de SonarCloud
-        run: dotnet tool install --global dotnet-sonarscanner
-
-      - name: Iniciar analisis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: >
-          dotnet-sonarscanner begin
           /k:"andrewstyle22_GestorSolicitudes" /o:"andrewstyle22"
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
