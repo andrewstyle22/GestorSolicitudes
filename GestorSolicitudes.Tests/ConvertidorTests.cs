@@ -79,6 +79,33 @@ public class ConvertidorTests
         Assert.Equal((byte)0x64, pincel.Color.R);
     }
 
+    [StaFact]
+    public void EstadoAColor_CadaEstadoTieneSuColor()
+    {
+        var conversor = new EstadoAColorConverter();
+        var esperados = new Dictionary<EstadoSolicitud, string>
+        {
+            { EstadoSolicitud.Enviada, "#64748B" },
+            { EstadoSolicitud.EnRevision, "#0284C7" },
+            { EstadoSolicitud.PruebaTecnica, "#7C3AED" },
+            { EstadoSolicitud.EntrevistaRrhh, "#7C3AED" },
+            { EstadoSolicitud.EntrevistaTecnica, "#7C3AED" },
+            { EstadoSolicitud.EntrevistaFinal, "#7C3AED" },
+            { EstadoSolicitud.OfertaRecibida, "#059669" },
+            { EstadoSolicitud.OfertaAceptada, "#047857" },
+            { EstadoSolicitud.OfertaRechazada, "#B45309" },
+            { EstadoSolicitud.Rechazada, "#DC2626" },
+            { EstadoSolicitud.Retirada, "#B45309" },
+            { EstadoSolicitud.SinRespuesta, "#94A3B8" },
+        };
+
+        foreach ((EstadoSolicitud estado, string hex) in esperados)
+        {
+            var color = ((SolidColorBrush)conversor.Convert(estado, typeof(Brush), null, null!)).Color;
+            Assert.Equal((Color)ColorConverter.ConvertFromString(hex), color);
+        }
+    }
+
     [Theory]
     [InlineData(EstadoSolicitud.Rechazada, Visibility.Visible)]
     [InlineData(EstadoSolicitud.Enviada, Visibility.Collapsed)]

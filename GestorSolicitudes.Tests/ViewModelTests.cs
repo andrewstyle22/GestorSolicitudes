@@ -396,4 +396,30 @@ public class ViewModelTests
         Assert.Equal(1, vm.TotalSolicitudes);
         Assert.Equal("https://www.linkedin.com/jobs/view/abc", Assert.Single(vm.Solicitudes).EnlaceOferta);
     }
+
+    // ---------------- Exportación CSV ----------------
+
+    [Fact]
+    public void ConstruirCsv_ConCandidaturasIncluyeCabeceraYFilas()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        db.Solicitudes.Add(new Solicitud
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            FechaSolicitud = new DateTime(2024, 5, 1),
+            Portal = "LinkedIn",
+            Estado = EstadoSolicitud.Enviada,
+            EnlaceOferta = "https://www.linkedin.com/jobs/view/abc",
+        });
+        db.SaveChanges();
+
+        string csv = vm.ConstruirCsv();
+
+        Assert.Contains(Localizacion.Texto("Csv.Empresa"), csv);
+        Assert.Contains("ACME", csv);
+        Assert.Contains("2024-05-01", csv);
+        Assert.Contains("https://www.linkedin.com/jobs/view/abc", csv);
+    }
 }

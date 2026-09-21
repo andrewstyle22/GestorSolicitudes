@@ -885,6 +885,15 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        File.WriteAllText(dialogo.FileName, this.ConstruirCsv(), new UTF8Encoding(true));
+
+        MessageBox.Show(
+            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
+            Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    internal string ConstruirCsv()
+    {
         var sb = new StringBuilder();
         sb.AppendLine(string.Join(
                     ';',
@@ -938,12 +947,7 @@ public partial class MainViewModel : ObservableObject
                 CsvHelper.Escapar(s.EnlaceOferta)));
         }
 
-        // UTF-8 con BOM para que Excel en español no destroce los acentos.
-        File.WriteAllText(dialogo.FileName, sb.ToString(), new UTF8Encoding(true));
-
-        MessageBox.Show(
-            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
-            Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+        return sb.ToString();
     }
 }
 
