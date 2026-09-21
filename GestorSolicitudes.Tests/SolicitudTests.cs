@@ -158,4 +158,20 @@ public class SolicitudTests
     {
         Assert.Null(new Solicitud().NombreCv);
     }
+
+    [Fact]
+    public void Evento_TrasGuardarExponeIdSolicitudYPropiedadDeNavegacion()
+    {
+        using var db = TestDb.NuevoContexto();
+
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+
+        Evento evento = solicitud.Eventos.First();
+        Assert.True(evento.Id > 0);
+        Assert.Equal(solicitud.Id, evento.SolicitudId);
+        Assert.Same(solicitud, evento.Solicitud);
+    }
 }

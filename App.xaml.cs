@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 public partial class App : Application
 {
+    // Arranque de la app: ventanas, bandeja y MessageBox del fallo de base de datos.
+    // Requiere el ciclo de vida completo de WPF y no se puede probar con los tests.
+    [ExcludeFromCodeCoverage]
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);

@@ -24,6 +24,8 @@ public partial class MainViewModel : ObservableObject
 
     private readonly AppDbContext db;
 
+    /// <summary>El constructor sin base arranca la base real de %APPDATA%; no se prueba.</summary>
+    [ExcludeFromCodeCoverage]
     public MainViewModel()
         : this(new AppDbContext())
     {
@@ -105,6 +107,9 @@ public partial class MainViewModel : ObservableObject
     /// Al cambiar de idioma: se refrescan los desplegables, la lista, las estadísticas y la
     /// gráfica para que lo que no se repinta solo (combos, celdas del DataGrid) lo haga.
     /// </summary>
+    // Solo es invocable mutando el idioma global de la sesión, algo que rompería los tests
+    // que se ejecutan en paralelo y dependen de la cultura castellana.
+    [ExcludeFromCodeCoverage]
     private void CuandoCambiaIdioma(object? sender, Idioma idioma)
     {
         EstadoSolicitud? filtro = this.EstadoFiltroItem?.Valor as EstadoSolicitud?;
@@ -358,6 +363,7 @@ public partial class MainViewModel : ObservableObject
 
     // ---------------------------------------------------------------- Adjuntos
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarCv() => this.AdjuntarAdjunto(
         Localizacion.Texto("Dialogo.SeleccionaCv"), "cv",
         obtenerRuta: e => e.RutaCv,
@@ -368,6 +374,7 @@ public partial class MainViewModel : ObservableObject
         });
 
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarCarta() => this.AdjuntarAdjunto(
         Localizacion.Texto("Dialogo.SeleccionaCarta"), "carta",
         obtenerRuta: e => e.RutaCarta,
@@ -377,6 +384,7 @@ public partial class MainViewModel : ObservableObject
             e.NombreOriginalCarta = nombre;
         });
 
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarAdjunto(
         string titulo, string etiqueta,
         Func<Solicitud, string?> obtenerRuta,
@@ -454,11 +462,14 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AbrirCv() => AbrirAdjunto(this.Edicion?.RutaCv);
 
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AbrirCarta() => AbrirAdjunto(this.Edicion?.RutaCarta);
 
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private static void AbrirAdjunto(string? ruta)
     {
         if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
@@ -805,6 +816,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void Eliminar()
     {
         if (this.Edicion is null || this.Edicion.Id == 0)
@@ -836,6 +848,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AbrirEnlace()
     {
         string? url = this.Edicion?.EnlaceOferta;

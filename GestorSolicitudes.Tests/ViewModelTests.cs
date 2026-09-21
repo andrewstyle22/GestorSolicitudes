@@ -1,5 +1,7 @@
 using Xunit;
 using System.Globalization;
+using System.IO;
+using Microsoft.EntityFrameworkCore;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
@@ -477,5 +479,211 @@ public class ViewModelTests
         Assert.Contains("ACME", csv);
         Assert.Contains("2024-05-01", csv);
         Assert.Contains("https://www.linkedin.com/jobs/view/abc", csv);
+    }
+
+    // ---------------- Comandos del panel de detalle ----------------
+
+    [Fact]
+    public void AnadirEvento_AnadeUnaNotaConLaFechaDeHoy()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME";
+        vm.Edicion.Puesto = "Dev";
+
+        vm.AnadirEventoCommand.Execute(null);
+
+        Evento nota = Assert.Single(vm.Edicion.Eventos);
+        Assert.Equal(TipoEvento.Nota, nota.Tipo);
+        Assert.Equal(DateTime.Today, nota.Fecha);
+    }
+
+    [Fact]
+    public void EliminarEvento_SinEdicionNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        vm.EliminarEventoCommand.Execute(new Evento());
+
+        Assert.Empty(vm.Solicitudes);
+    }
+
+    [Fact]
+    public void EliminarEvento_QuitaDeLaListaYMarcaElPersistidoComoBorrado()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today.AddDays(-1), Tipo = TipoEvento.SolicitudEnviada });
+        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+
+        Evento persistido = solicitud.Eventos.First(e => e.Id != 0);
+        vm.EliminarEventoCommand.Execute(persistido);
+
+        Assert.DoesNotContain(persistido, solicitud.Eventos);
+        Assert.Equal(EntityState.Deleted, db.Entry(persistido).State);
+    }
+
+    [Fact]
+    public void QuitarCv_LimpiaLaRutaSinBorrarUnFicheroAjero()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        string rutaCv = Path.Combine(TestDb.NuevaCarpeta(), "cv.pdf");
+        File.WriteAllText(rutaCv, "contenido");
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.RutaCv = rutaCv;
+
+        vm.QuitarCvCommand.Execute(null);
+
+        Assert.Null(vm.Edicion.RutaCv);
+        // Solo se borran ficheros de la carpeta de adjuntos: uno ajeno se deja quieto.
+        Assert.True(File.Exists(rutaCv));
+    }
+
+    [Fact]
+    public void QuitarCarta_LimpiaLaRutaSinBorrarUnFicheroAjero()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        string rutaCarta = Path.Combine(TestDb.NuevaCarpeta(), "carta.pdf");
+        File.WriteAllText(rutaCarta, "contenido");
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.RutaCarta = rutaCarta;
+
+        vm.QuitarCartaCommand.Execute(null);
+
+        Assert.Null(vm.Edicion.RutaCarta);
+        Assert.True(File.Exists(rutaCarta));
+    }
+
+    [Fact]
+    public void QuitarCv_SinEdicionNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        vm.QuitarCvCommand.Execute(null);
+
+        Assert.Null(vm.Edicion);
+    }
+
+    [Fact]
+    public void VerCandidaturasDeEstaEmpresa_RellenaLaBusquedaConLaEmpresa()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME";
+
+        vm.VerCandidaturasDeEstaEmpresaCommand.Execute(null);
+
+        Assert.Equal("ACME", vm.TextoBusqueda);
+    }
+
+    [Fact]
+    public void VerCandidaturasDeEstaEmpresa_SinEdicionOSinEmpresaNoTocaElFiltro()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        vm.VerCandidaturasDeEstaEmpresaCommand.Execute(null);
+        Assert.Equal(string.Empty, vm.TextoBusqueda);
+
+        vm.NuevaCommand.Execute(null);
+        vm.VerCandidaturasDeEstaEmpresaCommand.Execute(null);
+        Assert.Equal(string.Empty, vm.TextoBusqueda);
+    }
+
+    // ---------------- Salidas tempranas y recarga ----------------
+
+    [Fact]
+    public void Guardar_SinEdicionNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Empty(vm.Solicitudes);
+    }
+
+    [Fact]
+    public void Duplicar_SinEdicionNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        vm.DuplicarCommand.Execute(null);
+
+        Assert.Null(vm.Edicion);
+    }
+
+    [Fact]
+    public void Cancelar_SinEdicionNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        vm.CancelarCommand.Execute(null);
+
+        Assert.Null(vm.Edicion);
+    }
+
+    [Fact]
+    public void Cancelar_ConCandidaturaGuardada_DesenganchaYRecargaDesdeDisco()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        vm.Edicion.Empresa = "SinGuardar";
+
+        vm.CancelarCommand.Execute(null);
+
+        Assert.Equal(EntityState.Detached, db.Entry(solicitud).State);
+        Assert.NotNull(vm.Edicion);
+        Assert.Equal("ACME", vm.Edicion!.Empresa); // vuelve el valor guardado en disco
+    }
+
+    [Fact]
+    public void EstadoFiltro_FiltraPorUnEstadoConcreto()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        db.Solicitudes.Add(new Solicitud { Empresa = "Enviada", Puesto = "A", Estado = EstadoSolicitud.Enviada });
+        db.Solicitudes.Add(new Solicitud { Empresa = "Rechazada", Puesto = "B", Estado = EstadoSolicitud.Rechazada });
+        db.SaveChanges();
+        vm.Recargar();
+
+        EnumItem enviada = vm.EstadosFiltro.First(i => Equals(i.Valor, EstadoSolicitud.Enviada));
+        vm.EstadoFiltroItem = enviada;
+
+        Solicitud sola = Assert.Single(vm.Solicitudes);
+        Assert.Equal("Enviada", sola.Empresa);
+    }
+
+    [Fact]
+    public void RecargarEmbudoSiVisible_ConLaGraficaVisibleRefrescaLosMeses()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.VerGrafica = true;
+
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME";
+        vm.Edicion.Puesto = "Dev";
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Equal(12, vm.MesesEmbudo.Count);
     }
 }

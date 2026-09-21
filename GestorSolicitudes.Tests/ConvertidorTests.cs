@@ -1,5 +1,7 @@
 using Xunit;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
 using GestorSolicitudes.Converters;
 using GestorSolicitudes.Models;
@@ -145,5 +147,20 @@ public class ConvertidorTests
         Assert.Equal("☆☆☆☆☆", conversor.Convert(0, typeof(string), null, null!));
         Assert.Equal("★★★★★", conversor.Convert(9, typeof(string), null, null!));
         Assert.Equal("☆☆☆☆☆", conversor.Convert(null, typeof(string), null, null!));
+    }
+
+    [Fact]
+    public void ConvertBack_LanzaNotSupportedEnTodosLosConvertidores()
+    {
+        var invertir = new Action<IValueConverter>(c =>
+            Assert.Throws<NotSupportedException>(() => c.ConvertBack(null, typeof(object), null, CultureInfo.InvariantCulture)));
+
+        invertir(new EnumDescripcionConverter());
+        invertir(new NuloAVisibilidadConverter());
+        invertir(new EstadoAColorConverter());
+        invertir(new VerGraficaATextoConverter());
+        invertir(new NuloACadenaConverter());
+        invertir(new EstadoEsRechazadaAVisibilidadConverter());
+        invertir(new InteresATextoEstrellasConverter());
     }
 }

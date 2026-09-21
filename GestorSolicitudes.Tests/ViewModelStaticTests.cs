@@ -199,4 +199,26 @@ public class ViewModelStaticTests
         Assert.Contains(string.Format(Localizacion.Texto("Importar.ResumenDuplicadas"), 2), completo);
         Assert.Contains(string.Format(Localizacion.Texto("Importar.ResumenOmitidas"), 1), completo);
     }
+
+    // ---------------- Embudo ----------------
+
+    [Fact]
+    public void EmbudoMes_AlturasSonPorcentajeDelMaximo()
+    {
+        var mes = new EmbudoMes("Enero", 2, 4, 6, 8);
+        Assert.Equal(25.0, mes.AlturaEnviadas);
+        Assert.Equal(50.0, mes.AlturaRespondidas);
+        Assert.Equal(75.0, mes.AlturaEntrevistas);
+        Assert.Equal(100.0, mes.AlturaOfertas);
+    }
+
+    [Fact]
+    public void EmbudoMes_ConTodoACeroLasAlturasSonCero()
+    {
+        var mes = new EmbudoMes("Enero", 0, 0, 0, 0);
+        Assert.Equal(0.0, mes.AlturaEnviadas);
+        Assert.Equal(0.0, mes.AlturaRespondidas);
+        Assert.Equal(0.0, mes.AlturaEntrevistas);
+        Assert.Equal(0.0, mes.AlturaOfertas);
+    }
 }
