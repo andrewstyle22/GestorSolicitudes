@@ -38,16 +38,18 @@ public class NuloAVisibilidadConverter : IValueConverter
 /// <summary>Color de la etiqueta de estado, para localizar de un vistazo dónde está cada proceso.</summary>
 public class EstadoAColorConverter : IValueConverter
 {
+    private const string ColorEntrevista = "#7C3AED";
+
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var color = value switch
         {
             EstadoSolicitud.Enviada => "#64748B",
             EstadoSolicitud.EnRevision => "#0284C7",
-            EstadoSolicitud.PruebaTecnica => "#7C3AED",
-            EstadoSolicitud.EntrevistaRrhh => "#7C3AED",
-            EstadoSolicitud.EntrevistaTecnica => "#7C3AED",
-            EstadoSolicitud.EntrevistaFinal => "#7C3AED",
+            EstadoSolicitud.PruebaTecnica => ColorEntrevista,
+            EstadoSolicitud.EntrevistaRrhh => ColorEntrevista,
+            EstadoSolicitud.EntrevistaTecnica => ColorEntrevista,
+            EstadoSolicitud.EntrevistaFinal => ColorEntrevista,
             EstadoSolicitud.OfertaRecibida => "#059669",
             EstadoSolicitud.OfertaAceptada => "#047857",
             EstadoSolicitud.OfertaRechazada => "#B45309",

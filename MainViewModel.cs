@@ -2,6 +2,7 @@
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -18,6 +19,9 @@ public partial class MainViewModel : ObservableObject
 {
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
     // por el arranque de la app se apoyan en que por defecto el idioma es el castellano.
+    private const string ClaveError = "Error";
+    private const string FormatoFecha = "yyyy-MM-dd";
+
     private readonly AppDbContext db;
 
     public MainViewModel()
@@ -99,7 +103,7 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// Al cambiar de idioma: se refrescan los desplegables, la lista, las estadísticas y la
-    /// gráfica para que todo lo que no se repinta solo (combos, celdas del DataGrid) lo haga.
+    /// gráfica para que lo que no se repinta solo (combos, celdas del DataGrid) lo haga.
     /// </summary>
     private void CuandoCambiaIdioma(object? sender, Idioma idioma)
     {
@@ -292,7 +296,7 @@ public partial class MainViewModel : ObservableObject
     private void ActualizarEmbudo()
     {
         var meses = new List<DateTime>();
-        var inicioMesActual = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var inicioMesActual = DateTime.Today.AddDays(1 - DateTime.Today.Day);
         for (int i = 11; i >= 0; i--)
         {
             meses.Add(inicioMesActual.AddMonths(-i));
@@ -310,29 +314,11 @@ public partial class MainViewModel : ObservableObject
             DateTime inicio = meses[m];
             DateTime fin = inicio.AddMonths(1);
 
-            foreach (Solicitud s in todas)
-            {
-                bool tieneHitoEnvio = s.Eventos.Any(e =>
-                    e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha >= inicio && e.Fecha < fin);
-
-                bool enviadaSinHito = !s.Eventos.Any(e => e.Tipo == TipoEvento.SolicitudEnviada)
-                    && s.FechaSolicitud >= inicio && s.FechaSolicitud < fin;
-
-                if (tieneHitoEnvio || enviadaSinHito)
-                {
-                    enviadas[m]++;
-                }
-
-                if (s.FechaPrimeraRespuesta >= inicio && s.FechaPrimeraRespuesta < fin)
-                {
-                    respondidas[m]++;
-                }
-            }
-
+            enviadas[m] = todas.Count(s => EnviadaEnMes(s, inicio, fin));
+            respondidas[m] = todas.Count(s => s.FechaPrimeraRespuesta >= inicio && s.FechaPrimeraRespuesta < fin);
             entrevistas[m] = todas
                 .SelectMany(s => s.Eventos)
                 .Count(e => e.Tipo == TipoEvento.Entrevista && e.Fecha >= inicio && e.Fecha < fin);
-
             ofertas[m] = todas
                 .SelectMany(s => s.Eventos)
                 .Count(e => e.Tipo == TipoEvento.Oferta && e.Fecha >= inicio && e.Fecha < fin);
@@ -346,6 +332,17 @@ public partial class MainViewModel : ObservableObject
                 entrevistas[i],
                 ofertas[i]))
             .ToList();
+    }
+
+    internal static bool EnviadaEnMes(Solicitud s, DateTime inicio, DateTime fin)
+    {
+        bool tieneHito = s.Eventos.Any(e =>
+            e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha >= inicio && e.Fecha < fin);
+
+        bool sinHito = !s.Eventos.Any(e => e.Tipo == TipoEvento.SolicitudEnviada)
+            && s.FechaSolicitud >= inicio && s.FechaSolicitud < fin;
+
+        return tieneHito || sinHito;
     }
 
     /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
@@ -412,7 +409,7 @@ public partial class MainViewModel : ObservableObject
         {
             MessageBox.Show(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAdjuntar"), ex.Message),
-                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -480,12 +477,13 @@ public partial class MainViewModel : ObservableObject
         {
             MessageBox.Show(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
-                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
     // ---------------------------------------------------------------- Importación LinkedIn
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Método de diálogo: ni el diálogo ni los MessageBox se pueden probar.
     private void ImportarLinkedIn()
     {
         var dialogo = new OpenFileDialog
@@ -508,85 +506,57 @@ public partial class MainViewModel : ObservableObject
         {
             MessageBox.Show(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoLeerFichero"), ex.Message),
-                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
-        if (lineas.Count < 2)
+        string? aviso = ValidarImportacion(lineas);
+        if (aviso is not null)
         {
             MessageBox.Show(
-                Localizacion.Texto("Mensaje.CsvSinFilas"),
+                aviso,
                 Localizacion.Texto("Titulo.Importar"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         var columnas = CsvHelper.IdentificarColumnas(lineas[0]);
-        if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
+
+        (int importadas, int duplicadas, int omitidas) = this.ImportarLineas(lineas, columnas);
+
+        MessageBox.Show(
+            ResumenImportacion(importadas, duplicadas, omitidas),
+            Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    internal static string? ValidarImportacion(List<List<string>> lineas)
+    {
+        if (lineas.Count < 2)
         {
-            MessageBox.Show(
-                Localizacion.Texto("Mensaje.CsvColumnas"),
-                Localizacion.Texto("Titulo.Importar"), MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            return Localizacion.Texto("Mensaje.CsvSinFilas");
         }
 
+        var columnas = CsvHelper.IdentificarColumnas(lineas[0]);
+        if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
+        {
+            return Localizacion.Texto("Mensaje.CsvColumnas");
+        }
+
+        return null;
+    }
+
+    internal (int Importadas, int Duplicadas, int Omitidas) ImportarLineas(
+        List<List<string>> lineas, Dictionary<string, int> columnas)
+    {
         int maximoIndice = columnas.Values.Max();
         var vistas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         int importadas = 0, duplicadas = 0, omitidas = 0;
 
         foreach (List<string> campos in lineas.Skip(1))
         {
-            if (campos.Count <= maximoIndice)
-            {
-                continue;
-            }
-
-            string empresa = CsvHelper.ObtenerCampo(campos, columnas, "empresa").Trim();
-            string puesto = CsvHelper.ObtenerCampo(campos, columnas, "puesto").Trim();
-            if (empresa.Length == 0 || puesto.Length == 0)
-            {
-                omitidas++;
-                continue;
-            }
-
-            DateTime fecha = CsvHelper.ParsearFecha(CsvHelper.ObtenerCampo(campos, columnas, "fecha"));
-            string clave = $"{empresa}|{puesto}|{fecha:yyyy-MM-dd}";
-
-            bool existe = vistas.Contains(clave) || this.db.Solicitudes.Any(s =>
-                s.Empresa == empresa && s.Puesto == puesto && s.FechaSolicitud == fecha);
-
-            if (existe)
-            {
-                duplicadas++;
-                continue;
-            }
-
-            vistas.Add(clave);
-
-            string evento = CsvHelper.ObtenerCampo(campos, columnas, "evento");
-            string uuid = CsvHelper.ObtenerCampo(campos, columnas, "uuid");
-            string ubicacion = CsvHelper.ObtenerCampo(campos, columnas, "ubicacion");
-
-            var solicitud = new Solicitud
-            {
-                Empresa = empresa,
-                Puesto = puesto,
-                FechaSolicitud = fecha,
-                Ubicacion = ubicacion.Length == 0 ? null : ubicacion,
-                Portal = "LinkedIn",
-                Estado = CsvHelper.MapearEstadoLinkedIn(CsvHelper.ObtenerCampo(campos, columnas, "estado")),
-                EnlaceOferta = uuid.Length > 0 ? $"https://www.linkedin.com/jobs/view/{uuid}" : null,
-                Notas = evento.Length > 0 ? string.Format(Localizacion.Texto("Importar.EventoLinkedIn"), evento) : null,
-            };
-
-            solicitud.Eventos.Add(new Evento
-            {
-                Fecha = fecha,
-                Tipo = TipoEvento.SolicitudEnviada,
-                Descripcion = Localizacion.Texto("Evento.ImportadaLinkedIn"),
-            });
-
-            this.db.Solicitudes.Add(solicitud);
-            importadas++;
+            (int Imp, int Dup, int Omi) fila = this.ImportarFila(campos, columnas, maximoIndice, vistas);
+            importadas += fila.Imp;
+            duplicadas += fila.Dup;
+            omitidas += fila.Omi;
         }
 
         if (importadas > 0)
@@ -597,6 +567,66 @@ public partial class MainViewModel : ObservableObject
         this.Recargar();
         this.RecargarEmbudoSiVisible();
 
+        return (importadas, duplicadas, omitidas);
+    }
+
+    internal (int Importadas, int Duplicadas, int Omitidas) ImportarFila(
+        List<string> campos, Dictionary<string, int> columnas, int maximoIndice, HashSet<string> vistas)
+    {
+        if (campos.Count <= maximoIndice)
+        {
+            return (0, 0, 0);
+        }
+
+        string empresa = CsvHelper.ObtenerCampo(campos, columnas, "empresa").Trim();
+        string puesto = CsvHelper.ObtenerCampo(campos, columnas, "puesto").Trim();
+        if (empresa.Length == 0 || puesto.Length == 0)
+        {
+            return (0, 0, 1);
+        }
+
+        DateTime fecha = CsvHelper.ParsearFecha(CsvHelper.ObtenerCampo(campos, columnas, "fecha"));
+        string clave = $"{empresa}|{puesto}|{fecha:yyyy-MM-dd}";
+
+        bool existe = vistas.Contains(clave) || this.db.Solicitudes.Any(s =>
+            s.Empresa == empresa && s.Puesto == puesto && s.FechaSolicitud == fecha);
+
+        if (existe)
+        {
+            return (0, 1, 0);
+        }
+
+        vistas.Add(clave);
+
+        string evento = CsvHelper.ObtenerCampo(campos, columnas, "evento");
+        string uuid = CsvHelper.ObtenerCampo(campos, columnas, "uuid");
+        string ubicacion = CsvHelper.ObtenerCampo(campos, columnas, "ubicacion");
+
+        var solicitud = new Solicitud
+        {
+            Empresa = empresa,
+            Puesto = puesto,
+            FechaSolicitud = fecha,
+            Ubicacion = ubicacion.Length == 0 ? null : ubicacion,
+            Portal = "LinkedIn",
+            Estado = CsvHelper.MapearEstadoLinkedIn(CsvHelper.ObtenerCampo(campos, columnas, "estado")),
+            EnlaceOferta = uuid.Length > 0 ? $"https://www.linkedin.com/jobs/view/{uuid}" : null,
+            Notas = evento.Length > 0 ? string.Format(Localizacion.Texto("Importar.EventoLinkedIn"), evento) : null,
+        };
+
+        solicitud.Eventos.Add(new Evento
+        {
+            Fecha = fecha,
+            Tipo = TipoEvento.SolicitudEnviada,
+            Descripcion = Localizacion.Texto("Evento.ImportadaLinkedIn"),
+        });
+
+        this.db.Solicitudes.Add(solicitud);
+        return (1, 0, 0);
+    }
+
+    internal static string ResumenImportacion(int importadas, int duplicadas, int omitidas)
+    {
         string resumen = string.Format(Localizacion.Texto("Importar.ResumenImportadas"), importadas);
         if (duplicadas > 0)
         {
@@ -608,9 +638,7 @@ public partial class MainViewModel : ObservableObject
             resumen += "\n" + string.Format(Localizacion.Texto("Importar.ResumenOmitidas"), omitidas);
         }
 
-        MessageBox.Show(
-            resumen,
-            Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+        return resumen;
     }
 
     [RelayCommand]
@@ -732,7 +760,7 @@ public partial class MainViewModel : ObservableObject
         {
             MessageBox.Show(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
-                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -760,7 +788,7 @@ public partial class MainViewModel : ObservableObject
             AdjuntosHelper.Eliminar(this.Edicion.RutaCarta);
         }
 
-        // Desenganchamos todo lo que EF tenía en seguimiento: los cambios pendientes
+        // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
         foreach (EntityEntry entrada in this.db.ChangeTracker.Entries().ToList())
         {
@@ -824,7 +852,7 @@ public partial class MainViewModel : ObservableObject
         {
             MessageBox.Show(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirEnlace"), ex.Message),
-                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -855,6 +883,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Método de diálogo: ni el diálogo ni los MessageBox se pueden probar.
     private void ExportarCsv()
     {
         var dialogo = new SaveFileDialog
@@ -869,49 +898,56 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        var sb = new StringBuilder();
-        sb.AppendLine(string.Join(';', new[]
-        {
-            Localizacion.Texto("Csv.Empresa"),
-            Localizacion.Texto("Csv.Puesto"),
-            Localizacion.Texto("Csv.Estado"),
-            Localizacion.Texto("Csv.Portal"),
-            Localizacion.Texto("Csv.Ubicacion"),
-            Localizacion.Texto("Csv.Modalidad"),
-            Localizacion.Texto("Csv.FechaSolicitud"),
-            Localizacion.Texto("Csv.PrimeraRespuesta"),
-            Localizacion.Texto("Csv.DiasHastaRespuesta"),
-            Localizacion.Texto("Csv.Entrevista"),
-            Localizacion.Texto("Csv.Cierre"),
-            Localizacion.Texto("Csv.ProximoSeguimiento"),
-            Localizacion.Texto("Csv.SalarioMin"),
-            Localizacion.Texto("Csv.SalarioMax"),
-            Localizacion.Texto("Csv.Pretension"),
-            Localizacion.Texto("Csv.Interes"),
-            Localizacion.Texto("Csv.Tecnologias"),
-            Localizacion.Texto("Csv.Contacto"),
-            Localizacion.Texto("Csv.EmailContacto"),
-            Localizacion.Texto("Csv.RespuestaEmpresa"),
-            Localizacion.Texto("Csv.Notas"),
-            Localizacion.Texto("Csv.Enlace"),
-        }));
+        File.WriteAllText(dialogo.FileName, this.ConstruirCsv(), new UTF8Encoding(true));
 
+        MessageBox.Show(
+            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
+            Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    internal string ConstruirCsv()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(string.Join(
+                    ';',
+                    Localizacion.Texto("Csv.Empresa"),
+                    Localizacion.Texto("Csv.Puesto"),
+                    Localizacion.Texto("Csv.Estado"),
+                    Localizacion.Texto("Csv.Portal"),
+                    Localizacion.Texto("Csv.Ubicacion"),
+                    Localizacion.Texto("Csv.Modalidad"),
+                    Localizacion.Texto("Csv.FechaSolicitud"),
+                    Localizacion.Texto("Csv.PrimeraRespuesta"),
+                    Localizacion.Texto("Csv.DiasHastaRespuesta"),
+                    Localizacion.Texto("Csv.Entrevista"),
+                    Localizacion.Texto("Csv.Cierre"),
+                    Localizacion.Texto("Csv.ProximoSeguimiento"),
+                    Localizacion.Texto("Csv.SalarioMin"),
+                    Localizacion.Texto("Csv.SalarioMax"),
+                    Localizacion.Texto("Csv.Pretension"),
+                    Localizacion.Texto("Csv.Interes"),
+                    Localizacion.Texto("Csv.Tecnologias"),
+                    Localizacion.Texto("Csv.Contacto"),
+                    Localizacion.Texto("Csv.EmailContacto"),
+                    Localizacion.Texto("Csv.RespuestaEmpresa"),
+                    Localizacion.Texto("Csv.Notas"),
+                    Localizacion.Texto("Csv.Enlace")));
         foreach (Solicitud s in this.db.Solicitudes.OrderByDescending(x => x.FechaSolicitud).ToList())
         {
-            sb.AppendLine(string.Join(';', new[]
-            {
-                CsvHelper.Escapar(s.Empresa),
+            sb.AppendLine(string.Join(
+            ';',
+            CsvHelper.Escapar(s.Empresa),
                 CsvHelper.Escapar(s.Puesto),
                 CsvHelper.Escapar(EnumHelper.Descripcion(s.Estado)),
                 CsvHelper.Escapar(s.Portal),
                 CsvHelper.Escapar(s.Ubicacion),
                 CsvHelper.Escapar(EnumHelper.Descripcion(s.Modalidad)),
-                s.FechaSolicitud.ToString("yyyy-MM-dd"),
-                s.FechaPrimeraRespuesta?.ToString("yyyy-MM-dd") ?? string.Empty,
+                s.FechaSolicitud.ToString(FormatoFecha),
+                s.FechaPrimeraRespuesta?.ToString(FormatoFecha) ?? string.Empty,
                 s.DiasHastaRespuesta?.ToString() ?? string.Empty,
-                s.FechaEntrevista?.ToString("yyyy-MM-dd") ?? string.Empty,
-                s.FechaCierre?.ToString("yyyy-MM-dd") ?? string.Empty,
-                s.ProximoSeguimiento?.ToString("yyyy-MM-dd") ?? string.Empty,
+                s.FechaEntrevista?.ToString(FormatoFecha) ?? string.Empty,
+                s.FechaCierre?.ToString(FormatoFecha) ?? string.Empty,
+                s.ProximoSeguimiento?.ToString(FormatoFecha) ?? string.Empty,
                 s.SalarioMin?.ToString() ?? string.Empty,
                 s.SalarioMax?.ToString() ?? string.Empty,
                 s.PretensionSalarial?.ToString() ?? string.Empty,
@@ -921,16 +957,10 @@ public partial class MainViewModel : ObservableObject
                 CsvHelper.Escapar(s.ContactoEmail),
                 CsvHelper.Escapar(s.RespuestaEmpresa),
                 CsvHelper.Escapar(s.Notas),
-                CsvHelper.Escapar(s.EnlaceOferta),
-            }));
+                CsvHelper.Escapar(s.EnlaceOferta)));
         }
 
-        // UTF-8 con BOM para que Excel en español no destroce los acentos.
-        File.WriteAllText(dialogo.FileName, sb.ToString(), new UTF8Encoding(true));
-
-        MessageBox.Show(
-            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
-            Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+        return sb.ToString();
     }
 }
 

@@ -1,5 +1,6 @@
 using Xunit;
 using System.IO;
+using GestorSolicitudes;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
@@ -148,5 +149,54 @@ public class ViewModelStaticTests
     {
         var columnas = new Dictionary<string, int> { { "empresa", 0 } };
         Assert.Equal(string.Empty, CsvHelper.ObtenerCampo(new List<string> { "a" }, columnas, "puesto"));
+    }
+
+    // ---------------- Embudo ----------------
+
+    [Fact]
+    public void EnviadaEnMes_ReconoceElHitoDeEnvioDentroDelMes()
+    {
+        var conHito = new Solicitud
+        {
+            Eventos = { new Evento { Fecha = new DateTime(2026, 2, 10), Tipo = TipoEvento.SolicitudEnviada } },
+        };
+
+        Assert.True(MainViewModel.EnviadaEnMes(conHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+    }
+
+    [Fact]
+    public void EnviadaEnMes_ReconoceLaFechaLibroCuandoNoHayHito()
+    {
+        var sinHito = new Solicitud { FechaSolicitud = new DateTime(2026, 2, 15) };
+
+        Assert.True(MainViewModel.EnviadaEnMes(sinHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+    }
+
+    [Fact]
+    public void EnviadaEnMes_DescartaFueraDelMesYConHitoFueraDelMes()
+    {
+        var fueraDeRango = new Solicitud { FechaSolicitud = new DateTime(2026, 3, 1) };
+        Assert.False(MainViewModel.EnviadaEnMes(fueraDeRango, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+
+        var hitoFuera = new Solicitud
+        {
+            FechaSolicitud = new DateTime(2026, 1, 15),
+            Eventos = { new Evento { Fecha = new DateTime(2026, 1, 20), Tipo = TipoEvento.SolicitudEnviada } },
+        };
+        Assert.False(MainViewModel.EnviadaEnMes(hitoFuera, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+    }
+
+    // ---------------- Resumen de importación ----------------
+
+    [Fact]
+    public void ResumenImportacion_CombinaLosContadoresDelResumen()
+    {
+        string soloImportadas = MainViewModel.ResumenImportacion(3, 0, 0);
+        Assert.Equal(string.Format(Localizacion.Texto("Importar.ResumenImportadas"), 3), soloImportadas);
+        Assert.DoesNotContain("\n", soloImportadas);
+
+        string completo = MainViewModel.ResumenImportacion(3, 2, 1);
+        Assert.Contains(string.Format(Localizacion.Texto("Importar.ResumenDuplicadas"), 2), completo);
+        Assert.Contains(string.Format(Localizacion.Texto("Importar.ResumenOmitidas"), 1), completo);
     }
 }

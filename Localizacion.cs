@@ -1,5 +1,6 @@
 namespace GestorSolicitudes;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -20,8 +21,12 @@ public sealed record IdiomaItem(Idioma Idioma, string Nombre);
 /// Traducciones de toda la interfaz y gestión del idioma activo. La fuente única de los
 /// textos son los diccionarios de este archivo; el recurso XAML que se inyecta en la
 /// aplicación se construye a partir de ellos para que los {DynamicResource} se actualicen
-/// al cambiar de idioma sin reiniciar.
+/// al cambiar de idioma sin reiniciar. La supresión de la regla de literales duplicados
+/// (S1192) es a propósito: la misma palabra se repite como clave y como texto en los tres
+/// idiomas, y definir constantes ensuciaría la tabla de traducciones.
 /// </summary>
+[SuppressMessage("SonarAnalyzer.CSharp", "S1192",
+    Justification = "Las traducciones se repiten por naturaleza: la misma palabra es clave y valor en varios idiomas.")]
 public static class Localizacion
 {
     /// <summary>Se dispara al cambiar de idioma, para que la interfaz refresque lo que no usa DynamicResource.</summary>
@@ -759,10 +764,15 @@ public static class Localizacion
     public static string Texto(string clave) => Texto(IdiomaActual, clave);
 
     /// <summary>Traduce una clave a un idioma concreto, sin tocar el idioma activo.</summary>
-    public static string Texto(Idioma idioma, string clave) =>
-        Tablas[idioma].TryGetValue(clave, out string? traducido)
-            ? traducido
-            : TextoCastellano.TryGetValue(clave, out string? espanol) ? espanol : clave;
+    public static string Texto(Idioma idioma, string clave)
+    {
+        if (Tablas[idioma].TryGetValue(clave, out string? traducido))
+        {
+            return traducido;
+        }
+
+        return TextoCastellano.TryGetValue(clave, out string? espanol) ? espanol : clave;
+    }
 
     /// <summary>Indica si una clave existe en las traducciones.</summary>
     public static bool Contiene(string clave) =>

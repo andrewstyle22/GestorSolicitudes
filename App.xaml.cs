@@ -1,5 +1,6 @@
 ﻿namespace GestorSolicitudes;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using GestorSolicitudes.Data;
 using Microsoft.Data.Sqlite;
@@ -48,6 +49,8 @@ public partial class App : Application
     /// </summary>
     private static void VerificarColumnasFaltantes() => VerificarColumnasFaltantes(AppDbContext.RutaBaseDatos);
 
+    [SuppressMessage("SonarAnalyzer.CSharp", "S2077",
+        Justification = "ALTER TABLE de SQLite no admite parámetros y tanto el nombre como la definición de la columna salen de un array fijo del código, nunca de entrada del usuario.")]
     internal static void VerificarColumnasFaltantes(string ruta)
     {
         using var conexion = new SqliteConnection($"Data Source={ruta}");
@@ -67,13 +70,15 @@ public partial class App : Application
         // Los enums se guardan como entero; Origen es NOT NULL con valor por defecto
         // (0 = AplicacionDirecta) para que las filas ya existentes queden con un
         // valor válido en vez de nulo.
+        const string TextoNulo = "TEXT NULL";
+
         (string Columna, string Definicion)[] nuevas =
         {
-            ("RutaCv", "TEXT NULL"),
-            ("RutaCarta", "TEXT NULL"),
-            ("NombreOriginalCv", "TEXT NULL"),
-            ("NombreOriginalCarta", "TEXT NULL"),
-            ("Requisitos", "TEXT NULL"),
+            ("RutaCv", TextoNulo),
+            ("RutaCarta", TextoNulo),
+            ("NombreOriginalCv", TextoNulo),
+            ("NombreOriginalCarta", TextoNulo),
+            ("Requisitos", TextoNulo),
             ("MotivoRechazo", "INTEGER NULL"),
             ("Origen", "INTEGER NOT NULL DEFAULT 0"),
             ("ContactoTelefono", "TEXT NULL"),
