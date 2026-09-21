@@ -2,6 +2,7 @@
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -482,6 +483,7 @@ public partial class MainViewModel : ObservableObject
 
     // ---------------------------------------------------------------- Importación LinkedIn
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Método de diálogo: ni el diálogo ni los MessageBox se pueden probar.
     private void ImportarLinkedIn()
     {
         var dialogo = new OpenFileDialog
@@ -881,6 +883,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    [ExcludeFromCodeCoverage] // Método de diálogo: ni el diálogo ni los MessageBox se pueden probar.
     private void ExportarCsv()
     {
         var dialogo = new SaveFileDialog
