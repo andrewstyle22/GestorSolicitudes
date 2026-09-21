@@ -53,7 +53,7 @@ ViewModel se construye con un contexto apuntando a una base temporal, para no to
 **La oferta**: empresa, puesto, enlace directo (con botón para abrirlo en el navegador), portal de
 origen, vía de contacto (cómo llegó el contacto: aplicación directa, recruiter, referido, networking,
 feria de empleo...), ubicación, modalidad, tecnologías pedidas, horquilla salarial, tu pretensión, un
-nivel de interés del 1 al 5 (con estrellas clicables) y los requisitos del cargo (con botón *Leer*
+nivel de interés del 1 al 5 (con un desplegable) y los requisitos del cargo (con botón *Leer*
 que los abre en una ventana más grande, con texto seleccionable y scroll, para leerlos con comodidad).
 
 **El proceso**: estado dentro del embudo, fecha de envío, fecha de la primera contestación, día de
@@ -134,9 +134,11 @@ Localizacion.cs  Traducciones de la interfaz (es/en/de): textos, cultura, select
 Data/            AppDbContext (SQLite, EnsureCreated + ALTER TABLE de columnas nuevas)
 ViewModels/      MainViewModel: filtros, CRUD, métricas, embudo, adjuntos, duplicar e importación
 Views/           MainWindow: lista maestra + panel de detalle + gráfica + icono de bandeja
-Converters/      enum → texto, null → Visibility, estado → color, interés → color de estrella
+Converters/      enum → texto, null → Visibility, estado → color, interés → texto de estrellas
 Helpers/         EnumHelper: enum → texto traducido (cae a [Description] si falta la clave)
                  AdjuntosHelper: copia/borra CV y carta en %APPDATA%\...\adjuntos
+                 CsvHelper: lee el CSV de LinkedIn y escribe el de exportación; su normalización
+                            de texto (minúsculas sin tildes) se reutiliza en la búsqueda
 GestorSolicitudes.Tests/  xUnit: modelo, helpers, CSV, contexto SQLite y lógica del ViewModel
 ```
 
@@ -150,7 +152,7 @@ operación con `IDbContextFactory`.
 
 **Las entidades son POCOs sin `INotifyPropertyChanged`.** Por eso la lista se recarga entera
 después de cada guardado, y el panel de detalle se "repinta" reasignando `Edicion = null; Edicion =
-actual;` tras adjuntar un fichero o tocar una estrella, en vez de refrescar solo ese campo. Con unos
+actual;` tras adjuntar un fichero o cambiar el interés, en vez de refrescar solo ese campo. Con unos
 cientos de registros ni se nota; si algún día crece, el cambio natural es meter `ObservableObject`
 en `Solicitud`.
 
