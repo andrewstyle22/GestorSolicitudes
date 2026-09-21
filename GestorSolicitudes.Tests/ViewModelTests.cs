@@ -1,5 +1,6 @@
 using Xunit;
 using System.Globalization;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
@@ -300,5 +301,99 @@ public class ViewModelTests
         Assert.Equal(12, vm.MesesEmbudo.Count);
         Assert.All(vm.MesesEmbudo, m =>
             Assert.InRange(m.AlturaEnviadas, 0, 100));
+    }
+
+    // ---------------- Importación LinkedIn ----------------
+
+    private static Dictionary<string, int> ColumnasLinkedIn() =>
+        CsvHelper.IdentificarColumnas(new List<string> { "Company", "Title", "Application date", "Status", "Location", "event", "UUID" });
+
+    [Fact]
+    public void ImportarFila_FilaCortaNoCuentaNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        var resultado = vm.ImportarFila(new List<string> { "Empresa" }, ColumnasLinkedIn(), 6, new HashSet<string>());
+
+        Assert.Equal((0, 0, 0), resultado);
+        Assert.Equal(0, vm.TotalSolicitudes);
+    }
+
+    [Fact]
+    public void ImportarFila_SinEmpresaCuentaComoOmitida()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        var resultado = vm.ImportarFila(
+            new List<string> { "", "Dev", "2024-05-01", "Applied", "", "", "" },
+            ColumnasLinkedIn(), 6, new HashSet<string>());
+
+        Assert.Equal((0, 0, 1), resultado);
+        Assert.Equal(0, vm.TotalSolicitudes);
+    }
+
+    [Fact]
+    public void ImportarFila_DuplicadaEnBaseDeDatosNoSeInserta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev", FechaSolicitud = new DateTime(2024, 5, 1) });
+        db.SaveChanges();
+
+        var resultado = vm.ImportarFila(
+            new List<string> { "ACME", "Dev", "2024-05-01", "Applied", "", "", "" },
+            ColumnasLinkedIn(), 6, new HashSet<string>());
+
+        Assert.Equal((0, 1, 0), resultado);
+        vm.Recargar();
+        Assert.Equal(1, vm.TotalSolicitudes);
+    }
+
+    [Fact]
+    public void ImportarFila_NuevaInsertaLaCandidaturaConSuHito()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        var resultado = vm.ImportarFila(
+            new List<string> { "ACME", "Dev", "2024-05-01", "Applied", "Madrid", "Entró por un referido", "abc123" },
+            ColumnasLinkedIn(), 6, new HashSet<string>());
+
+        Assert.Equal((1, 0, 0), resultado);
+        db.SaveChanges();
+        vm.Recargar();
+        Solicitud guardada = Assert.Single(vm.Solicitudes);
+        Assert.Equal("ACME", guardada.Empresa);
+        Assert.Equal("LinkedIn", guardada.Portal);
+        Assert.Equal("https://www.linkedin.com/jobs/view/abc123", guardada.EnlaceOferta);
+        Assert.Equal(new DateTime(2024, 5, 1), guardada.FechaSolicitud);
+        Assert.Contains(guardada.Eventos, e => e.Tipo == TipoEvento.SolicitudEnviada);
+    }
+
+    [Fact]
+    public void ImportarLineas_ImportaValidasYCuentaDuplicadasYOmitidas()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        var lineas = new List<List<string>>
+        {
+            new() { "Company", "Title", "Application date", "Status", "Location", "event", "UUID" },
+            new() { "ACME", "Dev", "2024-05-01", "Applied", "Madrid", "", "abc" },
+            new() { "ACME" },
+            new() { "", "Dev2", "2024-05-02", "Applied", "", "", "" },
+            new() { "ACME", "Dev", "2024-05-01", "Applied", "Madrid", "", "abc" },
+        };
+
+        (int Importadas, int Duplicadas, int Omitidas) resultado =
+            vm.ImportarLineas(lineas, CsvHelper.IdentificarColumnas(lineas[0]));
+
+        Assert.Equal(1, resultado.Importadas);
+        Assert.Equal(1, resultado.Duplicadas);
+        Assert.Equal(1, resultado.Omitidas);
+        Assert.Equal(1, vm.TotalSolicitudes);
+        Assert.Equal("https://www.linkedin.com/jobs/view/abc", Assert.Single(vm.Solicitudes).EnlaceOferta);
     }
 }

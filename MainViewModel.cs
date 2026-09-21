@@ -333,7 +333,7 @@ public partial class MainViewModel : ObservableObject
             .ToList();
     }
 
-    private static bool EnviadaEnMes(Solicitud s, DateTime inicio, DateTime fin)
+    internal static bool EnviadaEnMes(Solicitud s, DateTime inicio, DateTime fin)
     {
         bool tieneHito = s.Eventos.Any(e =>
             e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha >= inicio && e.Fecha < fin);
@@ -525,17 +525,26 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        (int importadas, int duplicadas, int omitidas) = this.ImportarLineas(lineas, columnas);
+
+        MessageBox.Show(
+            ResumenImportacion(importadas, duplicadas, omitidas),
+            Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    internal (int Importadas, int Duplicadas, int Omitidas) ImportarLineas(
+        List<List<string>> lineas, Dictionary<string, int> columnas)
+    {
         int maximoIndice = columnas.Values.Max();
         var vistas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         int importadas = 0, duplicadas = 0, omitidas = 0;
 
         foreach (List<string> campos in lineas.Skip(1))
         {
-            (int Importadas, int Duplicadas, int Omitidas) resultado =
-                this.ImportarFila(campos, columnas, maximoIndice, vistas);
-            importadas += resultado.Importadas;
-            duplicadas += resultado.Duplicadas;
-            omitidas += resultado.Omitidas;
+            (int Imp, int Dup, int Omi) fila = this.ImportarFila(campos, columnas, maximoIndice, vistas);
+            importadas += fila.Imp;
+            duplicadas += fila.Dup;
+            omitidas += fila.Omi;
         }
 
         if (importadas > 0)
@@ -546,12 +555,10 @@ public partial class MainViewModel : ObservableObject
         this.Recargar();
         this.RecargarEmbudoSiVisible();
 
-        MessageBox.Show(
-            ResumenImportacion(importadas, duplicadas, omitidas),
-            Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+        return (importadas, duplicadas, omitidas);
     }
 
-    private (int Importadas, int Duplicadas, int Omitidas) ImportarFila(
+    internal (int Importadas, int Duplicadas, int Omitidas) ImportarFila(
         List<string> campos, Dictionary<string, int> columnas, int maximoIndice, HashSet<string> vistas)
     {
         if (campos.Count <= maximoIndice)
@@ -606,7 +613,7 @@ public partial class MainViewModel : ObservableObject
         return (1, 0, 0);
     }
 
-    private static string ResumenImportacion(int importadas, int duplicadas, int omitidas)
+    internal static string ResumenImportacion(int importadas, int duplicadas, int omitidas)
     {
         string resumen = string.Format(Localizacion.Texto("Importar.ResumenImportadas"), importadas);
         if (duplicadas > 0)
