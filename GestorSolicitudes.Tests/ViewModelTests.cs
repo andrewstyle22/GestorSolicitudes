@@ -113,22 +113,6 @@ public class ViewModelTests
     }
 
     [Fact]
-    public void EstablecerInteres_FijaElValorDelPanel()
-    {
-        using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-
-        vm.NuevaCommand.Execute(null);
-        Assert.NotNull(vm.Edicion);
-
-        vm.EstablecerInteresCommand.Execute("5");
-        Assert.Equal(5, vm.Edicion!.Interes);
-
-        vm.EstablecerInteresCommand.Execute("1");
-        Assert.Equal(1, vm.Edicion.Interes);
-    }
-
-    [Fact]
     public void FiltroSoloAbiertas_ExcluyeLasCerradas()
     {
         using var db = TestDb.NuevoContexto();
@@ -313,7 +297,8 @@ public class ViewModelTests
         vm.ConfigurarGraficaCommand.Execute(null);
 
         Assert.True(vm.VerGrafica);
-        Assert.Equal(4, vm.SerieEmbudo.Length);
-        Assert.Equal(12, vm.EjesXEmbudo[0].Labels!.Count);
+        Assert.Equal(12, vm.MesesEmbudo.Count);
+        Assert.All(vm.MesesEmbudo, m =>
+            Assert.InRange(m.AlturaEnviadas, 0, 100));
     }
 }

@@ -64,30 +64,22 @@ public partial class App : Application
             }
         }
 
-        string[] nuevas = { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos" };
-        foreach (string columna in nuevas)
-        {
-            if (columnas.Contains(columna))
-            {
-                continue;
-            }
-
-            using var command = conexion.CreateCommand();
-            command.CommandText = $"ALTER TABLE Solicitudes ADD COLUMN \"{columna}\" TEXT NULL;";
-            command.ExecuteNonQuery();
-        }
-
         // Los enums se guardan como entero; Origen es NOT NULL con valor por defecto
         // (0 = AplicacionDirecta) para que las filas ya existentes queden con un
         // valor válido en vez de nulo.
-        (string Columna, string Definicion)[] nuevasTipadas =
+        (string Columna, string Definicion)[] nuevas =
         {
+            ("RutaCv", "TEXT NULL"),
+            ("RutaCarta", "TEXT NULL"),
+            ("NombreOriginalCv", "TEXT NULL"),
+            ("NombreOriginalCarta", "TEXT NULL"),
+            ("Requisitos", "TEXT NULL"),
             ("MotivoRechazo", "INTEGER NULL"),
             ("Origen", "INTEGER NOT NULL DEFAULT 0"),
             ("ContactoTelefono", "TEXT NULL"),
         };
 
-        foreach ((string columna, string definicion) in nuevasTipadas)
+        foreach ((string columna, string definicion) in nuevas)
         {
             if (columnas.Contains(columna))
             {

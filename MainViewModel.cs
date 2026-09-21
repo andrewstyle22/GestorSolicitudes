@@ -2,7 +2,6 @@
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -11,13 +10,9 @@ using CommunityToolkit.Mvvm.Input;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Win32;
-using SkiaSharp;
 
 public partial class MainViewModel : ObservableObject
 {
@@ -187,12 +182,10 @@ public partial class MainViewModel : ObservableObject
     // ---------------------------------------------------------------- Gráfica de embudo
     [ObservableProperty]
     private bool verGrafica;
+
+    /// <summary>Filas del embudo (una por mes) con las cuatro series ya escaladas a porcentaje.</summary>
     [ObservableProperty]
-    private ISeries[] serieEmbudo = Array.Empty<ISeries>();
-    [ObservableProperty]
-    private Axis[] ejesXEmbudo = Array.Empty<Axis>();
-    [ObservableProperty]
-    private Axis[] ejesYEmbudo = Array.Empty<Axis>();
+    private IReadOnlyList<EmbudoMes> mesesEmbudo = new List<EmbudoMes>();
 
     // ---------------------------------------------------------------- Carga
 
@@ -218,13 +211,13 @@ public partial class MainViewModel : ObservableObject
         // acentos: normalizamos (minúsculas y sin tildes) el texto y los campos.
         if (!string.IsNullOrWhiteSpace(this.TextoBusqueda))
         {
-            string texto = NormalizarBusqueda(this.TextoBusqueda);
+            string texto = CsvHelper.NormalizarBusqueda(this.TextoBusqueda);
             lista = lista.Where(s =>
-                NormalizarBusqueda(s.Empresa).Contains(texto) ||
-                NormalizarBusqueda(s.Puesto).Contains(texto) ||
-                (s.Tecnologias != null && NormalizarBusqueda(s.Tecnologias).Contains(texto)) ||
-                (s.Ubicacion != null && NormalizarBusqueda(s.Ubicacion).Contains(texto)) ||
-                (s.Portal != null && NormalizarBusqueda(s.Portal).Contains(texto))).ToList();
+                CsvHelper.NormalizarBusqueda(s.Empresa).Contains(texto) ||
+                CsvHelper.NormalizarBusqueda(s.Puesto).Contains(texto) ||
+                (s.Tecnologias != null && CsvHelper.NormalizarBusqueda(s.Tecnologias).Contains(texto)) ||
+                (s.Ubicacion != null && CsvHelper.NormalizarBusqueda(s.Ubicacion).Contains(texto)) ||
+                (s.Portal != null && CsvHelper.NormalizarBusqueda(s.Portal).Contains(texto))).ToList();
         }
 
         // EstaAbierta y SeguimientoPendiente son [NotMapped]: se filtran en memoria.
@@ -240,29 +233,6 @@ public partial class MainViewModel : ObservableObject
 
         this.Solicitudes = new ObservableCollection<Solicitud>(lista);
         this.ActualizarEstadisticas();
-    }
-
-    /// <summary>
-    /// Minúsculas y sin tildes, para que la búsqueda ignore mayúsculas y acentos:
-    /// teclear "metrica" encuentra "Métrica". Se aplica igual al texto buscado y a
-    /// los campos, así la comparación es estable.
-    /// </summary>
-    internal static string NormalizarBusqueda(string valor)
-    {
-        string descompuesto = valor.ToLowerInvariant().Normalize(NormalizationForm.FormD);
-        var sb = new StringBuilder(descompuesto.Length);
-
-        foreach (char c in descompuesto)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark)
-            {
-                continue;
-            }
-
-            sb.Append(c);
-        }
-
-        return sb.ToString();
     }
 
     private void ActualizarEstadisticas()
@@ -330,10 +300,10 @@ public partial class MainViewModel : ObservableObject
 
         List<Solicitud> todas = this.db.Solicitudes.Include(s => s.Eventos).ToList();
 
-        double[] enviadas = Repetir(meses.Count, 0.0);
-        double[] respondidas = Repetir(meses.Count, 0.0);
-        double[] entrevistas = Repetir(meses.Count, 0.0);
-        double[] ofertas = Repetir(meses.Count, 0.0);
+        double[] enviadas = new double[meses.Count];
+        double[] respondidas = new double[meses.Count];
+        double[] entrevistas = new double[meses.Count];
+        double[] ofertas = new double[meses.Count];
 
         for (int m = 0; m < meses.Count; m++)
         {
@@ -368,27 +338,14 @@ public partial class MainViewModel : ObservableObject
                 .Count(e => e.Tipo == TipoEvento.Oferta && e.Fecha >= inicio && e.Fecha < fin);
         }
 
-        string[] etiquetas = meses
-            .Select(m => m.ToString("MMM yyyy", Localizacion.CulturaActual))
-            .ToArray();
-
-        this.SerieEmbudo = new ISeries[]
-        {
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Enviadas"),    Values = enviadas,    Fill = new SolidColorPaint(SKColor.Parse("#94A3B8")) },
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Respondidas"), Values = respondidas, Fill = new SolidColorPaint(SKColor.Parse("#2563EB")) },
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Entrevistas"), Values = entrevistas, Fill = new SolidColorPaint(SKColor.Parse("#7C3AED")) },
-            new ColumnSeries<double> { Name = Localizacion.Texto("Grafica.Ofertas"),     Values = ofertas,     Fill = new SolidColorPaint(SKColor.Parse("#059669")) },
-        };
-
-        this.EjesXEmbudo = new[] { new Axis { Labels = etiquetas, LabelsRotation = 45, TextSize = 11 } };
-        this.EjesYEmbudo = new[] { new Axis { MinLimit = 0, TextSize = 11 } };
-    }
-
-    private static T[] Repetir<T>(int cantidad, T valor)
-    {
-        var resultado = new T[cantidad];
-        Array.Fill(resultado, valor);
-        return resultado;
+        this.MesesEmbudo = meses
+            .Select((m, i) => new EmbudoMes(
+                m.ToString("MMM yyyy", Localizacion.CulturaActual),
+                enviadas[i],
+                respondidas[i],
+                entrevistas[i],
+                ofertas[i]))
+            .ToList();
     }
 
     /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
@@ -400,21 +357,6 @@ public partial class MainViewModel : ObservableObject
             .ToList()
             .Where(s => s.EstaAbierta)
             .ToList();
-    }
-
-    // ---------------------------------------------------------------- Interés (estrellas)
-
-    /// <summary>Fija el nivel de interés (1 a 5) al pulsar una estrella del panel de detalle.</summary>
-    [RelayCommand]
-    private void EstablecerInteres(string parametro)
-    {
-        if (this.Edicion is null || !int.TryParse(parametro, out int valor))
-        {
-            return;
-        }
-
-        this.Edicion.Interes = valor;
-        this.RefrescarPanelDetalle();
     }
 
     // ---------------------------------------------------------------- Adjuntos
@@ -560,7 +502,7 @@ public partial class MainViewModel : ObservableObject
         List<List<string>> lineas;
         try
         {
-            lineas = LeerCsv(dialogo.FileName);
+            lineas = CsvHelper.LeerCsv(dialogo.FileName);
         }
         catch (Exception ex)
         {
@@ -578,7 +520,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        var columnas = IdentificarColumnas(lineas[0]);
+        var columnas = CsvHelper.IdentificarColumnas(lineas[0]);
         if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
         {
             MessageBox.Show(
@@ -598,15 +540,15 @@ public partial class MainViewModel : ObservableObject
                 continue;
             }
 
-            string empresa = ObtenerCampo(campos, columnas, "empresa").Trim();
-            string puesto = ObtenerCampo(campos, columnas, "puesto").Trim();
+            string empresa = CsvHelper.ObtenerCampo(campos, columnas, "empresa").Trim();
+            string puesto = CsvHelper.ObtenerCampo(campos, columnas, "puesto").Trim();
             if (empresa.Length == 0 || puesto.Length == 0)
             {
                 omitidas++;
                 continue;
             }
 
-            DateTime fecha = ParsearFecha(ObtenerCampo(campos, columnas, "fecha"));
+            DateTime fecha = CsvHelper.ParsearFecha(CsvHelper.ObtenerCampo(campos, columnas, "fecha"));
             string clave = $"{empresa}|{puesto}|{fecha:yyyy-MM-dd}";
 
             bool existe = vistas.Contains(clave) || this.db.Solicitudes.Any(s =>
@@ -620,17 +562,18 @@ public partial class MainViewModel : ObservableObject
 
             vistas.Add(clave);
 
-            string evento = ObtenerCampo(campos, columnas, "evento");
-            string uuid = ObtenerCampo(campos, columnas, "uuid");
+            string evento = CsvHelper.ObtenerCampo(campos, columnas, "evento");
+            string uuid = CsvHelper.ObtenerCampo(campos, columnas, "uuid");
+            string ubicacion = CsvHelper.ObtenerCampo(campos, columnas, "ubicacion");
 
             var solicitud = new Solicitud
             {
                 Empresa = empresa,
                 Puesto = puesto,
                 FechaSolicitud = fecha,
-                Ubicacion = Nulo(ObtenerCampo(campos, columnas, "ubicacion")),
+                Ubicacion = ubicacion.Length == 0 ? null : ubicacion,
                 Portal = "LinkedIn",
-                Estado = MapearEstadoLinkedIn(ObtenerCampo(campos, columnas, "estado")),
+                Estado = CsvHelper.MapearEstadoLinkedIn(CsvHelper.ObtenerCampo(campos, columnas, "estado")),
                 EnlaceOferta = uuid.Length > 0 ? $"https://www.linkedin.com/jobs/view/{uuid}" : null,
                 Notas = evento.Length > 0 ? string.Format(Localizacion.Texto("Importar.EventoLinkedIn"), evento) : null,
             };
@@ -668,246 +611,6 @@ public partial class MainViewModel : ObservableObject
         MessageBox.Show(
             resumen,
             Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
-    internal static EstadoSolicitud MapearEstadoLinkedIn(string estado)
-    {
-        string s = estado.Trim().ToLowerInvariant();
-
-        if (s.Contains("applied") || s.Contains("sent") || s.Contains("don't know"))
-        {
-            return EstadoSolicitud.Enviada;
-        }
-
-        if (s.Contains("progress"))
-        {
-            return EstadoSolicitud.EnRevision;
-        }
-
-        if (s.Contains("interview"))
-        {
-            return EstadoSolicitud.EntrevistaRrhh;
-        }
-
-        if (s.Contains("offer"))
-        {
-            return EstadoSolicitud.OfertaRecibida;
-        }
-
-        if (s.Contains("hired") || s.Contains("accepted"))
-        {
-            return EstadoSolicitud.OfertaAceptada;
-        }
-
-        if (s.Contains("reject") || s.Contains("not selected") || s.Contains("not moving"))
-        {
-            return EstadoSolicitud.Rechazada;
-        }
-
-        if (s.Contains("withdrawn") || s.Contains("withdrew") || s.Contains("archived"))
-        {
-            return EstadoSolicitud.Retirada;
-        }
-
-        return EstadoSolicitud.Enviada;
-    }
-
-    internal static DateTime ParsearFecha(string valor)
-    {
-        var formatos = new[]
-        {
-            "yyyy-MM-dd", "dd/MM/yyyy", "M/d/yyyy", "yyyy-MM-ddTHH:mm:ss", "yyyy-MM-dd HH:mm:ss",
-        };
-
-        if (DateTime.TryParseExact(valor, formatos, CultureInfo.InvariantCulture,
-            DateTimeStyles.None, out DateTime exacta))
-        {
-            return exacta;
-        }
-
-        if (DateTime.TryParse(valor, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime local))
-        {
-            return local;
-        }
-
-        if (DateTime.TryParse(valor, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime invariante))
-        {
-            return invariante;
-        }
-
-        return DateTime.Today;
-    }
-
-    /// <summary>Localiza cada columna útil del CSV de LinkedIn por el nombre de la cabecera.</summary>
-    internal static Dictionary<string, int> IdentificarColumnas(List<string> cabecera)
-    {
-        var resultado = new Dictionary<string, int>();
-
-        for (int i = 0; i < cabecera.Count; i++)
-        {
-            string col = NormalizarCabecera(cabecera[i]);
-            if (col.Length == 0)
-            {
-                continue;
-            }
-
-            if (!resultado.ContainsKey("empresa") && col.Contains("company"))
-            {
-                resultado["empresa"] = i;
-            }
-
-            if (!resultado.ContainsKey("puesto") && (col.Contains("title") || col == "puesto"))
-            {
-                resultado["puesto"] = i;
-            }
-
-            if (!resultado.ContainsKey("fecha") && ((col.Contains("application") && col.Contains("date")) || col == "fecha"))
-            {
-                resultado["fecha"] = i;
-            }
-
-            if (!resultado.ContainsKey("estado") && (col.Contains("status") || col.Contains("estado")))
-            {
-                resultado["estado"] = i;
-            }
-
-            if (!resultado.ContainsKey("ubicacion") && (col.Contains("location") || col.Contains("ubicacion")))
-            {
-                resultado["ubicacion"] = i;
-            }
-
-            if (!resultado.ContainsKey("evento") && (col == "event" || col.Contains("evento")))
-            {
-                resultado["evento"] = i;
-            }
-
-            if (!resultado.ContainsKey("uuid") && col.Contains("uuid"))
-            {
-                resultado["uuid"] = i;
-            }
-        }
-
-        return resultado;
-    }
-
-    /// <summary>
-    /// Deja la cabecera en minúsculas y solo con letras/dígitos ASCII, quitando también
-    /// las tildes: así "Ubicación" y "Ubicacion" identifican la misma columna.
-    /// </summary>
-    internal static string NormalizarCabecera(string valor)
-    {
-        string descompuesto = valor.Normalize(NormalizationForm.FormD);
-        var sb = new StringBuilder(descompuesto.Length);
-
-        foreach (char c in descompuesto)
-        {
-            var categoria = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (categoria == UnicodeCategory.NonSpacingMark)
-            {
-                continue;
-            }
-
-            char minuscula = char.ToLowerInvariant(c);
-            if (char.IsLetterOrDigit(minuscula))
-            {
-                sb.Append(minuscula);
-            }
-        }
-
-        return sb.ToString();
-    }
-
-    internal static string ObtenerCampo(List<string> campos, Dictionary<string, int> columnas, string nombre) =>
-        columnas.TryGetValue(nombre, out int indice) && indice >= 0 && indice < campos.Count
-            ? campos[indice]
-            : string.Empty;
-
-    internal static string? Nulo(string valor) => valor.Length == 0 ? null : valor;
-
-    /// <summary>Lee un CSV respetando comillas y detecta si el separador es ';' o ','.</summary>
-    internal static List<List<string>> LeerCsv(string ruta)
-    {
-        var lineas = new List<List<string>>();
-        char delimitador = ',';
-
-        using var lector = new StreamReader(ruta, Encoding.UTF8, true);
-
-        string? linea;
-        bool primera = true;
-        while ((linea = lector.ReadLine()) is not null)
-        {
-            if (primera)
-            {
-                delimitador = DelimitadorDe(linea);
-                primera = false;
-            }
-
-            lineas.Add(DividirLinea(linea, delimitador));
-        }
-
-        return lineas;
-    }
-
-    internal static char DelimitadorDe(string linea)
-    {
-        int puntoYComa = 0, coma = 0;
-        bool dentroDeComillas = false;
-
-        foreach (char c in linea)
-        {
-            if (c == '"')
-            {
-                dentroDeComillas = !dentroDeComillas;
-            }
-            else if (!dentroDeComillas && c == ';')
-            {
-                puntoYComa++;
-            }
-            else if (!dentroDeComillas && c == ',')
-            {
-                coma++;
-            }
-        }
-
-        return puntoYComa > coma ? ';' : ',';
-    }
-
-    internal static List<string> DividirLinea(string linea, char delimitador)
-    {
-        var campos = new List<string>();
-        var actual = new StringBuilder();
-        bool dentroDeComillas = false;
-
-        for (int i = 0; i < linea.Length; i++)
-        {
-            char c = linea[i];
-
-            if (c == '"')
-            {
-                if (dentroDeComillas && i + 1 < linea.Length && linea[i + 1] == '"')
-                {
-                    // Comillas dobles escapadas dentro de un campo ("" -> ")
-                    actual.Append('"');
-                    i++;
-                }
-                else
-                {
-                    dentroDeComillas = !dentroDeComillas;
-                }
-            }
-            else if (c == delimitador && !dentroDeComillas)
-            {
-                campos.Add(actual.ToString().Trim());
-                actual.Clear();
-            }
-            else
-            {
-                actual.Append(c);
-            }
-        }
-
-        campos.Add(actual.ToString().Trim());
-        return campos;
     }
 
     [RelayCommand]
@@ -1197,12 +900,12 @@ public partial class MainViewModel : ObservableObject
         {
             sb.AppendLine(string.Join(';', new[]
             {
-                Escapar(s.Empresa),
-                Escapar(s.Puesto),
-                Escapar(EnumHelper.Descripcion(s.Estado)),
-                Escapar(s.Portal),
-                Escapar(s.Ubicacion),
-                Escapar(EnumHelper.Descripcion(s.Modalidad)),
+                CsvHelper.Escapar(s.Empresa),
+                CsvHelper.Escapar(s.Puesto),
+                CsvHelper.Escapar(EnumHelper.Descripcion(s.Estado)),
+                CsvHelper.Escapar(s.Portal),
+                CsvHelper.Escapar(s.Ubicacion),
+                CsvHelper.Escapar(EnumHelper.Descripcion(s.Modalidad)),
                 s.FechaSolicitud.ToString("yyyy-MM-dd"),
                 s.FechaPrimeraRespuesta?.ToString("yyyy-MM-dd") ?? string.Empty,
                 s.DiasHastaRespuesta?.ToString() ?? string.Empty,
@@ -1213,12 +916,12 @@ public partial class MainViewModel : ObservableObject
                 s.SalarioMax?.ToString() ?? string.Empty,
                 s.PretensionSalarial?.ToString() ?? string.Empty,
                 s.Interes.ToString(),
-                Escapar(s.Tecnologias),
-                Escapar(s.ContactoNombre),
-                Escapar(s.ContactoEmail),
-                Escapar(s.RespuestaEmpresa),
-                Escapar(s.Notas),
-                Escapar(s.EnlaceOferta),
+                CsvHelper.Escapar(s.Tecnologias),
+                CsvHelper.Escapar(s.ContactoNombre),
+                CsvHelper.Escapar(s.ContactoEmail),
+                CsvHelper.Escapar(s.RespuestaEmpresa),
+                CsvHelper.Escapar(s.Notas),
+                CsvHelper.Escapar(s.EnlaceOferta),
             }));
         }
 
@@ -1229,15 +932,23 @@ public partial class MainViewModel : ObservableObject
             string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
             Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
+}
 
-    internal static string Escapar(string? valor)
-    {
-        if (string.IsNullOrEmpty(valor))
-        {
-            return string.Empty;
-        }
+/// <summary>
+/// Una fila del embudo: un mes con las cuatro series (enviadas, respondidas, entrevistas,
+/// ofertas) y la altura de cada barra, ya escalada a porcentaje del valor máximo del mes.
+/// </summary>
+public record EmbudoMes(string Etiqueta, double Enviadas, double Respondidas, double Entrevistas, double Ofertas)
+{
+    public double AlturaEnviadas => this.Altura(this.Enviadas);
 
-        string limpio = valor.Replace("\"", "\"\"").Replace("\r", " ").Replace("\n", " ");
-        return $"\"{limpio}\"";
-    }
+    public double AlturaRespondidas => this.Altura(this.Respondidas);
+
+    public double AlturaEntrevistas => this.Altura(this.Entrevistas);
+
+    public double AlturaOfertas => this.Altura(this.Ofertas);
+
+    private double Maximo => Math.Max(Math.Max(this.Enviadas, this.Respondidas), Math.Max(this.Entrevistas, this.Ofertas));
+
+    private double Altura(double valor) => this.Maximo == 0 ? 0 : valor / this.Maximo * 100.0;
 }

@@ -1,5 +1,6 @@
 using Xunit;
 using System.IO;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
@@ -12,9 +13,9 @@ public class ViewModelStaticTests
     [Fact]
     public void NormalizarBusqueda_QuitaTildesYMayusculas()
     {
-        Assert.Equal("metrica", MainViewModel.NormalizarBusqueda("Métrica"));
-        Assert.Equal("aeiou", MainViewModel.NormalizarBusqueda("ÁÉÍÓÚ"));
-        Assert.Equal("nino", MainViewModel.NormalizarBusqueda("Ñino"));
+        Assert.Equal("metrica", CsvHelper.NormalizarBusqueda("Métrica"));
+        Assert.Equal("aeiou", CsvHelper.NormalizarBusqueda("ÁÉÍÓÚ"));
+        Assert.Equal("nino", CsvHelper.NormalizarBusqueda("Ñino"));
     }
 
     // ---------------- Mapeo de estado de LinkedIn ----------------
@@ -33,7 +34,7 @@ public class ViewModelStaticTests
     [InlineData("Algo raro", EstadoSolicitud.Enviada)]
     public void MapearEstadoLinkedIn_ReconoceLosEstados(string texto, EstadoSolicitud esperado)
     {
-        Assert.Equal(esperado, MainViewModel.MapearEstadoLinkedIn(texto));
+        Assert.Equal(esperado, CsvHelper.MapearEstadoLinkedIn(texto));
     }
 
     // ---------------- Fechas ----------------
@@ -45,15 +46,15 @@ public class ViewModelStaticTests
     [InlineData("2024-05-01T10:30:00", 2024, 5, 1)]
     public void ParsearFecha_ReconoceFormatosComunes(string texto, int anio, int mes, int dia)
     {
-        DateTime fecha = MainViewModel.ParsearFecha(texto);
+        DateTime fecha = CsvHelper.ParsearFecha(texto);
         Assert.Equal(new DateTime(anio, mes, dia), fecha.Date);
     }
 
     [Fact]
     public void ParsearFecha_InvalidaCaeAlDiaActual()
     {
-        Assert.Equal(DateTime.Today, MainViewModel.ParsearFecha("no-es-una-fecha"));
-        Assert.Equal(DateTime.Today, MainViewModel.ParsearFecha(""));
+        Assert.Equal(DateTime.Today, CsvHelper.ParsearFecha("no-es-una-fecha"));
+        Assert.Equal(DateTime.Today, CsvHelper.ParsearFecha(""));
     }
 
     // ---------------- CSV ----------------
@@ -61,7 +62,7 @@ public class ViewModelStaticTests
     [Fact]
     public void DividirLinea_RespetaComillasYEscapes()
     {
-        List<string> campos = MainViewModel.DividirLinea("\"Hola, mundo\";\"Dijo \"\"hola\"\"\"", ';');
+        List<string> campos = CsvHelper.DividirLinea("\"Hola, mundo\";\"Dijo \"\"hola\"\"\"", ';');
         Assert.Equal(new[] { "Hola, mundo", "Dijo \"hola\"" }, campos);
     }
 
@@ -69,14 +70,14 @@ public class ViewModelStaticTests
     public void DelimitadorDe_EligePuntoYComaCuandoAbruma()
     {
         string linea = "a;b;c;d,e";
-        Assert.Equal(';', MainViewModel.DelimitadorDe(linea));
+        Assert.Equal(';', CsvHelper.DelimitadorDe(linea));
     }
 
     [Fact]
     public void DelimitadorDe_EligeComaCuandoAbruma()
     {
         string linea = "a,b,c;d";
-        Assert.Equal(',', MainViewModel.DelimitadorDe(linea));
+        Assert.Equal(',', CsvHelper.DelimitadorDe(linea));
     }
 
     [Fact]
@@ -85,7 +86,7 @@ public class ViewModelStaticTests
         string ruta = Path.Combine(TestDb.NuevaCarpeta(), "datos.csv");
         File.WriteAllText(ruta, "Empresa;Puesto\nACME;Desarrollador\n");
 
-        List<List<string>> lineas = MainViewModel.LeerCsv(ruta);
+        List<List<string>> lineas = CsvHelper.LeerCsv(ruta);
 
         Assert.Equal(2, lineas.Count);
         Assert.Equal(new[] { "Empresa", "Puesto" }, lineas[0]);
@@ -97,7 +98,7 @@ public class ViewModelStaticTests
     [Fact]
     public void IdentificarColumnas_ReconoceCabeceraEnInglesYEspanol()
     {
-        Dictionary<string, int> columnas = MainViewModel.IdentificarColumnas(
+        Dictionary<string, int> columnas = CsvHelper.IdentificarColumnas(
             new List<string> { "Company", "Job Title", "Application Date", "Status" });
 
         Assert.True(columnas.ContainsKey("empresa"));
@@ -109,7 +110,7 @@ public class ViewModelStaticTests
     [Fact]
     public void IdentificarColumnas_NormalizaTildesDeLaCabecera()
     {
-        Dictionary<string, int> columnas = MainViewModel.IdentificarColumnas(
+        Dictionary<string, int> columnas = CsvHelper.IdentificarColumnas(
             new List<string> { "Empresa", "Puesto", "Ubicación" });
 
         Assert.True(columnas.ContainsKey("ubicacion"));
@@ -120,39 +121,32 @@ public class ViewModelStaticTests
     [Fact]
     public void Escapar_EncierraEntreComillas()
     {
-        Assert.Equal("\"ACME\"", MainViewModel.Escapar("ACME"));
+        Assert.Equal("\"ACME\"", CsvHelper.Escapar("ACME"));
     }
 
     [Fact]
     public void Escapar_ComillasInternasSeDoblan()
     {
-        Assert.Equal("\"Dijo \"\"hola\"\"\"", MainViewModel.Escapar("Dijo \"hola\""));
+        Assert.Equal("\"Dijo \"\"hola\"\"\"", CsvHelper.Escapar("Dijo \"hola\""));
     }
 
     [Fact]
     public void Escapar_SaltosDeLineaSeSustituyenPorEspacios()
     {
-        Assert.Equal("\"dos líneas\"", MainViewModel.Escapar("dos\nlíneas"));
+        Assert.Equal("\"dos líneas\"", CsvHelper.Escapar("dos\nlíneas"));
     }
 
     [Fact]
     public void Escapar_NuloOVacioDevuelveCadenaVacia()
     {
-        Assert.Equal(string.Empty, MainViewModel.Escapar(null));
-        Assert.Equal(string.Empty, MainViewModel.Escapar(""));
-    }
-
-    [Fact]
-    public void Nulo_VacioEsNull()
-    {
-        Assert.Null(MainViewModel.Nulo(""));
-        Assert.Equal("texto", MainViewModel.Nulo("texto"));
+        Assert.Equal(string.Empty, CsvHelper.Escapar(null));
+        Assert.Equal(string.Empty, CsvHelper.Escapar(""));
     }
 
     [Fact]
     public void ObtenerCampo_DevuelveVacioSiIndiceFueraDeRango()
     {
         var columnas = new Dictionary<string, int> { { "empresa", 0 } };
-        Assert.Equal(string.Empty, MainViewModel.ObtenerCampo(new List<string> { "a" }, columnas, "puesto"));
+        Assert.Equal(string.Empty, CsvHelper.ObtenerCampo(new List<string> { "a" }, columnas, "puesto"));
     }
 }

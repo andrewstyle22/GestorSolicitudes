@@ -9,10 +9,9 @@
         <conv:EnumDescripcionConverter x:Key="EnumDescripcion" />
         <conv:NuloAVisibilidadConverter x:Key="NuloAVisibilidad" />
         <conv:EstadoAColorConverter x:Key="EstadoAColor" />
-        <conv:InteresAColorEstrellaConverter x:Key="InteresAEstrella" />
+        <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
         <conv:EstadoEsRechazadaAVisibilidadConverter x:Key="EstadoEsRechazadaAVisibilidad" />
-        <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:NuloACadenaConverter x:Key="NuloACadena" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 
@@ -117,29 +116,6 @@
             <Setter Property="Background" Value="{StaticResource Panel}" />
             <Setter Property="BorderBrush" Value="{StaticResource Peligro}" />
             <Setter Property="Foreground" Value="{StaticResource Peligro}" />
-        </Style>
-
-        <!-- Botón "fantasma": sin chrome propio, para iconos y estrellas donde solo
-             debe pintar el símbolo (glifo) con el color que le diga el converter. -->
-        <Style x:Key="BotonGlifo" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="2,0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Botón secundario compacto, para acciones de un renglón (adjuntar, importar...) -->
-        <Style x:Key="BotonSecundarioCompacto" TargetType="Button" BasedOn="{StaticResource BotonSecundario}">
-            <Setter Property="Padding" Value="9,5" />
-            <Setter Property="FontSize" Value="12" />
         </Style>
 
         <!-- ============ Pestañas del panel de detalle ============ -->
