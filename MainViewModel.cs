@@ -508,7 +508,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        string? aviso = this.ValidarImportacion(lineas);
+        string? aviso = ValidarImportacion(lineas);
         if (aviso is not null)
         {
             MessageBox.Show(
@@ -526,7 +526,7 @@ public partial class MainViewModel : ObservableObject
             Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    internal string? ValidarImportacion(List<List<string>> lineas)
+    internal static string? ValidarImportacion(List<List<string>> lineas)
     {
         if (lineas.Count < 2)
         {

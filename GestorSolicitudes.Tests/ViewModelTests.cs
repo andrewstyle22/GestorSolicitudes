@@ -422,10 +422,7 @@ public class ViewModelTests
     [Fact]
     public void ValidarImportacion_ConMenosDeDosLineasDevuelveAviso()
     {
-        using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-
-        string? aviso = vm.ValidarImportacion(new List<List<string>> { new() { "Company" } });
+        string? aviso = MainViewModel.ValidarImportacion(new List<List<string>> { new() { "Company" } });
 
         Assert.Equal(Localizacion.Texto("Mensaje.CsvSinFilas"), aviso);
     }
@@ -433,10 +430,7 @@ public class ViewModelTests
     [Fact]
     public void ValidarImportacion_SinColumnasDeEmpresaOPuestoTambienAvisa()
     {
-        using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-
-        string? aviso = vm.ValidarImportacion(new List<List<string>>
+        string? aviso = MainViewModel.ValidarImportacion(new List<List<string>>
         {
             new() { "FechaSolicitud", "Notas" },
             new() { "2024-05-01", "sin empresa ni puesto" },
@@ -448,16 +442,13 @@ public class ViewModelTests
     [Fact]
     public void ValidarImportacion_ConLineasValidasDevuelveNulo()
     {
-        using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-
         var lineas = new List<List<string>>
         {
             new() { "Company", "Title", "Application date", "Status", "Location", "event", "UUID" },
             new() { "ACME", "Dev", "2024-05-01", "Applied", "Madrid", "", "abc" },
         };
 
-        string? aviso = vm.ValidarImportacion(lineas);
+        string? aviso = MainViewModel.ValidarImportacion(lineas);
 
         Assert.Null(aviso);
     }
