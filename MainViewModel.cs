@@ -547,7 +547,7 @@ public partial class MainViewModel : ObservableObject
         this.RecargarEmbudoSiVisible();
 
         MessageBox.Show(
-            this.ResumenImportacion(importadas, duplicadas, omitidas),
+            ResumenImportacion(importadas, duplicadas, omitidas),
             Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
@@ -606,7 +606,7 @@ public partial class MainViewModel : ObservableObject
         return (1, 0, 0);
     }
 
-    private string ResumenImportacion(int importadas, int duplicadas, int omitidas)
+    private static string ResumenImportacion(int importadas, int duplicadas, int omitidas)
     {
         string resumen = string.Format(Localizacion.Texto("Importar.ResumenImportadas"), importadas);
         if (duplicadas > 0)
