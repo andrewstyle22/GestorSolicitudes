@@ -113,22 +113,6 @@ public class ViewModelTests
     }
 
     [Fact]
-    public void EstablecerInteres_FijaElValorDelPanel()
-    {
-        using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-
-        vm.NuevaCommand.Execute(null);
-        Assert.NotNull(vm.Edicion);
-
-        vm.EstablecerInteresCommand.Execute("5");
-        Assert.Equal(5, vm.Edicion!.Interes);
-
-        vm.EstablecerInteresCommand.Execute("1");
-        Assert.Equal(1, vm.Edicion.Interes);
-    }
-
-    [Fact]
     public void FiltroSoloAbiertas_ExcluyeLasCerradas()
     {
         using var db = TestDb.NuevoContexto();

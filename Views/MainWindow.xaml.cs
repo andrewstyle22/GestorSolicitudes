@@ -36,16 +36,12 @@ public partial class MainWindow : Window
     /// </summary>
     private void ArrancarRecordatorios()
     {
-        var primera = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
-        primera.Tick += (_, _) =>
+        this.temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+        this.temporizadorRecordatorios.Tick += (_, _) =>
         {
-            primera.Stop();
+            this.temporizadorRecordatorios.Interval = TimeSpan.FromMinutes(5);
             this.ComprobarSeguimientosVencidos();
         };
-        primera.Start();
-
-        this.temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
-        this.temporizadorRecordatorios.Tick += (_, _) => this.ComprobarSeguimientosVencidos();
         this.temporizadorRecordatorios.Start();
     }
 
