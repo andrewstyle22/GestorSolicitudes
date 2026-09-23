@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification;assembly=Hardcodet.NotifyIcon.Wpf"
         xmlns:loc="clr-namespace:GestorSolicitudes"
+        Icon="/GestorSolicitudes;component/Resources/appicon.ico"
         Title="{DynamicResource TituloVentana}"
         Height="780" Width="1360"
         MinHeight="600" MinWidth="1080"

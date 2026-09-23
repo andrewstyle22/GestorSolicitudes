@@ -11,6 +11,7 @@
     <RootNamespace>GestorSolicitudes</RootNamespace>
     <AssemblyName>GestorSolicitudes</AssemblyName>
     <LangVersion>latest</LangVersion>
+    <ApplicationIcon>Resources\appicon.ico</ApplicationIcon>
 
     <!-- Genera el XML de documentación: StyleCop lo necesita para analizar los comentarios
          (si no, avisa con SA0001). Como la documentación no es obligatoria en este proyecto,
@@ -42,6 +43,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+
+    <Resource Include="Resources\appicon.ico" />
   </ItemGroup>
 
   <ItemGroup>
