@@ -775,10 +775,10 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        int id = this.Edicion.Id;
         this.Recargar();
         this.RecargarEmbudoSiVisible();
-        this.SolicitudSeleccionada = this.Solicitudes.FirstOrDefault(s => s.Id == id);
+        this.SolicitudSeleccionada = null;
+        this.Edicion = null;
     }
 
     [RelayCommand]
@@ -807,12 +807,8 @@ public partial class MainViewModel : ObservableObject
         }
 
         this.Edicion = null;
+        this.SolicitudSeleccionada = null;
         this.Recargar();
-
-        if (id > 0)
-        {
-            this.SolicitudSeleccionada = this.Solicitudes.FirstOrDefault(s => s.Id == id);
-        }
     }
 
     [RelayCommand]

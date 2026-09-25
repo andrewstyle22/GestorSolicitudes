@@ -39,7 +39,7 @@ public class ViewModelTests
     }
 
     [Fact]
-    public void Guardar_NuevaCandidaturaValida_PersisteYSelecciona()
+    public void Guardar_NuevaCandidaturaValida_PersisteYCierraElPanel()
     {
         using var db = TestDb.NuevoContexto();
         var vm = new MainViewModel(db);
@@ -51,12 +51,14 @@ public class ViewModelTests
         vm.GuardarCommand.Execute(null);
 
         Assert.Equal(1, vm.TotalSolicitudes);
-        Assert.NotNull(vm.SolicitudSeleccionada);
-        Assert.Equal(1, vm.SolicitudSeleccionada!.Id);
-        Assert.Equal("ACME", vm.SolicitudSeleccionada.Empresa);
-        Assert.Equal("Jefa", vm.SolicitudSeleccionada.ContactoNombre);
+        Solicitud guardada = Assert.Single(vm.Solicitudes);
+        Assert.Equal(1, guardada.Id);
+        Assert.Equal("ACME", guardada.Empresa);
+        Assert.Equal("Jefa", guardada.ContactoNombre);
         // Si el proceso sigue abierto, se propone el seguimiento a +7 días.
-        Assert.Equal(DateTime.Today.AddDays(7), vm.SolicitudSeleccionada.ProximoSeguimiento);
+        Assert.Equal(DateTime.Today.AddDays(7), guardada.ProximoSeguimiento);
+        Assert.Null(vm.Edicion);
+        Assert.Null(vm.SolicitudSeleccionada);
     }
 
     [Fact]
@@ -70,9 +72,9 @@ public class ViewModelTests
         vm.Edicion.Puesto = "Desarrollador";
         vm.GuardarCommand.Execute(null);
 
-        Assert.NotEmpty(vm.SolicitudSeleccionada!.Eventos);
-        Assert.Contains(vm.SolicitudSeleccionada.Eventos,
-            e => e.Tipo == TipoEvento.SolicitudEnviada);
+        Solicitud guardada = Assert.Single(vm.Solicitudes);
+        Assert.NotEmpty(guardada.Eventos);
+        Assert.Contains(guardada.Eventos, e => e.Tipo == TipoEvento.SolicitudEnviada);
     }
 
     [Fact]
@@ -89,6 +91,7 @@ public class ViewModelTests
         vm.Edicion.ProximoSeguimiento = DateTime.Today.AddDays(-5);
         vm.GuardarCommand.Execute(null);
 
+        vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
         vm.DuplicarCommand.Execute(null);
 
         Assert.NotNull(vm.Edicion);
@@ -113,6 +116,21 @@ public class ViewModelTests
 
         Assert.Null(vm.Edicion);
         Assert.Empty(vm.Solicitudes);
+    }
+
+    [Fact]
+    public void SeleccionarUnaFila_AbreElPanelDeDetalle()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
+
+        Assert.NotNull(vm.Edicion);
+        Assert.Equal("ACME", vm.Edicion!.Empresa);
     }
 
     [Fact]
@@ -651,8 +669,9 @@ public class ViewModelTests
         vm.CancelarCommand.Execute(null);
 
         Assert.Equal(EntityState.Detached, db.Entry(solicitud).State);
-        Assert.NotNull(vm.Edicion);
-        Assert.Equal("ACME", vm.Edicion!.Empresa); // vuelve el valor guardado en disco
+        Assert.Null(vm.Edicion);
+        Assert.Null(vm.SolicitudSeleccionada);
+        Assert.Equal("ACME", Assert.Single(vm.Solicitudes).Empresa);
     }
 
     [Fact]
