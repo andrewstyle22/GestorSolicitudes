@@ -296,7 +296,7 @@
                 <ColumnDefinition Width="394*" MinWidth="520" />
                 <ColumnDefinition Width="75*"/>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="440" MinWidth="380" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <!-- Lista -->
@@ -507,19 +507,15 @@
             </Border>
 
             <GridSplitter Grid.Column="2" Width="8" HorizontalAlignment="Stretch"
-                          Background="Transparent" />
+                          Background="Transparent"
+                          Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}" />
 
             <!-- Detalle -->
             <Border x:Name="NuevaCandidatura" Grid.Column="3" Background="{StaticResource Panel}"
-                    BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8">
+                    BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8"
+                    Width="440" MinWidth="380"
+                    Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}">
                 <Grid>
-
-                    <!-- Estado vacío -->
-                    <TextBlock Text="{DynamicResource Detalle.Vacio}"
-                               TextAlignment="Center" LineHeight="22"
-                               Foreground="{StaticResource TextoSuave}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Visibility="{Binding Edicion, ConverterParameter=invertir, Converter={StaticResource NuloAVisibilidad}}" />
 
                     <!-- Formulario -->
                     <Grid Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}">
