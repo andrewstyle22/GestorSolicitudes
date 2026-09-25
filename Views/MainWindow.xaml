@@ -293,15 +293,16 @@
         <!-- ===================== CUERPO ===================== -->
         <Grid Grid.Row="2" Margin="16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="520" />
+                <ColumnDefinition Width="394*" MinWidth="520" />
+                <ColumnDefinition Width="75*"/>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="440" MinWidth="380" />
             </Grid.ColumnDefinitions>
 
             <!-- Lista -->
             <Border Grid.Column="0" Background="{StaticResource Panel}"
-                    BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8">
-                <Grid>
+                    BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8" Grid.ColumnSpan="2">
+                <Grid x:Name="TablaCandidaturas">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -505,11 +506,11 @@
                 </Grid>
             </Border>
 
-            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch"
+            <GridSplitter Grid.Column="2" Width="8" HorizontalAlignment="Stretch"
                           Background="Transparent" />
 
             <!-- Detalle -->
-            <Border Grid.Column="2" Background="{StaticResource Panel}"
+            <Border x:Name="NuevaCandidatura" Grid.Column="3" Background="{StaticResource Panel}"
                     BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8">
                 <Grid>
 
