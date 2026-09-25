@@ -109,7 +109,7 @@ export function readManifest(root) {
     // Same allowlist, same reason, and it bites harder here: these names are pasted into the
     // notice a model reads. A switch is a plain lowercase name or it is not a switch — and only
     // the ones the team is allowed to decide for everybody get through at all.
-    optOuts: ids(parsed.optOuts).filter((n) => PROJECT_OPT_OUTS.includes(n)).sort(),
+    optOuts: ids(parsed.optOuts).filter((n) => PROJECT_OPT_OUTS.includes(n)).sort((a, b) => a.localeCompare(b)),
     tier: ['balanced', 'heavy'].includes(parsed.tier) ? parsed.tier : null,
   };
 }

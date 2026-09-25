@@ -87,8 +87,49 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
   `App()` antiguo) se resuelve con `[SuppressMessage]` + comentario, no tocando
   la lógica.
 
+## Ficheros que no son tuyos: los gobernados por el harness
+
+`.rsc.json` tiene dos listas que hay que consultar **antes** de tocar nada bajo
+`.claude/`, `.rsc/` o `.rsc.json`:
+
+- `governedPaths`: rutas cuyo contenido escribe la herramienta rsc.
+- `artifactDigests`: SHA-256 con el que la herramienta verifica cada una.
+
+Un fichero gobernado que se edita a mano **pierde el hash**: el siguiente
+`rsc repair`/`sync` lo restaura desde el catálogo (`catalogVersion`) y el cambio
+desaparece sin más. Comprobación rápida:
+
+```powershell
+Select-String -Path ".rsc.json" -Pattern '"<ruta>"'   # ¿está en governedPaths?
+(Get-FileHash "<ruta>" -Algorithm SHA256).Hash.ToLower()  # ¿coincide con artifactDigests?
+```
+
+Excepción: `AGENTS.md` sale con provenance `preexisting` — rsc solo reescribe la
+región entre `<!-- rsc-suggest:start -->` y `<!-- rsc-suggest:end -->`, el resto
+es tuyo y se edita sin miedo.
+
+### Regla de decisión cuando Sonar marca un fichero gobernado
+
+1. **¿Ya está en el diff del PR?** (`git log --oneline -<n> -- <ruta>`, o mira si
+   el fichero aparece en el diff que subiste). Si sí, el fichero entró con tu
+   trabajo: el arreglo **en el sitio** es legítimo y es lo que toca. Commit 21b8d72
+   ("Integrar el harness rsc") trajo `.claude/rsc-bootstrap.mjs` al repo, así que
+   hoy es código tuyo en términos de revisión.
+2. **Si no está en el diff**, pelea con la herramienta y ganarás. Excluye la ruta
+   del análisis (`/d:sonar.exclusions="<ruta>"` en `sonarcloud.yml`) en vez de
+   editar el fichero.
+
+No inventes un hook pre-push que lance Sonar: el análisis necesita el token de
+nube, tarda minutos en materializarse y CI ya lo corre. Sonar no es una
+comprobación local decidible al instante como `dotnet test` o `dotnet format`.
+
 ## Errores que ya hemos puesto
 
+- **No editar un fichero gobernado para tapar un issue de Sonar sin mirar si ya
+  está en el PR**: `.claude/rsc-bootstrap.mjs:112` (`.sort()` sin comparador,
+  javascript:S3785) se arregló en el sitio porque el fichero ya venía en el diff;
+  el hash registrado pasó a ser otro y el aviso de deriva de rsc es esperado, no
+  un fallo. Antes de editar ese fichero, decide con la regla de arriba.
 - Creer que testear métodos de código viejo (p.ej. `QuitarCv`,
   `RefrescarPanelDetalle`) sube el gate: no lo sube ni 0,1 pp; solo la cobertura
   global, que el gate de PR no evalúa.

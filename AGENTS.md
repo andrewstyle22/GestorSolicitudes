@@ -24,6 +24,7 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 - **Un solo `AppDbContext` durante toda la sesión** (explota el change tracking de EF).
 - **Añadir una propiedad a `Solicitud`**: no hay migraciones. Hay que registrar la columna en los arrays de `VerificarColumnasFaltantes` (App.xaml.cs) o la app revienta con bases ya creadas por versiones antiguas. Los enums se guardan como entero.
 - **XAML nuevo**: el csproj declara las páginas a mano (`EnableDefaultPageItems=false`): hay que añadir el `<Page>` al csproj o no se compila a BAML y la app falla buscando el recurso.
+- **Ficheros gobernados por el harness**: `.claude/rsc-bootstrap.mjs`, `.claude/settings.json`, `.rsc.json` y los `.rsc/**` los escribe la herramienta rsc, y su SHA-256 está registrado en `artifactDigests` de `.rsc.json`. Editarlos produce deriva y el próximo `rsc repair`/`sync` los restaura desde el catálogo (`catalogVersion`), con lo que pierdes el cambio. Si uno de ellos bloquea el gate de SonarCloud, comprueba **primero si ya está en el diff de tu PR**: si lo está, el arreglo en el sitio es legítimo; si no, excluye esa ruta del análisis en vez de pelear con el propietario del fichero. rsc solo reescribe la región entre `<!-- rsc-suggest:start -->` y `<!-- rsc-suggest:end -->` de este fichero.
 
 ## UI y localización
 
