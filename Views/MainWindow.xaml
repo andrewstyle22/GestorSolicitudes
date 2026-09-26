@@ -492,17 +492,16 @@
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="Dias" Binding="{Binding DiasProceso}" Width="60">
+                                <!-- El tooltip va en el HeaderTemplate y no en un HeaderStyle
+                                     propio: un estilo por columna sustituye al ColumnHeaderStyle
+                                     del DataGrid en vez de heredarlo, y esa columna se quedaba
+                                     sin el fondo gris de las demás. -->
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{DynamicResource Columna.Dias}" />
+                                        <TextBlock Text="{DynamicResource Columna.Dias}"
+                                                   ToolTip="{DynamicResource Columna.DiasToolTip}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.HeaderStyle>
-                                    <Style TargetType="{x:Type DataGridColumnHeader}">
-                                        <Setter Property="ToolTip"
-                                                Value="{DynamicResource Columna.DiasToolTip}" />
-                                    </Style>
-                                </DataGridTextColumn.HeaderStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
