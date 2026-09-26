@@ -39,7 +39,7 @@ dotnet test
 ```
 
 xUnit sobre el código que admite pruebas sin abrir ventanas: validaciones y modelo de `Solicitud`,
-helpers (enum → texto, CSV de LinkedIn, adjuntos), la localización (cobertura y paridad de claves
+helpers (enum → texto, CSV, adjuntos, columnas visibles), la localización (cobertura y paridad de claves
 entre los tres idiomas), el `AppDbContext` contra una base SQLite temporal,
 la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas).
 También corre **ArchUnitNET**: reglas de arquitectura que vigilan que las capas solo dependan
@@ -105,10 +105,10 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   vista arriba y los botones de *Eliminar/Duplicar/Cancelar/Guardar* abajo. Se abre siempre en *Oferta*.
 - **Exportar CSV** saca todo con `;` y UTF-8 con BOM, así que Excel en español lo abre en columnas
   directamente sin el asistente de importación.
-- **Importar LinkedIn** lee el CSV de "Mis candidaturas" que exporta LinkedIn (Ajustes → Privacidad de
-  datos → *Obtener una copia de tus datos*) y crea candidaturas con empresa, puesto, fecha, ubicación,
-  estado traducido y enlace a la oferta. Las filas que ya existan (misma empresa + puesto + fecha) se
-  omiten y al final te dice cuántas entraron y cuántas se saltaron.
+- **Selector de columnas** (botón *Columnas* de la cabecera, a la derecha del buscador): muestra u
+  oculta las columnas*Días*, *Primera respuesta*, *Entrevista*, *Seguimiento*, *Interés* y *Portal*.
+  *Empresa*, *Puesto*, *Estado* y *Enviada* no se pueden ocultar. La elección se recuerda en
+  `columnas.txt` dentro de `%APPDATA%\GestorSolicitudes`.
 - **Icono en la bandeja del sistema**: cerrar la ventana (la X o Alt+F4) termina la aplicación del
   todo; el menú del icono permite reabrir la ventana, comprobar seguimientos y *Salir*. Mientras la
   app está abierta, cada 5 minutos (y a los pocos segundos de arrancar) revisa si hay seguimientos
@@ -132,13 +132,14 @@ el `.csproj` quita los usings implícitos de WinForms y de `System.Drawing` con 
 Models/          Solicitud, Evento y enums con [Description] para los textos de la UI
 Localizacion.cs  Traducciones de la interfaz (es/en/de): textos, cultura, selector y preferencia
 Data/            AppDbContext (SQLite, EnsureCreated + ALTER TABLE de columnas nuevas)
-ViewModels/      MainViewModel: filtros, CRUD, métricas, embudo, adjuntos, duplicar e importación
+ViewModels/      MainViewModel: filtros, CRUD, métricas, embudo, adjuntos, duplicar y exportación
 Views/           MainWindow: lista maestra + panel de detalle + gráfica + icono de bandeja
 Converters/      enum → texto, null → Visibility, estado → color, interés → texto de estrellas
 Helpers/         EnumHelper: enum → texto traducido (cae a [Description] si falta la clave)
                  AdjuntosHelper: copia/borra CV y carta en %APPDATA%\...\adjuntos
-                 CsvHelper: lee el CSV de LinkedIn y escribe el de exportación; su normalización
-                            de texto (minúsculas sin tildes) se reutiliza en la búsqueda
+                 ColumnasHelper: lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
+                 CsvHelper: escapa los campos del CSV de exportación; su normalización de texto
+                            (minúsculas sin tildes) se reutiliza en la búsqueda
 GestorSolicitudes.Tests/  xUnit: modelo, helpers, CSV, contexto SQLite y lógica del ViewModel
 ```
 

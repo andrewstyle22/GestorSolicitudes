@@ -15,7 +15,7 @@ Referencia completa: `README.md` (features, decisiones de diseño, lecciones apr
 
 Los ficheros viven físicamente en la raíz del proyecto, pero el **namespace** marca la capa. Las capas solo dependen "hacia abajo": `Models`, `Data`, `Helpers`, `Converters` → `ViewModels` → `Views` (`GestorSolicitudes.Tests/ArquitecturaTests.cs`). El namespace raíz `GestorSolicitudes` (App, Localizacion) es el "Núcleo": es el único que construye Vistas; los ViewModels tienen prohibido tocar `Views` y `Converters`. Un `MessageBox` nuevo en un ViewModel o un using hacia una capa superior reventará los tests.
 
-Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no `GestorSolicitudes`). Los estáticos puros de CSV viven en `CsvHelper` (no en el ViewModel): `CsvHelper.NormalizarBusqueda` está ahí —y no en el ViewModel— porque `NormalizarCabecera` la necesita y Helpers no puede depender de ViewModels; el filtro de búsqueda la reutiliza desde `Recargar`.
+Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no `GestorSolicitudes`). Los estáticos puros viven en el helper que les toca (Helpers no puede depender de ViewModels): `CsvHelper.NormalizarBusqueda` —minúsculas sin tildes— está ahí, y no en el ViewModel, porque es lógica de texto reutilizable; el filtro de búsqueda la llama desde `Recargar` y `CsvHelper.Escapar` la usa la exportación.
 
 ## Convenciones que rompen el default de .NET
 
