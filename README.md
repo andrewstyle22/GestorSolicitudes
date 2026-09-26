@@ -105,10 +105,12 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   vista arriba y los botones de *Eliminar/Duplicar/Cancelar/Guardar* abajo. Se abre siempre en *Oferta*.
 - **Exportar CSV** saca todo con `;` y UTF-8 con BOM, así que Excel en español lo abre en columnas
   directamente sin el asistente de importación.
-- **Selector de columnas** (botón *Columnas* de la cabecera, a la derecha del buscador): muestra u
-  oculta las columnas*Días*, *Primera respuesta*, *Entrevista*, *Seguimiento*, *Interés* y *Portal*.
-  *Empresa*, *Puesto*, *Estado* y *Enviada* no se pueden ocultar. La elección se recuerda en
-  `columnas.txt` dentro de `%APPDATA%\GestorSolicitudes`.
+- La fila de filtros lleva el **buscador** a la izquierda, con el texto *Buscar...* mientras está
+  vacío, y el grupo *Columnas*, *Estados* y las dos casillas pegado al borde derecho. El botón
+  *Columnas* abre una lista con casillas para mostrar u ocultar *Días*, *1ª respuesta*, *Entrevista*,
+  *Seguimiento*, *Interés* y *Portal*; *Empresa*, *Puesto*, *Estado* y *Enviada* no se pueden
+  ocultar. La lista se cierra al pulsar fuera y la elección se recuerda en
+  `%APPDATA%\GestorSolicitudes\columnas.txt`.
 - **Icono en la bandeja del sistema**: cerrar la ventana (la X o Alt+F4) termina la aplicación del
   todo; el menú del icono permite reabrir la ventana, comprobar seguimientos y *Salir*. Mientras la
   app está abierta, cada 5 minutos (y a los pocos segundos de arrancar) revisa si hay seguimientos
@@ -117,7 +119,7 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
 - **Gráfica de embudo** (botón *Gráfico* de la cabecera): enviadas → respondidas → entrevistas →
   ofertas de los últimos 12 meses, contadas por el historial (hito "Solicitud enviada", primera
   contestación, hitos de entrevista y de oferta), así cada mes cuenta lo que pasó ese mes. Se refresca
-  sola si guardas, borras o importas candidaturas mientras está abierta.
+  sola si guardas o borras candidaturas mientras está abierta.
 - Atajos: `Ctrl+N` nueva candidatura, `Ctrl+S` guardar.
 
 ## Qué no hacer una vez (lección aprendida)
@@ -128,19 +130,31 @@ el `.csproj` quita los usings implícitos de WinForms y de `System.Drawing` con 
 
 ## Estructura
 
+Los ficheros `.cs` viven en la raíz del proyecto; **la capa la marca el namespace**, no la carpeta:
+`GestorSolicitudes.Models`, `.Data`, `.Helpers`, `.Converters` → `.ViewModels` → `.Views`. Solo hay
+tres carpetas con contenido, `Views/` (las XAML), `Resources/` (el icono) y `GestorSolicitudes.Tests/`.
+Lo vigila ArchUnitNET: las capas solo dependen hacia abajo, así que un helper nuevo va en `.Helpers` y
+un `using` a `Views` dentro de un ViewModel tumba el CI.
+
 ```
-Models/          Solicitud, Evento y enums con [Description] para los textos de la UI
-Localizacion.cs  Traducciones de la interfaz (es/en/de): textos, cultura, selector y preferencia
-Data/            AppDbContext (SQLite, EnsureCreated + ALTER TABLE de columnas nuevas)
-ViewModels/      MainViewModel: filtros, CRUD, métricas, embudo, adjuntos, duplicar y exportación
-Views/           MainWindow: lista maestra + panel de detalle + gráfica + icono de bandeja
-Converters/      enum → texto, null → Visibility, estado → color, interés → texto de estrellas
-Helpers/         EnumHelper: enum → texto traducido (cae a [Description] si falta la clave)
-                 AdjuntosHelper: copia/borra CV y carta en %APPDATA%\...\adjuntos
-                 ColumnasHelper: lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
-                 CsvHelper: escapa los campos del CSV de exportación; su normalización de texto
-                            (minúsculas sin tildes) se reutiliza en la búsqueda
-GestorSolicitudes.Tests/  xUnit: modelo, helpers, CSV, contexto SQLite y lógica del ViewModel
+Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] para los textos de la UI
+AppDbContext.cs → SQLite: EnsureCreated + ALTER TABLE de columnas nuevas
+Localizacion.cs → traducciones (es/en/de), cultura y selector de idioma
+Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
+EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
+AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
+ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
+ColumnaItem.cs → columna ocultable del selector (namespace ViewModels)
+CsvHelper.cs → escapa los campos del CSV de exportación; su normalización de texto (minúsculas sin
+                 tildes) la usa también la búsqueda
+MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, exportación y columnas
+App.xaml → tema y estilos compartidos (botones, campos, desplegables)
+App.xaml.cs → arranque, cultura, preferencias y comprobación de columnas al abrir la base
+Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
+Views/VentanaRequisitos.xaml(.cs) → ventana de lectura de los requisitos
+Resources/appicon.ico → icono de la ventana, del ejecutable y de la bandeja
+GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQLite, estilos de las
+                           pestañas y lógica del ViewModel
 ```
 
 ## Decisiones que conviene conocer antes de tocarlo
