@@ -20,6 +20,13 @@ public partial class MainWindow : Window
     private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
 
+    // Recurso del icono, como ruta relativa al ensamblado principal. WPF solo lo resuelve con
+    // el ";component", y montar la ruta con el nombre real del ensamblado evita el
+    // "pack://application:,,,/<ensamblado>;component/..." absoluto, que queda obsoleto
+    // en cuanto se renombra el proyecto.
+    private static readonly Uri RutaIcono = new(
+        $"/{typeof(MainWindow).Assembly.GetName().Name};component/Resources/appicon.ico", UriKind.Relative);
+
     public MainWindow()
     {
         this.InitializeComponent();
@@ -31,8 +38,7 @@ public partial class MainWindow : Window
         this.InputBindings.Add(new KeyBinding(this.vm.NuevaCommand, Key.N, ModifierKeys.Control));
         this.InputBindings.Add(new KeyBinding(this.vm.GuardarCommand, Key.S, ModifierKeys.Control));
 
-        this.flujoIcono = Application.GetResourceStream(
-            new Uri("pack://application:,,,/GestorSolicitudes;component/Resources/appicon.ico"))?.Stream;
+        this.flujoIcono = Application.GetResourceStream(RutaIcono)?.Stream;
 
         // Icon(Stream) no copia los bytes: el flujo tiene que vivir con el icono, de ahí
         // el campo. Si el recurso faltara, al icono genérico de Windows.

@@ -11,6 +11,8 @@ namespace GestorSolicitudes.Tests;
 
 public class ViewModelTests
 {
+    private static readonly int[] TamanosPaginaEsperados = { 5, 10, 20, 30 };
+
     [Fact]
     public void Constructor_CargaListaVacia()
     {
@@ -585,7 +587,7 @@ public class ViewModelTests
         using (db)
         {
             Assert.Equal(10, vm.TamanoPagina);
-            Assert.Equal(new[] { 5, 10, 20, 30 }, vm.TamanosPagina);
+            Assert.Equal(TamanosPaginaEsperados, vm.TamanosPagina);
             Assert.Equal(3, vm.TotalPaginas);
             Assert.Equal(1, vm.PaginaActual);
             Assert.Equal(10, vm.Solicitudes.Count);
