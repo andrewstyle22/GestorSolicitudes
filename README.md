@@ -111,6 +111,12 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   *Seguimiento*, *Interés* y *Portal*; *Empresa*, *Puesto*, *Estado* y *Enviada* no se pueden
   ocultar. La lista se cierra al pulsar fuera y la elección se recuerda en
   `%APPDATA%\GestorSolicitudes\columnas.txt`.
+- **La tabla está paginada**: por defecto enseña las diez primeras filas, con un desplegable para
+  poner 5, 10, 20 o 30 por página y cuatro flechas —primera, anterior, siguiente y última— que se
+  deshabilitan solas cuando no hay a dónde ir. Al lado, el rango (`1-10 de 47`). WPF no pagina las
+  listas por sí solo, así que el recorte se hace en el ViewModel: por eso, si pinchas la cabecera
+  de una columna para ordenar, el orden se aplica **solo a las filas de la página actual**, y la
+  exportación a CSV sigue sacando la lista entera.
 - **Icono en la bandeja del sistema**: cerrar la ventana (la X o Alt+F4) termina la aplicación del
   todo; el menú del icono permite reabrir la ventana, comprobar seguimientos y *Salir*. Mientras la
   app está abierta, cada 5 minutos (y a los pocos segundos de arrancar) revisa si hay seguimientos

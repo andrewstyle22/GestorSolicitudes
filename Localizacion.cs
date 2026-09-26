@@ -84,6 +84,14 @@ public static class Localizacion
         ("Columna.Interes", "Interés"),
         ("Columna.Portal", "Portal"),
 
+        // ----- Paginación de la tabla -----
+        ("Paginacion.PorPagina", "Filas por página"),
+        ("Paginacion.Primero", "Primera página"),
+        ("Paginacion.Anterior", "Página anterior"),
+        ("Paginacion.Siguiente", "Página siguiente"),
+        ("Paginacion.Ultimo", "Última página"),
+        ("Paginacion.De", "de"),
+
         // ----- Panel de detalle -----
         ("Detalle.Vacio", "Selecciona una candidatura de la lista\n o crea una nueva."),
         ("Detalle.Empresa", "Empresa *"),
@@ -309,6 +317,14 @@ public static class Localizacion
         ("Columna.Interes", "Interest"),
         ("Columna.Portal", "Portal"),
 
+        // ----- Paginación de la tabla -----
+        ("Paginacion.PorPagina", "Rows per page"),
+        ("Paginacion.Primero", "First page"),
+        ("Paginacion.Anterior", "Previous page"),
+        ("Paginacion.Siguiente", "Next page"),
+        ("Paginacion.Ultimo", "Last page"),
+        ("Paginacion.De", "of"),
+
         // ----- Panel de detalle -----
         ("Detalle.Vacio", "Select an application from the list\nor create a new one."),
         ("Detalle.Empresa", "Company *"),
@@ -533,6 +549,14 @@ public static class Localizacion
         ("Columna.Seguimiento", "Follow-up"),
         ("Columna.Interes", "Interesse"),
         ("Columna.Portal", "Portal"),
+
+        // ----- Paginación de la tabla -----
+        ("Paginacion.PorPagina", "Zeilen pro Seite"),
+        ("Paginacion.Primero", "Erste Seite"),
+        ("Paginacion.Anterior", "Vorherige Seite"),
+        ("Paginacion.Siguiente", "Nächste Seite"),
+        ("Paginacion.Ultimo", "Letzte Seite"),
+        ("Paginacion.De", "von"),
 
         // ----- Panel de detalle -----
         ("Detalle.Vacio", "Wähle eine Bewerbung aus der Liste\noder erstelle eine neue."),

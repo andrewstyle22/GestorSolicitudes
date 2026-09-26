@@ -304,6 +304,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <!-- Filtros -->
@@ -554,6 +555,58 @@
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Paginación: a la izquierda cuántas filas se muestran, a la derecha
+                         el rango y las cuatro flechas. Los botones que no llevan a ninguna parte
+                         se deshabilitan solos. -->
+                    <Grid Grid.Row="2" Margin="14,10,14,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource Paginacion.PorPagina}"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ComboBox x:Name="SelectorFilasPagina" Width="64"
+                                      Style="{StaticResource CampoCombo}"
+                                      ItemsSource="{Binding TamanosPagina}"
+                                      SelectedItem="{Binding TamanoPagina}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                            <TextBlock x:Name="RangoTexto" Text="{Binding RangoPagina}"
+                                       VerticalAlignment="Center" Margin="0,0,12,0" MinWidth="90"
+                                       TextAlignment="Right" />
+
+                            <Button x:Name="BotonPrimeraPagina" Content="|◀" Margin="0,0,4,0"
+                                    Padding="8,2" Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeIrAInicio}"
+                                    Command="{Binding IrAInicioCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Primero}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Primero}" />
+                            <Button x:Name="BotonPaginaAnterior" Content="◀" Margin="0,0,4,0"
+                                    Padding="8,2" Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeRetroceder}"
+                                    Command="{Binding IrAtrasCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Anterior}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Anterior}" />
+                            <Button x:Name="BotonPaginaSiguiente" Content="▶" Margin="0,0,4,0"
+                                    Padding="8,2" Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeAvanzar}"
+                                    Command="{Binding IrAdelanteCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Siguiente}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Siguiente}" />
+                            <Button x:Name="BotonUltimaPagina" Content="▶|" Padding="8,2"
+                                    Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeIrAlFinal}"
+                                    Command="{Binding IrAlFinalCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Ultimo}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Ultimo}" />
+                        </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
 

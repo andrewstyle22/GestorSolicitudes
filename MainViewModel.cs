@@ -192,6 +192,91 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<Solicitud> solicitudes = new();
 
+    // ---------------------------------------------------------------- Paginación
+
+    /// <summary>Filas por página que ofrece el desplegable.</summary>
+    public IReadOnlyList<int> TamanosPagina { get; } = new[] { 5, 10, 20, 30 };
+
+    [ObservableProperty]
+    private int tamanoPagina = 10;
+
+    // Al cambiar el tamaño se repagina la lista, quedándose en la página actual si sigue existiendo.
+    partial void OnTamanoPaginaChanged(int value) => this.Recargar();
+
+    /// <summary>Página actual, contando desde 1.</summary>
+    [ObservableProperty]
+    private int paginaActual = 1;
+
+    [ObservableProperty]
+    private int totalPaginas;
+
+    /// <summary>Texto "1-10 de 47" que se ve junto a las flechas.</summary>
+    [ObservableProperty]
+    private string rangoPagina = string.Empty;
+
+    [ObservableProperty]
+    private bool puedeIrAInicio;
+
+    [ObservableProperty]
+    private bool puedeRetroceder;
+
+    [ObservableProperty]
+    private bool puedeAvanzar;
+
+    [ObservableProperty]
+    private bool puedeIrAlFinal;
+
+    [RelayCommand]
+    private void IrAInicio() => this.IrAPagina(1);
+
+    [RelayCommand]
+    private void IrAtras() => this.IrAPagina(this.PaginaActual - 1);
+
+    [RelayCommand]
+    private void IrAdelante() => this.IrAPagina(this.PaginaActual + 1);
+
+    [RelayCommand]
+    private void IrAlFinal() => this.IrAPagina(this.TotalPaginas);
+
+    private void IrAPagina(int pagina)
+    {
+        int destino = Math.Clamp(pagina, 1, Math.Max(this.TotalPaginas, 1));
+
+        if (destino == this.PaginaActual)
+        {
+            return;
+        }
+
+        this.PaginaActual = destino;
+
+        // Recargar vuelve a filtrar la base y vuelve a recortar: un solo camino para los filtros
+        // y para las flechas, sin listas intermedias que se queden desfasadas.
+        this.Recargar();
+    }
+
+    /// <summary>
+    /// Deja <see cref="Solicitudes"/> con la página actual de <paramref name="filtradas"/> y
+    /// recalcula el rango y los botones. WPF no pagina las vistas de colección, así que el
+    /// recorte se hace aquí; la exportación a CSV no pasa por esta lista y sigue saliendo entera.
+    /// </summary>
+    private void Paginar(List<Solicitud> filtradas)
+    {
+        this.TotalPaginas = filtradas.Count == 0 ? 0 : ((filtradas.Count - 1) / this.TamanoPagina) + 1;
+        this.PaginaActual = Math.Clamp(this.PaginaActual, 1, Math.Max(this.TotalPaginas, 1));
+
+        int desde = (this.PaginaActual - 1) * this.TamanoPagina;
+        this.Solicitudes = new ObservableCollection<Solicitud>(filtradas.Skip(desde).Take(this.TamanoPagina));
+
+        this.PuedeIrAInicio = this.PuedeRetroceder = this.PaginaActual > 1;
+        this.PuedeAvanzar = this.PuedeIrAlFinal = this.PaginaActual < this.TotalPaginas;
+
+        int hasta = Math.Min(desde + this.TamanoPagina, filtradas.Count);
+        string de = Localizacion.Texto("Paginacion.De");
+        this.RangoPagina = filtradas.Count == 0
+            ? $"0 {de} 0"
+            : $"{desde + 1}-{hasta} {de} {filtradas.Count}";
+    }
+
     // ---------------------------------------------------------------- Filtros
     [ObservableProperty]
     private string textoBusqueda = string.Empty;
@@ -296,7 +381,7 @@ public partial class MainViewModel : ObservableObject
             lista = lista.Where(s => s.SeguimientoPendiente).ToList();
         }
 
-        this.Solicitudes = new ObservableCollection<Solicitud>(lista);
+        this.Paginar(lista);
         this.ActualizarEstadisticas();
     }
 
