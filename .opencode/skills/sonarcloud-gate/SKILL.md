@@ -44,8 +44,8 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
 1. **Extraer la lógica a métodos `internal` o `internal static`** del ViewModel
    (los tests ven `internal` vía `InternalsVisibleTo("GestorSolicitudes.Tests")`,
    no hace falta hacerlos `public`) y **cubrirlos con tests xUnit**. Ejemplos
-   hechos: `ImportarFila`/`ImportarLineas`, `ConstruirCsv`, `ValidarImportacion`,
-   `EnviadaEnMes`, `ResumenImportacion`. Los estáticos puros que no necesiten el
+   hechos: `ConstruirCsv`, `CargarColumnas`/`GuardarColumnas`, `EnviadaEnMes`.
+   Los estáticos puros que no necesiten el
    ViewModel van en `CsvHelper` (Helpers no puede depender de ViewModels).
 2. **`[ExcludeFromCodeCoverage]` en métodos 100% de diálogo/MessageBox**
    (`OpenFileDialog`, `SaveFileDialog`, `Process.Start`...). Es el mecanismo que

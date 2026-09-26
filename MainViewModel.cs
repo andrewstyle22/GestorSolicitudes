@@ -23,20 +23,24 @@ public partial class MainViewModel : ObservableObject
     private const string FormatoFecha = "yyyy-MM-dd";
 
     private readonly AppDbContext db;
+    private readonly string rutaColumnas;
 
     /// <summary>El constructor sin base arranca la base real de %APPDATA%; no se prueba.</summary>
     [ExcludeFromCodeCoverage]
     public MainViewModel()
-        : this(new AppDbContext())
+        : this(new AppDbContext(), ColumnasHelper.Ruta)
     {
     }
 
-    // Constructor con base de datos propia, para que los tests usen una base temporal.
-    internal MainViewModel(AppDbContext db)
+    // Constructor con base de datos y fichero de preferencias propios, para que los tests
+    // usen una base temporal y no toquen la preferencia real de %APPDATA%.
+    internal MainViewModel(AppDbContext db, string? rutaColumnas = null)
     {
         this.db = db;
+        this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
 
         this.CargarTextosLocalizados();
+        this.CargarColumnas();
 
         // Asignación directa al campo para no disparar la recarga dos veces.
         this.estadoFiltroItem = this.EstadosFiltro[0];
@@ -101,6 +105,58 @@ public partial class MainViewModel : ObservableObject
         // IdiomasDisponibles no se toca aquí a propósito: los tres nombres son fijos
         // (cada uno en su propia lengua), y reconstruir la lista forzaría al ComboBox
         // del selector a re-sincronizar su selección.
+
+        // Los nombres de las columnas ocultables salen del diccionario, así que también
+        // se releen al cambiar de idioma.
+        foreach (ColumnaItem columna in this.Columnas)
+        {
+            columna.RefrescarNombre();
+        }
+    }
+
+    // ---------------------------------------------------------------- Columnas
+
+    /// <summary>
+    /// Columnas de la tabla que el usuario puede ocultar. Empresa, Puesto, Estado y
+    /// Enviada no entran aquí: se ven siempre.
+    /// </summary>
+    private static readonly string[] ColumnasOcultables =
+        ["Dias", "PrimeraRespuesta", "Entrevista", "Seguimiento", "Interes", "Portal"];
+
+    public ObservableCollection<ColumnaItem> Columnas { get; } = new();
+
+    /// <summary>Abre y cierra la lista de checkboxes del botón "Columnas".</summary>
+    [ObservableProperty]
+    private bool panelColumnasAbierto;
+
+    /// <summary>
+    /// La vista se suscribe para ocultar las columnas del DataGrid: un DataGridColumn no
+    /// hereda el DataContext y no se puede enlazar, así que el aviso llega por aquí.
+    /// </summary>
+    public event Action? ColumnaVisibilidadCambiada;
+
+    /// <summary>Las columnas ocultables con el estado guardado, o todas si no hay preferencia.</summary>
+    private void CargarColumnas()
+    {
+        HashSet<string>? guardadas = ColumnasHelper.CargarDe(this.rutaColumnas);
+
+        foreach (string columna in ColumnasOcultables)
+        {
+            this.Columnas.Add(new ColumnaItem(
+                columna,
+                guardadas is null || guardadas.Contains(columna),
+                this.GuardarColumnas));
+        }
+    }
+
+    /// <summary>Guarda la preferencia y avisa a la vista para que aplique el nuevo estado.</summary>
+    private void GuardarColumnas()
+    {
+        ColumnasHelper.GuardarEn(
+            this.rutaColumnas,
+            this.Columnas.Where(c => c.Visible).Select(c => c.Columna));
+
+        this.ColumnaVisibilidadCambiada?.Invoke();
     }
 
     /// <summary>
@@ -135,6 +191,91 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<Solicitud> solicitudes = new();
+
+    // ---------------------------------------------------------------- Paginación
+
+    /// <summary>Filas por página que ofrece el desplegable.</summary>
+    public IReadOnlyList<int> TamanosPagina { get; } = new[] { 5, 10, 20, 30 };
+
+    [ObservableProperty]
+    private int tamanoPagina = 10;
+
+    // Al cambiar el tamaño se repagina la lista, quedándose en la página actual si sigue existiendo.
+    partial void OnTamanoPaginaChanged(int value) => this.Recargar();
+
+    /// <summary>Página actual, contando desde 1.</summary>
+    [ObservableProperty]
+    private int paginaActual = 1;
+
+    [ObservableProperty]
+    private int totalPaginas;
+
+    /// <summary>Texto "1-10 de 47" que se ve junto a las flechas.</summary>
+    [ObservableProperty]
+    private string rangoPagina = string.Empty;
+
+    [ObservableProperty]
+    private bool puedeIrAInicio;
+
+    [ObservableProperty]
+    private bool puedeRetroceder;
+
+    [ObservableProperty]
+    private bool puedeAvanzar;
+
+    [ObservableProperty]
+    private bool puedeIrAlFinal;
+
+    [RelayCommand]
+    private void IrAInicio() => this.IrAPagina(1);
+
+    [RelayCommand]
+    private void IrAtras() => this.IrAPagina(this.PaginaActual - 1);
+
+    [RelayCommand]
+    private void IrAdelante() => this.IrAPagina(this.PaginaActual + 1);
+
+    [RelayCommand]
+    private void IrAlFinal() => this.IrAPagina(this.TotalPaginas);
+
+    private void IrAPagina(int pagina)
+    {
+        int destino = Math.Clamp(pagina, 1, Math.Max(this.TotalPaginas, 1));
+
+        if (destino == this.PaginaActual)
+        {
+            return;
+        }
+
+        this.PaginaActual = destino;
+
+        // Recargar vuelve a filtrar la base y vuelve a recortar: un solo camino para los filtros
+        // y para las flechas, sin listas intermedias que se queden desfasadas.
+        this.Recargar();
+    }
+
+    /// <summary>
+    /// Deja <see cref="Solicitudes"/> con la página actual de <paramref name="filtradas"/> y
+    /// recalcula el rango y los botones. WPF no pagina las vistas de colección, así que el
+    /// recorte se hace aquí; la exportación a CSV no pasa por esta lista y sigue saliendo entera.
+    /// </summary>
+    private void Paginar(List<Solicitud> filtradas)
+    {
+        this.TotalPaginas = filtradas.Count == 0 ? 0 : ((filtradas.Count - 1) / this.TamanoPagina) + 1;
+        this.PaginaActual = Math.Clamp(this.PaginaActual, 1, Math.Max(this.TotalPaginas, 1));
+
+        int desde = (this.PaginaActual - 1) * this.TamanoPagina;
+        this.Solicitudes = new ObservableCollection<Solicitud>(filtradas.Skip(desde).Take(this.TamanoPagina));
+
+        this.PuedeIrAInicio = this.PuedeRetroceder = this.PaginaActual > 1;
+        this.PuedeAvanzar = this.PuedeIrAlFinal = this.PaginaActual < this.TotalPaginas;
+
+        int hasta = Math.Min(desde + this.TamanoPagina, filtradas.Count);
+        string de = Localizacion.Texto("Paginacion.De");
+        this.RangoPagina = filtradas.Count == 0
+            ? $"0 {de} 0"
+            : $"{desde + 1}-{hasta} {de} {filtradas.Count}";
+    }
 
     // ---------------------------------------------------------------- Filtros
     [ObservableProperty]
@@ -240,7 +381,7 @@ public partial class MainViewModel : ObservableObject
             lista = lista.Where(s => s.SeguimientoPendiente).ToList();
         }
 
-        this.Solicitudes = new ObservableCollection<Solicitud>(lista);
+        this.Paginar(lista);
         this.ActualizarEstadisticas();
     }
 
@@ -490,166 +631,6 @@ public partial class MainViewModel : ObservableObject
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
                 Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
-    }
-
-    // ---------------------------------------------------------------- Importación LinkedIn
-    [RelayCommand]
-    [ExcludeFromCodeCoverage] // Método de diálogo: ni el diálogo ni los MessageBox se pueden probar.
-    private void ImportarLinkedIn()
-    {
-        var dialogo = new OpenFileDialog
-        {
-            Title = Localizacion.Texto("Dialogo.ImportarCsvLinkedIn"),
-            Filter = "CSV (*.csv)|*.csv",
-        };
-
-        if (dialogo.ShowDialog() != true)
-        {
-            return;
-        }
-
-        List<List<string>> lineas;
-        try
-        {
-            lineas = CsvHelper.LeerCsv(dialogo.FileName);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                string.Format(Localizacion.Texto("Mensaje.NoSePudoLeerFichero"), ex.Message),
-                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
-            return;
-        }
-
-        string? aviso = ValidarImportacion(lineas);
-        if (aviso is not null)
-        {
-            MessageBox.Show(
-                aviso,
-                Localizacion.Texto("Titulo.Importar"), MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        var columnas = CsvHelper.IdentificarColumnas(lineas[0]);
-
-        (int importadas, int duplicadas, int omitidas) = this.ImportarLineas(lineas, columnas);
-
-        MessageBox.Show(
-            ResumenImportacion(importadas, duplicadas, omitidas),
-            Localizacion.Texto("Titulo.ImportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
-    internal static string? ValidarImportacion(List<List<string>> lineas)
-    {
-        if (lineas.Count < 2)
-        {
-            return Localizacion.Texto("Mensaje.CsvSinFilas");
-        }
-
-        var columnas = CsvHelper.IdentificarColumnas(lineas[0]);
-        if (!columnas.ContainsKey("empresa") || !columnas.ContainsKey("puesto"))
-        {
-            return Localizacion.Texto("Mensaje.CsvColumnas");
-        }
-
-        return null;
-    }
-
-    internal (int Importadas, int Duplicadas, int Omitidas) ImportarLineas(
-        List<List<string>> lineas, Dictionary<string, int> columnas)
-    {
-        int maximoIndice = columnas.Values.Max();
-        var vistas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        int importadas = 0, duplicadas = 0, omitidas = 0;
-
-        foreach (List<string> campos in lineas.Skip(1))
-        {
-            (int Imp, int Dup, int Omi) fila = this.ImportarFila(campos, columnas, maximoIndice, vistas);
-            importadas += fila.Imp;
-            duplicadas += fila.Dup;
-            omitidas += fila.Omi;
-        }
-
-        if (importadas > 0)
-        {
-            this.db.SaveChanges();
-        }
-
-        this.Recargar();
-        this.RecargarEmbudoSiVisible();
-
-        return (importadas, duplicadas, omitidas);
-    }
-
-    internal (int Importadas, int Duplicadas, int Omitidas) ImportarFila(
-        List<string> campos, Dictionary<string, int> columnas, int maximoIndice, HashSet<string> vistas)
-    {
-        if (campos.Count <= maximoIndice)
-        {
-            return (0, 0, 0);
-        }
-
-        string empresa = CsvHelper.ObtenerCampo(campos, columnas, "empresa").Trim();
-        string puesto = CsvHelper.ObtenerCampo(campos, columnas, "puesto").Trim();
-        if (empresa.Length == 0 || puesto.Length == 0)
-        {
-            return (0, 0, 1);
-        }
-
-        DateTime fecha = CsvHelper.ParsearFecha(CsvHelper.ObtenerCampo(campos, columnas, "fecha"));
-        string clave = $"{empresa}|{puesto}|{fecha:yyyy-MM-dd}";
-
-        bool existe = vistas.Contains(clave) || this.db.Solicitudes.Any(s =>
-            s.Empresa == empresa && s.Puesto == puesto && s.FechaSolicitud == fecha);
-
-        if (existe)
-        {
-            return (0, 1, 0);
-        }
-
-        vistas.Add(clave);
-
-        string evento = CsvHelper.ObtenerCampo(campos, columnas, "evento");
-        string uuid = CsvHelper.ObtenerCampo(campos, columnas, "uuid");
-        string ubicacion = CsvHelper.ObtenerCampo(campos, columnas, "ubicacion");
-
-        var solicitud = new Solicitud
-        {
-            Empresa = empresa,
-            Puesto = puesto,
-            FechaSolicitud = fecha,
-            Ubicacion = ubicacion.Length == 0 ? null : ubicacion,
-            Portal = "LinkedIn",
-            Estado = CsvHelper.MapearEstadoLinkedIn(CsvHelper.ObtenerCampo(campos, columnas, "estado")),
-            EnlaceOferta = uuid.Length > 0 ? $"https://www.linkedin.com/jobs/view/{uuid}" : null,
-            Notas = evento.Length > 0 ? string.Format(Localizacion.Texto("Importar.EventoLinkedIn"), evento) : null,
-        };
-
-        solicitud.Eventos.Add(new Evento
-        {
-            Fecha = fecha,
-            Tipo = TipoEvento.SolicitudEnviada,
-            Descripcion = Localizacion.Texto("Evento.ImportadaLinkedIn"),
-        });
-
-        this.db.Solicitudes.Add(solicitud);
-        return (1, 0, 0);
-    }
-
-    internal static string ResumenImportacion(int importadas, int duplicadas, int omitidas)
-    {
-        string resumen = string.Format(Localizacion.Texto("Importar.ResumenImportadas"), importadas);
-        if (duplicadas > 0)
-        {
-            resumen += "\n" + string.Format(Localizacion.Texto("Importar.ResumenDuplicadas"), duplicadas);
-        }
-
-        if (omitidas > 0)
-        {
-            resumen += "\n" + string.Format(Localizacion.Texto("Importar.ResumenOmitidas"), omitidas);
-        }
-
-        return resumen;
     }
 
     [RelayCommand]

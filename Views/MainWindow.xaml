@@ -6,7 +6,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GestorSolicitudes.Views.MainWindow"
         Icon="/GestorSolicitudes;component/Resources/appicon.ico"
         Title="{DynamicResource TituloVentana}"
-        Height="780" Width="1418"
+        Height="780" Width="1525"
         MinHeight="600" MinWidth="1080"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI"
@@ -174,8 +174,6 @@
                             Content="{Binding VerGrafica, Converter={StaticResource VerGraficaATexto}}"
                             Style="{StaticResource BotonSecundario}"
                             Command="{Binding ConfigurarGraficaCommand}" Margin="0,0,8,0" />
-                    <Button Content="{DynamicResource Boton.ImportarLinkedIn}" Style="{StaticResource BotonSecundario}"
-                            Command="{Binding ImportarLinkedInCommand}" Margin="0,0,8,0" />
                     <Button Content="{DynamicResource Boton.ExportarCsv}" Style="{StaticResource BotonSecundario}"
                             Command="{Binding ExportarCsvCommand}" Margin="0,0,8,0" />
                     <Button Content="{DynamicResource Boton.NuevaCandidatura}" Style="{StaticResource BotonPrimario}"
@@ -306,14 +304,14 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <!-- Filtros -->
                     <Grid Grid.Row="0" Margin="14,14,14,10">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="260" MaxWidth="360" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <Grid Grid.Column="0">
@@ -321,9 +319,31 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Style="{StaticResource Campo}"
-                                     Text="{Binding TextoBusqueda, Delay=250, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="{DynamicResource Filtro.BuscarToolTip}" />
+
+                            <!-- El TextBox de WPF no tiene Placeholder: se pinta un texto
+                                 encima que solo se ve mientras el campo está vacío. -->
+                            <Grid Grid.Column="0">
+                                <TextBox x:Name="Buscar_empresas" MinWidth="160"
+                                         Style="{StaticResource Campo}"
+                                         Text="{Binding TextoBusqueda, Delay=250, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="{DynamicResource Filtro.BuscarToolTip}" />
+                                <TextBlock Text="{DynamicResource Filtro.Buscar}"
+                                           Margin="9,0,0,0" VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           Foreground="{StaticResource TextoSuave}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=Buscar_empresas}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
                             <Button Grid.Column="1" Content="✕" Margin="6,0,0,0"
                                     Padding="9,2" VerticalAlignment="Center"
                                     Style="{StaticResource BotonSecundario}"
@@ -331,14 +351,46 @@
                                     Command="{Binding LimpiarBusquedaCommand}" />
                         </Grid>
 
-                        <ComboBox Grid.Column="1" Width="190" Margin="8,0,0,0"
-                                  Style="{StaticResource CampoCombo}"
-                                  ItemsSource="{Binding EstadosFiltro}"
-                                  DisplayMemberPath="Descripcion"
-                                  SelectedItem="{Binding EstadoFiltroItem}" />
+                        <!-- Todo el grupo de la derecha, pegado al borde. -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                    VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <ToggleButton Margin="0,0,8,0"
+                                          Style="{StaticResource BotonDesplegable}"
+                                          IsChecked="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource Columnas.Boton}" />
+                                    <TextBlock Text="▾" Margin="6,0,0,0" />
 
-                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0"
-                                    VerticalAlignment="Center">
+                                    <!-- StaysOpen=false es lo que cierra la lista al pulsar
+                                         fuera; con el valor por defecto (true) se queda. -->
+                                    <Popup Placement="Bottom"
+                                           AllowsTransparency="True"
+                                           StaysOpen="False"
+                                           IsOpen="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                        <Border Background="{StaticResource Panel}"
+                                                BorderBrush="{StaticResource Borde}"
+                                                BorderThickness="1" CornerRadius="6"
+                                                Padding="12,8" MinWidth="190">
+                                            <ItemsControl ItemsSource="{Binding Columnas}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox Content="{Binding Nombre}"
+                                                                  IsChecked="{Binding Visible}"
+                                                                  Margin="0,5" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Border>
+                                    </Popup>
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ComboBox x:Name="SelectorEstados" Width="190" Margin="0,0,12,0"
+                                      Style="{StaticResource CampoCombo}"
+                                      ItemsSource="{Binding EstadosFiltro}"
+                                      DisplayMemberPath="Descripcion"
+                                      SelectedItem="{Binding EstadoFiltroItem}" />
+
                             <CheckBox Content="{DynamicResource Filtro.SoloAbiertas}" VerticalAlignment="Center"
                                       IsChecked="{Binding SoloAbiertas}" />
                             <CheckBox Content="{DynamicResource Filtro.SeguimientoPendiente}" VerticalAlignment="Center"
@@ -354,6 +406,7 @@
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               HeadersVisibility="Column"
+                              ColumnHeaderStyle="{StaticResource CabeceraColumna}"
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
                               SelectionMode="Single"
@@ -379,7 +432,7 @@
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Binding="{Binding Empresa}" Width="260" MinWidth="260">
+                            <DataGridTextColumn x:Name="Empresa" Binding="{Binding Empresa}" Width="260" MinWidth="260">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Empresa}" />
@@ -395,7 +448,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding Puesto}" Width="300" MinWidth="300">
+                            <DataGridTextColumn x:Name="Puesto" Binding="{Binding Puesto}" Width="300" MinWidth="300">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Puesto}" />
@@ -410,7 +463,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Width="150">
+                            <DataGridTemplateColumn x:Name="Estado" Width="150">
                                 <DataGridTemplateColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Estado}" />
@@ -429,7 +482,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Binding="{Binding FechaSolicitud, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Enviadas" Binding="{Binding FechaSolicitud, StringFormat=dd/MM/yyyy}"
                                                 Width="100">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -438,21 +491,20 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding DiasProceso}" Width="60">
+                            <DataGridTextColumn x:Name="Dias" Binding="{Binding DiasProceso}" Width="60">
+                                <!-- El tooltip va en el HeaderTemplate y no en un HeaderStyle
+                                     propio: un estilo por columna sustituye al ColumnHeaderStyle
+                                     del DataGrid en vez de heredarlo, y esa columna se quedaba
+                                     sin el fondo gris de las demás. -->
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{DynamicResource Columna.Dias}" />
+                                        <TextBlock Text="{DynamicResource Columna.Dias}"
+                                                   ToolTip="{DynamicResource Columna.DiasToolTip}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.HeaderStyle>
-                                    <Style TargetType="{x:Type DataGridColumnHeader}">
-                                        <Setter Property="ToolTip"
-                                                Value="{DynamicResource Columna.DiasToolTip}" />
-                                    </Style>
-                                </DataGridTextColumn.HeaderStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
                                                 Width="110">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -461,7 +513,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Entrevista" Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
                                                 Width="105">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -470,7 +522,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Seguimiento" Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
                                                 Width="105">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -479,7 +531,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding Interes, Converter={StaticResource InteresATextoEstrellas}}"
+                            <DataGridTextColumn x:Name="Interes" Binding="{Binding Interes, Converter={StaticResource InteresATextoEstrellas}}"
                                                 Width="90">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -494,7 +546,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding Portal}" Width="150">
+                            <DataGridTextColumn x:Name="Portal" Binding="{Binding Portal}" Width="150" MinWidth="175">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Portal}" />
@@ -503,6 +555,58 @@
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Paginación: a la izquierda cuántas filas se muestran, a la derecha
+                         el rango y las cuatro flechas. Los botones que no llevan a ninguna parte
+                         se deshabilitan solos. -->
+                    <Grid Grid.Row="2" Margin="14,10,14,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource Paginacion.PorPagina}"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ComboBox x:Name="SelectorFilasPagina" Width="64"
+                                      Style="{StaticResource CampoCombo}"
+                                      ItemsSource="{Binding TamanosPagina}"
+                                      SelectedItem="{Binding TamanoPagina}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                            <TextBlock x:Name="RangoTexto" Text="{Binding RangoPagina}"
+                                       VerticalAlignment="Center" Margin="0,0,12,0" MinWidth="90"
+                                       TextAlignment="Right" />
+
+                            <Button x:Name="BotonPrimeraPagina" Content="|◀" Margin="0,0,4,0"
+                                    Padding="8,2" Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeIrAInicio}"
+                                    Command="{Binding IrAInicioCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Primero}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Primero}" />
+                            <Button x:Name="BotonPaginaAnterior" Content="◀" Margin="0,0,4,0"
+                                    Padding="8,2" Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeRetroceder}"
+                                    Command="{Binding IrAtrasCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Anterior}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Anterior}" />
+                            <Button x:Name="BotonPaginaSiguiente" Content="▶" Margin="0,0,4,0"
+                                    Padding="8,2" Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeAvanzar}"
+                                    Command="{Binding IrAdelanteCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Siguiente}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Siguiente}" />
+                            <Button x:Name="BotonUltimaPagina" Content="▶|" Padding="8,2"
+                                    Style="{StaticResource BotonSecundario}"
+                                    IsEnabled="{Binding PuedeIrAlFinal}"
+                                    Command="{Binding IrAlFinalCommand}"
+                                    ToolTip="{DynamicResource Paginacion.Ultimo}"
+                                    AutomationProperties.Name="{DynamicResource Paginacion.Ultimo}" />
+                        </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
 

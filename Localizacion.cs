@@ -49,7 +49,6 @@ public static class Localizacion
         ("Metrica.Dias", "días"),
 
         // ----- Botones de la cabecera -----
-        ("Boton.ImportarLinkedIn", "Importar LinkedIn"),
         ("Boton.ExportarCsv", "Exportar CSV"),
         ("Boton.NuevaCandidatura", "+  Nueva candidatura"),
 
@@ -63,6 +62,7 @@ public static class Localizacion
         ("Grafica.Ocultar", "Ocultar gráfica"),
 
         // ----- Filtros -----
+        ("Filtro.Buscar", "Buscar..."),
         ("Filtro.BuscarToolTip", "Busca por empresa, puesto, tecnología, ubicación o portal"),
         ("Filtro.BorrarBusqueda", "Borrar la búsqueda"),
         ("Filtro.SoloAbiertas", "Solo abiertas"),
@@ -71,6 +71,7 @@ public static class Localizacion
         ("Filtro.TodosLosEstados", "Todos los estados"),
 
         // ----- Columnas de la tabla -----
+        ("Columnas.Boton", "Columnas"),
         ("Columna.Empresa", "Empresa"),
         ("Columna.Puesto", "Puesto"),
         ("Columna.Estado", "Estado"),
@@ -82,6 +83,14 @@ public static class Localizacion
         ("Columna.Seguimiento", "Seguimiento"),
         ("Columna.Interes", "Interés"),
         ("Columna.Portal", "Portal"),
+
+        // ----- Paginación de la tabla -----
+        ("Paginacion.PorPagina", "Filas por página"),
+        ("Paginacion.Primero", "Primera página"),
+        ("Paginacion.Anterior", "Página anterior"),
+        ("Paginacion.Siguiente", "Página siguiente"),
+        ("Paginacion.Ultimo", "Última página"),
+        ("Paginacion.De", "de"),
 
         // ----- Panel de detalle -----
         ("Detalle.Vacio", "Selecciona una candidatura de la lista\n o crea una nueva."),
@@ -159,7 +168,6 @@ public static class Localizacion
         ("Dialogo.SeleccionaCv", "Selecciona el CV que enviaste"),
         ("Dialogo.SeleccionaCarta", "Selecciona la carta de presentación"),
         ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Currículos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Todos los archivos (*.*)|*.*"),
-        ("Dialogo.ImportarCsvLinkedIn", "Importar el CSV de 'Mis candidaturas' de LinkedIn"),
         ("Dialogo.ExportarCandidaturas", "Exportar candidaturas"),
 
         // ----- Mensajes -----
@@ -167,31 +175,21 @@ public static class Localizacion
         ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
         ("Mensaje.NoSePudoAbrirFichero", "No se pudo abrir el fichero: {0}"),
         ("Mensaje.NoSePudoAbrirEnlace", "No se pudo abrir el enlace: {0}"),
-        ("Mensaje.NoSePudoLeerFichero", "No se pudo leer el fichero:\n\n{0}"),
-        ("Mensaje.CsvSinFilas", "El fichero parece no tener filas de datos."),
-        ("Mensaje.CsvColumnas", "No se reconocen las columnas de empresa o puesto en la cabecera.\n\nSe espera el CSV que exporta LinkedIn en Ajustes → Privacidad de datos → 'Obtener una copia de tus datos' (fichero Jobs)."),
         ("Mensaje.FaltanDatos", "La empresa y el puesto son obligatorios."),
         ("Mensaje.NoSePudoGuardar", "No se pudo guardar: {0}"),
         ("Mensaje.ConfirmarEliminar", "¿Eliminar la candidatura de {0} ({1})?"),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
 
         // ----- Títulos de avisos -----
-        ("Titulo.Importar", "Importar"),
         ("Titulo.Adjunto", "Adjunto"),
         ("Titulo.FaltanDatos", "Faltan datos"),
-        ("Titulo.ImportacionCompletada", "Importación completada"),
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Candidatura enviada"),
-        ("Evento.ImportadaLinkedIn", "Importada desde LinkedIn"),
-        ("Importar.EventoLinkedIn", "Evento LinkedIn: {0}"),
 
-        // ----- Importación / duplicar / exportar -----
-        ("Importar.ResumenImportadas", "Se importaron {0} candidaturas desde LinkedIn."),
-        ("Importar.ResumenDuplicadas", "Se omitieron {0} ya existentes."),
-        ("Importar.ResumenOmitidas", "Se saltaron {0} filas sin empresa o puesto."),
+        // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Duplicada de la candidatura #{0} ({1}, {2})."),
 
         // ----- Ventana de requisitos -----
@@ -284,7 +282,6 @@ public static class Localizacion
         ("Metrica.Dias", "days"),
 
         // ----- Botones de la cabecera -----
-        ("Boton.ImportarLinkedIn", "Import LinkedIn"),
         ("Boton.ExportarCsv", "Export CSV"),
         ("Boton.NuevaCandidatura", "+  New application"),
 
@@ -298,6 +295,7 @@ public static class Localizacion
         ("Grafica.Ocultar", "Hide chart"),
 
         // ----- Filtros -----
+        ("Filtro.Buscar", "Search..."),
         ("Filtro.BuscarToolTip", "Search by company, position, technology, location or portal"),
         ("Filtro.BorrarBusqueda", "Clear search"),
         ("Filtro.SoloAbiertas", "Open only"),
@@ -306,6 +304,7 @@ public static class Localizacion
         ("Filtro.TodosLosEstados", "All statuses"),
 
         // ----- Columnas de la tabla -----
+        ("Columnas.Boton", "Columns"),
         ("Columna.Empresa", "Company"),
         ("Columna.Puesto", "Position"),
         ("Columna.Estado", "Status"),
@@ -317,6 +316,14 @@ public static class Localizacion
         ("Columna.Seguimiento", "Follow-up"),
         ("Columna.Interes", "Interest"),
         ("Columna.Portal", "Portal"),
+
+        // ----- Paginación de la tabla -----
+        ("Paginacion.PorPagina", "Rows per page"),
+        ("Paginacion.Primero", "First page"),
+        ("Paginacion.Anterior", "Previous page"),
+        ("Paginacion.Siguiente", "Next page"),
+        ("Paginacion.Ultimo", "Last page"),
+        ("Paginacion.De", "of"),
 
         // ----- Panel de detalle -----
         ("Detalle.Vacio", "Select an application from the list\nor create a new one."),
@@ -394,7 +401,6 @@ public static class Localizacion
         ("Dialogo.SeleccionaCv", "Select the CV you sent"),
         ("Dialogo.SeleccionaCarta", "Select the cover letter"),
         ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|CVs (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|All files (*.*)|*.*"),
-        ("Dialogo.ImportarCsvLinkedIn", "Import the 'My Jobs' CSV from LinkedIn"),
         ("Dialogo.ExportarCandidaturas", "Export applications"),
 
         // ----- Mensajes -----
@@ -402,31 +408,21 @@ public static class Localizacion
         ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
         ("Mensaje.NoSePudoAbrirFichero", "Could not open the file: {0}"),
         ("Mensaje.NoSePudoAbrirEnlace", "Could not open the link: {0}"),
-        ("Mensaje.NoSePudoLeerFichero", "Could not read the file:\n\n{0}"),
-        ("Mensaje.CsvSinFilas", "The file does not seem to have any data rows."),
-        ("Mensaje.CsvColumnas", "The company or position columns were not recognized in the header.\n\nExpected CSV exported by LinkedIn under Settings → Data privacy → 'Get a copy of your data' (Jobs file)."),
         ("Mensaje.FaltanDatos", "Company and position are required."),
         ("Mensaje.NoSePudoGuardar", "Could not save: {0}"),
         ("Mensaje.ConfirmarEliminar", "Delete the application for {0} ({1})?"),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
 
         // ----- Títulos de avisos -----
-        ("Titulo.Importar", "Import"),
         ("Titulo.Adjunto", "Attachment"),
         ("Titulo.FaltanDatos", "Missing data"),
-        ("Titulo.ImportacionCompletada", "Import completed"),
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Application sent"),
-        ("Evento.ImportadaLinkedIn", "Imported from LinkedIn"),
-        ("Importar.EventoLinkedIn", "LinkedIn event: {0}"),
 
-        // ----- Importación / duplicar / exportar -----
-        ("Importar.ResumenImportadas", "{0} applications imported from LinkedIn."),
-        ("Importar.ResumenDuplicadas", "{0} existing ones were skipped."),
-        ("Importar.ResumenOmitidas", "{0} rows without company or position were skipped."),
+        // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Duplicated from application #{0} ({1}, {2})."),
 
         // ----- Ventana de requisitos -----
@@ -519,7 +515,6 @@ public static class Localizacion
         ("Metrica.Dias", "Tage"),
 
         // ----- Botones de la cabecera -----
-        ("Boton.ImportarLinkedIn", "LinkedIn importieren"),
         ("Boton.ExportarCsv", "CSV exportieren"),
         ("Boton.NuevaCandidatura", "+  Neue Bewerbung"),
 
@@ -533,6 +528,7 @@ public static class Localizacion
         ("Grafica.Ocultar", "Diagramm ausblenden"),
 
         // ----- Filtros -----
+        ("Filtro.Buscar", "Suchen..."),
         ("Filtro.BuscarToolTip", "Suche nach Unternehmen, Position, Technologie, Standort oder Portal"),
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
@@ -541,6 +537,7 @@ public static class Localizacion
         ("Filtro.TodosLosEstados", "Alle Status"),
 
         // ----- Columnas de la tabla -----
+        ("Columnas.Boton", "Spalten"),
         ("Columna.Empresa", "Unternehmen"),
         ("Columna.Puesto", "Position"),
         ("Columna.Estado", "Status"),
@@ -552,6 +549,14 @@ public static class Localizacion
         ("Columna.Seguimiento", "Follow-up"),
         ("Columna.Interes", "Interesse"),
         ("Columna.Portal", "Portal"),
+
+        // ----- Paginación de la tabla -----
+        ("Paginacion.PorPagina", "Zeilen pro Seite"),
+        ("Paginacion.Primero", "Erste Seite"),
+        ("Paginacion.Anterior", "Vorherige Seite"),
+        ("Paginacion.Siguiente", "Nächste Seite"),
+        ("Paginacion.Ultimo", "Letzte Seite"),
+        ("Paginacion.De", "von"),
 
         // ----- Panel de detalle -----
         ("Detalle.Vacio", "Wähle eine Bewerbung aus der Liste\noder erstelle eine neue."),
@@ -629,7 +634,6 @@ public static class Localizacion
         ("Dialogo.SeleccionaCv", "Wähle den Lebenslauf, den du eingereicht hast"),
         ("Dialogo.SeleccionaCarta", "Wähle das Anschreiben"),
         ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Lebensläufe (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Alle Dateien (*.*)|*.*"),
-        ("Dialogo.ImportarCsvLinkedIn", "LinkedIn-CSV »Meine Jobs« importieren"),
         ("Dialogo.ExportarCandidaturas", "Bewerbungen exportieren"),
 
         // ----- Mensajes -----
@@ -637,31 +641,21 @@ public static class Localizacion
         ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
         ("Mensaje.NoSePudoAbrirFichero", "Die Datei konnte nicht geöffnet werden: {0}"),
         ("Mensaje.NoSePudoAbrirEnlace", "Der Link konnte nicht geöffnet werden: {0}"),
-        ("Mensaje.NoSePudoLeerFichero", "Die Datei konnte nicht gelesen werden:\n\n{0}"),
-        ("Mensaje.CsvSinFilas", "Die Datei scheint keine Datenzeilen zu enthalten."),
-        ("Mensaje.CsvColumnas", "Die Spalten für Unternehmen oder Position wurden in der Kopfzeile nicht erkannt.\n\nErwartet wird die CSV-Datei, die LinkedIn unter Einstellungen → Datenschutz → „Kopie deiner Daten“ exportiert (Datei „Jobs“)."),
         ("Mensaje.FaltanDatos", "Unternehmen und Position sind Pflichtfelder."),
         ("Mensaje.NoSePudoGuardar", "Speichern fehlgeschlagen: {0}"),
         ("Mensaje.ConfirmarEliminar", "Bewerbung von {0} ({1}) löschen?"),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
 
         // ----- Títulos de avisos -----
-        ("Titulo.Importar", "Importieren"),
         ("Titulo.Adjunto", "Anlage"),
         ("Titulo.FaltanDatos", "Fehlende Angaben"),
-        ("Titulo.ImportacionCompletada", "Import abgeschlossen"),
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Bewerbung gesendet"),
-        ("Evento.ImportadaLinkedIn", "Von LinkedIn importiert"),
-        ("Importar.EventoLinkedIn", "LinkedIn-Event: {0}"),
 
-        // ----- Importación / duplicar / exportar -----
-        ("Importar.ResumenImportadas", "{0} Bewerbungen von LinkedIn importiert."),
-        ("Importar.ResumenDuplicadas", "{0} bereits vorhandene übersprungen."),
-        ("Importar.ResumenOmitidas", "{0} Zeilen ohne Unternehmen oder Position übersprungen."),
+        // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Dupliziert aus Bewerbung Nr. {0} ({1}, {2})."),
 
         // ----- Ventana de requisitos -----
