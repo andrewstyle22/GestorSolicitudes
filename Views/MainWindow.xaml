@@ -6,7 +6,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GestorSolicitudes.Views.MainWindow"
         Icon="/GestorSolicitudes;component/Resources/appicon.ico"
         Title="{DynamicResource TituloVentana}"
-        Height="780" Width="1500"
+        Height="780" Width="1525"
         MinHeight="600" MinWidth="1080"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI"
@@ -546,7 +546,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Portal" Binding="{Binding Portal}" Width="150" MinWidth="170">
+                            <DataGridTextColumn x:Name="Portal" Binding="{Binding Portal}" Width="150" MinWidth="175">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Portal}" />
