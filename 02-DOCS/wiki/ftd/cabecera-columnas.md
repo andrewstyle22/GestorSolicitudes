@@ -9,8 +9,8 @@ oscuro" para que los nombres resalten, y después que la letra sea algo mayor.
 ## Scope
 
 - **Sí**: un gris de la paleta (`Cabecera`, #E2E8F0) de fondo, texto en `Texto`,
-  `SemiBold` a 13 px (el mismo tamaño que las filas) y un borde inferior y a la
-  derecha en `Borde`.
+  `SemiBold` a 14 px (las filas van a 13) y un borde inferior y a la derecha en
+  `Borde`.
 - **No**: cabeceras en dos líneas, indicador de orden propio, agrupar por color las
   columnas fijas frente a las ocultables.
 
@@ -24,7 +24,8 @@ oscuro" para que los nombres resalten, y después que la letra sea algo mayor.
       su propio `HeaderStyle` (para el tooltip) y un estilo por columna **sustituye**
       al `ColumnHeaderStyle` del `DataGrid` en vez de heredarlo. El tooltip se mudó al
       `TextBlock` de su `HeaderTemplate` y el `HeaderStyle` desapareció.
-- [x] Segunda vuelta: letra de 12 a 13 px.
+- [x] Segunda vuelta: letra de 12 a 13 px, y de 13 a 14 a petición del usuario
+      (probó la app y pidió un poco más).
 - [x] `dotnet test` en verde (141) y `dotnet format --verify-no-changes` sin cambios.
 
 ## Evidence
@@ -50,6 +51,6 @@ oscuro" para que los nombres resalten, y después que la letra sea algo mayor.
 - **Regla**: nada de `HeaderStyle` por columna. Si una columna necesita un tooltip (u
   otra cosa), va en su `HeaderTemplate`; un estilo propio se come el del `DataGrid`
   y esa columna se queda sin estilo. Lo vigila el test.
-- 13 px y no 14: queda a la altura de las filas, que van a 13.
+- 14 px: dos pasos porque el usuario lo pidió tras probar la app (12 → 13 → 14).
 
 

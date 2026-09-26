@@ -165,7 +165,7 @@
             <Setter Property="Background" Value="{StaticResource Cabecera}" />
             <Setter Property="Foreground" Value="{StaticResource Texto}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="14" />
             <Setter Property="Padding" Value="8,7" />
             <Setter Property="BorderBrush" Value="{StaticResource Borde}" />
             <Setter Property="BorderThickness" Value="0,0,1,1" />
