@@ -6,7 +6,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GestorSolicitudes.Views.MainWindow"
         Icon="/GestorSolicitudes;component/Resources/appicon.ico"
         Title="{DynamicResource TituloVentana}"
-        Height="780" Width="1418"
+        Height="780" Width="1500"
         MinHeight="600" MinWidth="1080"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI"
@@ -321,7 +321,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Style="{StaticResource Campo}"
+                            <TextBox x:Name="Buscar_empresas" Grid.Column="0" Style="{StaticResource Campo}"
                                      Text="{Binding TextoBusqueda, Delay=250, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="{DynamicResource Filtro.BuscarToolTip}" />
                             <Button Grid.Column="1" Content="✕" Margin="6,0,0,0"
@@ -379,7 +379,7 @@
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Binding="{Binding Empresa}" Width="260" MinWidth="260">
+                            <DataGridTextColumn x:Name="Empresa" Binding="{Binding Empresa}" Width="260" MinWidth="260">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Empresa}" />
@@ -395,7 +395,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding Puesto}" Width="300" MinWidth="300">
+                            <DataGridTextColumn x:Name="Puesto" Binding="{Binding Puesto}" Width="300" MinWidth="300">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Puesto}" />
@@ -410,7 +410,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Width="150">
+                            <DataGridTemplateColumn x:Name="Estado" Width="150">
                                 <DataGridTemplateColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Estado}" />
@@ -429,7 +429,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Binding="{Binding FechaSolicitud, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Enviadas" Binding="{Binding FechaSolicitud, StringFormat=dd/MM/yyyy}"
                                                 Width="100">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -438,7 +438,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding DiasProceso}" Width="60">
+                            <DataGridTextColumn x:Name="Dias" Binding="{Binding DiasProceso}" Width="60">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Dias}" />
@@ -452,7 +452,7 @@
                                 </DataGridTextColumn.HeaderStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Primera_respuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
                                                 Width="110">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -461,7 +461,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Entrevista" Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
                                                 Width="105">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -470,7 +470,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Seguimiento" Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
                                                 Width="105">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -479,7 +479,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding Interes, Converter={StaticResource InteresATextoEstrellas}}"
+                            <DataGridTextColumn x:Name="Interes" Binding="{Binding Interes, Converter={StaticResource InteresATextoEstrellas}}"
                                                 Width="90">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -494,7 +494,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Binding="{Binding Portal}" Width="150">
+                            <DataGridTextColumn x:Name="Portal" Binding="{Binding Portal}" Width="150" MinWidth="170">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Portal}" />
