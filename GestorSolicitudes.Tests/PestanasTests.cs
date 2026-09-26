@@ -65,6 +65,25 @@ public class PestanasTests
             app.Resources["Acento"],
             ((Border)boton.Template.FindName("borde", boton)).BorderBrush);
 
+        // La cabecera de las columnas: el fondo tiene que ser el gris de la paleta y no el del
+        // tema de Windows, que es lo que pone el DataGrid si no se le da estilo.
+        var estiloCabecera = (Style)app.Resources["CabeceraColumna"]!;
+        Assert.Equal(typeof(DataGridColumnHeader), estiloCabecera.TargetType);
+        Assert.Equal(app.Resources["Cabecera"], estiloCabecera.Setters
+            .OfType<Setter>().Single(s => s.Property == Control.BackgroundProperty).Value);
+        Assert.Equal(app.Resources["Texto"], estiloCabecera.Setters
+            .OfType<Setter>().Single(s => s.Property == TextBlock.ForegroundProperty).Value);
+
+        var cabecera = new DataGridColumnHeader { Style = estiloCabecera };
+        cabecera.Measure(new Size(120, 30));
+        cabecera.Arrange(new Rect(0, 0, 120, 30));
+        cabecera.UpdateLayout();
+
+        Assert.Equal(app.Resources["Cabecera"], cabecera.Background);
+        Assert.Equal(
+            FontWeights.SemiBold,
+            estiloCabecera.Setters.OfType<Setter>().Single(s => s.Property == TextBlock.FontWeightProperty).Value);
+
         // El icono de la bandeja se carga del recurso empaquetado, así que se comprueba
         // que existe y trae los tamaños que usa la bandeja.
         StreamResourceInfo? recurso = Application.GetResourceStream(

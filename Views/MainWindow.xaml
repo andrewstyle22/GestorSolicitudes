@@ -406,6 +406,7 @@
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               HeadersVisibility="Column"
+                              ColumnHeaderStyle="{StaticResource CabeceraColumna}"
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
                               SelectionMode="Single"

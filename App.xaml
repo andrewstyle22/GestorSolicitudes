@@ -26,6 +26,10 @@
         <SolidColorBrush x:Key="Aviso"       Color="#FEF3C7" />
         <SolidColorBrush x:Key="Estrella"    Color="#F59E0B" />
 
+        <!-- Cabecera de la tabla: un gris un punto más apagado que las filas (blanco del panel)
+             para que los nombres de las columnas se lean sin gritar. -->
+        <SolidColorBrush x:Key="Cabecera"    Color="#E2E8F0" />
+
         <!-- ============ Texto ============ -->
         <Style x:Key="Etiqueta" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
@@ -152,6 +156,19 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- ============ Cabeceras de columnas ============ -->
+        <!-- Sin estilo, la cabecera de un DataGrid viene con el fondo del tema de Windows y los
+             nombres se pierden contra las filas blancas. -->
+        <Style x:Key="CabeceraColumna" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource Cabecera}" />
+            <Setter Property="Foreground" Value="{StaticResource Texto}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="8,7" />
+            <Setter Property="BorderBrush" Value="{StaticResource Borde}" />
+            <Setter Property="BorderThickness" Value="0,0,1,1" />
         </Style>
 
         <!-- ============ Pestañas del panel de detalle ============ -->
