@@ -311,9 +311,8 @@
                     <!-- Filtros -->
                     <Grid Grid.Row="0" Margin="14,14,14,10">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="260" MaxWidth="360" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <Grid Grid.Column="0">
@@ -321,9 +320,31 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="Buscar_empresas" Grid.Column="0" Style="{StaticResource Campo}"
-                                     Text="{Binding TextoBusqueda, Delay=250, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="{DynamicResource Filtro.BuscarToolTip}" />
+
+                            <!-- El TextBox de WPF no tiene Placeholder: se pinta un texto
+                                 encima que solo se ve mientras el campo está vacío. -->
+                            <Grid Grid.Column="0">
+                                <TextBox x:Name="Buscar_empresas" MinWidth="160"
+                                         Style="{StaticResource Campo}"
+                                         Text="{Binding TextoBusqueda, Delay=250, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="{DynamicResource Filtro.BuscarToolTip}" />
+                                <TextBlock Text="{DynamicResource Filtro.Buscar}"
+                                           Margin="9,0,0,0" VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           Foreground="{StaticResource TextoSuave}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=Buscar_empresas}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
                             <Button Grid.Column="1" Content="✕" Margin="6,0,0,0"
                                     Padding="9,2" VerticalAlignment="Center"
                                     Style="{StaticResource BotonSecundario}"
@@ -331,14 +352,46 @@
                                     Command="{Binding LimpiarBusquedaCommand}" />
                         </Grid>
 
-                        <ComboBox Grid.Column="1" Width="190" Margin="8,0,0,0"
-                                  Style="{StaticResource CampoCombo}"
-                                  ItemsSource="{Binding EstadosFiltro}"
-                                  DisplayMemberPath="Descripcion"
-                                  SelectedItem="{Binding EstadoFiltroItem}" />
+                        <!-- Todo el grupo de la derecha, pegado al borde. -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                    VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <ToggleButton Margin="0,0,8,0"
+                                          Style="{StaticResource BotonDesplegable}"
+                                          IsChecked="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource Columnas.Boton}" />
+                                    <TextBlock Text="▾" Margin="6,0,0,0" />
 
-                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0"
-                                    VerticalAlignment="Center">
+                                    <!-- StaysOpen=false es lo que cierra la lista al pulsar
+                                         fuera; con el valor por defecto (true) se queda. -->
+                                    <Popup Placement="Bottom"
+                                           AllowsTransparency="True"
+                                           StaysOpen="False"
+                                           IsOpen="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                        <Border Background="{StaticResource Panel}"
+                                                BorderBrush="{StaticResource Borde}"
+                                                BorderThickness="1" CornerRadius="6"
+                                                Padding="12,8" MinWidth="190">
+                                            <ItemsControl ItemsSource="{Binding Columnas}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox Content="{Binding Nombre}"
+                                                                  IsChecked="{Binding Visible}"
+                                                                  Margin="0,5" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Border>
+                                    </Popup>
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ComboBox x:Name="SelectorEstados" Width="190" Margin="0,0,12,0"
+                                      Style="{StaticResource CampoCombo}"
+                                      ItemsSource="{Binding EstadosFiltro}"
+                                      DisplayMemberPath="Descripcion"
+                                      SelectedItem="{Binding EstadoFiltroItem}" />
+
                             <CheckBox Content="{DynamicResource Filtro.SoloAbiertas}" VerticalAlignment="Center"
                                       IsChecked="{Binding SoloAbiertas}" />
                             <CheckBox Content="{DynamicResource Filtro.SeguimientoPendiente}" VerticalAlignment="Center"
@@ -452,7 +505,7 @@
                                 </DataGridTextColumn.HeaderStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Primera_respuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
                                                 Width="110">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>

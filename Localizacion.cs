@@ -63,6 +63,7 @@ public static class Localizacion
         ("Grafica.Ocultar", "Ocultar gráfica"),
 
         // ----- Filtros -----
+        ("Filtro.Buscar", "Buscar..."),
         ("Filtro.BuscarToolTip", "Busca por empresa, puesto, tecnología, ubicación o portal"),
         ("Filtro.BorrarBusqueda", "Borrar la búsqueda"),
         ("Filtro.SoloAbiertas", "Solo abiertas"),
@@ -71,6 +72,7 @@ public static class Localizacion
         ("Filtro.TodosLosEstados", "Todos los estados"),
 
         // ----- Columnas de la tabla -----
+        ("Columnas.Boton", "Columnas"),
         ("Columna.Empresa", "Empresa"),
         ("Columna.Puesto", "Puesto"),
         ("Columna.Estado", "Estado"),
@@ -298,6 +300,7 @@ public static class Localizacion
         ("Grafica.Ocultar", "Hide chart"),
 
         // ----- Filtros -----
+        ("Filtro.Buscar", "Search..."),
         ("Filtro.BuscarToolTip", "Search by company, position, technology, location or portal"),
         ("Filtro.BorrarBusqueda", "Clear search"),
         ("Filtro.SoloAbiertas", "Open only"),
@@ -306,6 +309,7 @@ public static class Localizacion
         ("Filtro.TodosLosEstados", "All statuses"),
 
         // ----- Columnas de la tabla -----
+        ("Columnas.Boton", "Columns"),
         ("Columna.Empresa", "Company"),
         ("Columna.Puesto", "Position"),
         ("Columna.Estado", "Status"),
@@ -533,6 +537,7 @@ public static class Localizacion
         ("Grafica.Ocultar", "Diagramm ausblenden"),
 
         // ----- Filtros -----
+        ("Filtro.Buscar", "Suchen..."),
         ("Filtro.BuscarToolTip", "Suche nach Unternehmen, Position, Technologie, Standort oder Portal"),
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
@@ -541,6 +546,7 @@ public static class Localizacion
         ("Filtro.TodosLosEstados", "Alle Status"),
 
         // ----- Columnas de la tabla -----
+        ("Columnas.Boton", "Spalten"),
         ("Columna.Empresa", "Unternehmen"),
         ("Columna.Puesto", "Position"),
         ("Columna.Estado", "Status"),

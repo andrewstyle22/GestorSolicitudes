@@ -118,6 +118,42 @@
             <Setter Property="Foreground" Value="{StaticResource Peligro}" />
         </Style>
 
+        <!-- Botón que abre una lista flotante (columnas de la tabla). ToggleButton porque
+             IsChecked es el que abre y cierra el Popup enlazado a PanelColumnasAbierto. -->
+        <Style x:Key="BotonDesplegable" TargetType="ToggleButton">
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="{StaticResource Panel}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Borde}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource Texto}" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="borde"
+                                CornerRadius="6"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="borde" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="borde" Property="BorderBrush" Value="{StaticResource Acento}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ============ Pestañas del panel de detalle ============ -->
         <Style x:Key="Pestana" TargetType="TabItem">
             <Setter Property="Foreground" Value="{StaticResource TextoSuave}" />

@@ -2,6 +2,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GestorSolicitudes.Models;
@@ -30,6 +31,35 @@ public partial class MainWindow : Window
 
         this.IconoBandeja.Icon = System.Drawing.SystemIcons.Application;
         this.ArrancarRecordatorios();
+
+        // Un DataGridColumn no hereda el DataContext, así que su visibilidad no se puede
+        // enlazar: la fija la vista al construirse y cada vez que cambia una casilla.
+        this.vm.ColumnaVisibilidadCambiada += this.AplicarVisibilidadColumnas;
+        this.AplicarVisibilidadColumnas();
+    }
+
+    /// <summary>Muestra u oculta las columnas que el usuario puede decidir.</summary>
+    private void AplicarVisibilidadColumnas()
+    {
+        foreach (ColumnaItem columna in this.vm.Columnas)
+        {
+            // El x:Name de cada columna genera el campo con el que se llega desde aquí.
+            DataGridColumn? cd = columna.Columna switch
+            {
+                "Dias" => this.Dias,
+                "PrimeraRespuesta" => this.PrimeraRespuesta,
+                "Entrevista" => this.Entrevista,
+                "Seguimiento" => this.Seguimiento,
+                "Interes" => this.Interes,
+                "Portal" => this.Portal,
+                _ => null,
+            };
+
+            if (cd is not null)
+            {
+                cd.Visibility = columna.Visible ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
     }
 
     // ------------------------------------------------------------ Recordatorios

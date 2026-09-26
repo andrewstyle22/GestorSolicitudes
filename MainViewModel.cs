@@ -23,20 +23,24 @@ public partial class MainViewModel : ObservableObject
     private const string FormatoFecha = "yyyy-MM-dd";
 
     private readonly AppDbContext db;
+    private readonly string rutaColumnas;
 
     /// <summary>El constructor sin base arranca la base real de %APPDATA%; no se prueba.</summary>
     [ExcludeFromCodeCoverage]
     public MainViewModel()
-        : this(new AppDbContext())
+        : this(new AppDbContext(), ColumnasHelper.Ruta)
     {
     }
 
-    // Constructor con base de datos propia, para que los tests usen una base temporal.
-    internal MainViewModel(AppDbContext db)
+    // Constructor con base de datos y fichero de preferencias propios, para que los tests
+    // usen una base temporal y no toquen la preferencia real de %APPDATA%.
+    internal MainViewModel(AppDbContext db, string? rutaColumnas = null)
     {
         this.db = db;
+        this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
 
         this.CargarTextosLocalizados();
+        this.CargarColumnas();
 
         // Asignación directa al campo para no disparar la recarga dos veces.
         this.estadoFiltroItem = this.EstadosFiltro[0];
@@ -101,6 +105,58 @@ public partial class MainViewModel : ObservableObject
         // IdiomasDisponibles no se toca aquí a propósito: los tres nombres son fijos
         // (cada uno en su propia lengua), y reconstruir la lista forzaría al ComboBox
         // del selector a re-sincronizar su selección.
+
+        // Los nombres de las columnas ocultables salen del diccionario, así que también
+        // se releen al cambiar de idioma.
+        foreach (ColumnaItem columna in this.Columnas)
+        {
+            columna.RefrescarNombre();
+        }
+    }
+
+    // ---------------------------------------------------------------- Columnas
+
+    /// <summary>
+    /// Columnas de la tabla que el usuario puede ocultar. Empresa, Puesto, Estado y
+    /// Enviada no entran aquí: se ven siempre.
+    /// </summary>
+    private static readonly string[] ColumnasOcultables =
+        ["Dias", "PrimeraRespuesta", "Entrevista", "Seguimiento", "Interes", "Portal"];
+
+    public ObservableCollection<ColumnaItem> Columnas { get; } = new();
+
+    /// <summary>Abre y cierra la lista de checkboxes del botón "Columnas".</summary>
+    [ObservableProperty]
+    private bool panelColumnasAbierto;
+
+    /// <summary>
+    /// La vista se suscribe para ocultar las columnas del DataGrid: un DataGridColumn no
+    /// hereda el DataContext y no se puede enlazar, así que el aviso llega por aquí.
+    /// </summary>
+    public event Action? ColumnaVisibilidadCambiada;
+
+    /// <summary>Las columnas ocultables con el estado guardado, o todas si no hay preferencia.</summary>
+    private void CargarColumnas()
+    {
+        HashSet<string>? guardadas = ColumnasHelper.CargarDe(this.rutaColumnas);
+
+        foreach (string columna in ColumnasOcultables)
+        {
+            this.Columnas.Add(new ColumnaItem(
+                columna,
+                guardadas is null || guardadas.Contains(columna),
+                this.GuardarColumnas));
+        }
+    }
+
+    /// <summary>Guarda la preferencia y avisa a la vista para que aplique el nuevo estado.</summary>
+    private void GuardarColumnas()
+    {
+        ColumnasHelper.GuardarEn(
+            this.rutaColumnas,
+            this.Columnas.Where(c => c.Visible).Select(c => c.Columna));
+
+        this.ColumnaVisibilidadCambiada?.Invoke();
     }
 
     /// <summary>

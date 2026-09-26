@@ -1,6 +1,7 @@
 using Xunit;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using GestorSolicitudes;
 
 namespace GestorSolicitudes.Tests;
@@ -8,14 +9,16 @@ namespace GestorSolicitudes.Tests;
 public class PestanasTests
 {
     /// <summary>
-    /// Los estilos de las pestañas del panel de detalle viven en App.xaml y solo se
-    /// resuelven al aplicarse la plantilla, no al compilar: este test carga los
-    /// recursos (sin pasar por OnStartup, que crearía la base real) y fuerza el
-    /// dibujo de un TabControl para que se construyan TabPanel, ContentPresenter y
-    /// los StaticResource que usan las plantillas.
+    /// Los estilos que dependen de una plantilla (las pestañas del panel de detalle y el
+    /// botón del desplegable de columnas) viven en App.xaml y solo se resuelven al
+    /// aplicarse, no al compilar: este test carga los recursos (sin pasar por OnStartup,
+    /// que crearía la base real) y fuerza el dibujo para que se construyan las plantillas
+    /// y se activen los triggers.
+    /// Solo puede existir una Application por AppDomain, así que todos los estilos con
+    /// plantilla se comprueban aquí y en un único test.
     /// </summary>
     [StaFact]
-    public void Pestanas_EstilosDeDetalleExistenYAplican()
+    public void AppXaml_LosEstilosConPlantillaSeComponenAlPintar()
     {
         var app = new App();
         app.InitializeComponent();
@@ -40,5 +43,26 @@ public class PestanasTests
 
         Assert.NotNull(pestanas.Template);
         Assert.True(((TabItem)pestanas.Items[1]).IsSelected);
+
+        // El botón de "Columnas": sin plantilla propia sería un rectángulo gris, y el
+        // trigger de IsChecked es lo que pinta el borde de acento al abrirse la lista.
+        var estiloBoton = (Style)app.Resources["BotonDesplegable"]!;
+        Assert.Equal(typeof(ToggleButton), estiloBoton.TargetType);
+        Assert.Contains(estiloBoton.Setters, s => s is Setter setter && setter.Property == Control.TemplateProperty);
+
+        var boton = new ToggleButton { Style = estiloBoton };
+        boton.Measure(new Size(120, 30));
+        boton.Arrange(new Rect(0, 0, 120, 30));
+        boton.UpdateLayout();
+
+        Assert.NotNull(boton.Template);
+        Assert.NotNull(boton.Template.FindName("borde", boton));
+
+        boton.IsChecked = true;
+        boton.UpdateLayout();
+
+        Assert.Equal(
+            app.Resources["Acento"],
+            ((Border)boton.Template.FindName("borde", boton)).BorderBrush);
     }
 }
