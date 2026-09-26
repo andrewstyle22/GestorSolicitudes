@@ -2,8 +2,8 @@ using Xunit;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Resources;
 using GestorSolicitudes;
-
 namespace GestorSolicitudes.Tests;
 
 public class PestanasTests
@@ -64,5 +64,16 @@ public class PestanasTests
         Assert.Equal(
             app.Resources["Acento"],
             ((Border)boton.Template.FindName("borde", boton)).BorderBrush);
+
+        // El icono de la bandeja se carga del recurso empaquetado, así que se comprueba
+        // que existe y trae los tamaños que usa la bandeja.
+        StreamResourceInfo? recurso = Application.GetResourceStream(
+            new Uri("pack://application:,,,/GestorSolicitudes;component/Resources/appicon.ico"));
+
+        Assert.NotNull(recurso);
+        using (var icono = new System.Drawing.Icon(recurso!.Stream))
+        {
+            Assert.True(icono.Width >= 16);
+        }
     }
 }

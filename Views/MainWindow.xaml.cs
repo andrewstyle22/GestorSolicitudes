@@ -1,6 +1,7 @@
 ﻿namespace GestorSolicitudes.Views;
 
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,6 +17,7 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel vm;
     private readonly HashSet<int> idsVencidosAvisados = new();
+    private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
 
     public MainWindow()
@@ -29,7 +31,15 @@ public partial class MainWindow : Window
         this.InputBindings.Add(new KeyBinding(this.vm.NuevaCommand, Key.N, ModifierKeys.Control));
         this.InputBindings.Add(new KeyBinding(this.vm.GuardarCommand, Key.S, ModifierKeys.Control));
 
-        this.IconoBandeja.Icon = System.Drawing.SystemIcons.Application;
+        this.flujoIcono = Application.GetResourceStream(
+            new Uri("pack://application:,,,/GestorSolicitudes;component/Resources/appicon.ico"))?.Stream;
+
+        // Icon(Stream) no copia los bytes: el flujo tiene que vivir con el icono, de ahí
+        // el campo. Si el recurso faltara, al icono genérico de Windows.
+        this.IconoBandeja.Icon = this.flujoIcono is null
+            ? System.Drawing.SystemIcons.Application
+            : new System.Drawing.Icon(this.flujoIcono);
+
         this.ArrancarRecordatorios();
 
         // Un DataGridColumn no hereda el DataContext, así que su visibilidad no se puede

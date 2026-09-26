@@ -196,5 +196,4 @@ obligatoria ni cabeceras de copyright. `dotnet format` deja el código formatead
 ## Ideas para seguir
 
 - Recordatorios incluso cuando la app está cerrada del todo (arrancar un proceso en segundo plano con Windows)
-- Un `.ico` propio para la bandeja, en vez del icono genérico de aplicación de Windows
 - Migrar a Avalonia si algún día quieres ejecutarlo también en macOS o Linux
