@@ -87,28 +87,7 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
   `App()` antiguo) se resuelve con `[SuppressMessage]` + comentario, no tocando
   la lógica.
 
-## Ficheros que no son tuyos: los gobernados por el harness
-
-`.rsc.json` tiene dos listas que hay que consultar **antes** de tocar nada bajo
-`.claude/`, `.rsc/` o `.rsc.json`:
-
-- `governedPaths`: rutas cuyo contenido escribe la herramienta rsc.
-- `artifactDigests`: SHA-256 con el que la herramienta verifica cada una.
-
-Un fichero gobernado que se edita a mano **pierde el hash**: el siguiente
-`rsc repair`/`sync` lo restaura desde el catálogo (`catalogVersion`) y el cambio
-desaparece sin más. Comprobación rápida:
-
-```powershell
-Select-String -Path ".rsc.json" -Pattern '"<ruta>"'   # ¿está en governedPaths?
-(Get-FileHash "<ruta>" -Algorithm SHA256).Hash.ToLower()  # ¿coincide con artifactDigests?
-```
-
-Excepción: `AGENTS.md` sale con provenance `preexisting` — rsc solo reescribe la
-región entre `<!-- rsc-suggest:start -->` y `<!-- rsc-suggest:end -->`, el resto
-es tuyo y se edita sin miedo.
-
-### Regla de decisión cuando Sonar marca un fichero gobernado
+## Regla de decisión cuando Sonar marca un fichero sin cobertura
 
 1. **¿Es un lenguaje para el que el CI recoge cobertura?** Antes de nada mira
    qué Extensions tiene el PR, no qué issues marca Sonar:
@@ -119,8 +98,7 @@ es tuyo y se edita sin miedo.
    **0,0%** y el gate falla. Pasa directamente al punto 3.
 2. **¿Ya está en el diff del PR?** (`git log --oneline -<n> -- <ruta>`). Si sí,
    el fichero entró con tu trabajo y un issue de estilo (no de cobertura) se
-   arregla **en el sitio**: el arreglo es legítimo aunque el hash registrado en
-   `artifactDigests` quede desfasado y rsc avise de deriva después.
+   arregla **en el sitio**.
 3. **Si el fichero es de un lenguaje sin reporte de cobertura, o no está en el
    diff**, pelea con la herramienta y ganarás. Excluye la ruta del análisis
    (`/d:sonar.exclusions="<ruta>"` en `sonarcloud.yml`) en vez de editar el
@@ -145,11 +123,10 @@ reporta "Quality Gate failed" con la condición concreta.
   GitHub fallaba con `0.0% Coverage on New Code`. Eran dos analyses distintos.
   Lee siempre el check del PR.
 - **Arreglar el issue de un fichero sin cobertura y creer que eso arregla el
-  gate.** El `.sort()` sin comparador de `.claude/rsc-bootstrap.mjs:112`
-  (javascript:S3785) se corrigió en el sitio y el issue desapareció, pero el gate
-  seguía en rojo: el bloqueo era la cobertura, que un comparador no toca. El PR
-  no tenía ni una línea de C# y su único ejecutable era ese `.mjs`, sin reporte
-  de cobertura. La solución fue `sonar.exclusions=".claude/**"`.
+  gate.** Ya pasó: un issue de estilo se corrigió en el sitio y el issue
+  desapareció, pero el gate seguía en rojo. El bloqueo era la cobertura, que un
+  arreglo de estilo no toca. Si el PR no añade ni una línea de C#, no esperes
+  arreglar el gate editando ficheros: excluye la ruta del análisis.
 - Creer que testear métodos de código viejo (p.ej. `QuitarCv`,
   `RefrescarPanelDetalle`) sube el gate: no lo sube ni 0,1 pp; solo la cobertura
   global, que el gate de PR no evalúa.
