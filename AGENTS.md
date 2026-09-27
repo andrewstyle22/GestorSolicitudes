@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Aplicación WPF (.NET 8) escrita íntegramente en español: comentarios, mensajes de commit, textos de UI. No escribas en inglés salvo que se pida.
+Aplicación WPF en .NET 8 (C#) escrita íntegramente en español: comentarios, mensajes de commit, textos de UI. No escribas en inglés salvo que se pida. Stack: MVVM con EF Core + SQLite y xUnit, nada más — no hay ASP.NET, ni TypeScript, ni Node.js; no los propongas.
 
 Referencia completa: `README.md` (features, decisiones de diseño, lecciones aprendidas). Léelo antes de tocar código; este fichero solo resume lo que no se adivina.
 
