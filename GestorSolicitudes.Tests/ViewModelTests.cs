@@ -13,6 +13,8 @@ public class ViewModelTests
 {
     private static readonly int[] TamanosPaginaEsperados = { 5, 10, 20, 30 };
 
+    private static readonly string[] GranularidadesEsperadas = { "Mes", "Semana", "Día" };
+
     [Fact]
     public void Constructor_CargaListaVacia()
     {
@@ -321,9 +323,90 @@ public class ViewModelTests
         vm.ConfigurarGraficaCommand.Execute(null);
 
         Assert.True(vm.VerGrafica);
-        Assert.Equal(12, vm.MesesEmbudo.Count);
-        Assert.All(vm.MesesEmbudo, m =>
+        Assert.Equal(12, vm.PeriodosEmbudo.Count);
+        Assert.All(vm.PeriodosEmbudo, m =>
             Assert.InRange(m.AlturaEnviadas, 0, 100));
+    }
+
+    [Fact]
+    public void Granularidad_SemanaMuestraLasDoceSemanasHastaLaDelHoy()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.VerGrafica = true;
+
+        vm.GranularidadGrafica = GranularidadEmbudo.Semana;
+
+        Assert.Equal(12, vm.PeriodosEmbudo.Count);
+        Assert.Equal(GranularidadesEsperadas, vm.GranularidadesEmbudo.Select(g => g.Descripcion));
+
+        List<DateTime> semanas = MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, 0);
+        Assert.Equal(MainViewModel.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana), semanas[^1]);
+        Assert.All(semanas, s => Assert.Equal(DayOfWeek.Monday, s.DayOfWeek));
+        Assert.Equal(TimeSpan.FromDays(7), semanas[^1] - semanas[^2]);
+    }
+
+    [Fact]
+    public void Granularidad_DiaMuestraLosUltimosDoceDias()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.VerGrafica = true;
+
+        vm.GranularidadGrafica = GranularidadEmbudo.Dia;
+
+        Assert.Equal(12, vm.PeriodosEmbudo.Count);
+        List<DateTime> dias = MainViewModel.CalcularPeriodos(GranularidadEmbudo.Dia, 0);
+        Assert.Equal(12, dias.Count);
+        Assert.Equal(DateTime.Today, dias[^1]);
+        Assert.Equal(DateTime.Today.AddDays(-11), dias[0]);
+    }
+
+    [Fact]
+    public void PeriodoAnteriorY_Siguiente_MuevenLaVentanaYNoPasanDelHoy()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.VerGrafica = true;
+        vm.GranularidadGrafica = GranularidadEmbudo.Semana;
+
+        vm.PeriodoAnteriorCommand.Execute(null);
+
+        Assert.Equal(1, vm.DesplazamientoPeriodo);
+        Assert.True(vm.PuedeAvanzarPeriodo);
+
+        DateTime estaSemana = MainViewModel.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana);
+        Assert.Equal(estaSemana.AddDays(-7), MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, 1)[^1]);
+
+        vm.PeriodoSiguienteCommand.Execute(null);
+
+        Assert.Equal(0, vm.DesplazamientoPeriodo);
+        Assert.False(vm.PuedeAvanzarPeriodo);
+
+        // Sin datos futuros, avanzar desde el periodo actual no hace nada.
+        vm.PeriodoSiguienteCommand.Execute(null);
+        Assert.Equal(0, vm.DesplazamientoPeriodo);
+    }
+
+    [Fact]
+    public void IrAHoy_DevuelveLaVentanaAlPeriodoActual()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.VerGrafica = true;
+        vm.GranularidadGrafica = GranularidadEmbudo.Dia;
+
+        vm.PeriodoAnteriorCommand.Execute(null);
+        vm.PeriodoAnteriorCommand.Execute(null);
+        Assert.Equal(2, vm.DesplazamientoPeriodo);
+
+        vm.IrAHoyCommand.Execute(null);
+
+        Assert.Equal(0, vm.DesplazamientoPeriodo);
+        Assert.False(vm.PuedeAvanzarPeriodo);
+        Assert.Equal(
+            MainViewModel.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia),
+            vm.PeriodosEmbudo[^1].Etiqueta);
     }
 
     // ---------------- Exportación CSV ----------------
@@ -556,7 +639,34 @@ public class ViewModelTests
         vm.Edicion.Puesto = "Dev";
         vm.GuardarCommand.Execute(null);
 
-        Assert.Equal(12, vm.MesesEmbudo.Count);
+        Assert.Equal(12, vm.PeriodosEmbudo.Count);
+    }
+
+    [Fact]
+    public void PeriodoAnterior_NoPasaDeLaSolicitudMasAntigua()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.VerGrafica = true;
+        vm.GranularidadGrafica = GranularidadEmbudo.Semana;
+
+        db.Solicitudes.Add(new Solicitud
+        {
+            Empresa = "A",
+            Puesto = "P",
+            FechaSolicitud = DateTime.Today.AddDays(-10),
+        });
+        db.SaveChanges();
+
+        for (int i = 0; i < 20; i++)
+        {
+            vm.PeriodoAnteriorCommand.Execute(null);
+        }
+
+        // Se para en la semana de la primera solicitud: más atrás el embudo iría a cero.
+        DateTime suelo = MainViewModel.InicioDePeriodo(DateTime.Today.AddDays(-10), GranularidadEmbudo.Semana);
+        Assert.Equal(suelo, MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, vm.DesplazamientoPeriodo)[^1]);
+        Assert.False(vm.PuedeRetrocederPeriodo);
     }
 
     // ---------------------------------------------------------------- Paginación

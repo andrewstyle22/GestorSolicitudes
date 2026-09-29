@@ -33,6 +33,21 @@ public enum EstadoSolicitud
     SinRespuesta = 11,
 }
 
+/// <summary>
+/// Cada cuánto agrupa la gráfica de embudo: por mes, por semana (lunes a domingo) o por día.
+/// </summary>
+public enum GranularidadEmbudo
+{
+    [Description("Mes")]
+    Mes = 0,
+
+    [Description("Semana")]
+    Semana = 1,
+
+    [Description("Día")]
+    Dia = 2,
+}
+
 public enum Modalidad
 {
     [Description("Sin indicar")]
