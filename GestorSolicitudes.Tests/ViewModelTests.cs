@@ -363,6 +363,51 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void GranularidadEmbudoItem_AplicaLaGranularidadDelItemElegido()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        // El desplegable arranca en el primer item de la lista, que es el mes.
+        Assert.Same(vm.GranularidadesEmbudo[0], vm.GranularidadEmbudoItem);
+
+        vm.GranularidadEmbudoItem = vm.GranularidadesEmbudo.First(g => Equals(g.Valor, GranularidadEmbudo.Dia));
+
+        Assert.Equal(GranularidadEmbudo.Dia, vm.GranularidadGrafica);
+    }
+
+    [Fact]
+    public void GranularidadEmbudoItem_EnNullNoCambiaLaGranularidad()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.GranularidadEmbudoItem = vm.GranularidadesEmbudo.First(g => Equals(g.Valor, GranularidadEmbudo.Semana));
+
+        vm.GranularidadEmbudoItem = null;
+
+        Assert.Equal(GranularidadEmbudo.Semana, vm.GranularidadGrafica);
+    }
+
+    [Fact]
+    public void GranularidadEmbudoItem_SobreviveAlCambioDeIdioma()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        vm.GranularidadEmbudoItem = vm.GranularidadesEmbudo.First(g => Equals(g.Valor, GranularidadEmbudo.Semana));
+        EnumItem itemAnterior = vm.GranularidadEmbudoItem!;
+
+        // Lo que hace el cambio de idioma: la lista se reconstruye con objetos nuevos aunque
+        // representen la misma granularidad. El desplegable debe seguir con la semana puesta.
+        vm.GranularidadesEmbudo = EnumHelper.Valores<GranularidadEmbudo>();
+        Assert.NotSame(itemAnterior, vm.GranularidadesEmbudo[1]);
+
+        vm.RefrescarItemGranularidad();
+
+        Assert.Same(vm.GranularidadesEmbudo[1], vm.GranularidadEmbudoItem);
+        Assert.Equal(GranularidadEmbudo.Semana, vm.GranularidadGrafica);
+    }
+
+    [Fact]
     public void PeriodoAnteriorY_Siguiente_MuevenLaVentanaYNoPasanDelHoy()
     {
         using var db = TestDb.NuevoContexto();
