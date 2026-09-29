@@ -13,6 +13,8 @@ public class ViewModelTests
 {
     private static readonly int[] TamanosPaginaEsperados = { 5, 10, 20, 30 };
 
+    private static readonly string[] GranularidadesEsperadas = { "Mes", "Semana", "Día" };
+
     [Fact]
     public void Constructor_CargaListaVacia()
     {
@@ -336,7 +338,7 @@ public class ViewModelTests
         vm.GranularidadGrafica = GranularidadEmbudo.Semana;
 
         Assert.Equal(12, vm.PeriodosEmbudo.Count);
-        Assert.Equal(new[] { "Mes", "Semana", "Día" }, vm.GranularidadesEmbudo.Select(g => g.Descripcion));
+        Assert.Equal(GranularidadesEsperadas, vm.GranularidadesEmbudo.Select(g => g.Descripcion));
 
         List<DateTime> semanas = MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, 0);
         Assert.Equal(MainViewModel.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana), semanas[^1]);

@@ -351,8 +351,9 @@ public partial class MainViewModel : ObservableObject
     private GranularidadEmbudo granularidadGrafica = GranularidadEmbudo.Mes;
 
     /// <summary>
-    /// Cuántos periodos se retrocede desde el actual (0 = el que contiene hoy). Se puede
-    /// ir hacia atrás todo lo que se quiera, pero no hacia el futuro: no hay datos.
+    /// Cuántos periodos se retrocede desde el actual (0 = el que contiene hoy). Hacia atrás
+    /// el tope es la primera solicitud; hacia delante no hay ninguno, porque el futuro no
+    /// tiene datos.
     /// </summary>
     [ObservableProperty]
     private int desplazamientoPeriodo;
@@ -589,7 +590,7 @@ public partial class MainViewModel : ObservableObject
     {
         GranularidadEmbudo.Semana => fecha.Date.AddDays(-((int)fecha.DayOfWeek + 6) % 7), // lunes
         GranularidadEmbudo.Dia => fecha.Date,
-        _ => new DateTime(fecha.Year, fecha.Month, 1),
+        _ => new DateTime(fecha.Year, fecha.Month, 1, 0, 0, 0, DateTimeKind.Unspecified),
     };
 
     /// <summary>Primer día del periodo siguiente al que empieza en <paramref name="inicio"/>.</summary>
