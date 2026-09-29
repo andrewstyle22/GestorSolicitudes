@@ -45,6 +45,7 @@ public partial class MainViewModel : ObservableObject
 
         // Asignación directa al campo para no disparar la recarga dos veces.
         this.estadoFiltroItem = this.EstadosFiltro[0];
+        this.granularidadEmbudoItem = this.GranularidadesEmbudo[0];
 
         Localizacion.IdiomaCambiado += this.CuandoCambiaIdioma;
 
@@ -182,6 +183,8 @@ public partial class MainViewModel : ObservableObject
         // valor en la nueva (los objetos son distintos aunque representen lo mismo).
         this.EstadoFiltroItem = this.EstadosFiltro.FirstOrDefault(i => Equals(i.Valor, filtro))
             ?? this.EstadosFiltro[0];
+
+        this.RefrescarItemGranularidad();
 
         // Los botones de la gráfica usan un convertidor: se notifica para que se re-evalúen.
         this.OnPropertyChanged(nameof(this.VerGrafica));
@@ -349,6 +352,42 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Cada cuánto agrupa las barras: mes, semana o día.</summary>
     [ObservableProperty]
     private GranularidadEmbudo granularidadGrafica = GranularidadEmbudo.Mes;
+
+    private EnumItem? granularidadEmbudoItem;
+
+    /// <summary>
+    /// Item del desplegable de granularidad. El ComboBox va por SelectedItem y no por
+    /// SelectedValue porque, al cambiar de idioma, la lista se reconstruye con objetos nuevos
+    /// y SelectedValue se quedaría sin nada seleccionado. Por eso la propiedad está escrita a
+    /// mano y no con [ObservableProperty]: EnumItem es un record, así que el item nuevo es igual
+    /// al viejo y el setter generado se saltaría la asignación.
+    /// </summary>
+    public EnumItem? GranularidadEmbudoItem
+    {
+        get => this.granularidadEmbudoItem;
+        set
+        {
+            this.granularidadEmbudoItem = value;
+            this.OnPropertyChanged();
+
+            // El null que el ComboBox puede mandar a mitad de la actualización no cambia nada.
+            if (value?.Valor is GranularidadEmbudo granularidad)
+            {
+                this.GranularidadGrafica = granularidad;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reencuentra en la lista actual el item de la granularidad elegida. Sin esto, tras
+    /// cambiar de idioma el desplegable se queda vacío, como se quedaba el filtro de estados.
+    /// </summary>
+    internal void RefrescarItemGranularidad()
+    {
+        GranularidadEmbudo granularidad = this.GranularidadGrafica;
+        this.GranularidadEmbudoItem = this.GranularidadesEmbudo.FirstOrDefault(i => Equals(i.Valor, granularidad))
+            ?? this.GranularidadesEmbudo[0];
+    }
 
     /// <summary>
     /// Cuántos periodos se retrocede desde el actual (0 = el que contiene hoy). Hacia atrás
