@@ -9,7 +9,7 @@ a quién, cuándo, qué te contestaron y cuándo toca volver a insistir.
 - **Entity Framework Core 8** sobre **SQLite** (fichero local, sin servidor)
 - **CommunityToolkit.Mvvm** para `ObservableObject` y `RelayCommand` por generadores de código
 - **Hardcodet.NotifyIcon.Wpf** para el icono y los avisos de la bandeja del sistema
-- Barras WPF nativas para la gráfica de embudo mensual (sin dependencia de gráficos)
+- Barras WPF nativas para la gráfica de embudo (mensual, semanal o diaria; sin dependencia de gráficos)
 
 ## Cómo ejecutarlo
 
@@ -123,8 +123,12 @@ candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar 
   vencidos y avisa con un globo junto al reloj de Windows. Cada candidatura avisa una sola vez por
   sesión.
 - **Gráfica de embudo** (botón *Gráfico* de la cabecera): enviadas → respondidas → entrevistas →
-  ofertas de los últimos 12 meses, contadas por el historial (hito "Solicitud enviada", primera
-  contestación, hitos de entrevista y de oferta), así cada mes cuenta lo que pasó ese mes. Se refresca
+  ofertas de los últimos 12 periodos, contadas por el historial (hito "Solicitud enviada", primera
+  contestación, hitos de entrevista y de oferta), así cada barra cuenta lo que pasó en ese periodo. El
+  desplegable *Agrupar por* cambia la granularidad entre mes, semana (lunes a domingo) y día, y las
+  flechas ◀ ▶ desplazan la ventana de doce periodos hacia atrás y hacia delante, con el botón *Hoy*
+  para volver al periodo actual de un clic. El rango va de la primera solicitud a hoy: no se puede
+  avanzar al futuro (no hay datos) ni retroceder más allá de la primera candidatura. Se refresca
   sola si guardas o borras candidaturas mientras está abierta.
 - Atajos: `Ctrl+N` nueva candidatura, `Ctrl+S` guardar.
 

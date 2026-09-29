@@ -53,13 +53,22 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  Nueva candidatura"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Embudo del último año, por mes (enviadas → respondidas → entrevistas → ofertas)"),
+        ("Grafica.Titulo", "Embudo de los últimos 12 periodos, por {0} (enviadas → respondidas → entrevistas → ofertas)"),
+        ("Grafica.Granularidad", "Agrupar por"),
+        ("Grafica.Anterior", "Periodo anterior"),
+        ("Grafica.Siguiente", "Periodo siguiente"),
+        ("Grafica.Hoy", "Hoy"),
+        ("Grafica.HoyToolTip", "Volver al periodo actual"),
         ("Grafica.Enviadas", "Enviadas"),
         ("Grafica.Respondidas", "Respondidas"),
         ("Grafica.Entrevistas", "Entrevistas"),
         ("Grafica.Ofertas", "Ofertas"),
 ("Grafica.Ver", "Gráfico"),
         ("Grafica.Ocultar", "Ocultar gráfica"),
+
+        ("GranularidadEmbudo.Mes", "Mes"),
+        ("GranularidadEmbudo.Semana", "Semana"),
+        ("GranularidadEmbudo.Dia", "Día"),
 
         // ----- Filtros -----
         ("Filtro.Buscar", "Buscar..."),
@@ -286,13 +295,22 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  New application"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Last-year funnel by month (sent → answered → interviews → offers)"),
+        ("Grafica.Titulo", "Funnel for the last 12 periods, by {0} (sent → answered → interviews → offers)"),
+        ("Grafica.Granularidad", "Group by"),
+        ("Grafica.Anterior", "Previous period"),
+        ("Grafica.Siguiente", "Next period"),
+        ("Grafica.Hoy", "Today"),
+        ("Grafica.HoyToolTip", "Back to the current period"),
         ("Grafica.Enviadas", "Sent"),
         ("Grafica.Respondidas", "Answered"),
         ("Grafica.Entrevistas", "Interviews"),
         ("Grafica.Ofertas", "Offers"),
 ("Grafica.Ver", "Chart"),
         ("Grafica.Ocultar", "Hide chart"),
+
+        ("GranularidadEmbudo.Mes", "Month"),
+        ("GranularidadEmbudo.Semana", "Week"),
+        ("GranularidadEmbudo.Dia", "Day"),
 
         // ----- Filtros -----
         ("Filtro.Buscar", "Search..."),
@@ -519,13 +537,22 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  Neue Bewerbung"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Trichter des letzten Jahres nach Monat (gesendet → Antworten → Interviews → Angebote)"),
+        ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, nach {0} (gesendet → Antworten → Interviews → Angebote)"),
+        ("Grafica.Granularidad", "Gruppieren nach"),
+        ("Grafica.Anterior", "Vorheriger Zeitraum"),
+        ("Grafica.Siguiente", "Nächster Zeitraum"),
+        ("Grafica.Hoy", "Heute"),
+        ("Grafica.HoyToolTip", "Zurück zum aktuellen Zeitraum"),
         ("Grafica.Enviadas", "Gesendet"),
         ("Grafica.Respondidas", "Beantwortet"),
         ("Grafica.Entrevistas", "Interviews"),
         ("Grafica.Ofertas", "Angebote"),
 ("Grafica.Ver", "Diagramm"),
         ("Grafica.Ocultar", "Diagramm ausblenden"),
+
+        ("GranularidadEmbudo.Mes", "Monat"),
+        ("GranularidadEmbudo.Semana", "Woche"),
+        ("GranularidadEmbudo.Dia", "Tag"),
 
         // ----- Filtros -----
         ("Filtro.Buscar", "Suchen..."),

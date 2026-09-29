@@ -1,8 +1,9 @@
-﻿namespace GestorSolicitudes.ViewModels;
+namespace GestorSolicitudes.ViewModels;
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -63,6 +64,10 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private IReadOnlyList<EnumItem> tiposEvento = Array.Empty<EnumItem>();
 
+    /// <summary>Gets mes / semana / día para el desplegable de la gráfica.</summary>
+    [ObservableProperty]
+    private IReadOnlyList<EnumItem> granularidadesEmbudo = Array.Empty<EnumItem>();
+
     /// <summary>Gets vías de contacto (aplicación directa, recruiter, referido...), para el desplegable.</summary>
     [ObservableProperty]
     private IReadOnlyList<EnumItem> origenes = Array.Empty<EnumItem>();
@@ -93,6 +98,7 @@ public partial class MainViewModel : ObservableObject
         this.Modalidades = EnumHelper.Valores<Modalidad>();
         this.TiposEvento = EnumHelper.Valores<TipoEvento>();
         this.Origenes = EnumHelper.Valores<Origen>();
+        this.GranularidadesEmbudo = EnumHelper.Valores<GranularidadEmbudo>();
 
         this.MotivosRechazo = new List<EnumItem> { new(null, Localizacion.Texto("Filtro.SinEspecificar")) }
             .Concat(EnumHelper.Valores<MotivoRechazo>())
@@ -179,6 +185,9 @@ public partial class MainViewModel : ObservableObject
 
         // Los botones de la gráfica usan un convertidor: se notifica para que se re-evalúen.
         this.OnPropertyChanged(nameof(this.VerGrafica));
+
+        // El título de la gráfica se arma en el ViewModel con el texto de la granularidad.
+        this.OnPropertyChanged(nameof(this.TituloGrafica));
 
         if (this.VerGrafica)
         {
@@ -333,9 +342,78 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool verGrafica;
 
-    /// <summary>Filas del embudo (una por mes) con las cuatro series ya escaladas a porcentaje.</summary>
+    /// <summary>Filas del embudo (una por mes, semana o día) con las cuatro series ya escaladas a porcentaje.</summary>
     [ObservableProperty]
-    private IReadOnlyList<EmbudoMes> mesesEmbudo = new List<EmbudoMes>();
+    private IReadOnlyList<EmbudoPeriodo> periodosEmbudo = new List<EmbudoPeriodo>();
+
+    /// <summary>Cada cuánto agrupa las barras: mes, semana o día.</summary>
+    [ObservableProperty]
+    private GranularidadEmbudo granularidadGrafica = GranularidadEmbudo.Mes;
+
+    /// <summary>
+    /// Cuántos periodos se retrocede desde el actual (0 = el que contiene hoy). Se puede
+    /// ir hacia atrás todo lo que se quiera, pero no hacia el futuro: no hay datos.
+    /// </summary>
+    [ObservableProperty]
+    private int desplazamientoPeriodo;
+
+    /// <summary>Deshabilita la flecha de avanzar cuando ya se está en el periodo actual.</summary>
+    [ObservableProperty]
+    private bool puedeAvanzarPeriodo;
+
+    /// <summary>Deshabilita la flecha de retroceder cuando la ventana ya llega a la primera solicitud.</summary>
+    [ObservableProperty]
+    private bool puedeRetrocederPeriodo = true;
+
+    partial void OnGranularidadGraficaChanged(GranularidadEmbudo value)
+    {
+        this.OnPropertyChanged(nameof(this.TituloGrafica));
+
+        // El suelo se mide en periodos, así que también cambia al cambiar de granularidad.
+        this.PuedeRetrocederPeriodo = this.PuedeRetrocederUnPeriodoMas;
+
+        // El desplazamiento se conserva: si estabas tres meses atrás, al pasar a semanas
+        // sigues tres semanas atrás, que es el mismo instante de la historia.
+        this.RecargarEmbudoSiVisible();
+    }
+
+    partial void OnDesplazamientoPeriodoChanged(int value)
+    {
+        this.PuedeAvanzarPeriodo = value > 0;
+        this.PuedeRetrocederPeriodo = this.PuedeRetrocederUnPeriodoMas;
+        this.RecargarEmbudoSiVisible();
+    }
+
+    /// <summary>
+    /// El rango de la gráfica va de la primera solicitud a hoy. Con la base vacía no hay
+    /// suelo conocido, así que se deja ir hacia atrás (solo se ve ceros).
+    /// </summary>
+    private bool PuedeRetrocederUnPeriodoMas =>
+        this.db.Solicitudes.Min(s => (DateTime?)s.FechaSolicitud) is not DateTime primera
+        || CalcularPeriodos(this.GranularidadGrafica, this.DesplazamientoPeriodo + 1)[^1]
+            >= InicioDePeriodo(primera, this.GranularidadGrafica);
+
+    /// <summary>Título de la gráfica, que nombra la granularidad activa (se repinta al cambiar de idioma).</summary>
+    public string TituloGrafica => string.Format(
+        Localizacion.CulturaActual,
+        Localizacion.Texto("Grafica.Titulo"),
+        EnumHelper.Descripcion(this.GranularidadGrafica).ToLower(Localizacion.CulturaActual));
+
+    [RelayCommand]
+    private void PeriodoAnterior()
+    {
+        if (this.PuedeRetrocederUnPeriodoMas)
+        {
+            this.DesplazamientoPeriodo++;
+        }
+    }
+
+    [RelayCommand]
+    private void PeriodoSiguiente() => this.DesplazamientoPeriodo = Math.Max(0, this.DesplazamientoPeriodo - 1);
+
+    /// <summary>Vuelve al periodo actual (el único que se puede alcanzar hacia delante).</summary>
+    [RelayCommand]
+    private void IrAHoy() => this.DesplazamientoPeriodo = 0;
 
     // ---------------------------------------------------------------- Carga
 
@@ -436,31 +514,28 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Embudo enviadas → respondidas → entrevistas → ofertas de los últimos 12 meses.
-    /// Se apoya en el historial (Eventos) para fechar cada hito con precisión.
+    /// Embudo enviadas → respondidas → entrevistas → ofertas de los últimos 12 periodos
+    /// (meses, semanas o días según elijamos). Se apoya en el historial (Eventos) para
+    /// fechar cada hito con precisión.
     /// </summary>
     private void ActualizarEmbudo()
     {
-        var meses = new List<DateTime>();
-        var inicioMesActual = DateTime.Today.AddDays(1 - DateTime.Today.Day);
-        for (int i = 11; i >= 0; i--)
-        {
-            meses.Add(inicioMesActual.AddMonths(-i));
-        }
+        GranularidadEmbudo granularidad = this.GranularidadGrafica;
+        List<DateTime> periodos = CalcularPeriodos(granularidad, this.DesplazamientoPeriodo);
 
         List<Solicitud> todas = this.db.Solicitudes.Include(s => s.Eventos).ToList();
 
-        double[] enviadas = new double[meses.Count];
-        double[] respondidas = new double[meses.Count];
-        double[] entrevistas = new double[meses.Count];
-        double[] ofertas = new double[meses.Count];
+        double[] enviadas = new double[periodos.Count];
+        double[] respondidas = new double[periodos.Count];
+        double[] entrevistas = new double[periodos.Count];
+        double[] ofertas = new double[periodos.Count];
 
-        for (int m = 0; m < meses.Count; m++)
+        for (int m = 0; m < periodos.Count; m++)
         {
-            DateTime inicio = meses[m];
-            DateTime fin = inicio.AddMonths(1);
+            DateTime inicio = periodos[m];
+            DateTime fin = SiguientePeriodo(inicio, granularidad);
 
-            enviadas[m] = todas.Count(s => EnviadaEnMes(s, inicio, fin));
+            enviadas[m] = todas.Count(s => EnviadaEnRango(s, inicio, fin));
             respondidas[m] = todas.Count(s => s.FechaPrimeraRespuesta >= inicio && s.FechaPrimeraRespuesta < fin);
             entrevistas[m] = todas
                 .SelectMany(s => s.Eventos)
@@ -470,9 +545,9 @@ public partial class MainViewModel : ObservableObject
                 .Count(e => e.Tipo == TipoEvento.Oferta && e.Fecha >= inicio && e.Fecha < fin);
         }
 
-        this.MesesEmbudo = meses
-            .Select((m, i) => new EmbudoMes(
-                m.ToString("MMM yyyy", Localizacion.CulturaActual),
+        this.PeriodosEmbudo = periodos
+            .Select((inicio, i) => new EmbudoPeriodo(
+                EtiquetaDePeriodo(inicio, granularidad),
                 enviadas[i],
                 respondidas[i],
                 entrevistas[i],
@@ -480,7 +555,66 @@ public partial class MainViewModel : ObservableObject
             .ToList();
     }
 
-    internal static bool EnviadaEnMes(Solicitud s, DateTime inicio, DateTime fin)
+    /// <summary>Número de barras del embudo, sea cual sea la granularidad.</summary>
+    internal const int PeriodosDelEmbudo = 12;
+
+    /// <summary>
+    /// Los 12 periodos que terminan en el actual, de más antiguo a más reciente.
+    /// <paramref name="desplazamiento"/> los retrasa ese número de periodos.
+    /// </summary>
+    internal static List<DateTime> CalcularPeriodos(GranularidadEmbudo granularidad, int desplazamiento)
+    {
+        // Retroceder un periodo es meterse en el que contiene el día anterior: sirve igual
+        // para el mes (el día anterior ya es del mes pasado), para la semana (domingo) y
+        // para el día. Por eso no hace falta un "periodo anterior" aparte.
+        DateTime fin = SiguientePeriodo(InicioDePeriodo(DateTime.Today, granularidad), granularidad);
+
+        var periodos = new List<DateTime>(PeriodosDelEmbudo);
+        for (int i = 0; i < desplazamiento + PeriodosDelEmbudo; i++)
+        {
+            fin = InicioDePeriodo(fin.AddDays(-1), granularidad);
+
+            if (i >= desplazamiento)
+            {
+                periodos.Add(fin);
+            }
+        }
+
+        periodos.Reverse();
+        return periodos;
+    }
+
+    /// <summary>Primer día del periodo (mes, semana de lunes o día) al que pertenece una fecha.</summary>
+    internal static DateTime InicioDePeriodo(DateTime fecha, GranularidadEmbudo granularidad) => granularidad switch
+    {
+        GranularidadEmbudo.Semana => fecha.Date.AddDays(-((int)fecha.DayOfWeek + 6) % 7), // lunes
+        GranularidadEmbudo.Dia => fecha.Date,
+        _ => new DateTime(fecha.Year, fecha.Month, 1),
+    };
+
+    /// <summary>Primer día del periodo siguiente al que empieza en <paramref name="inicio"/>.</summary>
+    internal static DateTime SiguientePeriodo(DateTime inicio, GranularidadEmbudo granularidad) => granularidad switch
+    {
+        GranularidadEmbudo.Semana => inicio.AddDays(7),
+        GranularidadEmbudo.Dia => inicio.AddDays(1),
+        _ => inicio.AddMonths(1),
+    };
+
+    /// <summary>Texto de la barra: mes y año, el lunes de la semana o el día de la semana, según la granularidad.</summary>
+    internal static string EtiquetaDePeriodo(DateTime inicio, GranularidadEmbudo granularidad)
+    {
+        CultureInfo cultura = Localizacion.CulturaActual;
+
+        return granularidad switch
+        {
+            GranularidadEmbudo.Semana => inicio.ToString("d MMM", cultura),
+            GranularidadEmbudo.Dia => inicio.ToString("ddd d", cultura),
+            _ => inicio.ToString("MMM yyyy", cultura),
+        };
+    }
+
+    /// <summary>Si la solicitud se envió (por historial o por fecha) dentro del rango [inicio, fin).</summary>
+    internal static bool EnviadaEnRango(Solicitud s, DateTime inicio, DateTime fin)
     {
         bool tieneHito = s.Eventos.Any(e =>
             e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha >= inicio && e.Fecha < fin);
@@ -955,10 +1089,11 @@ public partial class MainViewModel : ObservableObject
 }
 
 /// <summary>
-/// Una fila del embudo: un mes con las cuatro series (enviadas, respondidas, entrevistas,
-/// ofertas) y la altura de cada barra, ya escalada a porcentaje del valor máximo del mes.
+/// Una fila del embudo: un periodo (mes, semana o día) con las cuatro series (enviadas,
+/// respondidas, entrevistas, ofertas) y la altura de cada barra, ya escalada a porcentaje
+/// del valor máximo del periodo.
 /// </summary>
-public record EmbudoMes(string Etiqueta, double Enviadas, double Respondidas, double Entrevistas, double Ofertas)
+public record EmbudoPeriodo(string Etiqueta, double Enviadas, double Respondidas, double Entrevistas, double Ofertas)
 {
     public double AlturaEnviadas => this.Altura(this.Enviadas);
 

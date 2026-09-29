@@ -1,4 +1,4 @@
-﻿<Window
+<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification;assembly=Hardcodet.NotifyIcon.Wpf"
@@ -195,12 +195,41 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0">
-                    <TextBlock Text="{DynamicResource Grafica.Titulo}"
+                    <TextBlock Text="{Binding TituloGrafica}"
                                Style="{StaticResource TituloSeccion}" Margin="0" VerticalAlignment="Center" />
-                    <Button Content="{Binding VerGrafica, Converter={StaticResource VerGraficaATexto}}"
-                            HorizontalAlignment="Right" Padding="10,5" FontSize="12"
-                            Style="{StaticResource BotonSecundario}"
-                            Command="{Binding ConfigurarGraficaCommand}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource Grafica.Granularidad}" FontSize="12"
+                                   Foreground="{StaticResource TextoSuave}" VerticalAlignment="Center"
+                                   Margin="0,0,6,0" />
+                        <ComboBox ItemsSource="{Binding GranularidadesEmbudo}"
+                                  DisplayMemberPath="Descripcion"
+                                  SelectedValuePath="Valor"
+                                  SelectedValue="{Binding GranularidadGrafica}"
+                                  Style="{StaticResource CampoCombo}"
+                                  FontSize="12" Padding="6,3" Width="90" Margin="0,0,6,0" />
+                        <Button Content="◀" Padding="9,3" FontSize="11"
+                                Style="{StaticResource BotonSecundario}"
+                                IsEnabled="{Binding PuedeRetrocederPeriodo}"
+                                ToolTip="{DynamicResource Grafica.Anterior}"
+                                AutomationProperties.Name="{DynamicResource Grafica.Anterior}"
+                                Command="{Binding PeriodoAnteriorCommand}" Margin="0,0,4,0" />
+                        <Button Content="▶" Padding="9,3" FontSize="11"
+                                Style="{StaticResource BotonSecundario}"
+                                IsEnabled="{Binding PuedeAvanzarPeriodo}"
+                                ToolTip="{DynamicResource Grafica.Siguiente}"
+                                AutomationProperties.Name="{DynamicResource Grafica.Siguiente}"
+                                Command="{Binding PeriodoSiguienteCommand}" Margin="0,0,4,0" />
+                        <Button Content="{DynamicResource Grafica.Hoy}" Padding="9,3" FontSize="11"
+                                Style="{StaticResource BotonSecundario}"
+                                IsEnabled="{Binding PuedeAvanzarPeriodo}"
+                                ToolTip="{DynamicResource Grafica.HoyToolTip}"
+                                AutomationProperties.Name="{DynamicResource Grafica.Hoy}"
+                                Command="{Binding IrAHoyCommand}" Margin="0,0,8,0" />
+                        <Button Content="{Binding VerGrafica, Converter={StaticResource VerGraficaATexto}}"
+                                Padding="10,5" FontSize="12"
+                                Style="{StaticResource BotonSecundario}"
+                                Command="{Binding ConfigurarGraficaCommand}" />
+                    </StackPanel>
                 </Grid>
 
                 <!-- Leyenda -->
@@ -225,7 +254,7 @@
 
                 <ScrollViewer Grid.Row="2" Margin="0,10,0,0" VerticalAlignment="Bottom"
                               HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding MesesEmbudo}">
+                    <ItemsControl ItemsSource="{Binding PeriodosEmbudo}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal" />

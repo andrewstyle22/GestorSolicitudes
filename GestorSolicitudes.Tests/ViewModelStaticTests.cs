@@ -47,42 +47,42 @@ public class ViewModelStaticTests
     // ---------------- Embudo ----------------
 
     [Fact]
-    public void EnviadaEnMes_ReconoceElHitoDeEnvioDentroDelMes()
+    public void EnviadaEnRango_ReconoceElHitoDeEnvioDentroDelMes()
     {
         var conHito = new Solicitud
         {
             Eventos = { new Evento { Fecha = new DateTime(2026, 2, 10), Tipo = TipoEvento.SolicitudEnviada } },
         };
 
-        Assert.True(MainViewModel.EnviadaEnMes(conHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+        Assert.True(MainViewModel.EnviadaEnRango(conHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
 
     [Fact]
-    public void EnviadaEnMes_ReconoceLaFechaLibroCuandoNoHayHito()
+    public void EnviadaEnRango_ReconoceLaFechaLibroCuandoNoHayHito()
     {
         var sinHito = new Solicitud { FechaSolicitud = new DateTime(2026, 2, 15) };
 
-        Assert.True(MainViewModel.EnviadaEnMes(sinHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+        Assert.True(MainViewModel.EnviadaEnRango(sinHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
 
     [Fact]
-    public void EnviadaEnMes_DescartaFueraDelMesYConHitoFueraDelMes()
+    public void EnviadaEnRango_DescartaFueraDelMesYConHitoFueraDelMes()
     {
         var fueraDeRango = new Solicitud { FechaSolicitud = new DateTime(2026, 3, 1) };
-        Assert.False(MainViewModel.EnviadaEnMes(fueraDeRango, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+        Assert.False(MainViewModel.EnviadaEnRango(fueraDeRango, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
 
         var hitoFuera = new Solicitud
         {
             FechaSolicitud = new DateTime(2026, 1, 15),
             Eventos = { new Evento { Fecha = new DateTime(2026, 1, 20), Tipo = TipoEvento.SolicitudEnviada } },
         };
-        Assert.False(MainViewModel.EnviadaEnMes(hitoFuera, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+        Assert.False(MainViewModel.EnviadaEnRango(hitoFuera, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
 
     [Fact]
-    public void EmbudoMes_AlturasSonPorcentajeDelMaximo()
+    public void EmbudoPeriodo_AlturasSonPorcentajeDelMaximo()
     {
-        var mes = new EmbudoMes("Enero", 2, 4, 6, 8);
+        var mes = new EmbudoPeriodo("Enero", 2, 4, 6, 8);
         Assert.Equal(25.0, mes.AlturaEnviadas);
         Assert.Equal(50.0, mes.AlturaRespondidas);
         Assert.Equal(75.0, mes.AlturaEntrevistas);
@@ -90,9 +90,9 @@ public class ViewModelStaticTests
     }
 
     [Fact]
-    public void EmbudoMes_ConTodoACeroLasAlturasSonCero()
+    public void EmbudoPeriodo_ConTodoACeroLasAlturasSonCero()
     {
-        var mes = new EmbudoMes("Enero", 0, 0, 0, 0);
+        var mes = new EmbudoPeriodo("Enero", 0, 0, 0, 0);
         Assert.Equal(0.0, mes.AlturaEnviadas);
         Assert.Equal(0.0, mes.AlturaRespondidas);
         Assert.Equal(0.0, mes.AlturaEntrevistas);
