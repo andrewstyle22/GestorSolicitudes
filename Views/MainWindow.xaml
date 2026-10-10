@@ -262,11 +262,15 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Width="96" Margin="0,0,4,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                                <!-- Separador izquierdo: delimita cada periodo (mes, semana o día)
+                                     para que los números de un grupo no se mezclen con los del siguiente. -->
+                                <Border BorderBrush="{StaticResource Borde}" BorderThickness="1,0,0,0"
+                                        Margin="0,0,4,0" Padding="6,0,0,0">
+                                    <Grid Width="96">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
                                     <Grid Grid.Row="0" Height="180">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -308,8 +312,10 @@
                                         </Grid>
                                     </Grid>
                                     <TextBlock Grid.Row="1" Text="{Binding Etiqueta}" Margin="0,4,0,0"
-                                               FontSize="10" Foreground="{StaticResource TextoSuave}" />
-                                </Grid>
+                                               FontSize="12" Foreground="{StaticResource TextoSuave}"
+                                               HorizontalAlignment="Center" />
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
