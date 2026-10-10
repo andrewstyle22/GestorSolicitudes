@@ -261,11 +261,15 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Width="96" Margin="0,0,4,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                                <!-- Separador izquierdo: delimita cada periodo (mes, semana o día)
+                                     para que los números de un grupo no se mezclen con los del siguiente. -->
+                                <Border BorderBrush="{StaticResource Borde}" BorderThickness="1,0,0,0"
+                                        Margin="0,0,4,0" Padding="6,0,0,0">
+                                    <Grid Width="96">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
                                     <Grid Grid.Row="0" Height="180">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -277,7 +281,7 @@
                                             <Border Width="14" Height="{Binding AlturaEnviadas}"
                                                     Background="#94A3B8" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                            <TextBlock Text="{Binding Enviadas}" FontSize="9"
+                                            <TextBlock Text="{Binding Enviadas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Top" />
                                         </Grid>
@@ -285,7 +289,7 @@
                                             <Border Width="14" Height="{Binding AlturaRespondidas}"
                                                     Background="#2563EB" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                            <TextBlock Text="{Binding Respondidas}" FontSize="9"
+                                            <TextBlock Text="{Binding Respondidas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Top" />
                                         </Grid>
@@ -293,7 +297,7 @@
                                             <Border Width="14" Height="{Binding AlturaEntrevistas}"
                                                     Background="#7C3AED" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                            <TextBlock Text="{Binding Entrevistas}" FontSize="9"
+                                            <TextBlock Text="{Binding Entrevistas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Top" />
                                         </Grid>
@@ -301,14 +305,16 @@
                                             <Border Width="14" Height="{Binding AlturaOfertas}"
                                                     Background="#059669" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
-                                            <TextBlock Text="{Binding Ofertas}" FontSize="9"
+                                            <TextBlock Text="{Binding Ofertas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Top" />
                                         </Grid>
                                     </Grid>
                                     <TextBlock Grid.Row="1" Text="{Binding Etiqueta}" Margin="0,4,0,0"
-                                               FontSize="10" Foreground="{StaticResource TextoSuave}" />
-                                </Grid>
+                                               FontSize="12" Foreground="{StaticResource TextoSuave}"
+                                               HorizontalAlignment="Center" />
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -517,6 +523,12 @@
                                         <TextBlock Text="{DynamicResource Columna.Enviada}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="6,0,0,0" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="Dias" Binding="{Binding DiasProceso}" Width="60">
@@ -530,6 +542,12 @@
                                                    ToolTip="{DynamicResource Columna.DiasToolTip}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="6,0,0,0" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
@@ -539,6 +557,12 @@
                                         <TextBlock Text="{DynamicResource Columna.PrimeraRespuesta}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="6,0,0,0" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="Entrevista" Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
@@ -548,6 +572,12 @@
                                         <TextBlock Text="{DynamicResource Columna.Entrevista}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="6,0,0,0" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="Seguimiento" Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
@@ -557,6 +587,12 @@
                                         <TextBlock Text="{DynamicResource Columna.Seguimiento}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="6,0,0,0" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="Interes" Binding="{Binding Interes, Converter={StaticResource InteresATextoEstrellas}}"
@@ -570,6 +606,7 @@
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Setter Property="Foreground" Value="{StaticResource Estrella}" />
                                         <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="6,0,0,0" />
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -580,6 +617,13 @@
                                         <TextBlock Text="{DynamicResource Columna.Portal}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Margin" Value="6,0,0,0" />
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
