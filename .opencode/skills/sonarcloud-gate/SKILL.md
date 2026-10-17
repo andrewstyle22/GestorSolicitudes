@@ -116,6 +116,23 @@ está en rojo. Para el PR, la fuente es el check de GitHub
 `/repos/<owner>/<repo>/commits/<rama>/check-runs`, sin token), que es el que
 reporta "Quality Gate failed" con la condición concreta.
 
+## Reglas del analizador que ya nos han mordido
+
+Cada vez que Sonar marca un issue de código (no de cobertura), apunta aquí la regla
+y su arreglo para no repetirlo:
+
+- **S6966 (`Await ReadAllTextAsync instead`)**: en un método `async`, la E/S de
+  fichero síncrona (`File.ReadAllText`, `File.ReadAllBytes`, `StreamReader.ReadToEnd`
+  sobre un `Stream` de fichero...) debe ser la versión `...Async` y con `await`
+  (`await File.ReadAllTextAsync(ruta)`). Ya pasó en `Views/VisorAdjuntoWindow.xaml.cs`.
+  Regla general: si el método es `async`, no llames a APIs de E/S bloqueantes.
+- **S6444 (`Pass a timeout to limit the execution time`)**: todo `Regex` debe llevar
+  timeout para no ser vulnerable a ReDoS. Usa la sobrecarga con timeout
+  (`Regex.Replace(entrada, patron, reemplazo, RegexOptions.None, TimeSpan.FromSeconds(1))`)
+  o un `Regex` estático construido con timeout. Ya pasó en `DocumentoHelper.cs`.
+  Regla general: nunca uses los atajos `Regex.IsMatch/Match/Replace/Split` sin timeout
+  sobre texto que viene de un fichero.
+
 ## Errores que ya hemos puesto
 
 - **Fiarse de la cobertura global o de `master` y decir que el gate del PR pasa.**

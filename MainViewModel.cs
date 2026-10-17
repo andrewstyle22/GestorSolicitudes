@@ -777,37 +777,6 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
-    private void AbrirCv() => AbrirAdjunto(this.Edicion?.RutaCv);
-
-    [RelayCommand]
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
-    private void AbrirCarta() => AbrirAdjunto(this.Edicion?.RutaCarta);
-
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
-    private static void AbrirAdjunto(string? ruta)
-    {
-        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
-        {
-            MessageBox.Show(
-                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
-                Localizacion.Texto("Titulo.Adjunto"), MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo(ruta.Trim()) { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
-                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-    }
-
-    [RelayCommand]
     private void Nueva()
     {
         this.SolicitudSeleccionada = null;

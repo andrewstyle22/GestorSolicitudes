@@ -145,7 +145,8 @@ public static class Localizacion
         ("Adjuntos.Texto", "El CV y la carta concretos que enviaste a esta oferta, guardados en copia local."),
         ("Adjuntos.Curriculum", "Curriculum"),
         ("Adjuntos.Carta", "Carta de presentación"),
-        ("Adjuntos.SinAdjuntar", "Sin adjuntar"),
+        ("Adjuntos.CurriculumSinAdjuntar", "Currículum sin adjuntar"),
+        ("Adjuntos.CartaSinAdjuntar", "Carta sin adjuntar"),
         ("Historial.Titulo", "HISTORIAL"),
         ("Historial.Anadir", "+ Añadir"),
 
@@ -163,6 +164,7 @@ public static class Localizacion
         ("Boton.Cancelar", "Cancelar"),
         ("Boton.Guardar", "Guardar"),
         ("Boton.Cerrar", "Cerrar"),
+        ("Boton.Descargar", "Descargar"),
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Abrir Gestor de candidaturas"),
@@ -176,13 +178,14 @@ public static class Localizacion
         // ----- Diálogos de fichero -----
         ("Dialogo.SeleccionaCv", "Selecciona el CV que enviaste"),
         ("Dialogo.SeleccionaCarta", "Selecciona la carta de presentación"),
-        ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Currículos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Todos los archivos (*.*)|*.*"),
+        ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Currículos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Todos los archivos (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Exportar candidaturas"),
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
         ("Mensaje.NoSePudoAbrirFichero", "No se pudo abrir el fichero: {0}"),
+        ("Mensaje.NoSePuedePrevisualizar", "No se puede previsualizar este formato. Usa Descargar para guardar una copia."),
         ("Mensaje.NoSePudoAbrirEnlace", "No se pudo abrir el enlace: {0}"),
         ("Mensaje.FaltanDatos", "La empresa y el puesto son obligatorios."),
         ("Mensaje.NoSePudoGuardar", "No se pudo guardar: {0}"),
@@ -387,7 +390,8 @@ public static class Localizacion
         ("Adjuntos.Texto", "The exact CV and cover letter you sent for this offer, stored locally."),
         ("Adjuntos.Curriculum", "CV"),
         ("Adjuntos.Carta", "Cover letter"),
-        ("Adjuntos.SinAdjuntar", "Not attached"),
+        ("Adjuntos.CurriculumSinAdjuntar", "CV not attached"),
+        ("Adjuntos.CartaSinAdjuntar", "Cover letter not attached"),
         ("Historial.Titulo", "HISTORY"),
         ("Historial.Anadir", "+ Add"),
 
@@ -405,6 +409,7 @@ public static class Localizacion
         ("Boton.Cancelar", "Cancel"),
         ("Boton.Guardar", "Save"),
         ("Boton.Cerrar", "Close"),
+        ("Boton.Descargar", "Download"),
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Open Application Tracker"),
@@ -418,13 +423,14 @@ public static class Localizacion
         // ----- Diálogos de fichero -----
         ("Dialogo.SeleccionaCv", "Select the CV you sent"),
         ("Dialogo.SeleccionaCarta", "Select the cover letter"),
-        ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|CVs (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|All files (*.*)|*.*"),
+        ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|CVs (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|All files (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Export applications"),
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
         ("Mensaje.NoSePudoAbrirFichero", "Could not open the file: {0}"),
+        ("Mensaje.NoSePuedePrevisualizar", "This format cannot be previewed. Use Download to save a copy."),
         ("Mensaje.NoSePudoAbrirEnlace", "Could not open the link: {0}"),
         ("Mensaje.FaltanDatos", "Company and position are required."),
         ("Mensaje.NoSePudoGuardar", "Could not save: {0}"),
@@ -629,7 +635,8 @@ public static class Localizacion
         ("Adjuntos.Texto", "Der konkrete Lebenslauf und das Anschreiben, die du für dieses Angebot eingereicht hast, lokal gespeichert."),
         ("Adjuntos.Curriculum", "Lebenslauf"),
         ("Adjuntos.Carta", "Anschreiben"),
-        ("Adjuntos.SinAdjuntar", "Nicht angehängt"),
+        ("Adjuntos.CurriculumSinAdjuntar", "Lebenslauf nicht angehängt"),
+        ("Adjuntos.CartaSinAdjuntar", "Anschreiben nicht angehängt"),
         ("Historial.Titulo", "VERLAUF"),
         ("Historial.Anadir", "+ Hinzufügen"),
 
@@ -647,6 +654,7 @@ public static class Localizacion
         ("Boton.Cancelar", "Abbrechen"),
         ("Boton.Guardar", "Speichern"),
         ("Boton.Cerrar", "Schließen"),
+        ("Boton.Descargar", "Herunterladen"),
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Bewerbungstracker öffnen"),
@@ -660,13 +668,14 @@ public static class Localizacion
         // ----- Diálogos de fichero -----
         ("Dialogo.SeleccionaCv", "Wähle den Lebenslauf, den du eingereicht hast"),
         ("Dialogo.SeleccionaCarta", "Wähle das Anschreiben"),
-        ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Lebensläufe (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Alle Dateien (*.*)|*.*"),
+        ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Lebensläufe (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Alle Dateien (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Bewerbungen exportieren"),
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
         ("Mensaje.NoSePudoAbrirFichero", "Die Datei konnte nicht geöffnet werden: {0}"),
+        ("Mensaje.NoSePuedePrevisualizar", "Dieses Format kann nicht angezeigt werden. Nutze Herunterladen, um eine Kopie zu speichern."),
         ("Mensaje.NoSePudoAbrirEnlace", "Der Link konnte nicht geöffnet werden: {0}"),
         ("Mensaje.FaltanDatos", "Unternehmen und Position sind Pflichtfelder."),
         ("Mensaje.NoSePudoGuardar", "Speichern fehlgeschlagen: {0}"),
