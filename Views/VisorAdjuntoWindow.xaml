@@ -1,0 +1,55 @@
+<Window x:Class="GestorSolicitudes.Views.VisorAdjuntoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Visor"
+        Height="760"
+        Width="960"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer x:Name="ScrollContenido" Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto">
+            <StackPanel x:Name="PanelPaginas" />
+        </ScrollViewer>
+
+        <TextBox x:Name="CajaTexto"
+                 Grid.Row="0"
+                 Visibility="Collapsed"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 FontFamily="Consolas"
+                 FontSize="12"
+                 Padding="12"
+                 BorderThickness="0"
+                 VerticalScrollBarVisibility="Disabled"
+                 HorizontalScrollBarVisibility="Disabled" />
+
+        <TextBlock x:Name="TextoAviso"
+                   Grid.Row="0"
+                   Visibility="Collapsed"
+                   TextWrapping="Wrap"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextAlignment="Center" />
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,10,0,0">
+            <Button Content="{DynamicResource Boton.Descargar}"
+                    Padding="12,6"
+                    Margin="0,0,8,0"
+                    Click="Descargar_Click" />
+            <Button Content="{DynamicResource Boton.Cerrar}"
+                    Padding="12,6"
+                    Click="Cerrar_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

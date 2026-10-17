@@ -147,7 +147,6 @@ public static class Localizacion
         ("Adjuntos.Carta", "Carta de presentación"),
         ("Adjuntos.CurriculumSinAdjuntar", "Currículum sin adjuntar"),
         ("Adjuntos.CartaSinAdjuntar", "Carta sin adjuntar"),
-        ("Adjuntos.SinAdjuntar", "Sin adjuntar"),
         ("Historial.Titulo", "HISTORIAL"),
         ("Historial.Anadir", "+ Añadir"),
 
@@ -165,6 +164,7 @@ public static class Localizacion
         ("Boton.Cancelar", "Cancelar"),
         ("Boton.Guardar", "Guardar"),
         ("Boton.Cerrar", "Cerrar"),
+        ("Boton.Descargar", "Descargar"),
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Abrir Gestor de candidaturas"),
@@ -185,6 +185,7 @@ public static class Localizacion
         ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
         ("Mensaje.NoSePudoAbrirFichero", "No se pudo abrir el fichero: {0}"),
+        ("Mensaje.NoSePuedePrevisualizar", "No se puede previsualizar este formato. Usa Descargar para guardar una copia."),
         ("Mensaje.NoSePudoAbrirEnlace", "No se pudo abrir el enlace: {0}"),
         ("Mensaje.FaltanDatos", "La empresa y el puesto son obligatorios."),
         ("Mensaje.NoSePudoGuardar", "No se pudo guardar: {0}"),
@@ -391,7 +392,6 @@ public static class Localizacion
         ("Adjuntos.Carta", "Cover letter"),
         ("Adjuntos.CurriculumSinAdjuntar", "CV not attached"),
         ("Adjuntos.CartaSinAdjuntar", "Cover letter not attached"),
-        ("Adjuntos.SinAdjuntar", "Not attached"),
         ("Historial.Titulo", "HISTORY"),
         ("Historial.Anadir", "+ Add"),
 
@@ -409,6 +409,7 @@ public static class Localizacion
         ("Boton.Cancelar", "Cancel"),
         ("Boton.Guardar", "Save"),
         ("Boton.Cerrar", "Close"),
+        ("Boton.Descargar", "Download"),
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Open Application Tracker"),
@@ -429,6 +430,7 @@ public static class Localizacion
         ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
         ("Mensaje.NoSePudoAbrirFichero", "Could not open the file: {0}"),
+        ("Mensaje.NoSePuedePrevisualizar", "This format cannot be previewed. Use Download to save a copy."),
         ("Mensaje.NoSePudoAbrirEnlace", "Could not open the link: {0}"),
         ("Mensaje.FaltanDatos", "Company and position are required."),
         ("Mensaje.NoSePudoGuardar", "Could not save: {0}"),
@@ -635,7 +637,6 @@ public static class Localizacion
         ("Adjuntos.Carta", "Anschreiben"),
         ("Adjuntos.CurriculumSinAdjuntar", "Lebenslauf nicht angehängt"),
         ("Adjuntos.CartaSinAdjuntar", "Anschreiben nicht angehängt"),
-        ("Adjuntos.SinAdjuntar", "Nicht angehängt"),
         ("Historial.Titulo", "VERLAUF"),
         ("Historial.Anadir", "+ Hinzufügen"),
 
@@ -653,6 +654,7 @@ public static class Localizacion
         ("Boton.Cancelar", "Abbrechen"),
         ("Boton.Guardar", "Speichern"),
         ("Boton.Cerrar", "Schließen"),
+        ("Boton.Descargar", "Herunterladen"),
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Bewerbungstracker öffnen"),
@@ -673,6 +675,7 @@ public static class Localizacion
         ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
         ("Mensaje.NoSePudoAbrirFichero", "Die Datei konnte nicht geöffnet werden: {0}"),
+        ("Mensaje.NoSePuedePrevisualizar", "Dieses Format kann nicht angezeigt werden. Nutze Herunterladen, um eine Kopie zu speichern."),
         ("Mensaje.NoSePudoAbrirEnlace", "Der Link konnte nicht geöffnet werden: {0}"),
         ("Mensaje.FaltanDatos", "Unternehmen und Position sind Pflichtfelder."),
         ("Mensaje.NoSePudoGuardar", "Speichern fehlgeschlagen: {0}"),

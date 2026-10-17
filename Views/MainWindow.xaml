@@ -957,7 +957,7 @@
                                                     <TextBlock Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center"
                                                                TextTrimming="CharacterEllipsis"
                                                                ToolTip="{Binding RutaCv}"
-                                                               Text="{Binding NombreCv, ConverterParameter=Adjuntos.SinAdjuntar, Converter={StaticResource NuloACadena}}" />
+                                                               Text="{Binding NombreCv, ConverterParameter=Adjuntos.CurriculumSinAdjuntar, Converter={StaticResource NuloACadena}}" />
                                                     <Button Grid.Column="2" Content="{DynamicResource Boton.Adjuntar}" Margin="0,0,6,0"
                                                             Padding="10,4" FontSize="12"
                                                             Style="{StaticResource BotonSecundario}"
@@ -968,7 +968,7 @@
                                                             Command="{Binding DataContext.QuitarCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                     <Button Grid.Column="4" Content="{DynamicResource Boton.Abrir}" Padding="10,4" FontSize="12"
                                                             Style="{StaticResource BotonSecundario}"
-                                                            Command="{Binding DataContext.AbrirCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                            Click="AbrirCv_Click" />
                                                 </Grid>
 
                                                 <Grid>
@@ -997,7 +997,7 @@
                                                             Command="{Binding DataContext.QuitarCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
                                                     <Button Grid.Column="6" Content="{DynamicResource Boton.Abrir}" Padding="10,4" FontSize="12"
                                                             Style="{StaticResource BotonSecundario}"
-                                                            Command="{Binding DataContext.AbrirCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                                            Click="AbrirCarta_Click" />
                                                 </Grid>
                                             </StackPanel>
                                         </Border>

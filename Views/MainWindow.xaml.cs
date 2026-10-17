@@ -169,6 +169,37 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>Abre el CV adjunto en el visor de solo lectura.</summary>
+    private void AbrirCv_Click(object? sender, RoutedEventArgs e) =>
+        this.AbrirAdjunto((sender as FrameworkElement)?.DataContext is Solicitud s ? s.RutaCv : null);
+
+    /// <summary>Abre la carta adjunta en el visor de solo lectura.</summary>
+    private void AbrirCarta_Click(object? sender, RoutedEventArgs e) =>
+        this.AbrirAdjunto((sender as FrameworkElement)?.DataContext is Solicitud s ? s.RutaCarta : null);
+
+    private void AbrirAdjunto(string? ruta)
+    {
+        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
+        {
+            MessageBox.Show(
+                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
+                Localizacion.Texto("Titulo.Adjunto"), MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            var ventana = new VisorAdjuntoWindow(ruta.Trim()) { Owner = this };
+            ventana.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
+                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
     protected override void OnClosed(System.EventArgs e)
     {
         this.IconoBandeja.Visibility = Visibility.Hidden;
