@@ -11,6 +11,10 @@ using System.Text.RegularExpressions;
 /// </summary>
 public static class DocumentoHelper
 {
+    // Límite de tiempo para las expresiones regulares: evita un cuelgue si un documento
+    // malicioso o corrupto dispara un backtracking desbocado.
+    private static readonly TimeSpan TiempoLimiteRegex = TimeSpan.FromSeconds(1);
+
     /// <summary>Extrae el texto plano de un DOCX (Word).</summary>
     public static string ExtraerTextoDocx(string ruta) =>
         ExtraerTextoZip(ruta, "word/document.xml", "</w:p>");
@@ -30,8 +34,8 @@ public static class DocumentoHelper
 
         using var lector = new StreamReader(xml.Open());
         string contenido = lector.ReadToEnd();
-        contenido = Regex.Replace(contenido, finParrafo, "\n");
-        contenido = Regex.Replace(contenido, "<[^>]+>", string.Empty);
+        contenido = Regex.Replace(contenido, finParrafo, "\n", RegexOptions.None, TiempoLimiteRegex);
+        contenido = Regex.Replace(contenido, "<[^>]+>", string.Empty, RegexOptions.None, TiempoLimiteRegex);
         return System.Net.WebUtility.HtmlDecode(contenido);
     }
 }

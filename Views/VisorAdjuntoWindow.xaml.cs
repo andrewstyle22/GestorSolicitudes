@@ -45,7 +45,7 @@ public partial class VisorAdjuntoWindow : Window
                     this.MostrarAviso(Localizacion.Texto("Mensaje.NoSePuedePrevisualizar"));
                     break;
                 default:
-                    this.MostrarTexto(File.ReadAllText(this.ruta));
+                    this.MostrarTexto(await File.ReadAllTextAsync(this.ruta));
                     break;
             }
         }
