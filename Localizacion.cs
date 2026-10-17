@@ -178,7 +178,7 @@ public static class Localizacion
         // ----- Diálogos de fichero -----
         ("Dialogo.SeleccionaCv", "Selecciona el CV que enviaste"),
         ("Dialogo.SeleccionaCarta", "Selecciona la carta de presentación"),
-        ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Currículos (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Todos los archivos (*.*)|*.*"),
+        ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Currículos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Todos los archivos (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Exportar candidaturas"),
 
         // ----- Mensajes -----
@@ -423,7 +423,7 @@ public static class Localizacion
         // ----- Diálogos de fichero -----
         ("Dialogo.SeleccionaCv", "Select the CV you sent"),
         ("Dialogo.SeleccionaCarta", "Select the cover letter"),
-        ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|CVs (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|All files (*.*)|*.*"),
+        ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|CVs (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|All files (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Export applications"),
 
         // ----- Mensajes -----
@@ -668,7 +668,7 @@ public static class Localizacion
         // ----- Diálogos de fichero -----
         ("Dialogo.SeleccionaCv", "Wähle den Lebenslauf, den du eingereicht hast"),
         ("Dialogo.SeleccionaCarta", "Wähle das Anschreiben"),
-        ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Lebensläufe (*.pdf;*.docx;*.doc)|*.pdf;*.docx;*.doc|Alle Dateien (*.*)|*.*"),
+        ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Lebensläufe (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Alle Dateien (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Bewerbungen exportieren"),
 
         // ----- Mensajes -----

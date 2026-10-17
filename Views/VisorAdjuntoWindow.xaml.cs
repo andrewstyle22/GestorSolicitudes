@@ -1,18 +1,19 @@
 namespace GestorSolicitudes.Views;
 
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.IO.Compression;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using GestorSolicitudes.Helpers;
 using Microsoft.Win32;
 using Windows.Data.Pdf;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
 // Ventana de solo lectura para ver el CV o la carta adjuntos sin abrir el programa externo.
-// PDF se renderiza con la API nativa de Windows; DOCX se extrae como texto; DOC no tiene
-// visor nativo y se ofrece descargar. Nunca modifica el fichero original.
+// PDF se renderiza con la API nativa de Windows; DOCX y ODT se extraen como texto; DOC no
+// tiene visor nativo y se ofrece descargar. Nunca modifica el fichero original.
+[ExcludeFromCodeCoverage] // Code-behind de diálogo: la UI no es automatizable.
 public partial class VisorAdjuntoWindow : Window
 {
     private readonly string ruta;
@@ -35,7 +36,10 @@ public partial class VisorAdjuntoWindow : Window
                     await this.MostrarPdfAsync();
                     break;
                 case ".docx":
-                    this.MostrarTexto(ExtraerTextoDocx(this.ruta));
+                    this.MostrarTexto(DocumentoHelper.ExtraerTextoDocx(this.ruta));
+                    break;
+                case ".odt":
+                    this.MostrarTexto(DocumentoHelper.ExtraerTextoOdt(this.ruta));
                     break;
                 case ".doc":
                     this.MostrarAviso(Localizacion.Texto("Mensaje.NoSePuedePrevisualizar"));
@@ -89,22 +93,6 @@ public partial class VisorAdjuntoWindow : Window
         this.ScrollContenido.Visibility = Visibility.Collapsed;
         this.TextoAviso.Text = mensaje;
         this.TextoAviso.Visibility = Visibility.Visible;
-    }
-
-    private static string ExtraerTextoDocx(string ruta)
-    {
-        using ZipArchive zip = ZipFile.OpenRead(ruta);
-        ZipArchiveEntry? entrada = zip.GetEntry("word/document.xml");
-        if (entrada is null)
-        {
-            return string.Empty;
-        }
-
-        using var lector = new StreamReader(entrada.Open());
-        string xml = lector.ReadToEnd();
-        xml = Regex.Replace(xml, "</w:p>", "\n");
-        xml = Regex.Replace(xml, "<[^>]+>", string.Empty);
-        return System.Net.WebUtility.HtmlDecode(xml);
     }
 
     private void Descargar_Click(object sender, RoutedEventArgs e)
