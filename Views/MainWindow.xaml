@@ -986,7 +986,7 @@
                                                     <TextBlock Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center"
                                                                TextTrimming="CharacterEllipsis"
                                                                ToolTip="{Binding RutaCarta}"
-                                                               Text="{Binding NombreCarta, ConverterParameter=Adjuntos.SinAdjuntar, Converter={StaticResource NuloACadena}}" Grid.ColumnSpan="3" />
+                                                               Text="{Binding NombreCarta, ConverterParameter=Adjuntos.CartaSinAdjuntar, Converter={StaticResource NuloACadena}}" Grid.ColumnSpan="3" />
                                                     <Button Grid.Column="4" Content="{DynamicResource Boton.Adjuntar}" Margin="0,0,6,0"
                                                             Padding="10,4" FontSize="12"
                                                             Style="{StaticResource BotonSecundario}"
