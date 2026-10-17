@@ -49,8 +49,14 @@ public class AdjuntosHelperTests
     public void EliminarDe_NuloOEnBlancoNoLanza()
     {
         string carpeta = TestDb.NuevaCarpeta();
-        AdjuntosHelper.EliminarDe(null, carpeta);
-        AdjuntosHelper.EliminarDe("   ", carpeta);
-        AdjuntosHelper.EliminarDe("", carpeta);
+
+        Exception? excepcion = Record.Exception(() =>
+        {
+            AdjuntosHelper.EliminarDe(null, carpeta);
+            AdjuntosHelper.EliminarDe("   ", carpeta);
+            AdjuntosHelper.EliminarDe("", carpeta);
+        });
+
+        Assert.Null(excepcion);
     }
 }
