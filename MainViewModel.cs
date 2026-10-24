@@ -435,8 +435,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private bool PuedeRetrocederUnPeriodoMas =>
         this.db.Solicitudes.Min(s => (DateTime?)s.FechaSolicitud) is not DateTime primera
-        || CalcularPeriodos(this.GranularidadGrafica, this.DesplazamientoPeriodo + 1)[^1]
-            >= InicioDePeriodo(primera, this.GranularidadGrafica);
+        || EmbudoHelper.CalcularPeriodos(this.GranularidadGrafica, this.DesplazamientoPeriodo + 1)[^1]
+            >= EmbudoHelper.InicioDePeriodo(primera, this.GranularidadGrafica);
 
     /// <summary>Título de la gráfica, que nombra la granularidad activa (se repinta al cambiar de idioma).</summary>
     public string TituloGrafica => string.Format(
@@ -565,12 +565,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // Retroceder un periodo es meterse en el que contiene el día anterior: sirve igual
         // para el mes (el día anterior ya es del mes pasado), para la semana (domingo) y
         // para el día. Por eso no hace falta un "periodo anterior" aparte.
-        DateTime fin = SiguientePeriodo(InicioDePeriodo(DateTime.Today, granularidad), granularidad);
+        DateTime fin = EmbudoHelper.SiguientePeriodo(EmbudoHelper.InicioDePeriodo(DateTime.Today, granularidad), granularidad);
 
         var periodos = new List<DateTime>(PeriodosDelEmbudo);
         for (int i = 0; i < desplazamiento + PeriodosDelEmbudo; i++)
         {
-            fin = InicioDePeriodo(fin.AddDays(-1), granularidad);
+            fin = EmbudoHelper.InicioDePeriodo(fin.AddDays(-1), granularidad);
 
             if (i >= desplazamiento)
             {
@@ -1072,8 +1072,4 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         return sb.ToString();
     }
-}
-
-/// <summary>
-}
 }
