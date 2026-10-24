@@ -769,7 +769,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(this.Edicion.Empresa) || string.IsNullOrWhiteSpace(this.Edicion.Puesto))
+        if (!ReglasSolicitud.TieneDatosObligatorios(this.Edicion))
         {
             this.dialogo.Avisar(
                 Localizacion.Texto("Mensaje.FaltanDatos"),
@@ -778,13 +778,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
-        // escribir, proponemos +7 dias desde el envio. Sin esto, el aviso de
-        // "seguimiento pendiente" nunca llega a dispararse salvo que el usuario
-        // recuerde rellenarlo a mano cada vez.
-        if (this.Edicion.EstaAbierta && this.Edicion.ProximoSeguimiento is null)
-        {
-            this.Edicion.ProximoSeguimiento = this.Edicion.FechaSolicitud.AddDays(7);
-        }
+        // escribir, proponemos +7 dias desde el envio.
+        this.Edicion.ProximoSeguimiento = ReglasSolicitud.ProponerSeguimiento(this.Edicion)
+            ?? this.Edicion.ProximoSeguimiento;
 
         bool esNueva = this.Edicion.Id == 0;
         if (esNueva)
@@ -792,6 +788,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             this.db.Solicitudes.Add(this.Edicion);
 
             // Primer hito del historial, para que la línea temporal no empiece vacía.
+            ReglasSolicitud.AnadirHitoInicial(this.Edicion);
+
             if (this.Edicion.Eventos.Count == 0)
             {
                 this.Edicion.Eventos.Add(new Evento
