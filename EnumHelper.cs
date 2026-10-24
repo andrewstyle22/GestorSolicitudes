@@ -27,7 +27,7 @@ public static class EnumHelper
     }
 
     /// <summary>Clave de traducción de un valor de enum, del tipo "EstadoSolicitud.Enviada".</summary>
-    public static string Clave(Enum valor) => $"{valor.GetType().Name}.{valor}";
+    internal static string Clave(Enum valor) => $"{valor.GetType().Name}.{valor}";
 
     /// <summary>Todos los valores de un enum ya traducidos, listos para enlazar.</summary>
     public static IReadOnlyList<EnumItem> Valores<T>()

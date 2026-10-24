@@ -860,7 +860,7 @@ public static class Localizacion
     /// Reconstruye el diccionario de textos inyectado en Application.Resources a partir de los
     /// diccionarios C#. Los {DynamicResource} resuelven contra él y se actualizan al cambiarlo.
     /// </summary>
-    public static void AplicarRecursosDeApplication()
+    private static void AplicarRecursosDeApplication()
     {
         ResourceDictionary? recursos = Application.Current?.Resources;
         if (recursos is null)
