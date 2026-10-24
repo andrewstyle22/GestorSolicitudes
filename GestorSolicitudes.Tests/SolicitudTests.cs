@@ -1,4 +1,3 @@
-using Xunit;
 using GestorSolicitudes.Models;
 
 namespace GestorSolicitudes.Tests;
