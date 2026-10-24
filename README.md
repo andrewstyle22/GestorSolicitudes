@@ -1,4 +1,4 @@
-# Gestor de candidaturas
+﻿# Gestor de candidaturas
 
 Aplicación de escritorio para llevar el control de las ofertas de empleo a las que te inscribes:
 a quién, cuándo, qué te contestaron y cuándo toca volver a insistir.
@@ -160,11 +160,12 @@ ColumnaItem.cs → columna ocultable del selector (namespace ViewModels)
 IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
 DialogoService.cs → implementación WPF de IDialogoService (MessageBox, Open/SaveFileDialog)
 CsvHelper.cs → escapa los campos del CSV de exportación; su normalización de texto (minúsculas sin
+                  tildes) la usa también la búsqueda
 EmbudoHelper.cs → lógica del embudo (máximo, periodos, rangos, conteos)
 EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
 CsvExportador.cs → exportación CSV pura (cabecera + filas)
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
-                 tildes) la usa también la búsqueda
+ReglasSolicitud.cs → reglas de negocio puras (datos obligatorios, seguimiento, hito inicial)
 MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, exportación y columnas
                  (sin WPF: habla con IDialogoService)
 App.xaml → tema y estilos compartidos (botones, campos, desplegables)

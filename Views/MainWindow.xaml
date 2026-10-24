@@ -334,7 +334,7 @@
             <!-- Lista -->
             <Border Grid.Column="0" Background="{StaticResource Panel}"
                     BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8" Grid.ColumnSpan="2">
-                <Grid x:Name="TablaCandidaturas">
+                <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -419,7 +419,7 @@
                                 </StackPanel>
                             </ToggleButton>
 
-                            <ComboBox x:Name="SelectorEstados" Width="190" Margin="0,0,12,0"
+                            <ComboBox Width="190" Margin="0,0,12,0"
                                       Style="{StaticResource CampoCombo}"
                                       ItemsSource="{Binding EstadosFiltro}"
                                       DisplayMemberPath="Descripcion"
@@ -466,7 +466,7 @@
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn x:Name="Empresa" Binding="{Binding Empresa}" Width="260" MinWidth="260">
+                            <DataGridTextColumn Binding="{Binding Empresa}" Width="260" MinWidth="260">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Empresa}" />
@@ -482,7 +482,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Puesto" Binding="{Binding Puesto}" Width="300" MinWidth="300">
+                            <DataGridTextColumn Binding="{Binding Puesto}" Width="300" MinWidth="300">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Puesto}" />
