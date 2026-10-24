@@ -135,7 +135,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// Columnas de la tabla que el usuario puede ocultar. Empresa, Puesto, Estado y
     /// Enviada no entran aquí: se ven siempre.
     /// </summary>
-    private static readonly string[] ColumnasOcultables =
+    internal static readonly string[] ColumnasOcultables =
         ["Dias", "PrimeraRespuesta", "Entrevista", "Seguimiento", "Interes", "Portal"];
 
     public ObservableCollection<ColumnaItem> Columnas { get; } = new();

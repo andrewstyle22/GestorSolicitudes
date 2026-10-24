@@ -114,7 +114,6 @@ public class SolicitudTests
             ProximoSeguimiento = DateTime.Today.AddDays(-1)
         };
         Assert.True(s.SeguimientoPendiente);
-        Assert.True(s.SeguimientoPendiente);
     }
 
     [Fact]

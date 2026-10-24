@@ -196,6 +196,7 @@ public static class Localizacion
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Adjunto"),
+        ("Titulo.Confirmar", "Confirmar"),
         ("Titulo.FaltanDatos", "Faltan datos"),
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
@@ -443,6 +444,7 @@ public static class Localizacion
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Attachment"),
+        ("Titulo.Confirmar", "Confirm"),
         ("Titulo.FaltanDatos", "Missing data"),
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
@@ -690,6 +692,7 @@ public static class Localizacion
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Anlage"),
+        ("Titulo.Confirmar", "Bestätigen"),
         ("Titulo.FaltanDatos", "Fehlende Angaben"),
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),

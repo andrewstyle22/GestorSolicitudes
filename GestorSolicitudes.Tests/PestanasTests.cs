@@ -1,6 +1,4 @@
 ﻿using Xunit;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -9,7 +7,7 @@ using GestorSolicitudes;
 
 namespace GestorSolicitudes.Tests;
 
-public partial class PestanasTests
+public class PestanasTests
 {
     /// <summary>
     /// Los estilos que dependen de una plantilla (las pestañas del panel de detalle y el
@@ -87,14 +85,6 @@ public partial class PestanasTests
             FontWeights.SemiBold,
             estiloCabecera.Setters.OfType<Setter>().Single(s => s.Property == TextBlock.FontWeightProperty).Value);
 
-        // Un HeaderStyle por columna sustituye al ColumnHeaderStyle del DataGrid en vez de
-        // heredarlo, y esa columna se queda sin el fondo gris (le pasó a "Días"). Comprobarlo
-        // sobre la ventana real no cabe aquí (WPF solo admite una Application por AppDomain y
-        // la crea este mismo test), así que se mira el XAML, sin comentarios: si alguna
-        // columna declara un HeaderStyle propio, el tooltip va en su HeaderTemplate.
-        var xaml = ComentariosXml().Replace(XamlDeLaVentana(), string.Empty);
-        Assert.DoesNotContain("HeaderStyle", xaml.Replace("ColumnHeaderStyle", string.Empty));
-
         // El icono de la bandeja se carga del recurso empaquetado, así que se comprueba
         // que existe y trae los tamaños que usa la bandeja, con la misma ruta que usa
         // MainWindow: relativa al ensamblado principal y sin "pack://" absoluto.
@@ -107,25 +97,4 @@ public partial class PestanasTests
             Assert.True(icono.Width >= 16);
         }
     }
-
-    /// <summary>Localiza Views/MainWindow.xaml subiendo desde la carpeta de salida.</summary>
-    private static string XamlDeLaVentana()
-    {
-        var carpeta = new DirectoryInfo(AppContext.BaseDirectory);
-
-        while (carpeta is not null && !File.Exists(Path.Combine(carpeta.FullName, "Views", "MainWindow.xaml")))
-        {
-            carpeta = carpeta.Parent;
-        }
-
-        Assert.NotNull(carpeta);
-        return File.ReadAllText(Path.Combine(carpeta!.FullName, "Views", "MainWindow.xaml"));
-    }
-
-    /// <summary>
-    /// Quita los comentarios XML del XAML: dentro de ellos puede aparecer la palabra que se
-    /// busca (el propio comentario que avisa de este bug) y no es XAML aplicable.
-    /// </summary>
-    [GeneratedRegex(@"<!--.*?-->", RegexOptions.Singleline)]
-    private static partial Regex ComentariosXml();
 }

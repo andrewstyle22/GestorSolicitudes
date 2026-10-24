@@ -90,11 +90,11 @@ public class LocalizacionTests
     }
 
     [Fact]
-    public void TextoDeLasEstadisticasDependenDelIdioma()
+    public void MetricaDias_EstaEnLosTresIdiomas()
     {
-        Assert.Equal("3 días", $"{3} {Localizacion.Texto(Idioma.Castellano, "Metrica.Dias")}");
-        Assert.Equal("3 days", $"{3} {Localizacion.Texto(Idioma.Ingles, "Metrica.Dias")}");
-        Assert.Equal("3 Tage", $"{3} {Localizacion.Texto(Idioma.Aleman, "Metrica.Dias")}");
+        Assert.Equal("días", Localizacion.Texto(Idioma.Castellano, "Metrica.Dias"));
+        Assert.Equal("days", Localizacion.Texto(Idioma.Ingles, "Metrica.Dias"));
+        Assert.Equal("Tage", Localizacion.Texto(Idioma.Aleman, "Metrica.Dias"));
     }
 
     [Fact]
