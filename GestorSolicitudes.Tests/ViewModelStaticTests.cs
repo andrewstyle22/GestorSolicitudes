@@ -1,7 +1,6 @@
 using Xunit;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-using GestorSolicitudes.ViewModels;
 
 namespace GestorSolicitudes.Tests;
 
@@ -54,7 +53,7 @@ public class ViewModelStaticTests
             Eventos = { new Evento { Fecha = new DateTime(2026, 2, 10), Tipo = TipoEvento.SolicitudEnviada } },
         };
 
-        Assert.True(MainViewModel.EnviadaEnRango(conHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+        Assert.True(EmbudoHelper.EnviadaEnRango(conHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
 
     [Fact]
@@ -62,21 +61,23 @@ public class ViewModelStaticTests
     {
         var sinHito = new Solicitud { FechaSolicitud = new DateTime(2026, 2, 15) };
 
-        Assert.True(MainViewModel.EnviadaEnRango(sinHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+        Assert.True(EmbudoHelper.EnviadaEnRango(sinHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
 
     [Fact]
     public void EnviadaEnRango_DescartaFueraDelMesYConHitoFueraDelMes()
     {
         var fueraDeRango = new Solicitud { FechaSolicitud = new DateTime(2026, 3, 1) };
-        Assert.False(MainViewModel.EnviadaEnRango(fueraDeRango, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+
+        Assert.False(EmbudoHelper.EnviadaEnRango(fueraDeRango, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
 
         var hitoFuera = new Solicitud
         {
             FechaSolicitud = new DateTime(2026, 1, 15),
             Eventos = { new Evento { Fecha = new DateTime(2026, 1, 20), Tipo = TipoEvento.SolicitudEnviada } },
         };
-        Assert.False(MainViewModel.EnviadaEnRango(hitoFuera, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
+
+        Assert.False(EmbudoHelper.EnviadaEnRango(hitoFuera, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
 
     [Fact]

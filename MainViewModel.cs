@@ -548,39 +548,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void ActualizarEmbudo()
     {
-        GranularidadEmbudo granularidad = this.GranularidadGrafica;
-        List<DateTime> periodos = CalcularPeriodos(granularidad, this.DesplazamientoPeriodo);
-
         List<Solicitud> todas = this.db.Solicitudes.Include(s => s.Eventos).ToList();
 
-        double[] enviadas = new double[periodos.Count];
-        double[] respondidas = new double[periodos.Count];
-        double[] entrevistas = new double[periodos.Count];
-        double[] ofertas = new double[periodos.Count];
-
-        for (int m = 0; m < periodos.Count; m++)
-        {
-            DateTime inicio = periodos[m];
-            DateTime fin = SiguientePeriodo(inicio, granularidad);
-
-            enviadas[m] = todas.Count(s => EnviadaEnRango(s, inicio, fin));
-            respondidas[m] = todas.Count(s => s.FechaPrimeraRespuesta >= inicio && s.FechaPrimeraRespuesta < fin);
-            entrevistas[m] = todas
-                .SelectMany(s => s.Eventos)
-                .Count(e => e.Tipo == TipoEvento.Entrevista && e.Fecha >= inicio && e.Fecha < fin);
-            ofertas[m] = todas
-                .SelectMany(s => s.Eventos)
-                .Count(e => e.Tipo == TipoEvento.Oferta && e.Fecha >= inicio && e.Fecha < fin);
-        }
-
-        this.PeriodosEmbudo = periodos
-            .Select((inicio, i) => new EmbudoPeriodo(
-                EtiquetaDePeriodo(inicio, granularidad),
-                enviadas[i],
-                respondidas[i],
-                entrevistas[i],
-                ofertas[i]))
-            .ToList();
+        this.PeriodosEmbudo = EmbudoHelper.Calcular(todas, this.GranularidadGrafica, this.DesplazamientoPeriodo);
     }
 
     /// <summary>Número de barras del embudo, sea cual sea la granularidad.</summary>
@@ -610,47 +580,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         periodos.Reverse();
         return periodos;
-    }
-
-    /// <summary>Primer día del periodo (mes, semana de lunes o día) al que pertenece una fecha.</summary>
-    internal static DateTime InicioDePeriodo(DateTime fecha, GranularidadEmbudo granularidad) => granularidad switch
-    {
-        GranularidadEmbudo.Semana => fecha.Date.AddDays(-((int)fecha.DayOfWeek + 6) % 7), // lunes
-        GranularidadEmbudo.Dia => fecha.Date,
-        _ => new DateTime(fecha.Year, fecha.Month, 1, 0, 0, 0, DateTimeKind.Unspecified),
-    };
-
-    /// <summary>Primer día del periodo siguiente al que empieza en <paramref name="inicio"/>.</summary>
-    internal static DateTime SiguientePeriodo(DateTime inicio, GranularidadEmbudo granularidad) => granularidad switch
-    {
-        GranularidadEmbudo.Semana => inicio.AddDays(7),
-        GranularidadEmbudo.Dia => inicio.AddDays(1),
-        _ => inicio.AddMonths(1),
-    };
-
-    /// <summary>Texto de la barra: mes y año, el lunes de la semana o el día de la semana, según la granularidad.</summary>
-    internal static string EtiquetaDePeriodo(DateTime inicio, GranularidadEmbudo granularidad)
-    {
-        CultureInfo cultura = Localizacion.CulturaActual;
-
-        return granularidad switch
-        {
-            GranularidadEmbudo.Semana => inicio.ToString("d MMM", cultura),
-            GranularidadEmbudo.Dia => inicio.ToString("ddd d", cultura),
-            _ => inicio.ToString("MMM yyyy", cultura),
-        };
-    }
-
-    /// <summary>Si la solicitud se envió (por historial o por fecha) dentro del rango [inicio, fin).</summary>
-    internal static bool EnviadaEnRango(Solicitud s, DateTime inicio, DateTime fin)
-    {
-        bool tieneHito = s.Eventos.Any(e =>
-            e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha >= inicio && e.Fecha < fin);
-
-        bool sinHito = !s.Eventos.Any(e => e.Tipo == TipoEvento.SolicitudEnviada)
-            && s.FechaSolicitud >= inicio && s.FechaSolicitud < fin;
-
-        return tieneHito || sinHito;
     }
 
     /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
@@ -1148,21 +1077,5 @@ public partial class MainViewModel : ObservableObject, IDisposable
 }
 
 /// <summary>
-/// Una fila del embudo: un periodo (mes, semana o día) con las cuatro series (enviadas,
-/// respondidas, entrevistas, ofertas) y la altura de cada barra, ya escalada a porcentaje
-/// del valor máximo del periodo.
-/// </summary>
-public record EmbudoPeriodo(string Etiqueta, double Enviadas, double Respondidas, double Entrevistas, double Ofertas)
-{
-    public double AlturaEnviadas => this.Altura(this.Enviadas);
-
-    public double AlturaRespondidas => this.Altura(this.Respondidas);
-
-    public double AlturaEntrevistas => this.Altura(this.Entrevistas);
-
-    public double AlturaOfertas => this.Altura(this.Ofertas);
-
-    private double Maximo => Math.Max(Math.Max(this.Enviadas, this.Respondidas), Math.Max(this.Entrevistas, this.Ofertas));
-
-    private double Altura(double valor) => this.Maximo == 0 ? 0 : valor / this.Maximo * 100.0;
+}
 }

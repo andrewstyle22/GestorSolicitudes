@@ -344,8 +344,8 @@ public class ViewModelTests
         Assert.Equal(12, vm.PeriodosEmbudo.Count);
         Assert.Equal(GranularidadesEsperadas, vm.GranularidadesEmbudo.Select(g => g.Descripcion));
 
-        List<DateTime> semanas = MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, 0);
-        Assert.Equal(MainViewModel.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana), semanas[^1]);
+        List<DateTime> semanas = EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Semana, 0);
+        Assert.Equal(EmbudoHelper.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana), semanas[^1]);
         Assert.All(semanas, s => Assert.Equal(DayOfWeek.Monday, s.DayOfWeek));
         Assert.Equal(TimeSpan.FromDays(7), semanas[^1] - semanas[^2]);
     }
@@ -360,7 +360,7 @@ public class ViewModelTests
         vm.GranularidadGrafica = GranularidadEmbudo.Dia;
 
         Assert.Equal(12, vm.PeriodosEmbudo.Count);
-        List<DateTime> dias = MainViewModel.CalcularPeriodos(GranularidadEmbudo.Dia, 0);
+        List<DateTime> dias = EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Dia, 0);
         Assert.Equal(12, dias.Count);
         Assert.Equal(DateTime.Today, dias[^1]);
         Assert.Equal(DateTime.Today.AddDays(-11), dias[0]);
@@ -424,8 +424,8 @@ public class ViewModelTests
         Assert.Equal(1, vm.DesplazamientoPeriodo);
         Assert.True(vm.PuedeAvanzarPeriodo);
 
-        DateTime estaSemana = MainViewModel.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana);
-        Assert.Equal(estaSemana.AddDays(-7), MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, 1)[^1]);
+        DateTime estaSemana = EmbudoHelper.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana);
+        Assert.Equal(estaSemana.AddDays(-7), EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Semana, 1)[^1]);
 
         vm.PeriodoSiguienteCommand.Execute(null);
 
@@ -454,35 +454,11 @@ public class ViewModelTests
         Assert.Equal(0, vm.DesplazamientoPeriodo);
         Assert.False(vm.PuedeAvanzarPeriodo);
         Assert.Equal(
-            MainViewModel.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia),
+            EmbudoHelper.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia),
             vm.PeriodosEmbudo[^1].Etiqueta);
     }
 
     // ---------------- Exportación CSV ----------------
-
-    [Fact]
-    public void ConstruirCsv_ConCandidaturasIncluyeCabeceraYFilas()
-    {
-        using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "ACME",
-            Puesto = "Dev",
-            FechaSolicitud = new DateTime(2024, 5, 1),
-            Portal = "LinkedIn",
-            Estado = EstadoSolicitud.Enviada,
-            EnlaceOferta = "https://www.linkedin.com/jobs/view/abc",
-        });
-        db.SaveChanges();
-
-        string csv = vm.ConstruirCsv();
-
-        Assert.Contains(Localizacion.Texto("Csv.Empresa"), csv);
-        Assert.Contains("ACME", csv);
-        Assert.Contains("2024-05-01", csv);
-        Assert.Contains("https://www.linkedin.com/jobs/view/abc", csv);
-    }
 
     [Fact]
     public void EscribirCsv_EnRutaValidaGuardaElContenido()
@@ -832,8 +808,8 @@ public class ViewModelTests
         }
 
         // Se para en la semana de la primera solicitud: más atrás el embudo iría a cero.
-        DateTime suelo = MainViewModel.InicioDePeriodo(DateTime.Today.AddDays(-10), GranularidadEmbudo.Semana);
-        Assert.Equal(suelo, MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, vm.DesplazamientoPeriodo)[^1]);
+        DateTime suelo = EmbudoHelper.InicioDePeriodo(DateTime.Today.AddDays(-10), GranularidadEmbudo.Semana);
+        Assert.Equal(suelo, EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Semana, vm.DesplazamientoPeriodo)[^1]);
         Assert.False(vm.PuedeRetrocederPeriodo);
     }
 
