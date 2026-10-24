@@ -30,19 +30,19 @@ internal static class TestDb
         }
     }
 
-    public static string NuevaRuta()
-    {
-        string carpeta = Path.Combine(Raiz, Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(carpeta);
-        return Path.Combine(carpeta, "test.db");
-    }
-
-    public static string NuevaCarpeta()
+    internal static string NuevaCarpeta()
     {
         string carpeta = Path.Combine(Raiz, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(carpeta);
         return carpeta;
     }
+
+    public static string NuevaRuta()
+    {
+        return Path.Combine(NuevaCarpeta(), "test.db");
+    }
+
+    // Método interno consolidado: Devuelve la carpeta temporal
 
     public static AppDbContext NuevoContexto()
     {
