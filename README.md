@@ -150,12 +150,14 @@ un `using` a `Views` dentro de un ViewModel tumba el CI.
 
 ```
 Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] para los textos de la UI
-AppDbContext.cs → SQLite: EnsureCreated + ALTER TABLE de columnas nuevas
+AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
+EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
 Localizacion.cs → traducciones (es/en/de), cultura y selector de idioma
 Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
 AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
+Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)
 ColumnaItem.cs → columna ocultable del selector (namespace ViewModels)
 IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
 DialogoService.cs → implementación WPF de IDialogoService (MessageBox, Open/SaveFileDialog)
@@ -169,7 +171,7 @@ ReglasSolicitud.cs → reglas de negocio puras (datos obligatorios, seguimiento,
 MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, exportación y columnas
                  (sin WPF: habla con IDialogoService)
 App.xaml → tema y estilos compartidos (botones, campos, desplegables)
-App.xaml.cs → arranque, cultura, preferencias y comprobación de columnas al abrir la base
+App.xaml.cs → arranque, cultura y preferencias
 Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
 Views/VentanaRequisitos.xaml(.cs) → ventana de lectura de los requisitos
 Resources/appicon.ico → icono de la ventana, del ejecutable y de la bandeja
