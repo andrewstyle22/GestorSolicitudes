@@ -268,26 +268,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Deja <see cref="Solicitudes"/> con la página actual de <paramref name="filtradas"/> y
-    /// recalcula el rango y los botones. WPF no pagina las vistas de colección, así que el
-    /// recorte se hace aquí; la exportación a CSV no pasa por esta lista y sigue saliendo entera.
+    /// Vuelca en <see cref="Solicitudes"/> la página actual de <paramref name="filtradas"/> y
+    /// recalcula el rango y los botones. El recorte lo hace <see cref="Paginador"/>; aquí solo
+    /// se formatea el rango con el idioma activo. WPF no pagina las vistas de colección, así que
+    /// la exportación a CSV no pasa por esta lista y sigue saliendo entera.
     /// </summary>
     private void Paginar(List<Solicitud> filtradas)
     {
-        this.TotalPaginas = filtradas.Count == 0 ? 0 : ((filtradas.Count - 1) / this.TamanoPagina) + 1;
-        this.PaginaActual = Math.Clamp(this.PaginaActual, 1, Math.Max(this.TotalPaginas, 1));
+        ResultadoPagina<Solicitud> pagina = Paginador.Paginar(filtradas, this.TamanoPagina, this.PaginaActual);
 
-        int desde = (this.PaginaActual - 1) * this.TamanoPagina;
-        this.Solicitudes = new ObservableCollection<Solicitud>(filtradas.Skip(desde).Take(this.TamanoPagina));
+        this.TotalPaginas = pagina.TotalPaginas;
+        this.PaginaActual = pagina.PaginaActual;
+        this.Solicitudes = new ObservableCollection<Solicitud>(pagina.Elementos);
 
-        this.PuedeIrAInicio = this.PuedeRetroceder = this.PaginaActual > 1;
-        this.PuedeAvanzar = this.PuedeIrAlFinal = this.PaginaActual < this.TotalPaginas;
+        this.PuedeIrAInicio = pagina.PuedeIrAInicio;
+        this.PuedeRetroceder = pagina.PuedeRetroceder;
+        this.PuedeAvanzar = pagina.PuedeAvanzar;
+        this.PuedeIrAlFinal = pagina.PuedeIrAlFinal;
 
-        int hasta = Math.Min(desde + this.TamanoPagina, filtradas.Count);
         string de = Localizacion.Texto("Paginacion.De");
-        this.RangoPagina = filtradas.Count == 0
+        this.RangoPagina = pagina.Total == 0
             ? $"0 {de} 0"
-            : $"{desde + 1}-{hasta} {de} {filtradas.Count}";
+            : $"{pagina.Desde + 1}-{pagina.Hasta} {de} {pagina.Total}";
     }
 
     // ---------------------------------------------------------------- Filtros
