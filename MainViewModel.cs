@@ -779,8 +779,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
         // escribir, proponemos +7 dias desde el envio.
-        this.Edicion.ProximoSeguimiento = ReglasSolicitud.ProponerSeguimiento(this.Edicion)
-            ?? this.Edicion.ProximoSeguimiento;
+        if (ReglasSolicitud.ProponerSeguimiento(this.Edicion) is DateTime propuesta)
+        {
+            this.Edicion.ProximoSeguimiento = propuesta;
+        }
 
         bool esNueva = this.Edicion.Id == 0;
         if (esNueva)
@@ -789,16 +791,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
             // Primer hito del historial, para que la línea temporal no empiece vacía.
             ReglasSolicitud.AnadirHitoInicial(this.Edicion);
-
-            if (this.Edicion.Eventos.Count == 0)
-            {
-                this.Edicion.Eventos.Add(new Evento
-                {
-                    Fecha = this.Edicion.FechaSolicitud,
-                    Tipo = TipoEvento.SolicitudEnviada,
-                    Descripcion = Localizacion.Texto("Evento.CandidaturaEnviada"),
-                });
-            }
         }
 
         // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
