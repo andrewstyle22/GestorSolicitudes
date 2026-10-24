@@ -900,6 +900,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         this.EliminarAdjunto(carta);
 
         this.Edicion = null;
+        this.SolicitudSeleccionada = null;
         this.Recargar();
         this.RecargarEmbudoSiVisible();
     }
