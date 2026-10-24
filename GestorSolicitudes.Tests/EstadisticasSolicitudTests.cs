@@ -6,7 +6,7 @@ namespace GestorSolicitudes.Tests;
 public class EstadisticasSolicitudTests
 {
     [Fact]
-    public void Calcular_SinSolicitudesDevuelveCerosYGuiones()
+    public void Calcular_SinSolicitudesDevuelveCerosYValoresNulos()
     {
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(Array.Empty<Solicitud>());
 
@@ -15,8 +15,8 @@ public class EstadisticasSolicitudTests
         Assert.Equal(0, resumen.EnEntrevista);
         Assert.Equal(0, resumen.Ofertas);
         Assert.Equal(0, resumen.SeguimientosPendientes);
-        Assert.Equal(null, resumen.TasaRespuesta);
-        Assert.Equal(null, resumen.MediaDiasRespuesta);
+        Assert.Null(resumen.TasaRespuesta);
+        Assert.Null(resumen.MediaDiasRespuesta);
     }
 
     [Fact]
@@ -67,9 +67,25 @@ public class EstadisticasSolicitudTests
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
 
-        // 2 de 3 tienen respuesta → 67 % (aprox)
-        Assert.InRange(resumen.TasaRespuesta.Value * 100, 66, 68);
-        // Media de 2 y 4 días → 3 días
-        Assert.InRange(resumen.MediaDiasRespuesta.Value, 2.5, 3.5);
+        // 2 de 3 tienen respuesta → 2/3, sin redondear a texto.
+        Assert.Equal(2.0 / 3.0, resumen.TasaRespuesta!.Value, precision: 10);
+        // Media de 2 y 4 días → 3 días.
+        Assert.Equal(3.0, resumen.MediaDiasRespuesta!.Value, precision: 10);
+    }
+
+    [Fact]
+    public void Calcular_MediaConDecimalesNoSeRedondea()
+    {
+        var baseFecha = new DateTime(2026, 1, 10);
+        var solicitudes = new List<Solicitud>
+        {
+            new() { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(2) },
+            new() { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(5) },
+        };
+
+        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
+
+        Assert.Equal(1.0, resumen.TasaRespuesta!.Value, precision: 10);
+        Assert.Equal(3.5, resumen.MediaDiasRespuesta!.Value, precision: 10);
     }
 }

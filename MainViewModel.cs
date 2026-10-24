@@ -515,13 +515,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         this.OfertasRecibidas = resumen.Ofertas;
         this.EnEntrevista = resumen.EnEntrevista;
         this.SeguimientosPendientes = resumen.SeguimientosPendientes;
-        this.TasaRespuesta = resumen.TasaRespuesta.HasValue
-            ? resumen.TasaRespuesta.Value.ToString("P0", Localizacion.CulturaActual)
-            : "-";
-        this.MediaDiasRespuesta = resumen.MediaDiasRespuesta.HasValue
-            ? $"{resumen.MediaDiasRespuesta.Value:0.#} {Localizacion.Texto("Metrica.Dias")}"
-            : "-";
+        this.TasaRespuesta = FormatearTasaRespuesta(resumen.TasaRespuesta);
+        this.MediaDiasRespuesta = FormatearMediaDiasRespuesta(resumen.MediaDiasRespuesta);
     }
+
+    private static string FormatearTasaRespuesta(double? tasa) =>
+        tasa is double valor
+            ? valor.ToString("P0", Localizacion.CulturaActual)
+            : "—";
+
+    private static string FormatearMediaDiasRespuesta(double? media) =>
+        media is double valor
+            ? $"{valor.ToString("0.#", Localizacion.CulturaActual)} {Localizacion.Texto("Metrica.Dias")}"
+            : "—";
 
     // ---------------------------------------------------------------- Comandos
     [RelayCommand]

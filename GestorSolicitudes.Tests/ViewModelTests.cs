@@ -23,7 +23,7 @@ public class ViewModelTests
         Assert.Empty(vm.Solicitudes);
         Assert.Equal(0, vm.TotalSolicitudes);
         Assert.Null(vm.SolicitudSeleccionada);
-        Assert.Equal("-", vm.TasaRespuesta);
+        Assert.Equal("—", vm.TasaRespuesta);
         // El filtro por defecto es "Todos los estados"
         Assert.Equal("Todos los estados", vm.EstadoFiltroItem!.Descripcion);
     }
@@ -259,20 +259,28 @@ public class ViewModelTests
             Empresa = "A",
             Puesto = "P",
             FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(3)
+            FechaPrimeraRespuesta = baseFecha.AddDays(2)
         });
-        db.Solicitudes.Add(new Solicitud { Empresa = "B", Puesto = "P", FechaSolicitud = baseFecha });
+        db.Solicitudes.Add(new Solicitud
+        {
+            Empresa = "B",
+            Puesto = "P",
+            FechaSolicitud = baseFecha,
+            FechaPrimeraRespuesta = baseFecha.AddDays(5)
+        });
+        db.Solicitudes.Add(new Solicitud { Empresa = "C", Puesto = "P", FechaSolicitud = baseFecha });
         db.SaveChanges();
-        vm.Recargar();
 
         // En GitHub Actions el hilo corre con en-US (o invariable); si el ViewModel
-        // formateara con la cultura del hilo daría "50%". Debe dar siempre es-ES.
+        // formateara con la cultura del hilo daría "67%" y "3.5 días". Debe dar siempre es-ES.
         CultureInfo actual = CultureInfo.CurrentCulture;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         try
         {
-            Assert.Equal("50 %", vm.TasaRespuesta);
-            Assert.Equal("3 días", vm.MediaDiasRespuesta);
+            vm.Recargar();
+
+            Assert.Equal("67 %", vm.TasaRespuesta);
+            Assert.Equal("3,5 días", vm.MediaDiasRespuesta);
         }
         finally
         {
