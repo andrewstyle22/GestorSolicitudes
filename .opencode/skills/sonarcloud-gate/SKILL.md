@@ -77,10 +77,10 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
 ## Convenciones de este repo que se deben respetar
 
 - La solución es `.slnx`. Todo texto, comentario y mensaje de commit en español.
-- Los `MessageBox` viven en el ViewModel por decisión de diseño: **no** convertir
-  diálogos/`Process.Start` en interfaces inyectables para "subir cobertura" como
-  hace un `public`. La cobertura del gate no se arregla así: lo único sin cubrir
-  suelen ser líneas de `MessageBox`, que una interfaz de diálogo no ataca.
+- Los diálogos van por `IDialogoService` (inyectado): `MessageBox`, `OpenFileDialog`,
+  `SaveFileDialog` y `Process.Start` solo viven en `DialogoService` (Views). No volver a
+  meter `MessageBox` en un ViewModel. La lógica de los comandos se prueba con un
+  `DialogoFalso`, así que la cobertura se arregla probando el comando, no excluyéndolo.
 - Para añadir propiedades a `Solicitud` o XAML nuevo, seguir AGENTS.md
   (`VerificarColumnasFaltantes`, `<Page>` declarado en el csproj).
 - Un issue nuevo de Sonar que es falso positivo del diseño (p.ej. S2077 en el

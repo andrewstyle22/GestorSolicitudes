@@ -50,6 +50,23 @@ public partial class FuentesTests
         Assert.Empty(conEstilo);
     }
 
+    [Fact]
+    public void LosViewModelsNoUsanWpfDirectamente()
+    {
+        string[] prohibidos = { "MessageBox.", "OpenFileDialog", "SaveFileDialog", "Process.Start" };
+
+        foreach (string fichero in FicherosDelModeloDeVista())
+        {
+            string texto = File.ReadAllText(fichero);
+            foreach (string prohibido in prohibidos)
+            {
+                Assert.False(
+                    texto.Contains(prohibido),
+                    $"{Path.GetFileName(fichero)} usa '{prohibido}': los diálogos van por IDialogoService.");
+            }
+        }
+    }
+
     private static List<string> ClavesUsadas()
     {
         List<string> deCodigo = FicherosDeCodigo()
@@ -95,6 +112,10 @@ public partial class FuentesTests
     private static IEnumerable<string> FicherosDeCodigo() =>
         Directory.EnumerateFiles(Raiz, "*.cs", SearchOption.TopDirectoryOnly)
             .Concat(Directory.EnumerateFiles(Path.Combine(Raiz, "Views"), "*.cs"));
+
+    private static IEnumerable<string> FicherosDelModeloDeVista() =>
+        Directory.EnumerateFiles(Raiz, "*.cs", SearchOption.TopDirectoryOnly)
+            .Where(f => File.ReadAllText(f).Contains("namespace GestorSolicitudes.ViewModels"));
 
     private static IEnumerable<string> FicherosDeXaml() =>
         Directory.EnumerateFiles(Raiz, "*.xaml", SearchOption.TopDirectoryOnly)

@@ -1,5 +1,6 @@
 namespace GestorSolicitudes;
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -944,9 +945,10 @@ public static class Localizacion
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Si no se puede leer la preferencia, se cae al idioma del sistema.
+            Debug.WriteLine($"No se pudo leer la preferencia de idioma: {ex}");
         }
 
         return CultureInfo.CurrentCulture.TwoLetterISOLanguageName switch
@@ -965,9 +967,10 @@ public static class Localizacion
             Directory.CreateDirectory(carpeta);
             File.WriteAllText(RutaPreferencia, idioma.ToString());
         }
-        catch
+        catch (Exception ex)
         {
             // Un fallo al guardar la preferencia no debe impedir el cambio de idioma.
+            Debug.WriteLine($"No se pudo guardar la preferencia de idioma: {ex}");
         }
     }
 

@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -31,7 +32,7 @@ public partial class MainWindow : Window
     {
         this.InitializeComponent();
 
-        this.vm = new MainViewModel();
+        this.vm = new MainViewModel(new AppDbContext(), dialogo: new DialogoService());
         this.DataContext = this.vm;
 
         // Ctrl+N nueva candidatura, Ctrl+S guardar.

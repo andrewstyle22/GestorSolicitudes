@@ -1,12 +1,10 @@
 namespace GestorSolicitudes.ViewModels;
 
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GestorSolicitudes.Data;
@@ -14,7 +12,6 @@ using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Win32;
 
 public partial class MainViewModel : ObservableObject, IDisposable
 {
@@ -26,21 +23,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly AppDbContext db;
     private readonly string rutaColumnas;
     private readonly string carpetaAdjuntos;
+    private readonly IDialogoService dialogo;
 
-    /// <summary>El constructor sin base arranca la base real de %APPDATA%; no se prueba.</summary>
-    [ExcludeFromCodeCoverage]
-    public MainViewModel()
-        : this(new AppDbContext(), ColumnasHelper.Ruta)
-    {
-    }
-
-    // Constructor con base de datos y fichero de preferencias propios, para que los tests
-    // usen una base temporal y no toquen la preferencia real de %APPDATA%.
-    internal MainViewModel(AppDbContext db, string? rutaColumnas = null, string? carpetaAdjuntos = null)
+    // Constructor con base de datos, preferencias y servicio de diálogos propios: los tests usan
+    // una base temporal, no tocan la preferencia real de %APPDATA% y observan los avisos con un
+    // falso. Sin servicio, los diálogos se ignoran (DialogosNulos).
+    internal MainViewModel(
+        AppDbContext db,
+        string? rutaColumnas = null,
+        string? carpetaAdjuntos = null,
+        IDialogoService? dialogo = null)
     {
         this.db = db;
         this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
         this.carpetaAdjuntos = carpetaAdjuntos ?? AdjuntosHelper.Carpeta;
+        this.dialogo = dialogo ?? new DialogosNulos();
 
         this.CargarTextosLocalizados();
         this.CargarColumnas();
@@ -686,7 +683,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     // ---------------------------------------------------------------- Adjuntos
     [RelayCommand]
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarCv() => this.AdjuntarAdjunto(
         Localizacion.Texto("Dialogo.SeleccionaCv"), "cv",
         asignar: (e, ruta, nombre) =>
@@ -696,7 +692,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         });
 
     [RelayCommand]
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarCarta() => this.AdjuntarAdjunto(
         Localizacion.Texto("Dialogo.SeleccionaCarta"), "carta",
         asignar: (e, ruta, nombre) =>
@@ -705,7 +700,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             e.NombreOriginalCarta = nombre;
         });
 
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarAdjunto(
         string titulo, string etiqueta,
         Action<Solicitud, string, string> asignar)
@@ -716,27 +710,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var dialogo = new OpenFileDialog
-        {
-            Title = titulo,
-            Filter = Localizacion.Texto("Dialogo.FiltroAdjuntos"),
-        };
-
-        if (dialogo.ShowDialog() != true)
+        string? origen = this.dialogo.ElegirFichero(titulo, Localizacion.Texto("Dialogo.FiltroAdjuntos"));
+        if (origen is null)
         {
             return;
         }
 
         try
         {
-            string nuevaRuta = AdjuntosHelper.Copiar(dialogo.FileName, etiqueta, this.carpetaAdjuntos);
-            asignar(editar, nuevaRuta, Path.GetFileName(dialogo.FileName));
+            string nuevaRuta = AdjuntosHelper.Copiar(origen, etiqueta, this.carpetaAdjuntos);
+            asignar(editar, nuevaRuta, Path.GetFileName(origen));
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAdjuntar"), ex.Message),
-                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
+                Localizacion.Texto(ClaveError));
             return;
         }
 
@@ -870,9 +859,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (string.IsNullOrWhiteSpace(this.Edicion.Empresa) || string.IsNullOrWhiteSpace(this.Edicion.Puesto))
         {
-            MessageBox.Show(
+            this.dialogo.Avisar(
                 Localizacion.Texto("Mensaje.FaltanDatos"),
-                Localizacion.Texto("Titulo.FaltanDatos"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto("Titulo.FaltanDatos"));
             return;
         }
 
@@ -913,9 +902,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
-                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
+                Localizacion.Texto(ClaveError));
             return;
         }
 
@@ -979,7 +968,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void Eliminar()
     {
         if (this.Edicion is null || this.Edicion.Id == 0)
@@ -987,11 +975,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var confirmacion = MessageBox.Show(
+        bool confirmado = this.dialogo.Confirmar(
             string.Format(Localizacion.Texto("Mensaje.ConfirmarEliminar"), this.Edicion.Empresa, this.Edicion.Puesto),
-            Localizacion.Texto("Titulo.Confirmar"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+            Localizacion.Texto("Titulo.Confirmar"));
 
-        if (confirmacion != MessageBoxResult.Yes)
+        if (!confirmado)
         {
             return;
         }
@@ -1001,9 +989,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (this.EliminarSolicitud(this.Edicion) is Exception error)
         {
-            MessageBox.Show(
+            this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error.Message),
-                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
+                Localizacion.Texto(ClaveError));
             return;
         }
 
@@ -1031,7 +1019,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AbrirEnlace()
     {
         string? url = this.Edicion?.EnlaceOferta;
@@ -1042,13 +1029,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            Process.Start(new ProcessStartInfo(url.Trim()) { UseShellExecute = true });
+            this.dialogo.AbrirEnlace(url.Trim());
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            this.dialogo.Avisar(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirEnlace"), ex.Message),
-                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto(ClaveError));
         }
     }
 
@@ -1079,32 +1066,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    [ExcludeFromCodeCoverage] // Método de diálogo: ni el diálogo ni los MessageBox se pueden probar.
     private void ExportarCsv()
     {
-        var dialogo = new SaveFileDialog
-        {
-            Title = Localizacion.Texto("Dialogo.ExportarCandidaturas"),
-            FileName = $"solicitudes-{DateTime.Today:yyyy-MM-dd}.csv",
-            Filter = "CSV (*.csv)|*.csv",
-        };
+        string? destino = this.dialogo.ElegirDestino(
+            Localizacion.Texto("Dialogo.ExportarCandidaturas"),
+            "CSV (*.csv)|*.csv",
+            $"solicitudes-{DateTime.Today:yyyy-MM-dd}.csv");
 
-        if (dialogo.ShowDialog() != true)
+        if (destino is null)
         {
             return;
         }
 
-        if (this.EscribirCsv(dialogo.FileName) is Exception error)
+        if (this.EscribirCsv(destino) is Exception error)
         {
-            MessageBox.Show(
+            this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error.Message),
-                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
+                Localizacion.Texto(ClaveError));
             return;
         }
 
-        MessageBox.Show(
+        this.dialogo.Informar(
             string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
-            Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+            Localizacion.Texto("Titulo.ExportacionCompletada"));
     }
 
     /// <summary>Escribe el CSV. Devuelve el fallo en vez de lanzarlo para poder avisar.</summary>

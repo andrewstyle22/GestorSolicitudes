@@ -1,5 +1,6 @@
 namespace GestorSolicitudes.Helpers;
 
+using System.Diagnostics;
 using System.IO;
 
 /// <summary>
@@ -31,9 +32,10 @@ public static class ColumnasHelper
                 .Where(linea => linea.Length > 0)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
-        catch
+        catch (Exception ex)
         {
             // Si no se puede leer la preferencia, se cae al comportamiento por defecto.
+            Debug.WriteLine($"No se pudo leer '{ruta}': {ex}");
             return null;
         }
     }
@@ -46,9 +48,10 @@ public static class ColumnasHelper
             Directory.CreateDirectory(Path.GetDirectoryName(ruta)!);
             File.WriteAllLines(ruta, claves);
         }
-        catch
+        catch (Exception ex)
         {
             // Un fallo al guardar la preferencia no debe impedir cambiar columnas.
+            Debug.WriteLine($"No se pudo guardar '{ruta}': {ex}");
         }
     }
 }

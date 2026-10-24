@@ -44,7 +44,8 @@ entre los tres idiomas), el `AppDbContext` contra una base SQLite temporal,
 la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas).
 También corre **ArchUnitNET**: reglas de arquitectura que vigilan que las capas solo dependan
 "hacia abajo" (lo típico: los ViewModels no tocan las Vistas, las Vistas solo se usan desde el
-arranque). Un `MessageBox` nuevo en el ViewModel o un using de más a una capa prohibida se cae en el CI.
+arranque). Un using de más a una capa prohibida, o un `MessageBox` colado en un ViewModel, se cae
+en el CI.
 La app se abre a los tests con `[assembly: InternalsVisibleTo("GestorSolicitudes.Tests")]` y el
 ViewModel se construye con un contexto apuntando a una base temporal, para no tocar tu histórico.
 
@@ -156,9 +157,12 @@ EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clav
 AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
 ColumnaItem.cs → columna ocultable del selector (namespace ViewModels)
+IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
+DialogoService.cs → implementación WPF de IDialogoService (MessageBox, Open/SaveFileDialog)
 CsvHelper.cs → escapa los campos del CSV de exportación; su normalización de texto (minúsculas sin
                  tildes) la usa también la búsqueda
 MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, exportación y columnas
+                 (sin WPF: habla con IDialogoService)
 App.xaml → tema y estilos compartidos (botones, campos, desplegables)
 App.xaml.cs → arranque, cultura, preferencias y comprobación de columnas al abrir la base
 Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
@@ -195,9 +199,13 @@ dotnet ef database update
 
 y cambia `EnsureCreated()` por `db.Database.Migrate()` en `App.xaml.cs`.
 
-**Los `MessageBox` viven en el ViewModel.** No es MVVM de manual; lo ortodoxo sería un
-`IDialogService` inyectado. Para una herramienta personal es ruido, pero si la usas como proyecto
-de portfolio, extraer ese servicio es la primera mejora que un revisor va a buscar.
+**Los diálogos pasan por `IDialogoService`.** El ViewModel no toca WPF: pide avisos,
+confirmaciones, elegir fichero y abrir enlaces a la interfaz (`IDialogoService`, en `ViewModels`),
+que implementa `DialogoService` en `.Views` con `MessageBox` y los diálogos de WPF. Los tests
+inyectan un falso y así se prueban comandos que antes quedaban fuera por
+`[ExcludeFromCodeCoverage]` (`Guardar` inválido, `Eliminar`, `ExportarCsv`, `Adjuntar`,
+`AbrirEnlace`). Un test de fuentes vigila que ningún ViewModel vuelva a llamar a `MessageBox`,
+`OpenFileDialog`, `SaveFileDialog` ni `Process.Start`.
 
 **Estilo guiado por StyleCop.** El analizador `StyleCop.Analyzers` corre sobre la app con un juego
 mínimo de reglas activas (ver `.editorconfig` y `stylecop.json`): nada de documentación XML

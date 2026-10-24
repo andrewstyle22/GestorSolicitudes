@@ -1,5 +1,6 @@
 ﻿namespace GestorSolicitudes.Helpers;
 
+using System.Diagnostics;
 using System.IO;
 
 /// <summary>
@@ -53,9 +54,10 @@ public static class AdjuntosHelper
                 File.Delete(ruta);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Dejar un fichero huérfano es mejor que romper la aplicación.
+            // Dejar un fichero huérfano es mejor que romper la aplicación, pero se deja rastro.
+            Debug.WriteLine($"No se pudo borrar el adjunto '{ruta}': {ex}");
         }
     }
 }
