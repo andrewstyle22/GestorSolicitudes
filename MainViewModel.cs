@@ -510,32 +510,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ActualizarEstadisticas()
     {
-        List<Solicitud> todas = this.db.Solicitudes.ToList();
+        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(this.db.Solicitudes.ToList());
 
-        this.TotalSolicitudes = todas.Count;
-        this.ProcesosAbiertos = todas.Count(s => s.EstaAbierta);
-        this.OfertasRecibidas = todas.Count(s => s.Estado is EstadoSolicitud.OfertaRecibida
-            or EstadoSolicitud.OfertaAceptada
-            or EstadoSolicitud.OfertaRechazada);
-        this.EnEntrevista = todas.Count(s => s.Estado is EstadoSolicitud.EntrevistaRrhh
-            or EstadoSolicitud.EntrevistaTecnica
-            or EstadoSolicitud.EntrevistaFinal
-            or EstadoSolicitud.PruebaTecnica);
-        this.SeguimientosPendientes = todas.Count(s => s.SeguimientoPendiente);
-
-        int conRespuesta = todas.Count(s => s.HuboRespuesta);
-        this.TasaRespuesta = todas.Count == 0
-            ? "—"
-            : ((double)conRespuesta / todas.Count).ToString("P0", Localizacion.CulturaActual);
-
-        List<int> dias = todas
-            .Where(s => s.DiasHastaRespuesta.HasValue)
-            .Select(s => s.DiasHastaRespuesta!.Value)
-            .ToList();
-
-        this.MediaDiasRespuesta = dias.Count == 0
-            ? "—"
-            : $"{dias.Average().ToString("0.#", Localizacion.CulturaActual)} {Localizacion.Texto("Metrica.Dias")}";
+        this.TotalSolicitudes = resumen.Total;
+        this.ProcesosAbiertos = resumen.Abiertas;
+        this.OfertasRecibidas = resumen.Ofertas;
+        this.EnEntrevista = resumen.EnEntrevista;
+        this.SeguimientosPendientes = resumen.SeguimientosPendientes;
+        this.TasaRespuesta = resumen.TasaRespuesta;
+        this.MediaDiasRespuesta = resumen.MediaDiasRespuesta;
     }
 
     // ---------------------------------------------------------------- Comandos
