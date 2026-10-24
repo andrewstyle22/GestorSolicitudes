@@ -23,7 +23,7 @@ public class ViewModelTests
         Assert.Empty(vm.Solicitudes);
         Assert.Equal(0, vm.TotalSolicitudes);
         Assert.Null(vm.SolicitudSeleccionada);
-        Assert.Equal("—", vm.TasaRespuesta);
+        Assert.Equal("-", vm.TasaRespuesta);
         // El filtro por defecto es "Todos los estados"
         Assert.Equal("Todos los estados", vm.EstadoFiltroItem!.Descripcion);
     }

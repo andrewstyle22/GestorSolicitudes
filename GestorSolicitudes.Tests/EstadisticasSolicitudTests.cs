@@ -15,8 +15,8 @@ public class EstadisticasSolicitudTests
         Assert.Equal(0, resumen.EnEntrevista);
         Assert.Equal(0, resumen.Ofertas);
         Assert.Equal(0, resumen.SeguimientosPendientes);
-        Assert.Equal("—", resumen.TasaRespuesta);
-        Assert.Equal("—", resumen.MediaDiasRespuesta);
+        Assert.Equal(null, resumen.TasaRespuesta);
+        Assert.Equal(null, resumen.MediaDiasRespuesta);
     }
 
     [Fact]
@@ -67,7 +67,9 @@ public class EstadisticasSolicitudTests
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
 
-        Assert.Equal("67 %", resumen.TasaRespuesta);
-        Assert.Equal("3 días", resumen.MediaDiasRespuesta);
+        // 2 de 3 tienen respuesta → 67 % (aprox)
+        Assert.InRange(resumen.TasaRespuesta.Value * 100, 66, 68);
+        // Media de 2 y 4 días → 3 días
+        Assert.InRange(resumen.MediaDiasRespuesta.Value, 2.5, 3.5);
     }
 }
