@@ -1,7 +1,6 @@
 namespace GestorSolicitudes.ViewModels;
 
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,6 +22,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly string rutaColumnas;
     private readonly string carpetaAdjuntos;
     private readonly IDialogoService dialogo;
+    private bool actualizandoIdioma;
 
     // Constructor con base de datos, preferencias y servicio de diálogos propios: los tests usan
     // una base temporal, no tocan la preferencia real de %APPDATA% y observan los avisos con un
@@ -174,28 +174,42 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// Al cambiar de idioma: se refrescan los desplegables, la lista, las estadísticas y la
     /// gráfica para que lo que no se repinta solo (combos, celdas del DataGrid) lo haga.
     /// </summary>
-    // Solo es invocable mutando el idioma global de la sesión, algo que rompería los tests
-    // que se ejecutan en paralelo y dependen de la cultura castellana.
-    [ExcludeFromCodeCoverage]
-    private void CuandoCambiaIdioma(object? sender, Idioma idioma)
+    /// <remarks>
+    /// Se puede invocar directamente con el idioma activo para probar el refresco sin mutar
+    /// el idioma global ni escribir la preferencia en %APPDATA%.
+    /// </remarks>
+    internal void CuandoCambiaIdioma(object? sender, Idioma idioma)
     {
         EstadoSolicitud? filtro = this.EstadoFiltroItem?.Valor as EstadoSolicitud?;
 
-        this.CargarTextosLocalizados();
-
-        // El item seleccionado del filtro pertenecía a la lista anterior: se reencuentra por
-        // valor en la nueva (los objetos son distintos aunque representen lo mismo).
-        this.EstadoFiltroItem = this.EstadosFiltro.FirstOrDefault(i => Equals(i.Valor, filtro))
-            ?? this.EstadosFiltro[0];
-
-        this.RefrescarItemGranularidad();
-
-        // El título de la gráfica se arma en el ViewModel con el texto de la granularidad.
-        this.OnPropertyChanged(nameof(this.TituloGrafica));
-
-        if (this.VerGrafica)
+        // Mientras se reasignan los desplegables, el filtro no debe recargar por su cuenta:
+        // la recarga se hace una sola vez al final.
+        this.actualizandoIdioma = true;
+        try
         {
-            this.ActualizarEmbudo();
+            this.CargarTextosLocalizados();
+
+            // El item seleccionado del filtro pertenecía a la lista anterior: se reencuentra
+            // por valor en la nueva (los objetos son distintos aunque representen lo mismo).
+            this.EstadoFiltroItem = this.EstadosFiltro.FirstOrDefault(i => Equals(i.Valor, filtro))
+                ?? this.EstadosFiltro[0];
+
+            this.RefrescarItemGranularidad();
+
+            // Los botones de la gráfica usan un convertidor: se notifica para que se re-evalúen.
+            this.OnPropertyChanged(nameof(this.VerGrafica));
+
+            // El título de la gráfica se arma en el ViewModel con el texto de la granularidad.
+            this.OnPropertyChanged(nameof(this.TituloGrafica));
+
+            if (this.VerGrafica)
+            {
+                this.ActualizarEmbudo();
+            }
+        }
+        finally
+        {
+            this.actualizandoIdioma = false;
         }
 
         this.Recargar();
@@ -301,7 +315,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private EnumItem? estadoFiltroItem;
 
-    partial void OnEstadoFiltroItemChanged(EnumItem? value) => Recargar();
+    partial void OnEstadoFiltroItemChanged(EnumItem? value)
+    {
+        if (!this.actualizandoIdioma)
+        {
+            this.Recargar();
+        }
+    }
 
     [ObservableProperty]
     private bool soloAbiertas;

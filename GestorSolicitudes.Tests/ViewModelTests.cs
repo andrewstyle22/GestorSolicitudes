@@ -419,6 +419,30 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void CuandoCambiaIdioma_RecargaLaListaUnaSolaVez()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        int recargas = 0;
+        var notificadas = new List<string?>();
+        vm.PropertyChanged += (_, e) =>
+        {
+            notificadas.Add(e.PropertyName);
+            if (e.PropertyName == nameof(MainViewModel.Solicitudes))
+            {
+                recargas++;
+            }
+        };
+
+        vm.CuandoCambiaIdioma(null, Idioma.Castellano);
+
+        // La asignación del filtro no debe sumar una recarga extra a la explícita.
+        Assert.Equal(1, recargas);
+        // Los botones de la gráfica usan un convertidor y hay que reevaluarlos.
+        Assert.Contains(nameof(MainViewModel.VerGrafica), notificadas);
+    }
+
+    [Fact]
     public void PeriodoAnteriorY_Siguiente_MuevenLaVentanaYNoPasanDelHoy()
     {
         using var db = TestDb.NuevoContexto();
