@@ -1,12 +1,20 @@
 namespace GestorSolicitudes.Data;
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Data.Sqlite;
 
-/// <summary>Operaciones de esquema y migración SQLite para la aplicación.</summary>
+/// <summary>
+/// Operaciones de esquema de SQLite que no encajan en <see cref="AppDbContext"/>: hoy, añadir
+/// las columnas nuevas a bases creadas por versiones anteriores de la app.
+/// </summary>
 internal static class EsquemaDb
 {
-    /// <summary>Verifica las columnas que faltan en la base de datos y las crea.</summary>
-    /// <param name="ruta">Ruta al archivo de base de datos SQLite.</param>
+    /// <summary>
+    /// Añade las columnas nuevas del modelo a bases de datos creadas por versiones anteriores.
+    /// Más adelante, si el esquema crece, lo natural es pasar a migraciones.
+    /// </summary>
+    [SuppressMessage("SonarAnalyzer.CSharp", "S2077",
+        Justification = "ALTER TABLE de SQLite no admite parámetros y tanto el nombre como la definición de la columna salen de un array fijo del código, nunca de entrada del usuario.")]
     internal static void VerificarColumnasFaltantes(string ruta)
     {
         using var conexion = new SqliteConnection($"Data Source={ruta}");
