@@ -69,7 +69,7 @@ public partial class MainWindow : Window
                 "Seguimiento" => this.Seguimiento,
                 "Interes" => this.Interes,
                 "Portal" => this.Portal,
-                _ => null,
+                _ => throw new InvalidOperationException($"Columna desconocida en la visibilidad: {columna.Columna}"),
             };
 
             if (cd is not null)
