@@ -26,7 +26,7 @@ public partial class App : Application
 
             // EnsureCreated no versiona el esquema: si la base ya existía sin las
             // columnas nuevas, las añadimos aquí con un ALTER TABLE barato.
-            VerificarColumnasFaltantes();
+            VerificarColumnasFaltantes(AppDbContext.RutaBaseDatos);
         }
         catch (Exception ex)
         {
@@ -47,10 +47,10 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// <summary>
     /// Añade las columnas nuevas del modelo a bases de datos creadas por versiones
     /// anteriores. Más adelante, si el esquema crece, lo natural es pasar a migraciones.
     /// </summary>
-    private static void VerificarColumnasFaltantes() => VerificarColumnasFaltantes(AppDbContext.RutaBaseDatos);
 
     [SuppressMessage("SonarAnalyzer.CSharp", "S2077",
         Justification = "ALTER TABLE de SQLite no admite parámetros y tanto el nombre como la definición de la columna salen de un array fijo del código, nunca de entrada del usuario.")]
