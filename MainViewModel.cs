@@ -190,9 +190,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         this.RefrescarItemGranularidad();
 
-        // Los botones de la gráfica usan un convertidor: se notifica para que se re-evalúen.
-        this.OnPropertyChanged(nameof(this.VerGrafica));
-
         // El título de la gráfica se arma en el ViewModel con el texto de la granularidad.
         this.OnPropertyChanged(nameof(this.TituloGrafica));
 
@@ -516,8 +513,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         this.OfertasRecibidas = resumen.Ofertas;
         this.EnEntrevista = resumen.EnEntrevista;
         this.SeguimientosPendientes = resumen.SeguimientosPendientes;
-        this.TasaRespuesta = resumen.TasaRespuesta;
-        this.MediaDiasRespuesta = resumen.MediaDiasRespuesta;
+        this.TasaRespuesta = resumen.TasaRespuesta.HasValue
+            ? resumen.TasaRespuesta.Value.ToString("P0", Localizacion.CulturaActual)
+            : "-";
+        this.MediaDiasRespuesta = resumen.MediaDiasRespuesta.HasValue
+            ? $"{resumen.MediaDiasRespuesta.Value:0.#} {Localizacion.Texto("Metrica.Dias")}"
+            : "-";
     }
 
     // ---------------------------------------------------------------- Comandos
