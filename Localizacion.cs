@@ -55,6 +55,9 @@ public static class Localizacion
 
         // ----- Gráfica -----
         ("Grafica.Titulo", "Embudo de los últimos 12 periodos, por {0} (enviadas → respondidas → entrevistas → ofertas)"),
+        ("Grafica.TituloMes", "por mes"),
+        ("Grafica.TituloSemana", "por semana"),
+        ("Grafica.TituloDia", "por día"),
         ("Grafica.Granularidad", "Agrupar por"),
         ("Grafica.Anterior", "Periodo anterior"),
         ("Grafica.Siguiente", "Periodo siguiente"),
@@ -303,6 +306,9 @@ public static class Localizacion
 
         // ----- Gráfica -----
         ("Grafica.Titulo", "Funnel for the last 12 periods, by {0} (sent → answered → interviews → offers)"),
+        ("Grafica.TituloMes", "by month"),
+        ("Grafica.TituloSemana", "by week"),
+        ("Grafica.TituloDia", "by day"),
         ("Grafica.Granularidad", "Group by"),
         ("Grafica.Anterior", "Previous period"),
         ("Grafica.Siguiente", "Next period"),
@@ -551,6 +557,9 @@ public static class Localizacion
 
         // ----- Gráfica -----
         ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, nach {0} (gesendet → Antworten → Interviews → Angebote)"),
+        ("Grafica.TituloMes", "nach Monat"),
+        ("Grafica.TituloSemana", "nach Woche"),
+        ("Grafica.TituloDia", "nach Tag"),
         ("Grafica.Granularidad", "Gruppieren nach"),
         ("Grafica.Anterior", "Vorheriger Zeitraum"),
         ("Grafica.Siguiente", "Nächster Zeitraum"),

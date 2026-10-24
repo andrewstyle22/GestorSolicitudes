@@ -441,7 +441,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string TituloGrafica => string.Format(
         Localizacion.CulturaActual,
         Localizacion.Texto("Grafica.Titulo"),
-        EnumHelper.Descripcion(this.GranularidadGrafica).ToLower(Localizacion.CulturaActual));
+        Localizacion.Texto($"Grafica.Titulo{(int)this.GranularidadGrafica}"));
 
     [RelayCommand]
     private void PeriodoAnterior()
