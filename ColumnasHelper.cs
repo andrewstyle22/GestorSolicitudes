@@ -17,9 +17,6 @@ public static class ColumnasHelper
         "columnas.txt");
 
     /// <summary>Claves guardadas, o null si no hay fichero (todas visibles por defecto).</summary>
-    public static HashSet<string>? Cargar() => CargarDe(Ruta);
-
-    /// <summary>Igual que <see cref="Cargar"/> pero sobre una ruta concreta (tests).</summary>
     internal static HashSet<string>? CargarDe(string ruta)
     {
         try
@@ -42,9 +39,6 @@ public static class ColumnasHelper
     }
 
     /// <summary>Guarda las claves visibles. Los errores se ignoran.</summary>
-    public static void Guardar(IEnumerable<string> claves) => GuardarEn(Ruta, claves);
-
-    /// <summary>Igual que <see cref="Guardar"/> pero sobre una ruta concreta (tests).</summary>
     internal static void GuardarEn(string ruta, IEnumerable<string> claves)
     {
         try

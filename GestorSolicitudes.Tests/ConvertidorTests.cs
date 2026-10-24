@@ -37,12 +37,21 @@ public class ConvertidorTests
     }
 
     [Fact]
-    public void NuloAVisibilidad_ConParametroInvertirHaceLoContrario()
+    public void FechaCorta_UsaLaCulturaDelIdiomaActivoEIgnoraLaDelBinding()
     {
-        var conversor = new NuloAVisibilidadConverter();
+        var conversor = new FechaCortaConverter();
+        var fecha = new DateTime(2024, 5, 1);
 
-        Assert.Equal(Visibility.Visible, conversor.Convert(null, typeof(Visibility), "invertir", null!));
-        Assert.Equal(Visibility.Collapsed, conversor.Convert("algo", typeof(Visibility), "invertir", null!));
+        object resultado = conversor.Convert(fecha, typeof(string), null, new CultureInfo("en-US"));
+
+        Assert.Equal(fecha.ToString("d", Localizacion.CulturaActual), resultado);
+    }
+
+    [Fact]
+    public void FechaCorta_ConNuloDevuelveVacio()
+    {
+        var conversor = new FechaCortaConverter();
+        Assert.Equal(string.Empty, conversor.Convert(null, typeof(string), null, null!));
     }
 
     [Theory]

@@ -75,7 +75,8 @@ el campo "día de la entrevista" te da la próxima de un vistazo y el historial 
 *Adjuntar* se **copian** a `%APPDATA%\GestorSolicitudes\adjuntos` con un nombre interno único (no se
 enlaza el original, así que sobreviven aunque muevas o borres el fichero de origen); el nombre que
 ves en pantalla es el original tal como lo elegiste, no el nombre interno. Se borran junto con la
-candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar a guardarla.
+candidatura, o si cancelas una candidatura nueva sin llegar a guardarla. Al sustituir o quitar uno, el
+fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigue teniendo su adjunto.
 
 ## Detalles que quizá no se vean a simple vista
 

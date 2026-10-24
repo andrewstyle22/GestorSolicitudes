@@ -16,15 +16,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Win32;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IDisposable
 {
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
     // por el arranque de la app se apoyan en que por defecto el idioma es el castellano.
     private const string ClaveError = "Error";
-    private const string FormatoFecha = "yyyy-MM-dd";
+    private const string FormatoFechaCsv = "yyyy-MM-dd";
 
     private readonly AppDbContext db;
     private readonly string rutaColumnas;
+    private readonly string carpetaAdjuntos;
 
     /// <summary>El constructor sin base arranca la base real de %APPDATA%; no se prueba.</summary>
     [ExcludeFromCodeCoverage]
@@ -35,10 +36,11 @@ public partial class MainViewModel : ObservableObject
 
     // Constructor con base de datos y fichero de preferencias propios, para que los tests
     // usen una base temporal y no toquen la preferencia real de %APPDATA%.
-    internal MainViewModel(AppDbContext db, string? rutaColumnas = null)
+    internal MainViewModel(AppDbContext db, string? rutaColumnas = null, string? carpetaAdjuntos = null)
     {
         this.db = db;
         this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
+        this.carpetaAdjuntos = carpetaAdjuntos ?? AdjuntosHelper.Carpeta;
 
         this.CargarTextosLocalizados();
         this.CargarColumnas();
@@ -51,6 +53,12 @@ public partial class MainViewModel : ObservableObject
 
         this.Recargar();
     }
+
+    /// <summary>
+    /// Se desengancha del evento estático de idioma: si no, cada ViewModel construido
+    /// (los tests crean decenas) queda retenido para siempre.
+    /// </summary>
+    public void Dispose() => Localizacion.IdiomaCambiado -= this.CuandoCambiaIdioma;
 
     // ---------------------------------------------------------------- Listas
     [ObservableProperty]
@@ -681,7 +689,6 @@ public partial class MainViewModel : ObservableObject
     [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarCv() => this.AdjuntarAdjunto(
         Localizacion.Texto("Dialogo.SeleccionaCv"), "cv",
-        obtenerRuta: e => e.RutaCv,
         asignar: (e, ruta, nombre) =>
         {
             e.RutaCv = ruta;
@@ -692,7 +699,6 @@ public partial class MainViewModel : ObservableObject
     [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarCarta() => this.AdjuntarAdjunto(
         Localizacion.Texto("Dialogo.SeleccionaCarta"), "carta",
-        obtenerRuta: e => e.RutaCarta,
         asignar: (e, ruta, nombre) =>
         {
             e.RutaCarta = ruta;
@@ -702,7 +708,6 @@ public partial class MainViewModel : ObservableObject
     [ExcludeFromCodeCoverage] // Métodos de diálogo/base: ni los diálogos ni los MessageBox se pueden probar.
     private void AdjuntarAdjunto(
         string titulo, string etiqueta,
-        Func<Solicitud, string?> obtenerRuta,
         Action<Solicitud, string, string> asignar)
     {
         Solicitud? editar = this.Edicion;
@@ -724,8 +729,7 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            string nuevaRuta = AdjuntosHelper.Copiar(dialogo.FileName, etiqueta);
-            AdjuntosHelper.Eliminar(obtenerRuta(editar));
+            string nuevaRuta = AdjuntosHelper.Copiar(dialogo.FileName, etiqueta, this.carpetaAdjuntos);
             asignar(editar, nuevaRuta, Path.GetFileName(dialogo.FileName));
         }
         catch (Exception ex)
@@ -742,29 +746,30 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void QuitarCv() => this.QuitarAdjunto(
-        e => e.RutaCv, e =>
-        {
-            e.RutaCv = null;
-            e.NombreOriginalCv = null;
-        });
+    private void QuitarCv() => this.QuitarAdjunto(e =>
+    {
+        e.RutaCv = null;
+        e.NombreOriginalCv = null;
+    });
 
     [RelayCommand]
-    private void QuitarCarta() => this.QuitarAdjunto(
-        e => e.RutaCarta, e =>
-        {
-            e.RutaCarta = null;
-            e.NombreOriginalCarta = null;
-        });
+    private void QuitarCarta() => this.QuitarAdjunto(e =>
+    {
+        e.RutaCarta = null;
+        e.NombreOriginalCarta = null;
+    });
 
-    private void QuitarAdjunto(Func<Solicitud, string?> obtenerRuta, Action<Solicitud> limpiar)
+    /// <summary>
+    /// Quita la ruta del adjunto, pero no el fichero: si el usuario cancela, el que
+    /// había en disco sigue siendo el que apunta la base de datos.
+    /// </summary>
+    private void QuitarAdjunto(Action<Solicitud> limpiar)
     {
         if (this.Edicion is null)
         {
             return;
         }
 
-        AdjuntosHelper.Eliminar(obtenerRuta(this.Edicion));
         limpiar(this.Edicion);
         this.RefrescarPanelDetalle();
     }
@@ -775,6 +780,16 @@ public partial class MainViewModel : ObservableObject
         this.Edicion = null;
         this.Edicion = actual;
     }
+
+    /// <summary>Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.</summary>
+    private (string? Cv, string? Carta) RutasGuardadas(Solicitud solicitud)
+    {
+        EntityEntry<Solicitud> entrada = this.db.Entry(solicitud);
+        return (entrada.Property(s => s.RutaCv).OriginalValue,
+                entrada.Property(s => s.RutaCarta).OriginalValue);
+    }
+
+    private void EliminarAdjunto(string? ruta) => AdjuntosHelper.Eliminar(ruta, this.carpetaAdjuntos);
 
     [RelayCommand]
     private void Nueva()
@@ -818,7 +833,7 @@ public partial class MainViewModel : ObservableObject
             Estado = EstadoSolicitud.Enviada,
             Notas = string.Format(
                 Localizacion.Texto("Duplicar.Nota"),
-                origen.Id, origen.Empresa, origen.FechaSolicitud.ToString("dd/MM/yyyy")),
+                origen.Id, origen.Empresa, origen.FechaSolicitud.ToString("d", Localizacion.CulturaActual)),
         };
 
         this.SolicitudSeleccionada = null;
@@ -887,6 +902,11 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
+        // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
+        (string? cvAnterior, string? cartaAnterior) = esNueva
+            ? (null, null)
+            : this.RutasGuardadas(this.Edicion);
+
         try
         {
             this.db.SaveChanges();
@@ -897,6 +917,19 @@ public partial class MainViewModel : ObservableObject
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
                 Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
+        }
+
+        // Los adjuntos sustituidos se borran aquí, nunca antes: si el guardado falla o el
+        // usuario cancela, la base sigue apuntando a un fichero que sigue existiendo.
+        // shortcut: reemplazar el mismo adjunto dos veces antes de guardar deja huérfano el intermedio.
+        if (cvAnterior != this.Edicion.RutaCv)
+        {
+            this.EliminarAdjunto(cvAnterior);
+        }
+
+        if (cartaAnterior != this.Edicion.RutaCarta)
+        {
+            this.EliminarAdjunto(cartaAnterior);
         }
 
         this.Recargar();
@@ -913,22 +946,32 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        int id = this.Edicion.Id;
+        Solicitud edicion = this.Edicion;
 
-        // Si la candidatura nunca se guardó, los adjuntos copiados se quedan
-        // huérfanos: los borramos antes de soltar la edición.
-        if (id == 0)
+        // Los adjuntos copiados en esta edición ya no los usará nadie: se borran. El que
+        // ya estaba guardado se queda, porque la base sigue apuntando a él.
+        if (edicion.Id == 0)
         {
-            AdjuntosHelper.Eliminar(this.Edicion.RutaCv);
-            AdjuntosHelper.Eliminar(this.Edicion.RutaCarta);
+            this.EliminarAdjunto(edicion.RutaCv);
+            this.EliminarAdjunto(edicion.RutaCarta);
+        }
+        else
+        {
+            (string? cvGuardado, string? cartaGuardada) = this.RutasGuardadas(edicion);
+            if (edicion.RutaCv != cvGuardado)
+            {
+                this.EliminarAdjunto(edicion.RutaCv);
+            }
+
+            if (edicion.RutaCarta != cartaGuardada)
+            {
+                this.EliminarAdjunto(edicion.RutaCarta);
+            }
         }
 
         // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
-        foreach (EntityEntry entrada in this.db.ChangeTracker.Entries().ToList())
-        {
-            entrada.State = EntityState.Detached;
-        }
+        this.db.ChangeTracker.Clear();
 
         this.Edicion = null;
         this.SolicitudSeleccionada = null;
@@ -956,15 +999,35 @@ public partial class MainViewModel : ObservableObject
         string? cv = this.Edicion.RutaCv;
         string? carta = this.Edicion.RutaCarta;
 
-        this.db.Solicitudes.Remove(this.Edicion);
-        this.db.SaveChanges();
+        if (this.EliminarSolicitud(this.Edicion) is Exception error)
+        {
+            MessageBox.Show(
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error.Message),
+                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
 
-        AdjuntosHelper.Eliminar(cv);
-        AdjuntosHelper.Eliminar(carta);
+        this.EliminarAdjunto(cv);
+        this.EliminarAdjunto(carta);
 
         this.Edicion = null;
         this.Recargar();
         this.RecargarEmbudoSiVisible();
+    }
+
+    /// <summary>Borra la candidatura de la base. Devuelve el fallo en vez de lanzarlo para poder avisar.</summary>
+    internal Exception? EliminarSolicitud(Solicitud solicitud)
+    {
+        try
+        {
+            this.db.Solicitudes.Remove(solicitud);
+            this.db.SaveChanges();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
     }
 
     [RelayCommand]
@@ -1031,11 +1094,31 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        File.WriteAllText(dialogo.FileName, this.ConstruirCsv(), new UTF8Encoding(true));
+        if (this.EscribirCsv(dialogo.FileName) is Exception error)
+        {
+            MessageBox.Show(
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error.Message),
+                Localizacion.Texto(ClaveError), MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
 
         MessageBox.Show(
             string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
             Localizacion.Texto("Titulo.ExportacionCompletada"), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    /// <summary>Escribe el CSV. Devuelve el fallo en vez de lanzarlo para poder avisar.</summary>
+    internal Exception? EscribirCsv(string ruta)
+    {
+        try
+        {
+            File.WriteAllText(ruta, this.ConstruirCsv(), new UTF8Encoding(true));
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
     }
 
     internal string ConstruirCsv()
@@ -1068,19 +1151,19 @@ public partial class MainViewModel : ObservableObject
         foreach (Solicitud s in this.db.Solicitudes.OrderByDescending(x => x.FechaSolicitud).ToList())
         {
             sb.AppendLine(string.Join(
-            ';',
-            CsvHelper.Escapar(s.Empresa),
+                ';',
+                CsvHelper.Escapar(s.Empresa),
                 CsvHelper.Escapar(s.Puesto),
                 CsvHelper.Escapar(EnumHelper.Descripcion(s.Estado)),
                 CsvHelper.Escapar(s.Portal),
                 CsvHelper.Escapar(s.Ubicacion),
                 CsvHelper.Escapar(EnumHelper.Descripcion(s.Modalidad)),
-                s.FechaSolicitud.ToString(FormatoFecha),
-                s.FechaPrimeraRespuesta?.ToString(FormatoFecha) ?? string.Empty,
+                s.FechaSolicitud.ToString(FormatoFechaCsv),
+                s.FechaPrimeraRespuesta?.ToString(FormatoFechaCsv) ?? string.Empty,
                 s.DiasHastaRespuesta?.ToString() ?? string.Empty,
-                s.FechaEntrevista?.ToString(FormatoFecha) ?? string.Empty,
-                s.FechaCierre?.ToString(FormatoFecha) ?? string.Empty,
-                s.ProximoSeguimiento?.ToString(FormatoFecha) ?? string.Empty,
+                s.FechaEntrevista?.ToString(FormatoFechaCsv) ?? string.Empty,
+                s.FechaCierre?.ToString(FormatoFechaCsv) ?? string.Empty,
+                s.ProximoSeguimiento?.ToString(FormatoFechaCsv) ?? string.Empty,
                 s.SalarioMin?.ToString() ?? string.Empty,
                 s.SalarioMax?.ToString() ?? string.Empty,
                 s.PretensionSalarial?.ToString() ?? string.Empty,

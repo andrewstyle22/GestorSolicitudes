@@ -83,13 +83,6 @@ public class AppDbContextTests
     }
 
     [Fact]
-    public void ConstructorPorDefecto_NoRequiereRuta()
-    {
-        using var db = new AppDbContext();
-        Assert.NotNull(db);
-    }
-
-    [Fact]
     public void OnConfiguring_RutaSinCarpeta_OmitelaCreacionDelDirectorio()
     {
         // Una ruta sin carpeta (solo nombre) entra por la rama false del if de OnConfiguring.

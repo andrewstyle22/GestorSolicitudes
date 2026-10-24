@@ -516,7 +516,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn x:Name="Enviadas" Binding="{Binding FechaSolicitud, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Enviadas" Binding="{Binding FechaSolicitud, Converter={StaticResource FechaCorta}}"
                                                 Width="100">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -550,7 +550,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, Converter={StaticResource FechaCorta}}"
                                                 Width="110">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -565,7 +565,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Entrevista" Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Entrevista" Binding="{Binding FechaEntrevista, Converter={StaticResource FechaCorta}}"
                                                 Width="105">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -580,7 +580,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Seguimiento" Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
+                            <DataGridTextColumn x:Name="Seguimiento" Binding="{Binding ProximoSeguimiento, Converter={StaticResource FechaCorta}}"
                                                 Width="105">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
@@ -725,7 +725,7 @@
                         <TabControl Grid.Row="1" Style="{StaticResource Pestanas}" Height="355" VerticalAlignment="Top">
 
                             <TabItem Header="{DynamicResource Pestana.Oferta}" Style="{StaticResource Pestana}">
-                                <ScrollViewer Margin="3,0,-12,0" Cursor="">
+                                <ScrollViewer Margin="3,0,-12,0">
                                     <StackPanel DataContext="{Binding Edicion}">
 
                                         <TextBlock Text="{DynamicResource Oferta.EnlaceOferta}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />

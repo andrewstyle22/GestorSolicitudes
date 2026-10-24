@@ -116,7 +116,7 @@ public partial class MainWindow : Window
                     Localizacion.Texto("Bandeja.VencidoTexto"),
                     s.Empresa,
                     s.Puesto,
-                    s.ProximoSeguimiento?.ToString("dd/MM/yyyy")),
+                    s.ProximoSeguimiento?.ToString("d", Localizacion.CulturaActual)),
                 BalloonIcon.Info);
         }
         else
@@ -203,6 +203,9 @@ public partial class MainWindow : Window
     protected override void OnClosed(System.EventArgs e)
     {
         this.IconoBandeja.Visibility = Visibility.Hidden;
+
+        // El evento de idioma es estático: si no se suelta, retiene el ViewModel.
+        this.vm.Dispose();
         base.OnClosed(e);
     }
 }

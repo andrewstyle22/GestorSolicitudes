@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041</TargetFramework>
-<UseWPF>true</UseWPF>
+    <UseWPF>true</UseWPF>
     <!-- Necesario para el System.Drawing Icon del icono de la bandeja del sistema. -->
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
@@ -13,7 +13,7 @@
     <LangVersion>latest</LangVersion>
     <ApplicationIcon>Resources\appicon.ico</ApplicationIcon>
 
-	<SelfContained>true</SelfContained>
+    <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>None</DebugType>
@@ -30,9 +30,6 @@
          no se compilan a BAML y la app revienta buscando el recurso. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <EnableDefaultPageItems>false</EnableDefaultPageItems>
-	
-	
-	
   </PropertyGroup>
 
   <ItemGroup>

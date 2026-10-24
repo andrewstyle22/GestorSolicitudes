@@ -107,6 +107,10 @@ public class ViewModelTests
         Assert.Equal(DateTime.Today, vm.Edicion.FechaSolicitud);
         Assert.Null(vm.Edicion.ContactoNombre); // el contacto no se copia
         Assert.Contains("Duplicada", vm.Edicion.Notas!);
+        // La fecha va en el formato corto del idioma activo, no fija en dd/MM/yyyy.
+        Assert.Contains(
+            DateTime.Today.AddDays(-20).ToString("d", Localizacion.CulturaActual),
+            vm.Edicion.Notas!);
     }
 
     [Fact]
@@ -480,6 +484,29 @@ public class ViewModelTests
         Assert.Contains("https://www.linkedin.com/jobs/view/abc", csv);
     }
 
+    [Fact]
+    public void EscribirCsv_EnRutaValidaGuardaElContenido()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        string ruta = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv");
+
+        Exception? error = vm.EscribirCsv(ruta);
+
+        Assert.Null(error);
+        Assert.Contains(Localizacion.Texto("Csv.Empresa"), File.ReadAllText(ruta));
+    }
+
+    [Fact]
+    public void EscribirCsv_EnRutaInvalidaDevuelveElFalloEnVezDeLanzarlo()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        string ruta = Path.Combine(TestDb.NuevaCarpeta(), "no", "existe", "salida.csv");
+
+        Assert.NotNull(vm.EscribirCsv(ruta));
+    }
+
     // ---------------- Comandos del panel de detalle ----------------
 
     [Fact]
@@ -530,36 +557,94 @@ public class ViewModelTests
     }
 
     [Fact]
-    public void QuitarCv_LimpiaLaRutaSinBorrarUnFicheroAjero()
+    public void QuitarCv_NoBorraElFicheroHastaGuardar()
     {
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-        string rutaCv = Path.Combine(TestDb.NuevaCarpeta(), "cv.pdf");
-        File.WriteAllText(rutaCv, "contenido");
-        vm.NuevaCommand.Execute(null);
-        vm.Edicion!.RutaCv = rutaCv;
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string rutaCv = solicitud.RutaCv!;
 
         vm.QuitarCvCommand.Execute(null);
 
-        Assert.Null(vm.Edicion.RutaCv);
-        // Solo se borran ficheros de la carpeta de adjuntos: uno ajeno se deja quieto.
+        Assert.Null(solicitud.RutaCv);
+        // El fichero sigue en disco: la base todavía lo apunta hasta que se guarde.
         Assert.True(File.Exists(rutaCv));
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(rutaCv));
     }
 
     [Fact]
-    public void QuitarCarta_LimpiaLaRutaSinBorrarUnFicheroAjero()
+    public void QuitarCarta_NoBorraElFicheroHastaGuardar()
     {
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-        string rutaCarta = Path.Combine(TestDb.NuevaCarpeta(), "carta.pdf");
-        File.WriteAllText(rutaCarta, "contenido");
-        vm.NuevaCommand.Execute(null);
-        vm.Edicion!.RutaCarta = rutaCarta;
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCarta = CopiarAdjunto(carpeta, "carta.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string rutaCarta = solicitud.RutaCarta!;
 
         vm.QuitarCartaCommand.Execute(null);
 
-        Assert.Null(vm.Edicion.RutaCarta);
+        Assert.Null(solicitud.RutaCarta);
         Assert.True(File.Exists(rutaCarta));
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(rutaCarta));
+    }
+
+    [Fact]
+    public void Guardar_ConElCvSustituido_BorraElAnteriorYGuardaElNuevo()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string viejo = solicitud.RutaCv!;
+        string nuevo = CopiarAdjunto(carpeta, "cv-nuevo.pdf");
+        solicitud.RutaCv = nuevo;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(viejo));
+        Assert.True(File.Exists(nuevo));
+        Assert.Equal(nuevo, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
+    public void Cancelar_ConElCvSustituido_ConservaElAnteriorYBorraElNuevo()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string viejo = solicitud.RutaCv!;
+        string nuevo = CopiarAdjunto(carpeta, "cv-nuevo.pdf");
+        solicitud.RutaCv = nuevo;
+
+        vm.CancelarCommand.Execute(null);
+
+        Assert.True(File.Exists(viejo));
+        Assert.False(File.Exists(nuevo));
+        Assert.Equal(viejo, db.Solicitudes.Single().RutaCv);
     }
 
     [Fact]
@@ -571,6 +656,14 @@ public class ViewModelTests
         vm.QuitarCvCommand.Execute(null);
 
         Assert.Null(vm.Edicion);
+    }
+
+    /// <summary>Crea un fichero dentro de la carpeta de adjuntos, como haría AdjuntarCv.</summary>
+    private static string CopiarAdjunto(string carpeta, string nombre)
+    {
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), nombre);
+        File.WriteAllText(origen, "contenido");
+        return AdjuntosHelper.Copiar(origen, "adjunto", carpeta);
     }
 
     [Fact]
@@ -653,6 +746,36 @@ public class ViewModelTests
         Assert.Null(vm.Edicion);
         Assert.Null(vm.SolicitudSeleccionada);
         Assert.Equal("ACME", Assert.Single(vm.Solicitudes).Empresa);
+    }
+
+    [Fact]
+    public void EliminarSolicitud_BorraLaFilaYDevuelveNull()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+
+        Exception? error = vm.EliminarSolicitud(solicitud);
+
+        Assert.Null(error);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void Dispose_NoLanzaAunqueSeLlameDosVeces()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        Exception? excepcion = Record.Exception(() =>
+        {
+            vm.Dispose();
+            vm.Dispose();
+        });
+
+        Assert.Null(excepcion);
     }
 
     [Fact]

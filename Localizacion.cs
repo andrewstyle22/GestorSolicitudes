@@ -189,6 +189,8 @@ public static class Localizacion
         ("Mensaje.NoSePudoAbrirEnlace", "No se pudo abrir el enlace: {0}"),
         ("Mensaje.FaltanDatos", "La empresa y el puesto son obligatorios."),
         ("Mensaje.NoSePudoGuardar", "No se pudo guardar: {0}"),
+        ("Mensaje.NoSePudoEliminar", "No se pudo eliminar: {0}"),
+        ("Mensaje.NoSePudoExportar", "No se pudo exportar el CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "¿Eliminar la candidatura de {0} ({1})?"),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
 
@@ -434,6 +436,8 @@ public static class Localizacion
         ("Mensaje.NoSePudoAbrirEnlace", "Could not open the link: {0}"),
         ("Mensaje.FaltanDatos", "Company and position are required."),
         ("Mensaje.NoSePudoGuardar", "Could not save: {0}"),
+        ("Mensaje.NoSePudoEliminar", "Could not delete: {0}"),
+        ("Mensaje.NoSePudoExportar", "Could not export the CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "Delete the application for {0} ({1})?"),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
 
@@ -679,6 +683,8 @@ public static class Localizacion
         ("Mensaje.NoSePudoAbrirEnlace", "Der Link konnte nicht geöffnet werden: {0}"),
         ("Mensaje.FaltanDatos", "Unternehmen und Position sind Pflichtfelder."),
         ("Mensaje.NoSePudoGuardar", "Speichern fehlgeschlagen: {0}"),
+        ("Mensaje.NoSePudoEliminar", "Löschen fehlgeschlagen: {0}"),
+        ("Mensaje.NoSePudoExportar", "CSV-Export fehlgeschlagen: {0}"),
         ("Mensaje.ConfirmarEliminar", "Bewerbung von {0} ({1}) löschen?"),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
 
