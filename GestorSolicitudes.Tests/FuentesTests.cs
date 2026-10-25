@@ -51,6 +51,26 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LasClavesDeRecursosNoPisanLasDeTraduccion()
+    {
+        // Un recurso de App.xaml con la misma clave que un texto hace que el
+        // {DynamicResource} de un TextBlock reciba el pincel y reviente al pintar.
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        List<string> claves = XDocument.Load(Path.Combine(Raiz, "App.xaml"))
+            .Descendants()
+            .Select(e => (string?)e.Attribute(x + "Key"))
+            .Where(clave => clave is not null)
+            .Select(clave => clave!)
+            .ToList();
+
+        Assert.NotEmpty(claves);
+        foreach (string clave in claves)
+        {
+            Assert.False(Localizacion.Contiene(clave), $"El recurso '{clave}' pisa la clave de texto del mismo nombre.");
+        }
+    }
+
+    [Fact]
     public void LasColumnasDeTextoCompartenElEstiloDeCelda()
     {
         // Las nueve columnas de texto leen de EstiloCelda (o de un derivado con BasedOn);

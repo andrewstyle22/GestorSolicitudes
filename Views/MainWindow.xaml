@@ -252,19 +252,19 @@
                 <!-- Leyenda -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
                     <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Grafica.Enviadas}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Enviadas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Enviadas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Grafica.Respondidas}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Respondidas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Respondidas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Grafica.Entrevistas}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Entrevistas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Entrevistas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Grafica.Ofertas}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Ofertas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Ofertas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                 </StackPanel>
@@ -297,7 +297,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0">
                                             <Border Width="14" Height="{Binding AlturaEnviadas}"
-                                                    Background="{StaticResource Grafica.Enviadas}" CornerRadius="2"
+                                                    Background="{StaticResource Color.Enviadas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Enviadas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
@@ -305,7 +305,7 @@
                                         </Grid>
                                         <Grid Grid.Column="1">
                                             <Border Width="14" Height="{Binding AlturaRespondidas}"
-                                                    Background="{StaticResource Grafica.Respondidas}" CornerRadius="2"
+                                                    Background="{StaticResource Color.Respondidas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Respondidas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
@@ -313,7 +313,7 @@
                                         </Grid>
                                         <Grid Grid.Column="2">
                                             <Border Width="14" Height="{Binding AlturaEntrevistas}"
-                                                    Background="{StaticResource Grafica.Entrevistas}" CornerRadius="2"
+                                                    Background="{StaticResource Color.Entrevistas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Entrevistas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
@@ -321,7 +321,7 @@
                                         </Grid>
                                         <Grid Grid.Column="3">
                                             <Border Width="14" Height="{Binding AlturaOfertas}"
-                                                    Background="{StaticResource Grafica.Ofertas}" CornerRadius="2"
+                                                    Background="{StaticResource Color.Ofertas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Ofertas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"

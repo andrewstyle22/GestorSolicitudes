@@ -31,11 +31,12 @@
              para que los nombres de las columnas se lean sin gritar. -->
         <SolidColorBrush x:Key="Cabecera"    Color="#E2E8F0" />
 
-        <!-- Colores de la gráfica del embudo: la leyenda y las barras leen de aquí. -->
-        <SolidColorBrush x:Key="Grafica.Enviadas"    Color="#94A3B8" />
-        <SolidColorBrush x:Key="Grafica.Respondidas" Color="#2563EB" />
-        <SolidColorBrush x:Key="Grafica.Entrevistas" Color="#7C3AED" />
-        <SolidColorBrush x:Key="Grafica.Ofertas"     Color="#059669" />
+        <!-- Colores de la gráfica del embudo: la leyenda y las barras leen de aquí.
+             El prefijo Color. evita chocar con las claves de texto Grafica.* de la leyenda. -->
+        <SolidColorBrush x:Key="Color.Enviadas"    Color="#94A3B8" />
+        <SolidColorBrush x:Key="Color.Respondidas" Color="#2563EB" />
+        <SolidColorBrush x:Key="Color.Entrevistas" Color="#7C3AED" />
+        <SolidColorBrush x:Key="Color.Ofertas"     Color="#059669" />
 
         <!-- ============ Texto ============ -->
         <Style x:Key="Etiqueta" TargetType="TextBlock">
