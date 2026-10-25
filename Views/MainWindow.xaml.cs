@@ -170,13 +170,9 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Abre el CV adjunto en el visor de solo lectura.</summary>
-    private void AbrirCv_Click(object? sender, RoutedEventArgs e) =>
-        this.AbrirAdjunto((sender as FrameworkElement)?.DataContext is Solicitud s ? s.RutaCv : null);
-
-    /// <summary>Abre la carta adjunta en el visor de solo lectura.</summary>
-    private void AbrirCarta_Click(object? sender, RoutedEventArgs e) =>
-        this.AbrirAdjunto((sender as FrameworkElement)?.DataContext is Solicitud s ? s.RutaCarta : null);
+    /// <summary>Abre el CV o la carta que muestra la fila de adjunto pulsada.</summary>
+    private void AbrirAdjunto_Click(object? sender, EventArgs e) =>
+        this.AbrirAdjunto((sender as FilaAdjunto)?.Ruta);
 
     private void AbrirAdjunto(string? ruta)
     {
