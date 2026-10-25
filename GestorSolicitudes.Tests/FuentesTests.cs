@@ -51,6 +51,20 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LasColumnasDeTextoCompartenElEstiloDeCelda()
+    {
+        // Las nueve columnas de texto leen de EstiloCelda (o de un derivado con BasedOn);
+        // un estilo incrustado por columna vuelve a desincronizar márgenes y recortes.
+        List<XElement> deTexto = Columnas().Where(c => c.Name.LocalName == "DataGridTextColumn").ToList();
+
+        Assert.Equal(9, deTexto.Count);
+        Assert.All(deTexto, c => Assert.NotNull(c.Attribute("ElementStyle")));
+        Assert.DoesNotContain(
+            Columnas(),
+            c => c.Descendants().Any(e => e.Name.LocalName == "DataGridTextColumn.ElementStyle"));
+    }
+
+    [Fact]
     public void LosViewModelsNoUsanWpfDirectamente()
     {
         string[] prohibidos = { "MessageBox.", "OpenFileDialog", "SaveFileDialog", "Process.Start" };
