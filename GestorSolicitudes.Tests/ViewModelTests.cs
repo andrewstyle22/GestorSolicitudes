@@ -948,6 +948,25 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void AdjuntarCarta_CuandoNoSePuedeCopiar_AvisaDeError()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso
+        {
+            FicheroElegido = Path.Combine(TestDb.NuevaCarpeta(), "no-existe.docx"),
+        };
+        var vm = new MainViewModel(db, carpetaAdjuntos: TestDb.NuevaCarpeta(), dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCartaCommand.Execute(null);
+
+        Assert.Contains(
+            Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
+            Assert.Single(dialogo.Errores));
+        Assert.Null(vm.Edicion!.RutaCarta);
+    }
+
+    [Fact]
     public void Eliminar_CuandoSeConfirma_BorraLaFilaYLosAdjuntos()
     {
         using var db = TestDb.NuevoContexto();

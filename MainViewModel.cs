@@ -622,27 +622,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     // ---------------------------------------------------------------- Adjuntos
-    [RelayCommand]
-    private void AdjuntarCv() => this.AdjuntarAdjunto(
-        Localizacion.Texto("Dialogo.SeleccionaCv"), "cv",
-        asignar: (e, ruta, nombre) =>
+
+    /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian la etiqueta del fichero y las propiedades.</summary>
+    private sealed record DescriptorAdjunto(string Etiqueta, Action<Solicitud, string?, string?> Asignar);
+
+    private static readonly DescriptorAdjunto AdjuntoCv = new(
+        "cv",
+        (solicitud, ruta, nombre) =>
         {
-            e.RutaCv = ruta;
-            e.NombreOriginalCv = nombre;
+            solicitud.RutaCv = ruta;
+            solicitud.NombreOriginalCv = nombre;
+        });
+
+    private static readonly DescriptorAdjunto AdjuntoCarta = new(
+        "carta",
+        (solicitud, ruta, nombre) =>
+        {
+            solicitud.RutaCarta = ruta;
+            solicitud.NombreOriginalCarta = nombre;
         });
 
     [RelayCommand]
-    private void AdjuntarCarta() => this.AdjuntarAdjunto(
-        Localizacion.Texto("Dialogo.SeleccionaCarta"), "carta",
-        asignar: (e, ruta, nombre) =>
-        {
-            e.RutaCarta = ruta;
-            e.NombreOriginalCarta = nombre;
-        });
+    private void AdjuntarCv() => this.AdjuntarAdjunto(AdjuntoCv, Localizacion.Texto("Dialogo.SeleccionaCv"));
 
-    private void AdjuntarAdjunto(
-        string titulo, string etiqueta,
-        Action<Solicitud, string, string> asignar)
+    [RelayCommand]
+    private void AdjuntarCarta() => this.AdjuntarAdjunto(AdjuntoCarta, Localizacion.Texto("Dialogo.SeleccionaCarta"));
+
+    private void AdjuntarAdjunto(DescriptorAdjunto adjunto, string titulo)
     {
         Solicitud? editar = this.Edicion;
         if (editar is null)
@@ -658,8 +664,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            string nuevaRuta = AdjuntosHelper.Copiar(origen, etiqueta, this.carpetaAdjuntos);
-            asignar(editar, nuevaRuta, Path.GetFileName(origen));
+            string nuevaRuta = AdjuntosHelper.Copiar(origen, adjunto.Etiqueta, this.carpetaAdjuntos);
+            adjunto.Asignar(editar, nuevaRuta, Path.GetFileName(origen));
         }
         catch (Exception ex)
         {
@@ -675,31 +681,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void QuitarCv() => this.QuitarAdjunto(e =>
-    {
-        e.RutaCv = null;
-        e.NombreOriginalCv = null;
-    });
+    private void QuitarCv() => this.QuitarAdjunto(AdjuntoCv);
 
     [RelayCommand]
-    private void QuitarCarta() => this.QuitarAdjunto(e =>
-    {
-        e.RutaCarta = null;
-        e.NombreOriginalCarta = null;
-    });
+    private void QuitarCarta() => this.QuitarAdjunto(AdjuntoCarta);
 
     /// <summary>
     /// Quita la ruta del adjunto, pero no el fichero: si el usuario cancela, el que
     /// había en disco sigue siendo el que apunta la base de datos.
     /// </summary>
-    private void QuitarAdjunto(Action<Solicitud> limpiar)
+    private void QuitarAdjunto(DescriptorAdjunto adjunto)
     {
         if (this.Edicion is null)
         {
             return;
         }
 
-        limpiar(this.Edicion);
+        adjunto.Asignar(this.Edicion, null, null);
         this.RefrescarPanelDetalle();
     }
 
@@ -792,65 +790,104 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Guardar()
     {
-        if (this.Edicion is null)
+        if (this.Edicion is not Solicitud edicion || !this.Validar(edicion))
         {
             return;
         }
 
-        if (!ReglasSolicitud.TieneDatosObligatorios(this.Edicion))
-        {
-            this.dialogo.Avisar(
-                Localizacion.Texto("Mensaje.FaltanDatos"),
-                Localizacion.Texto("Titulo.FaltanDatos"));
-            return;
-        }
-
-        // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
-        // escribir, proponemos +7 dias desde el envio.
-        if (ReglasSolicitud.ProponerSeguimiento(this.Edicion) is DateTime propuesta)
-        {
-            this.Edicion.ProximoSeguimiento = propuesta;
-        }
-
-        bool esNueva = this.Edicion.Id == 0;
-        if (esNueva)
-        {
-            this.db.Solicitudes.Add(this.Edicion);
-
-            // Primer hito del historial, para que la línea temporal no empiece vacía.
-            ReglasSolicitud.AnadirHitoInicial(this.Edicion);
-        }
+        bool esNueva = this.PrepararNueva(edicion);
 
         // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
         (string? cvAnterior, string? cartaAnterior) = esNueva
             ? (null, null)
-            : this.RutasGuardadas(this.Edicion);
+            : this.RutasGuardadas(edicion);
 
+        if (!this.Persistir())
+        {
+            return;
+        }
+
+        this.EliminarAdjuntosSustituidos(edicion, (cvAnterior, cartaAnterior));
+        this.CerrarEdicion();
+    }
+
+    /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
+    private bool Validar(Solicitud edicion)
+    {
+        if (ReglasSolicitud.TieneDatosObligatorios(edicion))
+        {
+            return true;
+        }
+
+        this.dialogo.Avisar(
+            Localizacion.Texto("Mensaje.FaltanDatos"),
+            Localizacion.Texto("Titulo.FaltanDatos"));
+        return false;
+    }
+
+    /// <summary>
+    /// Propone el seguimiento y, si la candidatura es nueva, la añade con su primer hito.
+    /// Devuelve si era nueva.
+    /// </summary>
+    private bool PrepararNueva(Solicitud edicion)
+    {
+        // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
+        // escribir, proponemos +7 dias desde el envio.
+        if (ReglasSolicitud.ProponerSeguimiento(edicion) is DateTime propuesta)
+        {
+            edicion.ProximoSeguimiento = propuesta;
+        }
+
+        if (edicion.Id != 0)
+        {
+            return false;
+        }
+
+        this.db.Solicitudes.Add(edicion);
+
+        // Primer hito del historial, para que la línea temporal no empiece vacía.
+        ReglasSolicitud.AnadirHitoInicial(edicion);
+        return true;
+    }
+
+    /// <summary>Escribe los cambios; si la base falla, avisa y deja el panel abierto.</summary>
+    private bool Persistir()
+    {
         try
         {
             this.db.SaveChanges();
+            return true;
         }
         catch (Exception ex)
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
                 Localizacion.Texto(ClaveError));
-            return;
+            return false;
         }
+    }
 
-        // Los adjuntos sustituidos se borran aquí, nunca antes: si el guardado falla o el
-        // usuario cancela, la base sigue apuntando a un fichero que sigue existiendo.
+    /// <summary>
+    /// Borra los adjuntos que la base ya no apunta tras guardar. Se hace aquí y no antes:
+    /// si el guardado falla, la base sigue apuntando a un fichero que sigue existiendo.
+    /// </summary>
+    private void EliminarAdjuntosSustituidos(Solicitud edicion, (string? Cv, string? Carta) anteriores)
+    {
         // shortcut: reemplazar el mismo adjunto dos veces antes de guardar deja huérfano el intermedio.
-        if (cvAnterior != this.Edicion.RutaCv)
+        if (anteriores.Cv != edicion.RutaCv)
         {
-            this.EliminarAdjunto(cvAnterior);
+            this.EliminarAdjunto(anteriores.Cv);
         }
 
-        if (cartaAnterior != this.Edicion.RutaCarta)
+        if (anteriores.Carta != edicion.RutaCarta)
         {
-            this.EliminarAdjunto(cartaAnterior);
+            this.EliminarAdjunto(anteriores.Carta);
         }
+    }
 
+    /// <summary>Cierra el panel y refresca lista, cabecera y embudo.</summary>
+    private void CerrarEdicion()
+    {
         this.Recargar();
         this.RecargarEmbudoSiVisible();
         this.SolicitudSeleccionada = null;
@@ -860,33 +897,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Cancelar()
     {
-        if (this.Edicion is null)
+        if (this.Edicion is not Solicitud edicion)
         {
             return;
         }
 
-        Solicitud edicion = this.Edicion;
-
-        // Los adjuntos copiados en esta edición ya no los usará nadie: se borran. El que
-        // ya estaba guardado se queda, porque la base sigue apuntando a él.
-        if (edicion.Id == 0)
-        {
-            this.EliminarAdjunto(edicion.RutaCv);
-            this.EliminarAdjunto(edicion.RutaCarta);
-        }
-        else
-        {
-            (string? cvGuardado, string? cartaGuardada) = this.RutasGuardadas(edicion);
-            if (edicion.RutaCv != cvGuardado)
-            {
-                this.EliminarAdjunto(edicion.RutaCv);
-            }
-
-            if (edicion.RutaCarta != cartaGuardada)
-            {
-                this.EliminarAdjunto(edicion.RutaCarta);
-            }
-        }
+        this.EliminarAdjuntosNoGuardados(edicion);
 
         // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
@@ -895,6 +911,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         this.Edicion = null;
         this.SolicitudSeleccionada = null;
         this.Recargar();
+    }
+
+    /// <summary>
+    /// Borra las copias hechas durante la edición que se descarta. Los adjuntos que ya
+    /// estaban guardados se quedan, porque la base sigue apuntando a ellos.
+    /// </summary>
+    private void EliminarAdjuntosNoGuardados(Solicitud edicion)
+    {
+        (string? cvGuardado, string? cartaGuardada) = edicion.Id == 0
+            ? (null, null)
+            : this.RutasGuardadas(edicion);
+
+        if (edicion.RutaCv != cvGuardado)
+        {
+            this.EliminarAdjunto(edicion.RutaCv);
+        }
+
+        if (edicion.RutaCarta != cartaGuardada)
+        {
+            this.EliminarAdjunto(edicion.RutaCarta);
+        }
     }
 
     [RelayCommand]
