@@ -173,6 +173,7 @@ MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, expor
 App.xaml → tema y estilos compartidos (botones, campos, desplegables)
 App.xaml.cs → arranque, cultura y preferencias
 Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
+Views/FilaAdjunto.xaml(.cs) → fila de un adjunto (CV o carta): etiqueta, nombre y botones
 Views/VentanaRequisitos.xaml(.cs) → ventana de lectura de los requisitos
 Resources/appicon.ico → icono de la ventana, del ejecutable y de la bandeja
 GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQLite, estilos de las
