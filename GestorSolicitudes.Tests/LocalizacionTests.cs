@@ -55,14 +55,17 @@ public class LocalizacionTests
     [Fact]
     public void TodosLosIdiomasCubrenLasMismasClaves()
     {
-        IReadOnlyCollection<string> claves = Localizacion.Claves();
+        IReadOnlyCollection<string> claves = Localizacion.Claves(Idioma.Castellano);
         Assert.NotEmpty(claves);
 
         foreach (Idioma idioma in Enum.GetValues<Idioma>())
         {
+            // Mismos conjuntos: comparar los textos no sirve porque Texto cae al castellano.
+            Assert.Equal(claves.Order(), Localizacion.Claves(idioma).Order());
+
             foreach (string clave in claves)
             {
-                // Ni una clave sin traducir ni vacía en ningún idioma.
+                // Ni una clave vacía en ningún idioma.
                 Assert.False(
                     string.IsNullOrWhiteSpace(Localizacion.Texto(idioma, clave)),
                     $"La clave '{clave}' no tiene texto en {idioma}.");

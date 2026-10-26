@@ -518,6 +518,40 @@ public class ViewModelTests
         Assert.NotNull(vm.EscribirCsv(ruta));
     }
 
+    [Fact]
+    public void ConstruirCsv_ConLaMismaFechaDesempataPorIdDescendente()
+    {
+        using var db = TestDb.NuevoContexto();
+        var fecha = new DateTime(2024, 5, 1);
+        db.Solicitudes.Add(new Solicitud { Empresa = "Antigua", Puesto = "Dev", FechaSolicitud = fecha });
+        db.SaveChanges();
+        db.Solicitudes.Add(new Solicitud { Empresa = "Nueva", Puesto = "Dev", FechaSolicitud = fecha });
+        db.SaveChanges();
+        var vm = new MainViewModel(db);
+
+        string[] filas = vm.ConstruirCsv().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.True(
+            Array.FindIndex(filas, f => f.Contains("Nueva")) < Array.FindIndex(filas, f => f.Contains("Antigua")),
+            "La solicitud con el Id mayor debe ir primero cuando comparten fecha.");
+    }
+
+    [Fact]
+    public void ExportarCsv_InformaLasFilasEscritasAunqueLaCabeceraEsteDesfasada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.SaveChanges();
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        // TotalSolicitudes sigue en 0: el aviso cuenta lo que se escribe, no la cabecera.
+        Assert.Equal(string.Format(Localizacion.Texto("Csv.ExportadasN"), 2), Assert.Single(dialogo.Informes));
+    }
+
     // ---------------- Comandos del panel de detalle ----------------
 
     [Fact]
@@ -656,6 +690,61 @@ public class ViewModelTests
         Assert.True(File.Exists(viejo));
         Assert.False(File.Exists(nuevo));
         Assert.Equal(viejo, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
+    public void AdjuntarCv_DosVecesAntesDeGuardar_BorraLaCopiaIntermedia()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        string primero = Path.Combine(TestDb.NuevaCarpeta(), "cv-1.pdf");
+        string segundo = Path.Combine(TestDb.NuevaCarpeta(), "cv-2.pdf");
+        File.WriteAllText(primero, "uno");
+        File.WriteAllText(segundo, "dos");
+        var dialogo = new DialogoFalso { FicheroElegido = primero };
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME";
+        vm.Edicion.Puesto = "Dev";
+
+        vm.AdjuntarCvCommand.Execute(null);
+        string intermedio = vm.Edicion.RutaCv!;
+        dialogo.FicheroElegido = segundo;
+        vm.AdjuntarCvCommand.Execute(null);
+        string final = vm.Edicion.RutaCv!;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(intermedio));
+        Assert.True(File.Exists(final));
+    }
+
+    [Fact]
+    public void Cancelar_ConDosCopiasDelCv_BorraLasDos()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        string primero = Path.Combine(TestDb.NuevaCarpeta(), "cv-1.pdf");
+        string segundo = Path.Combine(TestDb.NuevaCarpeta(), "cv-2.pdf");
+        File.WriteAllText(primero, "uno");
+        File.WriteAllText(segundo, "dos");
+        var dialogo = new DialogoFalso { FicheroElegido = primero };
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME";
+        vm.Edicion.Puesto = "Dev";
+
+        vm.AdjuntarCvCommand.Execute(null);
+        string intermedio = vm.Edicion.RutaCv!;
+        dialogo.FicheroElegido = segundo;
+        vm.AdjuntarCvCommand.Execute(null);
+        string final = vm.Edicion.RutaCv!;
+
+        vm.CancelarCommand.Execute(null);
+
+        Assert.False(File.Exists(intermedio));
+        Assert.False(File.Exists(final));
+        Assert.Null(vm.Edicion);
     }
 
     [Fact]

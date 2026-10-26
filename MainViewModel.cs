@@ -21,6 +21,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly string rutaColumnas;
     private readonly string carpetaAdjuntos;
     private readonly IDialogoService dialogo;
+    private readonly List<string> adjuntosCopiados = new();
     private bool actualizandoIdioma;
 
     // Constructor con base de datos, preferencias y servicio de diálogos propios: los tests usan
@@ -584,35 +585,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.PeriodosEmbudo = EmbudoHelper.Calcular(todas, this.GranularidadGrafica, this.DesplazamientoPeriodo);
     }
 
-    /// <summary>Número de barras del embudo, sea cual sea la granularidad.</summary>
-    internal const int PeriodosDelEmbudo = 12;
-
-    /// <summary>
-    /// Los 12 periodos que terminan en el actual, de más antiguo a más reciente.
-    /// <paramref name="desplazamiento"/> los retrasa ese número de periodos.
-    /// </summary>
-    internal static List<DateTime> CalcularPeriodos(GranularidadEmbudo granularidad, int desplazamiento)
-    {
-        // Retroceder un periodo es meterse en el que contiene el día anterior: sirve igual
-        // para el mes (el día anterior ya es del mes pasado), para la semana (domingo) y
-        // para el día. Por eso no hace falta un "periodo anterior" aparte.
-        DateTime fin = EmbudoHelper.SiguientePeriodo(EmbudoHelper.InicioDePeriodo(DateTime.Today, granularidad), granularidad);
-
-        var periodos = new List<DateTime>(PeriodosDelEmbudo);
-        for (int i = 0; i < desplazamiento + PeriodosDelEmbudo; i++)
-        {
-            fin = EmbudoHelper.InicioDePeriodo(fin.AddDays(-1), granularidad);
-
-            if (i >= desplazamiento)
-            {
-                periodos.Add(fin);
-            }
-        }
-
-        periodos.Reverse();
-        return periodos;
-    }
-
     /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
     public List<Solicitud> SeguimientosVencidosAhora()
     {
@@ -668,6 +640,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             string nuevaRuta = AdjuntosHelper.Copiar(origen, adjunto.Etiqueta, this.carpetaAdjuntos);
+            this.adjuntosCopiados.Add(nuevaRuta);
             adjunto.Asignar(editar, nuevaRuta, Path.GetFileName(origen));
         }
         catch (Exception ex)
@@ -876,7 +849,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void EliminarAdjuntosSustituidos(Solicitud solicitud, (string? Cv, string? Carta) anteriores)
     {
-        // shortcut: reemplazar el mismo adjunto dos veces antes de guardar deja huérfano el intermedio.
         if (anteriores.Cv != solicitud.RutaCv)
         {
             this.EliminarAdjunto(anteriores.Cv);
@@ -886,6 +858,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.EliminarAdjunto(anteriores.Carta);
         }
+
+        this.EliminarCopiasDeLaEdicion(solicitud.RutaCv, solicitud.RutaCarta);
+    }
+
+    /// <summary>
+    /// Borra las copias hechas durante la edición salvo las que se quieren conservar.
+    /// Sin argumentos las borra todas: es lo que toca al cancelar o al eliminar la fila.
+    /// </summary>
+    private void EliminarCopiasDeLaEdicion(string? conservarCv = null, string? conservarCarta = null)
+    {
+        foreach (string ruta in this.adjuntosCopiados)
+        {
+            if (ruta != conservarCv && ruta != conservarCarta)
+            {
+                this.EliminarAdjunto(ruta);
+            }
+        }
+
+        this.adjuntosCopiados.Clear();
     }
 
     /// <summary>Cierra el panel y refresca lista, cabecera y embudo.</summary>
@@ -935,6 +926,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.EliminarAdjunto(solicitud.RutaCarta);
         }
+
+        this.EliminarCopiasDeLaEdicion();
     }
 
     [RelayCommand]
@@ -967,6 +960,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         this.EliminarAdjunto(cv);
         this.EliminarAdjunto(carta);
+        this.EliminarCopiasDeLaEdicion();
 
         this.Edicion = null;
         this.SolicitudSeleccionada = null;
@@ -1058,7 +1052,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.dialogo.Informar(
-            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
+            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.db.Solicitudes.Count()),
             Localizacion.Texto("Titulo.ExportacionCompletada"));
     }
 
@@ -1077,5 +1071,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     internal string ConstruirCsv() =>
-        CsvExportador.Construir(this.db.Solicitudes.OrderByDescending(x => x.FechaSolicitud).ToList());
+        CsvExportador.Construir(this.db.Solicitudes
+            .OrderByDescending(x => x.FechaSolicitud)
+            .ThenByDescending(x => x.Id)
+            .ToList());
 }

@@ -833,8 +833,8 @@ public static class Localizacion
             .Select(i => new IdiomaItem(i, NombrePropio(i)))
             .ToList();
 
-    /// <summary>Todas las claves conocidas, para comprobar que ningún idioma se queda atrás.</summary>
-    public static IReadOnlyCollection<string> Claves() => TextoCastellano.Keys.ToArray();
+    /// <summary>Las claves de un idioma, para comprobar que los tres diccionarios tienen las mismas.</summary>
+    public static IReadOnlyCollection<string> Claves(Idioma idioma) => Tablas[idioma].Keys.ToArray();
 
     /// <summary>
     /// Decide el idioma inicial (preferencia guardada o, si no hay, el del sistema), fija la
