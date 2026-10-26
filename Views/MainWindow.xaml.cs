@@ -106,18 +106,18 @@ public partial class MainWindow : Window
 
     private void ComprobarSeguimientosVencidos()
     {
-        List<Solicitud> vencidos = this.vm.SeguimientosVencidosAhora();
+        List<SeguimientoVencido> vencidos = this.vm.SeguimientosVencidosAhora();
 
         // El aviso es una vez por sesión, pero solo para los que siguen vencidos: así el
         // HashSet no crece con filas que ya se resolvieron o se borraron.
         this.idsVencidosAvisados.IntersectWith(vencidos.Select(s => s.Id));
 
-        var nuevos = new List<Solicitud>();
-        foreach (Solicitud solicitud in vencidos)
+        var nuevos = new List<SeguimientoVencido>();
+        foreach (SeguimientoVencido vencido in vencidos)
         {
-            if (this.idsVencidosAvisados.Add(solicitud.Id))
+            if (this.idsVencidosAvisados.Add(vencido.Id))
             {
-                nuevos.Add(solicitud);
+                nuevos.Add(vencido);
             }
         }
 
@@ -128,7 +128,7 @@ public partial class MainWindow : Window
 
         if (nuevos.Count == 1)
         {
-            Solicitud s = nuevos[0];
+            SeguimientoVencido s = nuevos[0];
             this.IconoBandeja.ShowBalloonTip(
                 Localizacion.Texto("Bandeja.SeguimientoVencido"),
                 string.Format(

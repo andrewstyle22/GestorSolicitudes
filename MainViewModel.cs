@@ -11,6 +11,9 @@ using GestorSolicitudes.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
+/// <summary>Lo mínimo que necesita el aviso de la bandeja, sin arrastrar la entidad completa.</summary>
+internal sealed record SeguimientoVencido(int Id, string Empresa, string Puesto, DateTime? ProximoSeguimiento);
+
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
@@ -184,6 +187,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </remarks>
     internal void CuandoCambiaIdioma(object? sender, Idioma idioma)
     {
+        // El ComboBox se sincroniza aunque el cambio venga de fuera del ViewModel.
+        this.IdiomaActual = idioma;
+
         EstadoSolicitud? filtro = this.EstadoFiltroItem?.Valor as EstadoSolicitud?;
 
         // Mientras se reasignan los desplegables, el filtro no debe recargar por su cuenta:
@@ -345,7 +351,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         // Ignoramos el null que manda el DataGrid al recargar la lista o al pulsar "Nueva".
         if (value is not null)
+        {
+            // El historial solo lo usa el panel de detalle: se carga al abrir la fila,
+            // no en cada pulsación del buscador.
+            this.db.Entry(value).Collection(s => s.Eventos).Load();
             Edicion = value;
+        }
     }
 
     /// <summary>Entidad mostrada en el panel de detalle.</summary>
@@ -437,7 +448,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.TituloGrafica));
 
         // El suelo se mide en periodos, así que también cambia al cambiar de granularidad.
-        this.PuedeRetrocederPeriodo = this.PuedeRetrocederUnPeriodoMas;
+        this.ActualizarLimitesEmbudo();
 
         // El desplazamiento se conserva: si estabas tres meses atrás, al pasar a semanas
         // sigues tres semanas atrás, que es el mismo instante de la historia.
@@ -447,18 +458,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     partial void OnDesplazamientoPeriodoChanged(int value)
     {
         this.PuedeAvanzarPeriodo = value > 0;
-        this.PuedeRetrocederPeriodo = this.PuedeRetrocederUnPeriodoMas;
+        this.ActualizarLimitesEmbudo();
         this.RecargarEmbudoSiVisible();
     }
 
     /// <summary>
-    /// El rango de la gráfica va de la primera solicitud a hoy. Con la base vacía no hay
-    /// suelo conocido, así que se deja ir hacia atrás (solo se ve ceros).
+    /// Recalcula si la ventana puede retroceder otro periodo. El suelo es la primera
+    /// solicitud; con la base vacía no hay suelo conocido y se deja ir hacia atrás.
     /// </summary>
-    private bool PuedeRetrocederUnPeriodoMas =>
-        this.db.Solicitudes.Min(s => (DateTime?)s.FechaSolicitud) is not DateTime primera
-        || EmbudoHelper.CalcularPeriodos(this.GranularidadGrafica, this.DesplazamientoPeriodo + 1)[^1]
-            >= EmbudoHelper.InicioDePeriodo(primera, this.GranularidadGrafica);
+    private void ActualizarLimitesEmbudo()
+    {
+        DateTime? primera = this.db.Solicitudes.Min(s => (DateTime?)s.FechaSolicitud);
+
+        this.PuedeRetrocederPeriodo = primera is not DateTime suelo
+            || EmbudoHelper.CalcularPeriodos(this.GranularidadGrafica, this.DesplazamientoPeriodo + 1)[^1]
+                >= EmbudoHelper.InicioDePeriodo(suelo, this.GranularidadGrafica);
+    }
 
     /// <summary>Título de la gráfica, que nombra la granularidad activa (se repinta al cambiar de idioma).</summary>
     public string TituloGrafica => string.Format(
@@ -469,7 +484,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void PeriodoAnterior()
     {
-        if (this.PuedeRetrocederUnPeriodoMas)
+        if (this.PuedeRetrocederPeriodo)
         {
             this.DesplazamientoPeriodo++;
         }
@@ -490,7 +505,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Recargar()
     {
-        IQueryable<Solicitud> consulta = this.db.Solicitudes.Include(s => s.Eventos);
+        IQueryable<Solicitud> consulta = this.db.Solicitudes;
 
         if (this.EstadoFiltroItem?.Valor is EstadoSolicitud estado)
         {
@@ -507,12 +522,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (!string.IsNullOrWhiteSpace(this.TextoBusqueda))
         {
             string texto = CsvHelper.NormalizarBusqueda(this.TextoBusqueda);
-            lista = lista.Where(s =>
-                CsvHelper.NormalizarBusqueda(s.Empresa).Contains(texto) ||
-                CsvHelper.NormalizarBusqueda(s.Puesto).Contains(texto) ||
-                (s.Tecnologias != null && CsvHelper.NormalizarBusqueda(s.Tecnologias).Contains(texto)) ||
-                (s.Ubicacion != null && CsvHelper.NormalizarBusqueda(s.Ubicacion).Contains(texto)) ||
-                (s.Portal != null && CsvHelper.NormalizarBusqueda(s.Portal).Contains(texto))).ToList();
+            lista = lista.Where(s => CamposBuscables(s).Contains(texto)).ToList();
         }
 
         // EstaAbierta y SeguimientoPendiente son [NotMapped]: se filtran en memoria.
@@ -528,7 +538,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         this.Paginar(lista);
         this.ActualizarEstadisticas();
+        this.ActualizarLimitesEmbudo();
     }
+
+    /// <summary>
+    /// Los campos del buscador en una sola cadena ya normalizada. Se separan con salto de
+    /// línea para que una búsqueda no case a caballo entre dos campos.
+    /// </summary>
+    private static string CamposBuscables(Solicitud solicitud) =>
+        CsvHelper.NormalizarBusqueda(string.Join(
+            '\n',
+            solicitud.Empresa,
+            solicitud.Puesto,
+            solicitud.Tecnologias,
+            solicitud.Ubicacion,
+            solicitud.Portal));
 
     /// <summary>
     /// La cabecera mide la base entera, no la lista filtrada: los filtros solo recortan la tabla.
@@ -536,7 +560,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void ActualizarEstadisticas()
     {
-        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(this.db.Solicitudes.ToList());
+        // Solo las columnas que miran los cálculos; el resto de la fila no hace falta.
+        List<Solicitud> paraCalculo = this.db.Solicitudes
+            .AsNoTracking()
+            .Select(s => new Solicitud
+            {
+                Estado = s.Estado,
+                FechaSolicitud = s.FechaSolicitud,
+                FechaPrimeraRespuesta = s.FechaPrimeraRespuesta,
+                ProximoSeguimiento = s.ProximoSeguimiento,
+            })
+            .ToList();
+
+        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(paraCalculo);
 
         this.TotalSolicitudes = resumen.Total;
         this.ProcesosAbiertos = resumen.Abiertas;
@@ -589,14 +625,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.PeriodosEmbudo = EmbudoHelper.Calcular(todas, this.GranularidadGrafica, this.DesplazamientoPeriodo);
     }
 
-    /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
-    public List<Solicitud> SeguimientosVencidosAhora()
+    /// <summary>Seguimientos vencidos de candidaturas abiertas. Lo usa el icono de la bandeja.</summary>
+    internal List<SeguimientoVencido> SeguimientosVencidosAhora()
     {
         DateTime hoy = DateTime.Today;
         return this.db.Solicitudes
+            .AsNoTracking()
             .Where(s => s.ProximoSeguimiento != null && s.ProximoSeguimiento.Value.Date <= hoy)
-            .ToList()
-            .Where(s => s.EstaAbierta)
+            .Where(s => s.Estado != EstadoSolicitud.OfertaAceptada
+                && s.Estado != EstadoSolicitud.OfertaRechazada
+                && s.Estado != EstadoSolicitud.Rechazada
+                && s.Estado != EstadoSolicitud.Retirada)
+            .Select(s => new SeguimientoVencido(s.Id, s.Empresa, s.Puesto, s.ProximoSeguimiento))
             .ToList();
     }
 

@@ -77,6 +77,8 @@ public class ViewModelTests
         vm.GuardarCommand.Execute(null);
 
         Solicitud guardada = Assert.Single(vm.Solicitudes);
+        // El historial no viene en la recarga: lo carga el panel al abrir la fila.
+        db.Entry(guardada).Collection(s => s.Eventos).Load();
         Assert.NotEmpty(guardada.Eventos);
         Assert.Contains(guardada.Eventos, e => e.Tipo == TipoEvento.SolicitudEnviada);
     }
@@ -221,6 +223,67 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void TextoBusqueda_EncuentraTecnologiaYPortalEnLaMismaPasada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        db.Solicitudes.Add(new Solicitud
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            Tecnologias = "Kubernetes, C#",
+            Portal = "InfoJobs",
+        });
+        db.Solicitudes.Add(new Solicitud { Empresa = "Otra", Puesto = "Dev" });
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.TextoBusqueda = "kubernetes";
+        Assert.Single(vm.Solicitudes);
+
+        vm.TextoBusqueda = "infojobs";
+        Assert.Single(vm.Solicitudes);
+        Assert.Equal("ACME", vm.Solicitudes[0].Empresa);
+    }
+
+    [Fact]
+    public void Recargar_NoTraeElHistorialYSeleccionarLaFilaSiLoCarga()
+    {
+        using var db = TestDb.NuevoContexto();
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        var vm = new MainViewModel(db);
+
+        // Se olvida lo que había en memoria para que la consulta sea la única fuente.
+        db.ChangeTracker.Clear();
+        vm.Recargar();
+        Assert.Empty(vm.Solicitudes[0].Eventos);
+
+        vm.SolicitudSeleccionada = vm.Solicitudes[0];
+
+        Assert.Single(vm.SolicitudSeleccionada!.Eventos);
+    }
+
+    [Fact]
+    public void Recargar_RecalculaElSueloDelEmbudo()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        // Con la base vacía no hay suelo: se puede retroceder.
+        Assert.True(vm.PuedeRetrocederPeriodo);
+
+        db.Solicitudes.Add(new Solicitud { Empresa = "A", Puesto = "P", FechaSolicitud = DateTime.Today });
+        db.SaveChanges();
+        vm.Recargar();
+
+        // La única solicitud está en el periodo actual: no queda nada más atrás.
+        Assert.False(vm.PuedeRetrocederPeriodo);
+    }
+
+    [Fact]
     public void LimpiarBusqueda_VaciaElTextoYRestauraLaListaCompleta()
     {
         using var db = TestDb.NuevoContexto();
@@ -334,7 +397,7 @@ public class ViewModelTests
         db.SaveChanges();
         vm.Recargar();
 
-        List<Solicitud> vencidos = vm.SeguimientosVencidosAhora();
+        List<SeguimientoVencido> vencidos = vm.SeguimientosVencidosAhora();
 
         Assert.Single(vencidos);
         Assert.Equal("Vencida abierta", vencidos[0].Empresa);
@@ -454,6 +517,7 @@ public class ViewModelTests
 
         vm.CuandoCambiaIdioma(null, Idioma.Castellano);
 
+        Assert.Equal(Idioma.Castellano, vm.IdiomaActual);
         // La asignación del filtro no debe sumar una recarga extra a la explícita.
         Assert.Equal(1, recargas);
         // Los botones de la gráfica usan un convertidor y hay que reevaluarlos.
