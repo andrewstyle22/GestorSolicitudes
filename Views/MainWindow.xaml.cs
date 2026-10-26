@@ -25,12 +25,12 @@ public partial class MainWindow : Window
     private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
 
-    // Recurso del icono, como ruta relativa al ensamblado principal. WPF solo lo resuelve con
-    // el ";component", y montar la ruta con el nombre real del ensamblado evita el
-    // "pack://application:,,,/<ensamblado>;component/..." absoluto, que queda obsoleto
-    // en cuanto se renombra el proyecto.
-    private static readonly Uri RutaIcono = new(
-        $"/{typeof(MainWindow).Assembly.GetName().Name};component/Resources/appicon.ico", UriKind.Relative);
+    // Ruta absoluta al recurso empaquetado. BitmapFrame.Create no resuelve la forma relativa
+    // ("/Ensamblado;component/..."): la interpreta como ruta de fichero. El nombre del
+    // ensamblado se toma del propio tipo, así que renombrar el proyecto no rompe la ruta.
+    internal static readonly Uri RutaIcono = new(
+        $"pack://application:,,,/{typeof(MainWindow).Assembly.GetName().Name};component/Resources/appicon.ico",
+        UriKind.Absolute);
 
     public MainWindow()
     {

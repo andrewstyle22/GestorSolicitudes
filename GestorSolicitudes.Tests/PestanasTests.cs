@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Resources;
 using GestorSolicitudes;
 using GestorSolicitudes.Views;
@@ -105,12 +106,13 @@ public class PestanasTests
             FontWeights.SemiBold,
             estiloCabecera.Setters.OfType<Setter>().Single(s => s.Property == TextBlock.FontWeightProperty).Value);
 
-        // El icono de la bandeja se carga del recurso empaquetado, así que se comprueba
-        // que existe y trae los tamaños que usa la bandeja, con la misma ruta que usa
-        // MainWindow: relativa al ensamblado principal y sin "pack://" absoluto.
-        StreamResourceInfo? recurso = Application.GetResourceStream(
-            new Uri($"/{typeof(App).Assembly.GetName().Name};component/Resources/appicon.ico", UriKind.Relative));
+        // El icono de la ventana sale de una ruta absoluta: BitmapFrame.Create no resuelve
+        // la forma relativa y la trataría como una ruta de fichero. El de la bandeja usa
+        // la misma ruta, así que se comprueba que ambas formas leen el recurso.
+        BitmapFrame iconoVentana = BitmapFrame.Create(MainWindow.RutaIcono);
+        Assert.True(iconoVentana.PixelWidth >= 16);
 
+        StreamResourceInfo? recurso = Application.GetResourceStream(MainWindow.RutaIcono);
         Assert.NotNull(recurso);
         using (var icono = new System.Drawing.Icon(recurso!.Stream))
         {
