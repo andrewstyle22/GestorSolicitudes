@@ -101,6 +101,20 @@ public class LocalizacionTests
         Assert.Equal("Tage", Localizacion.Texto(Idioma.Aleman, "Metrica.Dias"));
     }
 
+    [Theory]
+    [InlineData(Idioma.Castellano, "por por")]
+    [InlineData(Idioma.Ingles, "by by")]
+    [InlineData(Idioma.Aleman, "nach nach")]
+    public void TituloDeLaGrafica_NoDuplicaLaPreposicion(Idioma idioma, string duplicada)
+    {
+        string titulo = string.Format(
+            Localizacion.Cultura(idioma),
+            Localizacion.Texto(idioma, "Grafica.Titulo"),
+            Localizacion.Texto(idioma, "Grafica.TituloMes"));
+
+        Assert.DoesNotContain(duplicada, titulo);
+    }
+
     [Fact]
     public void EnumHelper_UsaLasTraduccionesDeLocalizacion()
     {

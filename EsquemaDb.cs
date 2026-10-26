@@ -45,7 +45,7 @@ internal static class EsquemaDb
             ("Requisitos", TextoNulo),
             ("MotivoRechazo", "INTEGER NULL"),
             ("Origen", "INTEGER NOT NULL DEFAULT 0"),
-            ("ContactoTelefono", "TEXT NULL"),
+            ("ContactoTelefono", TextoNulo),
         };
 
         foreach ((string columna, string definicion) in nuevas)

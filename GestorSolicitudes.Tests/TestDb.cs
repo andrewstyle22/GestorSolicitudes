@@ -37,12 +37,7 @@ internal static class TestDb
         return carpeta;
     }
 
-    public static string NuevaRuta()
-    {
-        return Path.Combine(NuevaCarpeta(), "test.db");
-    }
-
-    // Método interno consolidado: Devuelve la carpeta temporal
+    public static string NuevaRuta() => Path.Combine(NuevaCarpeta(), "test.db");
 
     public static AppDbContext NuevoContexto()
     {

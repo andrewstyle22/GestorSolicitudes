@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Converters;
+namespace GestorSolicitudes.Converters;
 
 using System.Globalization;
 using System.Windows;

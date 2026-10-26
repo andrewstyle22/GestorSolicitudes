@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Helpers;
+namespace GestorSolicitudes.Helpers;
 
 using System.Collections.Concurrent;
 using System.ComponentModel;

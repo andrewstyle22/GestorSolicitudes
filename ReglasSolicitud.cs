@@ -3,7 +3,7 @@ namespace GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
 /// <summary>
-/// Reglas de negocio pura para la operación de Guardar una solicitud.
+/// Reglas de negocio puras para la operación de Guardar una solicitud.
 /// Viven fuera del ViewModel para facilitar su prueba y mantener el ViewModel delgado.
 /// </summary>
 public static class ReglasSolicitud

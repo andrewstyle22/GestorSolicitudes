@@ -1,7 +1,10 @@
 # Reglas de estilo del proyecto (StyleCop y código).
 root = true
 
+# Codificación de los ficheros C#: UTF-8 sin BOM. Los XAML y la documentación se dejan
+# como están para no mezclar este cambio con una normalización masiva de codificaciones.
 [*.cs]
+charset = utf-8
 
 # StyleCop: documentación obligatoria (familia SA1600-SA1699): no se exige.
 # Los comentarios XML existentes se conservan; el analizador simplemente no los impone.

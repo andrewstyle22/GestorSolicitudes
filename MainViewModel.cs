@@ -479,7 +479,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public string TituloGrafica => string.Format(
         Localizacion.CulturaActual,
         Localizacion.Texto("Grafica.Titulo"),
-        Localizacion.Texto($"Grafica.Titulo{(int)this.GranularidadGrafica}"));
+        TextoTitulo(this.GranularidadGrafica));
+
+    /// <summary>
+    /// Texto de la granularidad que completa el título. Se elige por valor del enum, no por
+    /// su número: las claves son TituloMes, TituloSemana y TituloDia.
+    /// </summary>
+    private static string TextoTitulo(GranularidadEmbudo granularidad) => granularidad switch
+    {
+        GranularidadEmbudo.Semana => Localizacion.Texto("Grafica.TituloSemana"),
+        GranularidadEmbudo.Dia => Localizacion.Texto("Grafica.TituloDia"),
+        _ => Localizacion.Texto("Grafica.TituloMes"),
+    };
 
     [RelayCommand]
     private void PeriodoAnterior()
@@ -995,8 +1006,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        string? cv = this.Edicion.RutaCv;
-        string? carta = this.Edicion.RutaCarta;
+        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
+        (string? cv, string? carta) = this.RutasGuardadas(this.Edicion);
 
         if (this.EliminarSolicitud(this.Edicion) is Exception error)
         {

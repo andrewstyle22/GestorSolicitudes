@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Helpers;
+namespace GestorSolicitudes.Helpers;
 
 using System.Diagnostics;
 using System.IO;

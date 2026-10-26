@@ -14,9 +14,10 @@ pulsar un elemento, y evitarlo exige un truco en code-behind. El Popup se cierra
 solo al pulsar fuera y no se cierra al marcar. Que la lista de checkboxes se
 cierre al pulsar fuera es justo lo que documenta `StaysOpen=false`.
 
-**`x:Name` en cada `DataGridColumn`.** El compilador XAML genera un campo por
-cada una y el code-behind las alcanza con un `switch`: si se renombra una
-columna, deja de compilar.
+**`x:Name` en cada columna ocultable.** El compilador XAML genera un campo por cada una y
+el code-behind las alcanza con un `switch`: si se renombra una columna ocultable, deja de
+compilar. Las columnas fijas (Empresa, Puesto, Estado, Enviada) no lo necesitan y no lo
+llevan.
 
 **Se renombró `Primera_respuesta` → `PrimeraRespuesta`** para que la clave
 guardada, el nombre del diccionario (`Columna.PrimeraRespuesta`) y el `x:Name`

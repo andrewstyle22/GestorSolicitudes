@@ -420,6 +420,22 @@ public class ViewModelTests
             Assert.InRange(m.AlturaEnviadas, 0, 100));
     }
 
+    [Theory]
+    [InlineData(GranularidadEmbudo.Mes, "Grafica.TituloMes")]
+    [InlineData(GranularidadEmbudo.Semana, "Grafica.TituloSemana")]
+    [InlineData(GranularidadEmbudo.Dia, "Grafica.TituloDia")]
+    public void TituloGrafica_UsaLaTraduccionDeLaGranularidad(GranularidadEmbudo granularidad, string clave)
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        vm.GranularidadGrafica = granularidad;
+
+        Assert.Contains(Localizacion.Texto(clave), vm.TituloGrafica);
+        Assert.DoesNotContain("Grafica.Titulo", vm.TituloGrafica);
+        Assert.DoesNotContain("por por", vm.TituloGrafica);
+    }
+
     [Fact]
     public void Granularidad_SemanaMuestraLasDoceSemanasHastaLaDelHoy()
     {
@@ -772,6 +788,54 @@ public class ViewModelTests
         Assert.True(File.Exists(viejo));
         Assert.False(File.Exists(nuevo));
         Assert.Equal(viejo, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
+    public void Eliminar_ConElCvQuitadoSinGuardar_BorraElFicheroGuardado()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string rutaCv = solicitud.RutaCv!;
+
+        vm.QuitarCvCommand.Execute(null);
+        vm.EliminarCommand.Execute(null);
+
+        Assert.Empty(db.Solicitudes);
+        Assert.False(File.Exists(rutaCv));
+    }
+
+    [Fact]
+    public void Eliminar_ConElCvSustituidoSinGuardar_BorraElAnteriorYLaCopia()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        string rutaAnterior = CopiarAdjunto(carpeta, "cv.pdf");
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = rutaAnterior };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+
+        string origenNuevo = Path.Combine(TestDb.NuevaCarpeta(), "cv-nuevo.pdf");
+        File.WriteAllText(origenNuevo, "nuevo");
+        dialogo.FicheroElegido = origenNuevo;
+        vm.AdjuntarCvCommand.Execute(null);
+        string rutaNueva = solicitud.RutaCv!;
+
+        vm.EliminarCommand.Execute(null);
+
+        Assert.Empty(db.Solicitudes);
+        Assert.False(File.Exists(rutaAnterior));
+        Assert.False(File.Exists(rutaNueva));
     }
 
     [Fact]

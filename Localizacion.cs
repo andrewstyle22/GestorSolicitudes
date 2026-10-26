@@ -54,7 +54,7 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  Nueva candidatura"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Embudo de los últimos 12 periodos, por {0} (enviadas → respondidas → entrevistas → ofertas)"),
+        ("Grafica.Titulo", "Embudo de los últimos 12 periodos, {0} (enviadas → respondidas → entrevistas → ofertas)"),
         ("Grafica.TituloMes", "por mes"),
         ("Grafica.TituloSemana", "por semana"),
         ("Grafica.TituloDia", "por día"),
@@ -305,7 +305,7 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  New application"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Funnel for the last 12 periods, by {0} (sent → answered → interviews → offers)"),
+        ("Grafica.Titulo", "Funnel for the last 12 periods, {0} (sent → answered → interviews → offers)"),
         ("Grafica.TituloMes", "by month"),
         ("Grafica.TituloSemana", "by week"),
         ("Grafica.TituloDia", "by day"),
@@ -318,7 +318,7 @@ public static class Localizacion
         ("Grafica.Respondidas", "Answered"),
         ("Grafica.Entrevistas", "Interviews"),
         ("Grafica.Ofertas", "Offers"),
-("Grafica.Ver", "Chart"),
+        ("Grafica.Ver", "Chart"),
         ("Grafica.Ocultar", "Hide chart"),
 
         ("GranularidadEmbudo.Mes", "Month"),
@@ -556,7 +556,7 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  Neue Bewerbung"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, nach {0} (gesendet → Antworten → Interviews → Angebote)"),
+        ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, {0} (gesendet → Antworten → Interviews → Angebote)"),
         ("Grafica.TituloMes", "nach Monaten"),
         ("Grafica.TituloSemana", "nach Wochen"),
         ("Grafica.TituloDia", "nach Tagen"),

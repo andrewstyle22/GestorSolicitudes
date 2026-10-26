@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Data;
+namespace GestorSolicitudes.Data;
 
 using System.IO;
 using GestorSolicitudes.Models;

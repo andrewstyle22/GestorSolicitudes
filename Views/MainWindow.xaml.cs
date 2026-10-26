@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Views;
+namespace GestorSolicitudes.Views;
 
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         foreach (ColumnaItem columna in this.vm.Columnas)
         {
             // El x:Name de cada columna genera el campo con el que se llega desde aquí.
-            DataGridColumn? cd = columna.Columna switch
+            DataGridColumn columnaVista = columna.Columna switch
             {
                 "Dias" => this.Dias,
                 "PrimeraRespuesta" => this.PrimeraRespuesta,
@@ -80,10 +80,7 @@ public partial class MainWindow : Window
                 _ => throw new InvalidOperationException($"Columna desconocida en la visibilidad: {columna.Columna}"),
             };
 
-            if (cd is not null)
-            {
-                cd.Visibility = columna.Visible ? Visibility.Visible : Visibility.Collapsed;
-            }
+            columnaVista.Visibility = columna.Visible ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

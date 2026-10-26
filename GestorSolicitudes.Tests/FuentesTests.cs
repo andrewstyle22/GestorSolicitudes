@@ -71,6 +71,19 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void NingunFicheroDeTextoTieneCaracteresDeReemplazo()
+    {
+        IEnumerable<string> ficheros = FicherosDeCodigo()
+            .Concat(FicherosDeXaml())
+            .Concat(FicherosDeTest());
+
+        foreach (string fichero in ficheros)
+        {
+            Assert.DoesNotContain("\uFFFD", File.ReadAllText(fichero));
+        }
+    }
+
+    [Fact]
     public void LasColumnasDeTextoCompartenElEstiloDeCelda()
     {
         // Las nueve columnas de texto leen de EstiloCelda (o de un derivado con BasedOn);
@@ -154,6 +167,9 @@ public partial class FuentesTests
     private static IEnumerable<string> FicherosDeXaml() =>
         Directory.EnumerateFiles(Raiz, "*.xaml", SearchOption.TopDirectoryOnly)
             .Concat(Directory.EnumerateFiles(Path.Combine(Raiz, "Views"), "*.xaml"));
+
+    private static IEnumerable<string> FicherosDeTest() =>
+        Directory.EnumerateFiles(Path.Combine(Raiz, "GestorSolicitudes.Tests"), "*.cs");
 
     private static string RaizDelProyecto()
     {

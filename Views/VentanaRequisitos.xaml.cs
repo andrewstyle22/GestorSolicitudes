@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Views;
+namespace GestorSolicitudes.Views;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;

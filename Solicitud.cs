@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Models;
+namespace GestorSolicitudes.Models;
 
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;

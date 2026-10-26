@@ -374,7 +374,7 @@
                             <!-- El TextBox de WPF no tiene Placeholder: se pinta un texto
                                  encima que solo se ve mientras el campo está vacío. -->
                             <Grid Grid.Column="0">
-                                <TextBox x:Name="Buscar_empresas" MinWidth="160"
+                                <TextBox x:Name="BuscarEmpresas" MinWidth="160"
                                          Style="{StaticResource Campo}"
                                          Text="{Binding TextoBusqueda, Delay=250, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="{DynamicResource Filtro.BuscarToolTip}" />
@@ -386,7 +386,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Text, ElementName=Buscar_empresas}" Value="">
+                                                <DataTrigger Binding="{Binding Text, ElementName=BuscarEmpresas}" Value="">
                                                     <Setter Property="Visibility" Value="Visible" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -501,7 +501,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn x:Name="Estado" Width="150">
+                            <DataGridTemplateColumn Width="150">
                                 <DataGridTemplateColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Estado}" />
@@ -603,7 +603,7 @@
                                     VerticalAlignment="Center">
                             <TextBlock Text="{DynamicResource Paginacion.PorPagina}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <ComboBox x:Name="SelectorFilasPagina" Width="64"
+                            <ComboBox Width="64"
                                       Style="{StaticResource CampoCombo}"
                                       ItemsSource="{Binding TamanosPagina}"
                                       SelectedItem="{Binding TamanoPagina}" />
@@ -611,29 +611,29 @@
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal"
                                     VerticalAlignment="Center">
-                            <TextBlock x:Name="RangoTexto" Text="{Binding RangoPagina}"
+                            <TextBlock Text="{Binding RangoPagina}"
                                        VerticalAlignment="Center" Margin="0,0,12,0" MinWidth="90"
                                        TextAlignment="Right" />
 
-                            <Button x:Name="BotonPrimeraPagina" Content="|◀" Margin="0,0,4,0"
+                            <Button Content="|◀" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
                                     IsEnabled="{Binding PuedeIrAInicio}"
                                     Command="{Binding IrAInicioCommand}"
                                     ToolTip="{DynamicResource Paginacion.Primero}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Primero}" />
-                            <Button x:Name="BotonPaginaAnterior" Content="◀" Margin="0,0,4,0"
+                            <Button Content="◀" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
                                     IsEnabled="{Binding PuedeRetroceder}"
                                     Command="{Binding IrAtrasCommand}"
                                     ToolTip="{DynamicResource Paginacion.Anterior}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Anterior}" />
-                            <Button x:Name="BotonPaginaSiguiente" Content="▶" Margin="0,0,4,0"
+                            <Button Content="▶" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
                                     IsEnabled="{Binding PuedeAvanzar}"
                                     Command="{Binding IrAdelanteCommand}"
                                     ToolTip="{DynamicResource Paginacion.Siguiente}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Siguiente}" />
-                            <Button x:Name="BotonUltimaPagina" Content="▶|" Padding="8,2"
+                            <Button Content="▶|" Padding="8,2"
                                     Style="{StaticResource BotonSecundario}"
                                     IsEnabled="{Binding PuedeIrAlFinal}"
                                     Command="{Binding IrAlFinalCommand}"
@@ -649,7 +649,7 @@
                           Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}" />
 
             <!-- Detalle -->
-            <Border x:Name="NuevaCandidatura" Grid.Column="3" Background="{StaticResource Panel}"
+            <Border Grid.Column="3" Background="{StaticResource Panel}"
                     BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8"
                     Width="440" MinWidth="380"
                     Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}">

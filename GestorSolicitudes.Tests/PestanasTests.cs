@@ -11,13 +11,13 @@ namespace GestorSolicitudes.Tests;
 public class PestanasTests
 {
     /// <summary>
-    /// Los estilos que dependen de una plantilla (las pesta�as del panel de detalle y el
-    /// bot�n del desplegable de columnas) viven en App.xaml y solo se resuelven al
+    /// Los estilos que dependen de una plantilla (las pestañas del panel de detalle y el
+    /// botón del desplegable de columnas) viven en App.xaml y solo se resuelven al
     /// aplicarse, no al compilar: este test carga los recursos (sin pasar por OnStartup,
-    /// que crear�a la base real) y fuerza el dibujo para que se construyan las plantillas
+    /// que crearía la base real) y fuerza el dibujo para que se construyan las plantillas
     /// y se activen los triggers.
-    /// Solo puede existir una Application por AppDomain, as� que todos los estilos con
-    /// plantilla se comprueban aqu� y en un �nico test.
+    /// Solo puede existir una Application por AppDomain, así que todos los estilos con
+    /// plantilla se comprueban aquí y en un único test.
     /// </summary>
     [StaFact]
     public void AppXaml_LosEstilosConPlantillaSeComponenAlPintar()
@@ -37,7 +37,7 @@ public class PestanasTests
         pestanas.Items.Add(new TabItem { Style = estiloPestana, Header = "Seguimiento", IsSelected = true });
 
         // El layout del TabControl genera el TabPanel (IsItemsHost), aplica las
-        // plantillas de los TabItem y activa los triggers con los Est�ticos de
+        // plantillas de los TabItem y activa los triggers con los Estáticos de
         // recurso del subrayado de acento.
         pestanas.Measure(new Size(400, 300));
         pestanas.Arrange(new Rect(0, 0, 400, 300));
@@ -46,7 +46,7 @@ public class PestanasTests
         Assert.NotNull(pestanas.Template);
         Assert.True(((TabItem)pestanas.Items[1]).IsSelected);
 
-        // El bot�n de "Columnas": sin plantilla propia ser�a un rect�ngulo gris, y el
+        // El botón de "Columnas": sin plantilla propia sería un rectángulo gris, y el
         // trigger de IsChecked es lo que pinta el borde de acento al abrirse la lista.
         var estiloBoton = (Style)app.Resources["BotonDesplegable"]!;
         Assert.Equal(typeof(ToggleButton), estiloBoton.TargetType);
@@ -105,8 +105,8 @@ public class PestanasTests
             FontWeights.SemiBold,
             estiloCabecera.Setters.OfType<Setter>().Single(s => s.Property == TextBlock.FontWeightProperty).Value);
 
-        // El icono de la bandeja se carga del recurso empaquetado, as� que se comprueba
-        // que existe y trae los tama�os que usa la bandeja, con la misma ruta que usa
+        // El icono de la bandeja se carga del recurso empaquetado, así que se comprueba
+        // que existe y trae los tamaños que usa la bandeja, con la misma ruta que usa
         // MainWindow: relativa al ensamblado principal y sin "pack://" absoluto.
         StreamResourceInfo? recurso = Application.GetResourceStream(
             new Uri($"/{typeof(App).Assembly.GetName().Name};component/Resources/appicon.ico", UriKind.Relative));
