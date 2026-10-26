@@ -3,6 +3,7 @@ namespace GestorSolicitudes.Views;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.ViewModels;
 using Microsoft.Win32;
 
@@ -49,6 +50,13 @@ internal sealed class DialogoService : IDialogoService
         return dialogo.ShowDialog() == true ? dialogo.FileName : null;
     }
 
-    public void AbrirEnlace(string url) =>
+    public void AbrirEnlace(string url)
+    {
+        if (!Enlaces.EsWeb(url))
+        {
+            return;
+        }
+
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
 }

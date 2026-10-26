@@ -7,6 +7,9 @@ namespace GestorSolicitudes.ViewModels;
 /// </summary>
 internal sealed class DialogosNulos : IDialogoService
 {
+    public DialogosNulos() =>
+        System.Diagnostics.Debug.WriteLine("MainViewModel sin IDialogoService: los avisos no se mostrarán.");
+
     public bool Confirmar(string mensaje, string titulo) => false;
 
     public void Avisar(string mensaje, string titulo)

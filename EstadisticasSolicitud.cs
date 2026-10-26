@@ -3,7 +3,14 @@ namespace GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
 /// <summary>Los números de la cabecera, ya calculados (no formateados).</summary>
-public sealed record ResumenEstadisticas(int Total, int Abiertas, int EnEntrevista, int Ofertas, int SeguimientosPendientes, double? TasaRespuesta, double? MediaDiasRespuesta);
+public sealed record ResumenEstadisticas(
+    int Total,
+    int Abiertas,
+    int EnEntrevista,
+    int Ofertas,
+    int SeguimientosPendientes,
+    double? TasaRespuesta,
+    double? MediaDiasRespuesta);
 
 /// <summary>Cálculo puro de las estadísticas de la cabecera.</summary>
 public static class EstadisticasSolicitud

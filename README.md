@@ -104,9 +104,11 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
   empresa, reutilizando la búsqueda de texto.
 - El panel de detalle está en **tres pestañas** —*Oferta*, *Seguimiento* y *Adjuntos e historial*—
   para no tener que hacer scroll de quince bloques seguidos: *Empresa* y *Puesto* quedan siempre a la
-  vista arriba y los botones de *Eliminar/Duplicar/Cancelar/Guardar* abajo. Se abre siempre en *Oferta*.
-- **Exportar CSV** saca todo con `;` y UTF-8 con BOM, así que Excel en español lo abre en columnas
-  directamente sin el asistente de importación.
+  vista arriba y los botones de *Eliminar/Duplicar/Cancelar/Guardar* abajo. La pestaña activa se
+  conserva mientras la app sigue abierta; al arrancar se abre en *Oferta*.
+- **Exportar CSV** saca todas las filas con `;` y UTF-8 con BOM, así que Excel en español lo abre en
+  columnas directamente sin el asistente de importación. No incluye todos los campos: faltan
+  `Requisitos`, `Origen`, `MotivoRechazo`, `ContactoTelefono` y las rutas y nombres de los adjuntos.
 - La fila de filtros lleva el **buscador** a la izquierda, con el texto *Buscar...* mientras está
   vacío, y el grupo *Columnas*, *Estados* y las dos casillas pegado al borde derecho. El botón
   *Columnas* abre una lista con casillas para mostrar u ocultar *Días*, *1ª respuesta*, *Entrevista*,
@@ -153,31 +155,34 @@ Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] p
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
 Localizacion.cs → traducciones (es/en/de), cultura y selector de idioma
-Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
+Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
+
 AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
+DocumentoHelper.cs → extrae el texto de DOCX/ODT para el visor de adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
 Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)
+CsvHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqueda (minúsculas sin tildes)
+CsvExportador.cs → exportación CSV pura (cabecera + filas)
+EmbudoHelper.cs, EmbudoPeriodo.cs → lógica del embudo (máximo, periodos, rangos, conteos)
+EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
+ReglasSolicitud.cs → reglas de negocio puras (datos obligatorios, seguimiento, hito inicial)
+Enlaces.cs → validación de los enlaces que se abren (solo http y https)
+
 ColumnaItem.cs → columna ocultable del selector (namespace ViewModels)
 IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
-DialogoService.cs → implementación WPF de IDialogoService (MessageBox, Open/SaveFileDialog)
-CsvHelper.cs → escapa los campos del CSV de exportación; su normalización de texto (minúsculas sin
-                  tildes) la usa también la búsqueda
-EmbudoHelper.cs → lógica del embudo (máximo, periodos, rangos, conteos)
-EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
-CsvExportador.cs → exportación CSV pura (cabecera + filas)
-EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
-ReglasSolicitud.cs → reglas de negocio puras (datos obligatorios, seguimiento, hito inicial)
 MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, exportación y columnas
                  (sin WPF: habla con IDialogoService)
-App.xaml → tema y estilos compartidos (botones, campos, desplegables)
-App.xaml.cs → arranque, cultura y preferencias
+
+DialogoService.cs, DialogosNulos.cs → implementación WPF y versión silenciosa de IDialogoService
+App.xaml, App.xaml.cs → tema, estilos compartidos, arranque, cultura y preferencias
 Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
 Views/FilaAdjunto.xaml(.cs) → fila de un adjunto (CV o carta): etiqueta, nombre y botones
 Views/VentanaRequisitos.xaml(.cs) → ventana de lectura de los requisitos
+Views/VisorAdjuntoWindow.xaml(.cs) → visor de PDF/DOCX/ODT sin abrir el programa externo
 Resources/appicon.ico → icono de la ventana, del ejecutable y de la bandeja
 GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQLite, estilos de las
-                           pestañas y lógica del ViewModel
+                           ventanas y lógica del ViewModel
 ```
 
 ## Decisiones que conviene conocer antes de tocarlo

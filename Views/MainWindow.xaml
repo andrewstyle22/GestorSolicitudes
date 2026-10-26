@@ -5,7 +5,6 @@
         xmlns:loc="clr-namespace:GestorSolicitudes"
         xmlns:views="clr-namespace:GestorSolicitudes.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GestorSolicitudes.Views.MainWindow"
-        Icon="/GestorSolicitudes;component/Resources/appicon.ico"
         Title="{DynamicResource TituloVentana}"
         Height="780" Width="1525"
         MinHeight="600" MinWidth="1080"

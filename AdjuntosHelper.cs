@@ -38,20 +38,20 @@ public static class AdjuntosHelper
             return;
         }
 
-        bool esNuestraCarpeta = ruta.StartsWith(
-            carpeta + Path.DirectorySeparatorChar,
-            StringComparison.OrdinalIgnoreCase);
-
-        if (!esNuestraCarpeta)
-        {
-            return;
-        }
-
         try
         {
-            if (File.Exists(ruta))
+            // Canonicalizar evita que "carpeta\..\otro" pase por estar dentro.
+            string carpetaCompleta = Path.GetFullPath(carpeta) + Path.DirectorySeparatorChar;
+            string rutaCompleta = Path.GetFullPath(ruta);
+
+            if (!rutaCompleta.StartsWith(carpetaCompleta, StringComparison.OrdinalIgnoreCase))
             {
-                File.Delete(ruta);
+                return;
+            }
+
+            if (File.Exists(rutaCompleta))
+            {
+                File.Delete(rutaCompleta);
             }
         }
         catch (Exception ex)

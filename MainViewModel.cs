@@ -530,6 +530,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.ActualizarEstadisticas();
     }
 
+    /// <summary>
+    /// La cabecera mide la base entera, no la lista filtrada: los filtros solo recortan la tabla.
+    /// Así los totales no bailan al buscar o al marcar «Solo abiertas».
+    /// </summary>
     private void ActualizarEstadisticas()
     {
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(this.db.Solicitudes.ToList());
@@ -684,7 +688,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Edicion = actual;
     }
 
-    /// <summary>Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.</summary>
+    /// <summary>
+    /// Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.
+    /// Exige que <paramref name="solicitud"/> esté en seguimiento por el contexto: si estuviera
+    /// separada, EF no conserva el valor original y devolvería el actual.
+    /// </summary>
     private (string? Cv, string? Carta) RutasGuardadas(Solicitud solicitud)
     {
         EntityEntry<Solicitud> entrada = this.db.Entry(solicitud);
@@ -968,7 +976,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.RecargarEmbudoSiVisible();
     }
 
-    /// <summary>Borra la candidatura de la base. Devuelve el fallo en vez de lanzarlo para poder avisar.</summary>
+    /// <summary>
+    /// Borra la candidatura de la base. Devuelve el fallo en vez de lanzarlo para poder avisar;
+    /// <c>null</c> significa que se borró bien.
+    /// </summary>
     internal Exception? EliminarSolicitud(Solicitud solicitud)
     {
         try
@@ -1056,7 +1067,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             Localizacion.Texto("Titulo.ExportacionCompletada"));
     }
 
-    /// <summary>Escribe el CSV. Devuelve el fallo en vez de lanzarlo para poder avisar.</summary>
+    /// <summary>
+    /// Escribe el CSV. Devuelve el fallo en vez de lanzarlo para poder avisar;
+    /// <c>null</c> significa que se escribió bien.
+    /// </summary>
     internal Exception? EscribirCsv(string ruta)
     {
         try

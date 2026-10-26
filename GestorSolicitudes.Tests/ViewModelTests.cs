@@ -159,6 +159,24 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void Estadisticas_MidenLaBaseEnteraAunqueLaTablaEsteFiltrada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        db.Solicitudes.Add(new Solicitud { Empresa = "Abierta", Puesto = "A" });
+        db.Solicitudes.Add(new Solicitud { Empresa = "Cerrada", Puesto = "B", Estado = EstadoSolicitud.Rechazada });
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.SoloAbiertas = true;
+
+        // El filtro recorta la tabla, no la cabecera.
+        Assert.Single(vm.Solicitudes);
+        Assert.Equal(2, vm.TotalSolicitudes);
+        Assert.Equal(1, vm.ProcesosAbiertos);
+    }
+
+    [Fact]
     public void FiltroSeguimientoPendiente_MuestraSoloLosVencidosAbiertos()
     {
         using var db = TestDb.NuevoContexto();

@@ -16,7 +16,11 @@ using Hardcodet.Wpf.TaskbarNotification;
 [ExcludeFromCodeCoverage]
 public partial class MainWindow : Window
 {
+    private const int SegundosAntesDelPrimerAviso = 20;
+    private const int MinutosEntreAvisos = 5;
+
     private readonly MainViewModel vm;
+    private readonly AppDbContext db;
     private readonly HashSet<int> idsVencidosAvisados = new();
     private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
@@ -32,8 +36,12 @@ public partial class MainWindow : Window
     {
         this.InitializeComponent();
 
-        this.vm = new MainViewModel(new AppDbContext(), dialogo: new DialogoService());
+        this.db = new AppDbContext();
+        this.vm = new MainViewModel(this.db, dialogo: new DialogoService());
         this.DataContext = this.vm;
+
+        // El icono de la ventana sale de la misma ruta que el de la bandeja: una sola fuente.
+        this.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(RutaIcono);
 
         // Ctrl+N nueva candidatura, Ctrl+S guardar.
         this.InputBindings.Add(new KeyBinding(this.vm.NuevaCommand, Key.N, ModifierKeys.Control));
@@ -87,10 +95,10 @@ public partial class MainWindow : Window
     /// </summary>
     private void ArrancarRecordatorios()
     {
-        this.temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+        this.temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromSeconds(SegundosAntesDelPrimerAviso) };
         this.temporizadorRecordatorios.Tick += (_, _) =>
         {
-            this.temporizadorRecordatorios.Interval = TimeSpan.FromMinutes(5);
+            this.temporizadorRecordatorios.Interval = TimeSpan.FromMinutes(MinutosEntreAvisos);
             this.ComprobarSeguimientosVencidos();
         };
         this.temporizadorRecordatorios.Start();
@@ -99,9 +107,19 @@ public partial class MainWindow : Window
     private void ComprobarSeguimientosVencidos()
     {
         List<Solicitud> vencidos = this.vm.SeguimientosVencidosAhora();
-        List<Solicitud> nuevos = vencidos
-            .Where(s => this.idsVencidosAvisados.Add(s.Id))
-            .ToList();
+
+        // El aviso es una vez por sesión, pero solo para los que siguen vencidos: así el
+        // HashSet no crece con filas que ya se resolvieron o se borraron.
+        this.idsVencidosAvisados.IntersectWith(vencidos.Select(s => s.Id));
+
+        var nuevos = new List<Solicitud>();
+        foreach (Solicitud solicitud in vencidos)
+        {
+            if (this.idsVencidosAvisados.Add(solicitud.Id))
+            {
+                nuevos.Add(solicitud);
+            }
+        }
 
         if (nuevos.Count == 0)
         {
@@ -200,9 +218,16 @@ public partial class MainWindow : Window
     protected override void OnClosed(System.EventArgs e)
     {
         this.IconoBandeja.Visibility = Visibility.Hidden;
+        this.temporizadorRecordatorios?.Stop();
 
         // El evento de idioma es estático: si no se suelta, retiene el ViewModel.
         this.vm.Dispose();
+
+        // La ventana creó la base y los recursos de la bandeja, así que los libera ella.
+        this.db.Dispose();
+        this.IconoBandeja.Dispose();
+        this.flujoIcono?.Dispose();
+
         base.OnClosed(e);
     }
 }

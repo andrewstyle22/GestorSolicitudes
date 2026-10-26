@@ -9,7 +9,7 @@ using GestorSolicitudes.Models;
 public static class ReglasSolicitud
 {
     /// <summary>
-    /// Verifica si los datos obligatorios (empuesto) están prellenados.
+    /// Verifica si los datos obligatorios (empresa y puesto) están rellenos.
     /// </summary>
     public static bool TieneDatosObligatorios(Solicitud solicitud) =>
         !string.IsNullOrWhiteSpace(solicitud.Empresa)

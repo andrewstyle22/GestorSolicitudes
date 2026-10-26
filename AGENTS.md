@@ -41,4 +41,4 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 - Todo cambio de función (crear/editar/eliminar) obliga a su test: carga la skill `tests-obligatorios` (`.opencode/skills/`) y deja `dotnet test` en verde.
 - Tests que dependen del dispatcher WPF usan `[StaFact]` (Xunit.StaFact).
 - Los tests ven miembros `internal` vía `InternalsVisibleTo("GestorSolicitudes.Tests")`.
-- El CI corre en `windows-latest`; SonarCloud, aparte, en `ubuntu-24.04`.
+- El CI corre en `windows-latest`, incluido el análisis de SonarCloud.

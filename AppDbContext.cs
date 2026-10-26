@@ -2,6 +2,7 @@
 
 using System.IO;
 using GestorSolicitudes.Models;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
@@ -40,7 +41,9 @@ public class AppDbContext : DbContext
             Directory.CreateDirectory(carpeta);
         }
 
-        optionsBuilder.UseSqlite($"Data Source={this.rutaBaseDatos}");
+        // El builder escapa rutas con ';' o comillas que romperían la cadena de conexión.
+        string cadena = new SqliteConnectionStringBuilder { DataSource = this.rutaBaseDatos }.ToString();
+        optionsBuilder.UseSqlite(cadena);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

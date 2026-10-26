@@ -67,7 +67,7 @@ public static class Localizacion
         ("Grafica.Respondidas", "Respondidas"),
         ("Grafica.Entrevistas", "Entrevistas"),
         ("Grafica.Ofertas", "Ofertas"),
-("Grafica.Ver", "Gráfico"),
+        ("Grafica.Ver", "Gráfico"),
         ("Grafica.Ocultar", "Ocultar gráfica"),
 
         ("GranularidadEmbudo.Mes", "Mes"),
@@ -154,7 +154,7 @@ public static class Localizacion
         ("Historial.Titulo", "HISTORIAL"),
         ("Historial.Anadir", "+ Añadir"),
 
-        // ----- Camios comunes -----
+        // ----- Campos comunes -----
         ("Campo.Nombre", "Nombre"),
         ("Campo.Email", "Email"),
         ("Campo.Telefono", "Teléfono"),
@@ -405,7 +405,7 @@ public static class Localizacion
         ("Historial.Titulo", "HISTORY"),
         ("Historial.Anadir", "+ Add"),
 
-        // ----- Camios comunes -----
+        // ----- Campos comunes -----
         ("Campo.Nombre", "Name"),
         ("Campo.Email", "Email"),
         ("Campo.Telefono", "Phone"),
@@ -557,9 +557,9 @@ public static class Localizacion
 
         // ----- Gráfica -----
         ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, nach {0} (gesendet → Antworten → Interviews → Angebote)"),
-        ("Grafica.TituloMes", "nach Monat"),
-        ("Grafica.TituloSemana", "nach Woche"),
-        ("Grafica.TituloDia", "nach Tag"),
+        ("Grafica.TituloMes", "nach Monaten"),
+        ("Grafica.TituloSemana", "nach Wochen"),
+        ("Grafica.TituloDia", "nach Tagen"),
         ("Grafica.Granularidad", "Gruppieren nach"),
         ("Grafica.Anterior", "Vorheriger Zeitraum"),
         ("Grafica.Siguiente", "Nächster Zeitraum"),
@@ -569,7 +569,7 @@ public static class Localizacion
         ("Grafica.Respondidas", "Beantwortet"),
         ("Grafica.Entrevistas", "Interviews"),
         ("Grafica.Ofertas", "Angebote"),
-("Grafica.Ver", "Diagramm"),
+        ("Grafica.Ver", "Diagramm"),
         ("Grafica.Ocultar", "Diagramm ausblenden"),
 
         ("GranularidadEmbudo.Mes", "Monat"),
@@ -581,7 +581,7 @@ public static class Localizacion
         ("Filtro.BuscarToolTip", "Suche nach Unternehmen, Position, Technologie, Standort oder Portal"),
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
-        ("Filtro.SeguimientoPendiente", "Follow-up fällig"),
+        ("Filtro.SeguimientoPendiente", "Nachverfolgung fällig"),
         ("Filtro.SinEspecificar", "Nicht angegeben"),
         ("Filtro.TodosLosEstados", "Alle Status"),
 
@@ -595,7 +595,7 @@ public static class Localizacion
         ("Columna.DiasToolTip", "Tage seit dem Versand; nach Abschluss, wie lange der Prozess gedauert hat"),
         ("Columna.PrimeraRespuesta", "1. Antwort"),
         ("Columna.Entrevista", "Interview"),
-        ("Columna.Seguimiento", "Follow-up"),
+        ("Columna.Seguimiento", "Nachverfolgung"),
         ("Columna.Interes", "Interesse"),
         ("Columna.Portal", "Portal"),
 
@@ -614,7 +614,7 @@ public static class Localizacion
         ("Detalle.VerTodas", "Alle anzeigen"),
         ("Detalle.VerTodasToolTip", "Filtert die Liste auf alle Bewerbungen dieses Unternehmens"),
         ("Pestana.Oferta", "Angebot"),
-        ("Pestana.Seguimiento", "Follow-up"),
+        ("Pestana.Seguimiento", "Nachverfolgung"),
         ("Pestana.AdjuntosHistorial", "Anhänge & Verlauf"),
 
         // ----- Pestaña Oferta -----
@@ -640,7 +640,7 @@ public static class Localizacion
         ("Seguimiento.FechaSolicitud", "Bewerbungsdatum"),
         ("Seguimiento.PrimeraContestacion", "Erste Antwort"),
         ("Seguimiento.DiaEntrevista", "Tag des Interviews"),
-        ("Seguimiento.ProximoSeguimiento", "Nächstes Follow-up"),
+        ("Seguimiento.ProximoSeguimiento", "Nächste Nachverfolgung"),
         ("Seguimiento.ProximoSeguimientoToolTip", "Wann du wieder schreiben solltest, falls keine Nachricht kommt"),
         ("Seguimiento.FechaCierre", "Abschlussdatum"),
         ("Seguimiento.RespuestaEmpresa", "Antwort des Unternehmens"),
@@ -656,7 +656,7 @@ public static class Localizacion
         ("Historial.Titulo", "VERLAUF"),
         ("Historial.Anadir", "+ Hinzufügen"),
 
-        // ----- Camios comunes -----
+        // ----- Campos comunes -----
         ("Campo.Nombre", "Name"),
         ("Campo.Email", "E-Mail"),
         ("Campo.Telefono", "Telefon"),
@@ -674,11 +674,11 @@ public static class Localizacion
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Bewerbungstracker öffnen"),
-        ("Bandeja.Comprobar", "Follow-ups jetzt prüfen"),
+        ("Bandeja.Comprobar", "Nachverfolgungen jetzt prüfen"),
         ("Bandeja.Salir", "Beenden"),
-        ("Bandeja.SeguimientoVencido", "Follow-up überfällig"),
+        ("Bandeja.SeguimientoVencido", "Nachverfolgung überfällig"),
         ("Bandeja.VencidoTexto", "{0} — {1}. Fällig seit {2}."),
-        ("Bandeja.VencidosMultiples", "{0} überfällige Follow-ups"),
+        ("Bandeja.VencidosMultiples", "{0} überfällige Nachverfolgungen"),
         ("Bandeja.RecordatorioLinea", "• {0} — {1}"),
 
         // ----- Diálogos de fichero -----
@@ -734,7 +734,7 @@ public static class Localizacion
         ("Csv.DiasHastaRespuesta", "Tage bis Antwort"),
         ("Csv.Entrevista", "Interview"),
         ("Csv.Cierre", "Abschluss"),
-        ("Csv.ProximoSeguimiento", "Nächstes Follow-up"),
+        ("Csv.ProximoSeguimiento", "Nächste Nachverfolgung"),
         ("Csv.SalarioMin", "Mindestgehalt"),
         ("Csv.SalarioMax", "Höchstgehalt"),
         ("Csv.Pretension", "Gehaltsvorstellung"),
@@ -770,7 +770,7 @@ public static class Localizacion
         ("TipoEvento.Llamada", "Anruf / Screening"),
         ("TipoEvento.PruebaTecnica", "Technischer Test"),
         ("TipoEvento.Entrevista", "Interview"),
-        ("TipoEvento.Seguimiento", "Follow-up gesendet"),
+        ("TipoEvento.Seguimiento", "Nachverfolgung gesendet"),
         ("TipoEvento.Oferta", "Angebot"),
         ("TipoEvento.Rechazo", "Absage"),
         ("MotivoRechazo.Salario", "Gehalt / Vorstellung"),
