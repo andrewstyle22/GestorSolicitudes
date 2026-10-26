@@ -71,8 +71,27 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
   /p:CoverletOutput="<temp>\coverage" /p:CoverletOutputFormat=opencover` y filtrar
   las líneas `+` del `git diff <merge-base> HEAD` contra el `coverage.opencover.xml`
   (sumatorio de líneas y de `bec`/`bev` por línea nueva).
+- **Comprueba que el reporte no está vacío**: si el XML pesa unos cientos de bytes y
+  el `Summary` trae `numSequencePoints="0"`, coverlet no ha podido mapear ninguna
+  línea. No es que los tests no cubran: es que falta el PDB (ver más abajo).
 - Tests que dependen del dispatcher WPF: `[StaFact]` (Xunit.StaFact). `[StaFact]`
   y `[Theory]` no pueden coexistir en el mismo test (xUnit1002).
+
+## Cobertura a 0,0% en todos los ficheros
+
+Si Sonar muestra `0.0%` y las líneas sin cubrir coinciden con el total de cada
+fichero, el problema es el reporte, no los tests. En este repo la causa fue
+`<DebugType>None</DebugType>` en `GestorSolicitudes.csproj`: sin PDB, coverlet no
+puede asociar los puntos de secuencia y genera un OpenCover vacío. `None` solo hace
+falta al publicar, así que se condiciona a Release:
+
+```xml
+<DebugType Condition="'$(Configuration)' == 'Release'">None</DebugType>
+```
+
+`dotnet test` compila en Debug, así que el CI recupera el PDB y la cobertura real
+(~89% de líneas en este repo). Después de tocar esto, vuelve a mirar el tamaño del
+`coverage.opencover.xml`, no solo el código de salida de `dotnet test`.
 
 ## Convenciones de este repo que se deben respetar
 
@@ -153,6 +172,12 @@ y su arreglo para no repetirlo:
   ("de que todo fue bien"). Si aparece en un comentario que no es una tarea pendiente,
   reescribe la frase ("la operación terminó bien") en vez de añadir un `NOSONAR`.
   Ya pasó en `IDialogoService.cs` y `ArquitecturaTests.cs`.
+- **Duplicación (`Duplicated Lines`)**: una lógica extraída a un helper pero sin
+  conectar deja dos copias y Sonar marca la nueva. Conecta el helper y borra la
+  copia vieja: `MainViewModel.ConstruirCsv` delegó en `CsvExportador.Construir` y
+  desaparecieron las ~50 líneas duplicadas. Antes de extraer, busca el cuerpo que ya
+  existe (`Select-String -Pattern 'Csv\.Empresa|CsvHelper\.Escapar'`) y no copies el
+  bloque.
 
 ## Barrido antes de dar por cerrados los issues
 

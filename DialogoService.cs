@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Views;
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using GestorSolicitudes.ViewModels;
 using Microsoft.Win32;
@@ -10,6 +11,7 @@ using Microsoft.Win32;
 /// un MessageBox o abre un diálogo de fichero. Aísla a los ViewModels de WPF y hace testables
 /// sus comandos (los tests inyectan un falso en vez de esta clase).
 /// </summary>
+[ExcludeFromCodeCoverage] // Diálogos WPF: no hay UI automatizable.
 internal sealed class DialogoService : IDialogoService
 {
     public bool Confirmar(string mensaje, string titulo) =>

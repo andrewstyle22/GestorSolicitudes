@@ -495,13 +495,17 @@ public class ViewModelTests
     public void EscribirCsv_EnRutaValidaGuardaElContenido()
     {
         using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.SaveChanges();
         var vm = new MainViewModel(db);
         string ruta = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv");
 
         Exception? error = vm.EscribirCsv(ruta);
 
         Assert.Null(error);
-        Assert.Contains(Localizacion.Texto("Csv.Empresa"), File.ReadAllText(ruta));
+        string csv = File.ReadAllText(ruta);
+        Assert.Contains(Localizacion.Texto("Csv.Empresa"), csv);
+        Assert.Contains("ACME", csv);
     }
 
     [Fact]

@@ -16,7 +16,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
     // por el arranque de la app se apoyan en que por defecto el idioma es el castellano.
     private const string ClaveError = "Error";
-    private const string FormatoFechaCsv = "yyyy-MM-dd";
 
     private readonly AppDbContext db;
     private readonly string rutaColumnas;
@@ -1077,61 +1076,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    internal string ConstruirCsv()
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine(string.Join(
-                    ';',
-                    Localizacion.Texto("Csv.Empresa"),
-                    Localizacion.Texto("Csv.Puesto"),
-                    Localizacion.Texto("Csv.Estado"),
-                    Localizacion.Texto("Csv.Portal"),
-                    Localizacion.Texto("Csv.Ubicacion"),
-                    Localizacion.Texto("Csv.Modalidad"),
-                    Localizacion.Texto("Csv.FechaSolicitud"),
-                    Localizacion.Texto("Csv.PrimeraRespuesta"),
-                    Localizacion.Texto("Csv.DiasHastaRespuesta"),
-                    Localizacion.Texto("Csv.Entrevista"),
-                    Localizacion.Texto("Csv.Cierre"),
-                    Localizacion.Texto("Csv.ProximoSeguimiento"),
-                    Localizacion.Texto("Csv.SalarioMin"),
-                    Localizacion.Texto("Csv.SalarioMax"),
-                    Localizacion.Texto("Csv.Pretension"),
-                    Localizacion.Texto("Csv.Interes"),
-                    Localizacion.Texto("Csv.Tecnologias"),
-                    Localizacion.Texto("Csv.Contacto"),
-                    Localizacion.Texto("Csv.EmailContacto"),
-                    Localizacion.Texto("Csv.RespuestaEmpresa"),
-                    Localizacion.Texto("Csv.Notas"),
-                    Localizacion.Texto("Csv.Enlace")));
-        foreach (Solicitud s in this.db.Solicitudes.OrderByDescending(x => x.FechaSolicitud).ToList())
-        {
-            sb.AppendLine(string.Join(
-                ';',
-                CsvHelper.Escapar(s.Empresa),
-                CsvHelper.Escapar(s.Puesto),
-                CsvHelper.Escapar(EnumHelper.Descripcion(s.Estado)),
-                CsvHelper.Escapar(s.Portal),
-                CsvHelper.Escapar(s.Ubicacion),
-                CsvHelper.Escapar(EnumHelper.Descripcion(s.Modalidad)),
-                s.FechaSolicitud.ToString(FormatoFechaCsv),
-                s.FechaPrimeraRespuesta?.ToString(FormatoFechaCsv) ?? string.Empty,
-                s.DiasHastaRespuesta?.ToString() ?? string.Empty,
-                s.FechaEntrevista?.ToString(FormatoFechaCsv) ?? string.Empty,
-                s.FechaCierre?.ToString(FormatoFechaCsv) ?? string.Empty,
-                s.ProximoSeguimiento?.ToString(FormatoFechaCsv) ?? string.Empty,
-                s.SalarioMin?.ToString() ?? string.Empty,
-                s.SalarioMax?.ToString() ?? string.Empty,
-                s.PretensionSalarial?.ToString() ?? string.Empty,
-                s.Interes.ToString(),
-                CsvHelper.Escapar(s.Tecnologias),
-                CsvHelper.Escapar(s.ContactoNombre),
-                CsvHelper.Escapar(s.ContactoEmail),
-                CsvHelper.Escapar(s.RespuestaEmpresa),
-                CsvHelper.Escapar(s.Notas),
-                CsvHelper.Escapar(s.EnlaceOferta)));
-        }
-
-        return sb.ToString();
-    }
+    internal string ConstruirCsv() =>
+        CsvExportador.Construir(this.db.Solicitudes.OrderByDescending(x => x.FechaSolicitud).ToList());
 }
