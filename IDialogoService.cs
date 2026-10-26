@@ -13,7 +13,7 @@ public interface IDialogoService
     /// <summary>Advertencia: algo no es correcto, pero la app sigue.</summary>
     void Avisar(string mensaje, string titulo);
 
-    /// <summary>Aviso informativo de que todo fue bien.</summary>
+    /// <summary>Aviso informativo de que la operación terminó bien.</summary>
     void Informar(string mensaje, string titulo);
 
     /// <summary>Error: la operación no se pudo completar.</summary>

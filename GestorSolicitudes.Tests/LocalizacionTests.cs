@@ -11,6 +11,8 @@ namespace GestorSolicitudes.Tests;
 /// </summary>
 public class LocalizacionTests
 {
+    private static readonly Idioma[] IdiomasEsperados = [Idioma.Castellano, Idioma.Ingles, Idioma.Aleman];
+
     [Fact]
     public void Texto_TraduceConElIdiomaPedidoSinTocarElActivo()
     {
@@ -77,7 +79,7 @@ public class LocalizacionTests
         Assert.Equal("Español", idiomas[0].Nombre);
         Assert.Equal("English", idiomas[1].Nombre);
         Assert.Equal("Deutsch", idiomas[2].Nombre);
-        Assert.Equal(new[] { Idioma.Castellano, Idioma.Ingles, Idioma.Aleman }, idiomas.Select(i => i.Idioma));
+        Assert.Equal(IdiomasEsperados, idiomas.Select(i => i.Idioma));
     }
 
     [Fact]

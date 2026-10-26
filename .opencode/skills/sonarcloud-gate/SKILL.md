@@ -132,6 +132,37 @@ y su arreglo para no repetirlo:
   o un `Regex` estático construido con timeout. Ya pasó en `DocumentoHelper.cs`.
   Regla general: nunca uses los atajos `Regex.IsMatch/Match/Replace/Split` sin timeout
   sobre texto que viene de un fichero.
+- **S3881 (`Fix this implementation of 'IDisposable' to conform to the dispose pattern`)
+  y CA1816 (`Change Dispose() to call GC.SuppressFinalize`)**: un `IDisposable` sin
+  finalizador se resuelve **sellando la clase** (`public sealed partial class ...`) y
+  llamando a `GC.SuppressFinalize(this)` al final de `Dispose()`. Si la clase no puede
+  sellarse (se hereda), hace falta `protected virtual void Dispose(bool disposing)` y
+  `Dispose()` llama a `Dispose(true)` + `GC.SuppressFinalize(this)`. Ya pasó en
+  `MainViewModel`. No añadas un finalizador solo para callar la regla.
+- **S1117 (`Rename 'x' which hides the field with the same name`)**: una variable local
+  o de patrón (`if (this.Edicion is not Solicitud edicion)`) que se llama igual que un
+  campo generado (`edicion`) oculta el campo. Renombra la local/parámetro (`solicitud`)
+  y deja el campo con su nombre. Cuidado con `[ObservableProperty]`: el campo privado y
+  la propiedad pública comparten nombre en PascalCase.
+- **S3878 (`Prefer 'static readonly' fields over constant array arguments...`)**: no
+  crees arrays literales en cada llamada (`Assert.Equal(new[] { ... }, ...)`). Usa un
+  `private static readonly` en la clase del test o evita el array (`lista.Take(n)`,
+  `lista.Skip(n)`). Ya pasó en `PaginadorTests` y `LocalizacionTests`.
+- **S1135 (`Complete the task associated to this 'TODO' comment`)**: la regla busca la
+  etiqueta `TODO`, pero también muerde el **"todo" español** de los comentarios
+  ("de que todo fue bien"). Si aparece en un comentario que no es una tarea pendiente,
+  reescribe la frase ("la operación terminó bien") en vez de añadir un `NOSONAR`.
+  Ya pasó en `IDialogoService.cs` y `ArquitecturaTests.cs`.
+
+## Barrido antes de dar por cerrados los issues
+
+Sonar no corre en local, pero estos patrones se encuentran con `grep`/`Select-String`:
+
+- `IDisposable|Dispose\(` en `*.cs` (¿hay otra clase que lo implemente?).
+- `\bedicion\b` (o el nombre del campo) en el fichero tocado: locales/parámetros que
+  lo ocultan.
+- `Assert\.(Equal|Contains)\(new` y `new\[\]` dentro de llamadas: arrays constantes.
+- `\btodo\b` (sin distinguir mayúsculas) en comentarios: falsos TODO en español.
 
 ## Errores que ya hemos puesto
 

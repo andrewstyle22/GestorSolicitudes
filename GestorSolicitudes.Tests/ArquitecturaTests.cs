@@ -28,7 +28,7 @@ public class ArquitecturaTests
     private static readonly IReadOnlyCollection<IType> CapaVistas = EnNamespace("Views");
 
     // Lo que vive en el raíz (App, Localizacion, Idioma...): el "arranque" que sí puede
-    // referenciar todo lo demás (crea la ventana, inyecta diccionarios de recursos).
+    // referenciar las demás capas (crea la ventana, inyecta diccionarios de recursos).
     private static readonly IReadOnlyCollection<IType> Nucleo =
         Arquitectura.Types.Where(t => Regex.IsMatch(t.FullName, @"^GestorSolicitudes\.[^.]+$")).ToArray();
 

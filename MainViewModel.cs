@@ -11,7 +11,7 @@ using GestorSolicitudes.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-public partial class MainViewModel : ObservableObject, IDisposable
+public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
     // por el arranque de la app se apoyan en que por defecto el idioma es el castellano.
@@ -54,7 +54,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// Se desengancha del evento estático de idioma: si no, cada ViewModel construido
     /// (los tests crean decenas) queda retenido para siempre.
     /// </summary>
-    public void Dispose() => Localizacion.IdiomaCambiado -= this.CuandoCambiaIdioma;
+    public void Dispose()
+    {
+        Localizacion.IdiomaCambiado -= this.CuandoCambiaIdioma;
+        GC.SuppressFinalize(this);
+    }
 
     // ---------------------------------------------------------------- Listas
     [ObservableProperty]
@@ -790,31 +794,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Guardar()
     {
-        if (this.Edicion is not Solicitud edicion || !this.Validar(edicion))
+        if (this.Edicion is not Solicitud solicitud || !this.Validar(solicitud))
         {
             return;
         }
 
-        bool esNueva = this.PrepararNueva(edicion);
+        bool esNueva = this.PrepararNueva(solicitud);
 
         // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
         (string? cvAnterior, string? cartaAnterior) = esNueva
             ? (null, null)
-            : this.RutasGuardadas(edicion);
+            : this.RutasGuardadas(solicitud);
 
         if (!this.Persistir())
         {
             return;
         }
 
-        this.EliminarAdjuntosSustituidos(edicion, (cvAnterior, cartaAnterior));
+        this.EliminarAdjuntosSustituidos(solicitud, (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
     }
 
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
-    private bool Validar(Solicitud edicion)
+    private bool Validar(Solicitud solicitud)
     {
-        if (ReglasSolicitud.TieneDatosObligatorios(edicion))
+        if (ReglasSolicitud.TieneDatosObligatorios(solicitud))
         {
             return true;
         }
@@ -829,24 +833,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// Propone el seguimiento y, si la candidatura es nueva, la añade con su primer hito.
     /// Devuelve si era nueva.
     /// </summary>
-    private bool PrepararNueva(Solicitud edicion)
+    private bool PrepararNueva(Solicitud solicitud)
     {
         // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
         // escribir, proponemos +7 dias desde el envio.
-        if (ReglasSolicitud.ProponerSeguimiento(edicion) is DateTime propuesta)
+        if (ReglasSolicitud.ProponerSeguimiento(solicitud) is DateTime propuesta)
         {
-            edicion.ProximoSeguimiento = propuesta;
+            solicitud.ProximoSeguimiento = propuesta;
         }
 
-        if (edicion.Id != 0)
+        if (solicitud.Id != 0)
         {
             return false;
         }
 
-        this.db.Solicitudes.Add(edicion);
+        this.db.Solicitudes.Add(solicitud);
 
         // Primer hito del historial, para que la línea temporal no empiece vacía.
-        ReglasSolicitud.AnadirHitoInicial(edicion);
+        ReglasSolicitud.AnadirHitoInicial(solicitud);
         return true;
     }
 
@@ -871,15 +875,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// Borra los adjuntos que la base ya no apunta tras guardar. Se hace aquí y no antes:
     /// si el guardado falla, la base sigue apuntando a un fichero que sigue existiendo.
     /// </summary>
-    private void EliminarAdjuntosSustituidos(Solicitud edicion, (string? Cv, string? Carta) anteriores)
+    private void EliminarAdjuntosSustituidos(Solicitud solicitud, (string? Cv, string? Carta) anteriores)
     {
         // shortcut: reemplazar el mismo adjunto dos veces antes de guardar deja huérfano el intermedio.
-        if (anteriores.Cv != edicion.RutaCv)
+        if (anteriores.Cv != solicitud.RutaCv)
         {
             this.EliminarAdjunto(anteriores.Cv);
         }
 
-        if (anteriores.Carta != edicion.RutaCarta)
+        if (anteriores.Carta != solicitud.RutaCarta)
         {
             this.EliminarAdjunto(anteriores.Carta);
         }
@@ -897,12 +901,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Cancelar()
     {
-        if (this.Edicion is not Solicitud edicion)
+        if (this.Edicion is not Solicitud solicitud)
         {
             return;
         }
 
-        this.EliminarAdjuntosNoGuardados(edicion);
+        this.EliminarAdjuntosNoGuardados(solicitud);
 
         // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
@@ -917,20 +921,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// Borra las copias hechas durante la edición que se descarta. Los adjuntos que ya
     /// estaban guardados se quedan, porque la base sigue apuntando a ellos.
     /// </summary>
-    private void EliminarAdjuntosNoGuardados(Solicitud edicion)
+    private void EliminarAdjuntosNoGuardados(Solicitud solicitud)
     {
-        (string? cvGuardado, string? cartaGuardada) = edicion.Id == 0
+        (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
             ? (null, null)
-            : this.RutasGuardadas(edicion);
+            : this.RutasGuardadas(solicitud);
 
-        if (edicion.RutaCv != cvGuardado)
+        if (solicitud.RutaCv != cvGuardado)
         {
-            this.EliminarAdjunto(edicion.RutaCv);
+            this.EliminarAdjunto(solicitud.RutaCv);
         }
 
-        if (edicion.RutaCarta != cartaGuardada)
+        if (solicitud.RutaCarta != cartaGuardada)
         {
-            this.EliminarAdjunto(edicion.RutaCarta);
+            this.EliminarAdjunto(solicitud.RutaCarta);
         }
     }
 

@@ -11,7 +11,7 @@ public class PaginadorTests
     {
         ResultadoPagina<int> pagina = Paginador.Paginar(Veinticinco, 10, 1);
 
-        Assert.Equal(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, pagina.Elementos.ToArray());
+        Assert.Equal(Veinticinco.Take(10), pagina.Elementos);
         Assert.Equal(1, pagina.PaginaActual);
         Assert.Equal(3, pagina.TotalPaginas);
         Assert.Equal(0, pagina.Desde);
@@ -28,7 +28,7 @@ public class PaginadorTests
     {
         ResultadoPagina<int> pagina = Paginador.Paginar(Veinticinco, 10, 3);
 
-        Assert.Equal(new[] { 21, 22, 23, 24, 25 }, pagina.Elementos.ToArray());
+        Assert.Equal(Veinticinco.Skip(20), pagina.Elementos);
         Assert.Equal(3, pagina.PaginaActual);
         Assert.Equal(3, pagina.TotalPaginas);
         Assert.Equal(20, pagina.Desde);
