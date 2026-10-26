@@ -17,19 +17,24 @@ public class EnumDescripcionConverter : IValueConverter
         throw new NotSupportedException();
 }
 
-/// <summary>Oculta un elemento cuando el origen es nulo. Con parámetro "invertir" hace lo contrario.</summary>
+/// <summary>Oculta un elemento cuando el origen es nulo.</summary>
 public class NuloAVisibilidadConverter : IValueConverter
 {
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        bool visible = value is not null;
-        if (string.Equals(parameter as string, "invertir", StringComparison.OrdinalIgnoreCase))
-        {
-            visible = !visible;
-        }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is not null ? Visibility.Visible : Visibility.Collapsed;
 
-        return visible ? Visibility.Visible : Visibility.Collapsed;
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>
+/// Fecha corta en la cultura del idioma activo. Se ignora la cultura que llega por parámetro
+/// (WPF pasa la del xml:lang, que por defecto es en-US) y se usa la de la app.
+/// </summary>
+public class FechaCortaConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is DateTime fecha ? fecha.ToString("d", Localizacion.CulturaActual) : string.Empty;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

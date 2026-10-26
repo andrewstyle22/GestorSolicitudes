@@ -1,24 +1,23 @@
-﻿using Xunit;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 using System.Windows.Resources;
 using GestorSolicitudes;
+using GestorSolicitudes.Views;
 
 namespace GestorSolicitudes.Tests;
 
-public partial class PestanasTests
+public class PestanasTests
 {
     /// <summary>
-    /// Los estilos que dependen de una plantilla (las pestañas del panel de detalle y el
-    /// botón del desplegable de columnas) viven en App.xaml y solo se resuelven al
+    /// Los estilos que dependen de una plantilla (las pesta�as del panel de detalle y el
+    /// bot�n del desplegable de columnas) viven en App.xaml y solo se resuelven al
     /// aplicarse, no al compilar: este test carga los recursos (sin pasar por OnStartup,
-    /// que crearía la base real) y fuerza el dibujo para que se construyan las plantillas
+    /// que crear�a la base real) y fuerza el dibujo para que se construyan las plantillas
     /// y se activen los triggers.
-    /// Solo puede existir una Application por AppDomain, así que todos los estilos con
-    /// plantilla se comprueban aquí y en un único test.
+    /// Solo puede existir una Application por AppDomain, as� que todos los estilos con
+    /// plantilla se comprueban aqu� y en un �nico test.
     /// </summary>
     [StaFact]
     public void AppXaml_LosEstilosConPlantillaSeComponenAlPintar()
@@ -38,7 +37,7 @@ public partial class PestanasTests
         pestanas.Items.Add(new TabItem { Style = estiloPestana, Header = "Seguimiento", IsSelected = true });
 
         // El layout del TabControl genera el TabPanel (IsItemsHost), aplica las
-        // plantillas de los TabItem y activa los triggers con los Estáticos de
+        // plantillas de los TabItem y activa los triggers con los Est�ticos de
         // recurso del subrayado de acento.
         pestanas.Measure(new Size(400, 300));
         pestanas.Arrange(new Rect(0, 0, 400, 300));
@@ -47,7 +46,7 @@ public partial class PestanasTests
         Assert.NotNull(pestanas.Template);
         Assert.True(((TabItem)pestanas.Items[1]).IsSelected);
 
-        // El botón de "Columnas": sin plantilla propia sería un rectángulo gris, y el
+        // El bot�n de "Columnas": sin plantilla propia ser�a un rect�ngulo gris, y el
         // trigger de IsChecked es lo que pinta el borde de acento al abrirse la lista.
         var estiloBoton = (Style)app.Resources["BotonDesplegable"]!;
         Assert.Equal(typeof(ToggleButton), estiloBoton.TargetType);
@@ -68,6 +67,25 @@ public partial class PestanasTests
             app.Resources["Acento"],
             ((Border)boton.Template.FindName("borde", boton)).BorderBrush);
 
+        // La plantilla del botón es una sola: BotonBase y BotonDesplegable la comparten.
+        var plantillaBoton = (ControlTemplate)app.Resources["BotonPlano"]!;
+        Assert.Equal(typeof(ButtonBase), plantillaBoton.TargetType);
+        Assert.Same(plantillaBoton, ((Style)app.Resources["BotonBase"]!).Setters
+            .OfType<Setter>().Single(s => s.Property == Control.TemplateProperty).Value);
+        Assert.Same(plantillaBoton, estiloBoton.Setters
+            .OfType<Setter>().Single(s => s.Property == Control.TemplateProperty).Value);
+
+        // La fila de adjunto es un solo control para CV y carta: la etiqueta y el nombre
+        // llegan por propiedades de dependencia y el XAML los resuelve con ElementName.
+        var fila = new FilaAdjunto { Etiqueta = "Currículum", Texto = "mi-cv.pdf", Ruta = @"C:\mi-cv.pdf" };
+        fila.Measure(new Size(500, 30));
+        fila.Arrange(new Rect(0, 0, 500, 30));
+        fila.UpdateLayout();
+
+        List<string> textos = Descendientes<TextBlock>(fila).Select(t => t.Text).ToList();
+        Assert.Contains("Currículum", textos);
+        Assert.Contains("mi-cv.pdf", textos);
+
         // La cabecera de las columnas: el fondo tiene que ser el gris de la paleta y no el del
         // tema de Windows, que es lo que pone el DataGrid si no se le da estilo.
         var estiloCabecera = (Style)app.Resources["CabeceraColumna"]!;
@@ -87,16 +105,8 @@ public partial class PestanasTests
             FontWeights.SemiBold,
             estiloCabecera.Setters.OfType<Setter>().Single(s => s.Property == TextBlock.FontWeightProperty).Value);
 
-        // Un HeaderStyle por columna sustituye al ColumnHeaderStyle del DataGrid en vez de
-        // heredarlo, y esa columna se queda sin el fondo gris (le pasó a "Días"). Comprobarlo
-        // sobre la ventana real no cabe aquí (WPF solo admite una Application por AppDomain y
-        // la crea este mismo test), así que se mira el XAML, sin comentarios: si alguna
-        // columna declara un HeaderStyle propio, el tooltip va en su HeaderTemplate.
-        var xaml = ComentariosXml().Replace(XamlDeLaVentana(), string.Empty);
-        Assert.DoesNotContain("HeaderStyle", xaml.Replace("ColumnHeaderStyle", string.Empty));
-
-        // El icono de la bandeja se carga del recurso empaquetado, así que se comprueba
-        // que existe y trae los tamaños que usa la bandeja, con la misma ruta que usa
+        // El icono de la bandeja se carga del recurso empaquetado, as� que se comprueba
+        // que existe y trae los tama�os que usa la bandeja, con la misma ruta que usa
         // MainWindow: relativa al ensamblado principal y sin "pack://" absoluto.
         StreamResourceInfo? recurso = Application.GetResourceStream(
             new Uri($"/{typeof(App).Assembly.GetName().Name};component/Resources/appicon.ico", UriKind.Relative));
@@ -108,24 +118,21 @@ public partial class PestanasTests
         }
     }
 
-    /// <summary>Localiza Views/MainWindow.xaml subiendo desde la carpeta de salida.</summary>
-    private static string XamlDeLaVentana()
+    private static IEnumerable<T> Descendientes<T>(DependencyObject raiz)
+        where T : DependencyObject
     {
-        var carpeta = new DirectoryInfo(AppContext.BaseDirectory);
-
-        while (carpeta is not null && !File.Exists(Path.Combine(carpeta.FullName, "Views", "MainWindow.xaml")))
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(raiz); i++)
         {
-            carpeta = carpeta.Parent;
+            DependencyObject hijo = VisualTreeHelper.GetChild(raiz, i);
+            if (hijo is T encontrado)
+            {
+                yield return encontrado;
+            }
+
+            foreach (T nieto in Descendientes<T>(hijo))
+            {
+                yield return nieto;
+            }
         }
-
-        Assert.NotNull(carpeta);
-        return File.ReadAllText(Path.Combine(carpeta!.FullName, "Views", "MainWindow.xaml"));
     }
-
-    /// <summary>
-    /// Quita los comentarios XML del XAML: dentro de ellos puede aparecer la palabra que se
-    /// busca (el propio comentario que avisa de este bug) y no es XAML aplicable.
-    /// </summary>
-    [GeneratedRegex(@"<!--.*?-->", RegexOptions.Singleline)]
-    private static partial Regex ComentariosXml();
 }

@@ -9,19 +9,40 @@ namespace GestorSolicitudes.Tests;
 /// </summary>
 internal static class TestDb
 {
-    public static string NuevaRuta()
+    private static readonly string Raiz = Path.Combine(Path.GetTempPath(), "gs-tests");
+
+    /// <summary>
+    /// Borra las carpetas de ejecuciones anteriores. No se puede limpiar al terminar sin un
+    /// fixture global, así que se limpia al empezar: la basura no se acumula entre ejecuciones.
+    /// </summary>
+    static TestDb()
     {
-        string carpeta = Path.Combine(Path.GetTempPath(), "gs-tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(carpeta);
-        return Path.Combine(carpeta, "test.db");
+        try
+        {
+            if (Directory.Exists(Raiz))
+            {
+                Directory.Delete(Raiz, recursive: true);
+            }
+        }
+        catch (Exception)
+        {
+            // Si algo quedó bloqueado por otra ejecución, se limpia la próxima vez.
+        }
     }
 
-    public static string NuevaCarpeta()
+    internal static string NuevaCarpeta()
     {
-        string carpeta = Path.Combine(Path.GetTempPath(), "gs-tests", Guid.NewGuid().ToString("N"));
+        string carpeta = Path.Combine(Raiz, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(carpeta);
         return carpeta;
     }
+
+    public static string NuevaRuta()
+    {
+        return Path.Combine(NuevaCarpeta(), "test.db");
+    }
+
+    // Método interno consolidado: Devuelve la carpeta temporal
 
     public static AppDbContext NuevoContexto()
     {

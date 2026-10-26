@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification;assembly=Hardcodet.NotifyIcon.Wpf"
         xmlns:loc="clr-namespace:GestorSolicitudes"
+        xmlns:views="clr-namespace:GestorSolicitudes.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GestorSolicitudes.Views.MainWindow"
         Icon="/GestorSolicitudes;component/Resources/appicon.ico"
         Title="{DynamicResource TituloVentana}"
@@ -31,6 +32,23 @@
             <Setter Property="Width" Value="1" />
             <Setter Property="Background" Value="{StaticResource Borde}" />
             <Setter Property="Margin" Value="20,4,20,4" />
+        </Style>
+
+        <!-- Celda de la tabla: las columnas comparten alineación y recorte; sólo Empresa
+             (negrita) e Interés (color) añaden algo sobre esta base. -->
+        <Style x:Key="EstiloCelda" TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="EstiloCeldaEmpresa" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource EstiloCelda}">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="10,0,0,0" />
+        </Style>
+
+        <Style x:Key="EstiloCeldaInteres" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource EstiloCelda}">
+            <Setter Property="Foreground" Value="{StaticResource Estrella}" />
         </Style>
 
     </Window.Resources>
@@ -234,19 +252,19 @@
                 <!-- Leyenda -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
                     <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="#94A3B8" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Enviadas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Enviadas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="#2563EB" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Respondidas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Respondidas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="#7C3AED" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Entrevistas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Entrevistas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="#059669" Margin="0,0,4,0" VerticalAlignment="Center" />
+                        <Rectangle Width="10" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource Color.Ofertas}" Margin="0,0,4,0" VerticalAlignment="Center" />
                         <TextBlock Text="{DynamicResource Grafica.Ofertas}" FontSize="11" Foreground="{StaticResource TextoSuave}" />
                     </StackPanel>
                 </StackPanel>
@@ -279,7 +297,7 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0">
                                             <Border Width="14" Height="{Binding AlturaEnviadas}"
-                                                    Background="#94A3B8" CornerRadius="2"
+                                                    Background="{StaticResource Color.Enviadas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Enviadas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
@@ -287,7 +305,7 @@
                                         </Grid>
                                         <Grid Grid.Column="1">
                                             <Border Width="14" Height="{Binding AlturaRespondidas}"
-                                                    Background="#2563EB" CornerRadius="2"
+                                                    Background="{StaticResource Color.Respondidas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Respondidas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
@@ -295,7 +313,7 @@
                                         </Grid>
                                         <Grid Grid.Column="2">
                                             <Border Width="14" Height="{Binding AlturaEntrevistas}"
-                                                    Background="#7C3AED" CornerRadius="2"
+                                                    Background="{StaticResource Color.Entrevistas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Entrevistas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
@@ -303,7 +321,7 @@
                                         </Grid>
                                         <Grid Grid.Column="3">
                                             <Border Width="14" Height="{Binding AlturaOfertas}"
-                                                    Background="#059669" CornerRadius="2"
+                                                    Background="{StaticResource Color.Ofertas}" CornerRadius="2"
                                                     HorizontalAlignment="Center" VerticalAlignment="Bottom" />
                                             <TextBlock Text="{Binding Ofertas}" FontSize="11"
                                                        Foreground="{StaticResource TextoSuave}"
@@ -334,7 +352,7 @@
             <!-- Lista -->
             <Border Grid.Column="0" Background="{StaticResource Panel}"
                     BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8" Grid.ColumnSpan="2">
-                <Grid x:Name="TablaCandidaturas">
+                <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -419,7 +437,7 @@
                                 </StackPanel>
                             </ToggleButton>
 
-                            <ComboBox x:Name="SelectorEstados" Width="190" Margin="0,0,12,0"
+                            <ComboBox Width="190" Margin="0,0,12,0"
                                       Style="{StaticResource CampoCombo}"
                                       ItemsSource="{Binding EstadosFiltro}"
                                       DisplayMemberPath="Descripcion"
@@ -466,35 +484,22 @@
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn x:Name="Empresa" Binding="{Binding Empresa}" Width="260" MinWidth="260">
+                            <DataGridTextColumn Binding="{Binding Empresa}" Width="260" MinWidth="260"
+                                                ElementStyle="{StaticResource EstiloCeldaEmpresa}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Empresa}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="FontWeight" Value="SemiBold" />
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="10,0,0,0" />
-                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Puesto" Binding="{Binding Puesto}" Width="300" MinWidth="300">
+                            <DataGridTextColumn Binding="{Binding Puesto}" Width="300" MinWidth="300"
+                                                ElementStyle="{StaticResource EstiloCelda}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Puesto}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTemplateColumn x:Name="Estado" Width="150">
@@ -516,22 +521,17 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn x:Name="Enviadas" Binding="{Binding FechaSolicitud, StringFormat=dd/MM/yyyy}"
-                                                Width="100">
+                            <DataGridTextColumn x:Name="Enviadas" Binding="{Binding FechaSolicitud, Converter={StaticResource FechaCorta}}"
+                                                Width="100" ElementStyle="{StaticResource EstiloCelda}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Enviada}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Dias" Binding="{Binding DiasProceso}" Width="60">
+                            <DataGridTextColumn x:Name="Dias" Binding="{Binding DiasProceso}" Width="60"
+                                                ElementStyle="{StaticResource EstiloCelda}">
                                 <!-- El tooltip va en el HeaderTemplate y no en un HeaderStyle
                                      propio: un estilo por columna sustituye al ColumnHeaderStyle
                                      del DataGrid en vez de heredarlo, y esa columna se quedaba
@@ -542,88 +542,51 @@
                                                    ToolTip="{DynamicResource Columna.DiasToolTip}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, StringFormat=dd/MM/yyyy}"
-                                                Width="110">
+                            <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, Converter={StaticResource FechaCorta}}"
+                                                Width="110" ElementStyle="{StaticResource EstiloCelda}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.PrimeraRespuesta}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Entrevista" Binding="{Binding FechaEntrevista, StringFormat=dd/MM/yyyy}"
-                                                Width="105">
+                            <DataGridTextColumn x:Name="Entrevista" Binding="{Binding FechaEntrevista, Converter={StaticResource FechaCorta}}"
+                                                Width="105" ElementStyle="{StaticResource EstiloCelda}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Entrevista}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Seguimiento" Binding="{Binding ProximoSeguimiento, StringFormat=dd/MM/yyyy}"
-                                                Width="105">
+                            <DataGridTextColumn x:Name="Seguimiento" Binding="{Binding ProximoSeguimiento, Converter={StaticResource FechaCorta}}"
+                                                Width="105" ElementStyle="{StaticResource EstiloCelda}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Seguimiento}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
                             <DataGridTextColumn x:Name="Interes" Binding="{Binding Interes, Converter={StaticResource InteresATextoEstrellas}}"
-                                                Width="90">
+                                                Width="90" ElementStyle="{StaticResource EstiloCeldaInteres}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Interes}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="Foreground" Value="{StaticResource Estrella}" />
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Portal" Binding="{Binding Portal}" Width="150" MinWidth="175">
+                            <DataGridTextColumn x:Name="Portal" Binding="{Binding Portal}" Width="150" MinWidth="175"
+                                                ElementStyle="{StaticResource EstiloCelda}">
                                 <DataGridTextColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Portal}" />
                                     </DataTemplate>
                                 </DataGridTextColumn.HeaderTemplate>
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                        <Setter Property="Margin" Value="6,0,0,0" />
-                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -725,7 +688,7 @@
                         <TabControl Grid.Row="1" Style="{StaticResource Pestanas}" Height="355" VerticalAlignment="Top">
 
                             <TabItem Header="{DynamicResource Pestana.Oferta}" Style="{StaticResource Pestana}">
-                                <ScrollViewer Margin="3,0,-12,0" Cursor="">
+                                <ScrollViewer Margin="3,0,-12,0">
                                     <StackPanel DataContext="{Binding Edicion}">
 
                                         <TextBlock Text="{DynamicResource Oferta.EnlaceOferta}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
@@ -944,61 +907,20 @@
                                         <Border BorderBrush="{StaticResource Borde}" BorderThickness="1"
                                                 CornerRadius="6" Padding="10" Margin="9,8,9,0">
                                             <StackPanel>
-                                                <Grid Margin="0,2,0,8">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{DynamicResource Adjuntos.Curriculum}" FontWeight="SemiBold"
-                                                               VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               ToolTip="{Binding RutaCv}"
-                                                               Text="{Binding NombreCv, ConverterParameter=Adjuntos.CurriculumSinAdjuntar, Converter={StaticResource NuloACadena}}" />
-                                                    <Button Grid.Column="2" Content="{DynamicResource Boton.Adjuntar}" Margin="0,0,6,0"
-                                                            Padding="10,4" FontSize="12"
-                                                            Style="{StaticResource BotonSecundario}"
-                                                            Command="{Binding DataContext.AdjuntarCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                    <Button Grid.Column="3" Content="{DynamicResource Boton.Quitar}" Margin="0,0,6,0"
-                                                            Padding="10,4" FontSize="12"
-                                                            Style="{StaticResource BotonSecundario}"
-                                                            Command="{Binding DataContext.QuitarCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                    <Button Grid.Column="4" Content="{DynamicResource Boton.Abrir}" Padding="10,4" FontSize="12"
-                                                            Style="{StaticResource BotonSecundario}"
-                                                            Click="AbrirCv_Click" />
-                                                </Grid>
+                                                <views:FilaAdjunto Margin="0,2,0,8"
+                                                                   Etiqueta="{DynamicResource Adjuntos.Curriculum}"
+                                                                   Texto="{Binding NombreCv, ConverterParameter=Adjuntos.CurriculumSinAdjuntar, Converter={StaticResource NuloACadena}}"
+                                                                   Ruta="{Binding RutaCv}"
+                                                                   ComandoAdjuntar="{Binding DataContext.AdjuntarCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                                   ComandoQuitar="{Binding DataContext.QuitarCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                                   Abrir="AbrirAdjunto_Click" />
 
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="32*" />
-                                                        <ColumnDefinition Width="85*"/>
-                                                        <ColumnDefinition Width="167*"/>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{DynamicResource Adjuntos.Carta}" FontWeight="SemiBold"
-                                                               VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0,0,32,0" />
-                                                    <TextBlock Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               ToolTip="{Binding RutaCarta}"
-                                                               Text="{Binding NombreCarta, ConverterParameter=Adjuntos.CartaSinAdjuntar, Converter={StaticResource NuloACadena}}" Grid.ColumnSpan="3" />
-                                                    <Button Grid.Column="4" Content="{DynamicResource Boton.Adjuntar}" Margin="0,0,6,0"
-                                                            Padding="10,4" FontSize="12"
-                                                            Style="{StaticResource BotonSecundario}"
-                                                            Command="{Binding DataContext.AdjuntarCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                    <Button Grid.Column="5" Content="{DynamicResource Boton.Quitar}" Margin="0,0,6,0"
-                                                            Padding="10,4" FontSize="12"
-                                                            Style="{StaticResource BotonSecundario}"
-                                                            Command="{Binding DataContext.QuitarCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                                    <Button Grid.Column="6" Content="{DynamicResource Boton.Abrir}" Padding="10,4" FontSize="12"
-                                                            Style="{StaticResource BotonSecundario}"
-                                                            Click="AbrirCarta_Click" />
-                                                </Grid>
+                                                <views:FilaAdjunto Etiqueta="{DynamicResource Adjuntos.Carta}"
+                                                                   Texto="{Binding NombreCarta, ConverterParameter=Adjuntos.CartaSinAdjuntar, Converter={StaticResource NuloACadena}}"
+                                                                   Ruta="{Binding RutaCarta}"
+                                                                   ComandoAdjuntar="{Binding DataContext.AdjuntarCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                                   ComandoQuitar="{Binding DataContext.QuitarCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                                   Abrir="AbrirAdjunto_Click" />
                                             </StackPanel>
                                         </Border>
 

@@ -1,5 +1,6 @@
 namespace GestorSolicitudes.Views;
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows;
@@ -49,8 +50,10 @@ public partial class VisorAdjuntoWindow : Window
                     break;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            // No se pudo previsualizar: se avisa en la propia ventana.
+            Debug.WriteLine($"No se pudo previsualizar '{this.ruta}': {ex}");
             this.MostrarAviso(Localizacion.Texto("Mensaje.NoSePuedePrevisualizar"));
         }
     }

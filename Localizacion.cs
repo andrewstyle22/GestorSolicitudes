@@ -1,5 +1,6 @@
 namespace GestorSolicitudes;
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -54,6 +55,9 @@ public static class Localizacion
 
         // ----- Gráfica -----
         ("Grafica.Titulo", "Embudo de los últimos 12 periodos, por {0} (enviadas → respondidas → entrevistas → ofertas)"),
+        ("Grafica.TituloMes", "por mes"),
+        ("Grafica.TituloSemana", "por semana"),
+        ("Grafica.TituloDia", "por día"),
         ("Grafica.Granularidad", "Agrupar por"),
         ("Grafica.Anterior", "Periodo anterior"),
         ("Grafica.Siguiente", "Periodo siguiente"),
@@ -189,11 +193,14 @@ public static class Localizacion
         ("Mensaje.NoSePudoAbrirEnlace", "No se pudo abrir el enlace: {0}"),
         ("Mensaje.FaltanDatos", "La empresa y el puesto son obligatorios."),
         ("Mensaje.NoSePudoGuardar", "No se pudo guardar: {0}"),
+        ("Mensaje.NoSePudoEliminar", "No se pudo eliminar: {0}"),
+        ("Mensaje.NoSePudoExportar", "No se pudo exportar el CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "¿Eliminar la candidatura de {0} ({1})?"),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Adjunto"),
+        ("Titulo.Confirmar", "Confirmar"),
         ("Titulo.FaltanDatos", "Faltan datos"),
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
@@ -299,6 +306,9 @@ public static class Localizacion
 
         // ----- Gráfica -----
         ("Grafica.Titulo", "Funnel for the last 12 periods, by {0} (sent → answered → interviews → offers)"),
+        ("Grafica.TituloMes", "by month"),
+        ("Grafica.TituloSemana", "by week"),
+        ("Grafica.TituloDia", "by day"),
         ("Grafica.Granularidad", "Group by"),
         ("Grafica.Anterior", "Previous period"),
         ("Grafica.Siguiente", "Next period"),
@@ -434,11 +444,14 @@ public static class Localizacion
         ("Mensaje.NoSePudoAbrirEnlace", "Could not open the link: {0}"),
         ("Mensaje.FaltanDatos", "Company and position are required."),
         ("Mensaje.NoSePudoGuardar", "Could not save: {0}"),
+        ("Mensaje.NoSePudoEliminar", "Could not delete: {0}"),
+        ("Mensaje.NoSePudoExportar", "Could not export the CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "Delete the application for {0} ({1})?"),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Attachment"),
+        ("Titulo.Confirmar", "Confirm"),
         ("Titulo.FaltanDatos", "Missing data"),
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
@@ -544,6 +557,9 @@ public static class Localizacion
 
         // ----- Gráfica -----
         ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, nach {0} (gesendet → Antworten → Interviews → Angebote)"),
+        ("Grafica.TituloMes", "nach Monat"),
+        ("Grafica.TituloSemana", "nach Woche"),
+        ("Grafica.TituloDia", "nach Tag"),
         ("Grafica.Granularidad", "Gruppieren nach"),
         ("Grafica.Anterior", "Vorheriger Zeitraum"),
         ("Grafica.Siguiente", "Nächster Zeitraum"),
@@ -679,11 +695,14 @@ public static class Localizacion
         ("Mensaje.NoSePudoAbrirEnlace", "Der Link konnte nicht geöffnet werden: {0}"),
         ("Mensaje.FaltanDatos", "Unternehmen und Position sind Pflichtfelder."),
         ("Mensaje.NoSePudoGuardar", "Speichern fehlgeschlagen: {0}"),
+        ("Mensaje.NoSePudoEliminar", "Löschen fehlgeschlagen: {0}"),
+        ("Mensaje.NoSePudoExportar", "CSV-Export fehlgeschlagen: {0}"),
         ("Mensaje.ConfirmarEliminar", "Bewerbung von {0} ({1}) löschen?"),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Anlage"),
+        ("Titulo.Confirmar", "Bestätigen"),
         ("Titulo.FaltanDatos", "Fehlende Angaben"),
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),
@@ -850,7 +869,7 @@ public static class Localizacion
     /// Reconstruye el diccionario de textos inyectado en Application.Resources a partir de los
     /// diccionarios C#. Los {DynamicResource} resuelven contra él y se actualizan al cambiarlo.
     /// </summary>
-    public static void AplicarRecursosDeApplication()
+    private static void AplicarRecursosDeApplication()
     {
         ResourceDictionary? recursos = Application.Current?.Resources;
         if (recursos is null)
@@ -935,9 +954,10 @@ public static class Localizacion
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Si no se puede leer la preferencia, se cae al idioma del sistema.
+            Debug.WriteLine($"No se pudo leer la preferencia de idioma: {ex}");
         }
 
         return CultureInfo.CurrentCulture.TwoLetterISOLanguageName switch
@@ -956,9 +976,10 @@ public static class Localizacion
             Directory.CreateDirectory(carpeta);
             File.WriteAllText(RutaPreferencia, idioma.ToString());
         }
-        catch
+        catch (Exception ex)
         {
             // Un fallo al guardar la preferencia no debe impedir el cambio de idioma.
+            Debug.WriteLine($"No se pudo guardar la preferencia de idioma: {ex}");
         }
     }
 

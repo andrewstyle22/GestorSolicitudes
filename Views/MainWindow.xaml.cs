@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -31,7 +32,7 @@ public partial class MainWindow : Window
     {
         this.InitializeComponent();
 
-        this.vm = new MainViewModel();
+        this.vm = new MainViewModel(new AppDbContext(), dialogo: new DialogoService());
         this.DataContext = this.vm;
 
         // Ctrl+N nueva candidatura, Ctrl+S guardar.
@@ -68,7 +69,7 @@ public partial class MainWindow : Window
                 "Seguimiento" => this.Seguimiento,
                 "Interes" => this.Interes,
                 "Portal" => this.Portal,
-                _ => null,
+                _ => throw new InvalidOperationException($"Columna desconocida en la visibilidad: {columna.Columna}"),
             };
 
             if (cd is not null)
@@ -116,7 +117,7 @@ public partial class MainWindow : Window
                     Localizacion.Texto("Bandeja.VencidoTexto"),
                     s.Empresa,
                     s.Puesto,
-                    s.ProximoSeguimiento?.ToString("dd/MM/yyyy")),
+                    s.ProximoSeguimiento?.ToString("d", Localizacion.CulturaActual)),
                 BalloonIcon.Info);
         }
         else
@@ -169,13 +170,9 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Abre el CV adjunto en el visor de solo lectura.</summary>
-    private void AbrirCv_Click(object? sender, RoutedEventArgs e) =>
-        this.AbrirAdjunto((sender as FrameworkElement)?.DataContext is Solicitud s ? s.RutaCv : null);
-
-    /// <summary>Abre la carta adjunta en el visor de solo lectura.</summary>
-    private void AbrirCarta_Click(object? sender, RoutedEventArgs e) =>
-        this.AbrirAdjunto((sender as FrameworkElement)?.DataContext is Solicitud s ? s.RutaCarta : null);
+    /// <summary>Abre el CV o la carta que muestra la fila de adjunto pulsada.</summary>
+    private void AbrirAdjunto_Click(object? sender, EventArgs e) =>
+        this.AbrirAdjunto((sender as FilaAdjunto)?.Ruta);
 
     private void AbrirAdjunto(string? ruta)
     {
@@ -203,6 +200,9 @@ public partial class MainWindow : Window
     protected override void OnClosed(System.EventArgs e)
     {
         this.IconoBandeja.Visibility = Visibility.Hidden;
+
+        // El evento de idioma es estático: si no se suelta, retiene el ViewModel.
+        this.vm.Dispose();
         base.OnClosed(e);
     }
 }

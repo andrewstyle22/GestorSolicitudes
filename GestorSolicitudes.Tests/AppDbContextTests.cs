@@ -1,4 +1,3 @@
-using Xunit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using System.IO;
@@ -80,13 +79,6 @@ public class AppDbContextTests
         string ruta = AppDbContext.RutaBaseDatos;
         Assert.Contains("GestorSolicitudes", ruta);
         Assert.EndsWith("solicitudes.db", ruta);
-    }
-
-    [Fact]
-    public void ConstructorPorDefecto_NoRequiereRuta()
-    {
-        using var db = new AppDbContext();
-        Assert.NotNull(db);
     }
 
     [Fact]

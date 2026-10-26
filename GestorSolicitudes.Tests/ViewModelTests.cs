@@ -1,4 +1,3 @@
-using Xunit;
 using System.Globalization;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
@@ -107,6 +106,10 @@ public class ViewModelTests
         Assert.Equal(DateTime.Today, vm.Edicion.FechaSolicitud);
         Assert.Null(vm.Edicion.ContactoNombre); // el contacto no se copia
         Assert.Contains("Duplicada", vm.Edicion.Notas!);
+        // La fecha va en el formato corto del idioma activo, no fija en dd/MM/yyyy.
+        Assert.Contains(
+            DateTime.Today.AddDays(-20).ToString("d", Localizacion.CulturaActual),
+            vm.Edicion.Notas!);
     }
 
     [Fact]
@@ -256,20 +259,28 @@ public class ViewModelTests
             Empresa = "A",
             Puesto = "P",
             FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(3)
+            FechaPrimeraRespuesta = baseFecha.AddDays(2)
         });
-        db.Solicitudes.Add(new Solicitud { Empresa = "B", Puesto = "P", FechaSolicitud = baseFecha });
+        db.Solicitudes.Add(new Solicitud
+        {
+            Empresa = "B",
+            Puesto = "P",
+            FechaSolicitud = baseFecha,
+            FechaPrimeraRespuesta = baseFecha.AddDays(5)
+        });
+        db.Solicitudes.Add(new Solicitud { Empresa = "C", Puesto = "P", FechaSolicitud = baseFecha });
         db.SaveChanges();
-        vm.Recargar();
 
         // En GitHub Actions el hilo corre con en-US (o invariable); si el ViewModel
-        // formateara con la cultura del hilo daría "50%". Debe dar siempre es-ES.
+        // formateara con la cultura del hilo daría "67%" y "3.5 días". Debe dar siempre es-ES.
         CultureInfo actual = CultureInfo.CurrentCulture;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         try
         {
-            Assert.Equal("50 %", vm.TasaRespuesta);
-            Assert.Equal("3 días", vm.MediaDiasRespuesta);
+            vm.Recargar();
+
+            Assert.Equal("67 %", vm.TasaRespuesta);
+            Assert.Equal("3,5 días", vm.MediaDiasRespuesta);
         }
         finally
         {
@@ -340,8 +351,8 @@ public class ViewModelTests
         Assert.Equal(12, vm.PeriodosEmbudo.Count);
         Assert.Equal(GranularidadesEsperadas, vm.GranularidadesEmbudo.Select(g => g.Descripcion));
 
-        List<DateTime> semanas = MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, 0);
-        Assert.Equal(MainViewModel.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana), semanas[^1]);
+        List<DateTime> semanas = EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Semana, 0);
+        Assert.Equal(EmbudoHelper.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana), semanas[^1]);
         Assert.All(semanas, s => Assert.Equal(DayOfWeek.Monday, s.DayOfWeek));
         Assert.Equal(TimeSpan.FromDays(7), semanas[^1] - semanas[^2]);
     }
@@ -356,7 +367,7 @@ public class ViewModelTests
         vm.GranularidadGrafica = GranularidadEmbudo.Dia;
 
         Assert.Equal(12, vm.PeriodosEmbudo.Count);
-        List<DateTime> dias = MainViewModel.CalcularPeriodos(GranularidadEmbudo.Dia, 0);
+        List<DateTime> dias = EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Dia, 0);
         Assert.Equal(12, dias.Count);
         Assert.Equal(DateTime.Today, dias[^1]);
         Assert.Equal(DateTime.Today.AddDays(-11), dias[0]);
@@ -408,6 +419,30 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void CuandoCambiaIdioma_RecargaLaListaUnaSolaVez()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        int recargas = 0;
+        var notificadas = new List<string?>();
+        vm.PropertyChanged += (_, e) =>
+        {
+            notificadas.Add(e.PropertyName);
+            if (e.PropertyName == nameof(MainViewModel.Solicitudes))
+            {
+                recargas++;
+            }
+        };
+
+        vm.CuandoCambiaIdioma(null, Idioma.Castellano);
+
+        // La asignación del filtro no debe sumar una recarga extra a la explícita.
+        Assert.Equal(1, recargas);
+        // Los botones de la gráfica usan un convertidor y hay que reevaluarlos.
+        Assert.Contains(nameof(MainViewModel.VerGrafica), notificadas);
+    }
+
+    [Fact]
     public void PeriodoAnteriorY_Siguiente_MuevenLaVentanaYNoPasanDelHoy()
     {
         using var db = TestDb.NuevoContexto();
@@ -420,8 +455,8 @@ public class ViewModelTests
         Assert.Equal(1, vm.DesplazamientoPeriodo);
         Assert.True(vm.PuedeAvanzarPeriodo);
 
-        DateTime estaSemana = MainViewModel.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana);
-        Assert.Equal(estaSemana.AddDays(-7), MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, 1)[^1]);
+        DateTime estaSemana = EmbudoHelper.InicioDePeriodo(DateTime.Today, GranularidadEmbudo.Semana);
+        Assert.Equal(estaSemana.AddDays(-7), EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Semana, 1)[^1]);
 
         vm.PeriodoSiguienteCommand.Execute(null);
 
@@ -450,34 +485,37 @@ public class ViewModelTests
         Assert.Equal(0, vm.DesplazamientoPeriodo);
         Assert.False(vm.PuedeAvanzarPeriodo);
         Assert.Equal(
-            MainViewModel.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia),
+            EmbudoHelper.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia),
             vm.PeriodosEmbudo[^1].Etiqueta);
     }
 
     // ---------------- Exportación CSV ----------------
 
     [Fact]
-    public void ConstruirCsv_ConCandidaturasIncluyeCabeceraYFilas()
+    public void EscribirCsv_EnRutaValidaGuardaElContenido()
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.SaveChanges();
+        var vm = new MainViewModel(db);
+        string ruta = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv");
+
+        Exception? error = vm.EscribirCsv(ruta);
+
+        Assert.Null(error);
+        string csv = File.ReadAllText(ruta);
+        Assert.Contains(Localizacion.Texto("Csv.Empresa"), csv);
+        Assert.Contains("ACME", csv);
+    }
+
+    [Fact]
+    public void EscribirCsv_EnRutaInvalidaDevuelveElFalloEnVezDeLanzarlo()
     {
         using var db = TestDb.NuevoContexto();
         var vm = new MainViewModel(db);
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "ACME",
-            Puesto = "Dev",
-            FechaSolicitud = new DateTime(2024, 5, 1),
-            Portal = "LinkedIn",
-            Estado = EstadoSolicitud.Enviada,
-            EnlaceOferta = "https://www.linkedin.com/jobs/view/abc",
-        });
-        db.SaveChanges();
+        string ruta = Path.Combine(TestDb.NuevaCarpeta(), "no", "existe", "salida.csv");
 
-        string csv = vm.ConstruirCsv();
-
-        Assert.Contains(Localizacion.Texto("Csv.Empresa"), csv);
-        Assert.Contains("ACME", csv);
-        Assert.Contains("2024-05-01", csv);
-        Assert.Contains("https://www.linkedin.com/jobs/view/abc", csv);
+        Assert.NotNull(vm.EscribirCsv(ruta));
     }
 
     // ---------------- Comandos del panel de detalle ----------------
@@ -530,36 +568,94 @@ public class ViewModelTests
     }
 
     [Fact]
-    public void QuitarCv_LimpiaLaRutaSinBorrarUnFicheroAjero()
+    public void QuitarCv_NoBorraElFicheroHastaGuardar()
     {
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-        string rutaCv = Path.Combine(TestDb.NuevaCarpeta(), "cv.pdf");
-        File.WriteAllText(rutaCv, "contenido");
-        vm.NuevaCommand.Execute(null);
-        vm.Edicion!.RutaCv = rutaCv;
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string rutaCv = solicitud.RutaCv!;
 
         vm.QuitarCvCommand.Execute(null);
 
-        Assert.Null(vm.Edicion.RutaCv);
-        // Solo se borran ficheros de la carpeta de adjuntos: uno ajeno se deja quieto.
+        Assert.Null(solicitud.RutaCv);
+        // El fichero sigue en disco: la base todavía lo apunta hasta que se guarde.
         Assert.True(File.Exists(rutaCv));
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(rutaCv));
     }
 
     [Fact]
-    public void QuitarCarta_LimpiaLaRutaSinBorrarUnFicheroAjero()
+    public void QuitarCarta_NoBorraElFicheroHastaGuardar()
     {
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db);
-        string rutaCarta = Path.Combine(TestDb.NuevaCarpeta(), "carta.pdf");
-        File.WriteAllText(rutaCarta, "contenido");
-        vm.NuevaCommand.Execute(null);
-        vm.Edicion!.RutaCarta = rutaCarta;
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCarta = CopiarAdjunto(carpeta, "carta.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string rutaCarta = solicitud.RutaCarta!;
 
         vm.QuitarCartaCommand.Execute(null);
 
-        Assert.Null(vm.Edicion.RutaCarta);
+        Assert.Null(solicitud.RutaCarta);
         Assert.True(File.Exists(rutaCarta));
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(rutaCarta));
+    }
+
+    [Fact]
+    public void Guardar_ConElCvSustituido_BorraElAnteriorYGuardaElNuevo()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string viejo = solicitud.RutaCv!;
+        string nuevo = CopiarAdjunto(carpeta, "cv-nuevo.pdf");
+        solicitud.RutaCv = nuevo;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(viejo));
+        Assert.True(File.Exists(nuevo));
+        Assert.Equal(nuevo, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
+    public void Cancelar_ConElCvSustituido_ConservaElAnteriorYBorraElNuevo()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string viejo = solicitud.RutaCv!;
+        string nuevo = CopiarAdjunto(carpeta, "cv-nuevo.pdf");
+        solicitud.RutaCv = nuevo;
+
+        vm.CancelarCommand.Execute(null);
+
+        Assert.True(File.Exists(viejo));
+        Assert.False(File.Exists(nuevo));
+        Assert.Equal(viejo, db.Solicitudes.Single().RutaCv);
     }
 
     [Fact]
@@ -571,6 +667,14 @@ public class ViewModelTests
         vm.QuitarCvCommand.Execute(null);
 
         Assert.Null(vm.Edicion);
+    }
+
+    /// <summary>Crea un fichero dentro de la carpeta de adjuntos, como haría AdjuntarCv.</summary>
+    private static string CopiarAdjunto(string carpeta, string nombre)
+    {
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), nombre);
+        File.WriteAllText(origen, "contenido");
+        return AdjuntosHelper.Copiar(origen, "adjunto", carpeta);
     }
 
     [Fact]
@@ -656,6 +760,36 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void EliminarSolicitud_BorraLaFilaYDevuelveNull()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+
+        Exception? error = vm.EliminarSolicitud(solicitud);
+
+        Assert.Null(error);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void Dispose_NoLanzaAunqueSeLlameDosVeces()
+    {
+        using var db = TestDb.NuevoContexto();
+        var vm = new MainViewModel(db);
+
+        Exception? excepcion = Record.Exception(() =>
+        {
+            vm.Dispose();
+            vm.Dispose();
+        });
+
+        Assert.Null(excepcion);
+    }
+
+    [Fact]
     public void EstadoFiltro_FiltraPorUnEstadoConcreto()
     {
         using var db = TestDb.NuevoContexto();
@@ -709,9 +843,276 @@ public class ViewModelTests
         }
 
         // Se para en la semana de la primera solicitud: más atrás el embudo iría a cero.
-        DateTime suelo = MainViewModel.InicioDePeriodo(DateTime.Today.AddDays(-10), GranularidadEmbudo.Semana);
-        Assert.Equal(suelo, MainViewModel.CalcularPeriodos(GranularidadEmbudo.Semana, vm.DesplazamientoPeriodo)[^1]);
+        DateTime suelo = EmbudoHelper.InicioDePeriodo(DateTime.Today.AddDays(-10), GranularidadEmbudo.Semana);
+        Assert.Equal(suelo, EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Semana, vm.DesplazamientoPeriodo)[^1]);
         Assert.False(vm.PuedeRetrocederPeriodo);
+    }
+
+    // ---------------- Comandos con diálogos ----------------
+
+    [Fact]
+    public void Guardar_SinEmpresaOPuesto_AvisaYSigueEditando()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME"; // falta el puesto
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.NotNull(vm.Edicion);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void Guardar_CuandoFallaLaBase_AvisaDeErrorYNoCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME";
+        vm.Edicion.Puesto = "Dev";
+        db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes"); // que SaveChanges falle dentro del try
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Edicion);
+    }
+
+    [Fact]
+    public void AdjuntarCv_CopiaElFicheroYPoneElNombreOriginal()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "mi-cv.pdf");
+        File.WriteAllText(origen, "cv");
+        var dialogo = new DialogoFalso { FicheroElegido = origen };
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCvCommand.Execute(null);
+
+        Assert.NotNull(vm.Edicion!.RutaCv);
+        Assert.StartsWith(carpeta, vm.Edicion.RutaCv!);
+        Assert.True(File.Exists(vm.Edicion.RutaCv));
+        Assert.Equal("mi-cv.pdf", vm.Edicion.NombreOriginalCv);
+    }
+
+    [Fact]
+    public void AdjuntarCarta_CopiaElFicheroYPoneElNombreOriginal()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "carta.docx");
+        File.WriteAllText(origen, "carta");
+        var dialogo = new DialogoFalso { FicheroElegido = origen };
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCartaCommand.Execute(null);
+
+        Assert.NotNull(vm.Edicion!.RutaCarta);
+        Assert.Equal("carta.docx", vm.Edicion.NombreOriginalCarta);
+    }
+
+    [Fact]
+    public void AdjuntarCv_CuandoSeCancela_NoCambiaNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { FicheroElegido = null };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCvCommand.Execute(null);
+
+        Assert.Null(vm.Edicion!.RutaCv);
+    }
+
+    [Fact]
+    public void AdjuntarCv_CuandoNoSePuedeCopiar_AvisaDeError()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso
+        {
+            FicheroElegido = Path.Combine(TestDb.NuevaCarpeta(), "no-existe.pdf"),
+        };
+        var vm = new MainViewModel(db, carpetaAdjuntos: TestDb.NuevaCarpeta(), dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCvCommand.Execute(null);
+
+        Assert.Contains(
+            Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
+            Assert.Single(dialogo.Errores));
+        Assert.Null(vm.Edicion!.RutaCv);
+    }
+
+    [Fact]
+    public void AdjuntarCarta_CuandoNoSePuedeCopiar_AvisaDeError()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso
+        {
+            FicheroElegido = Path.Combine(TestDb.NuevaCarpeta(), "no-existe.docx"),
+        };
+        var vm = new MainViewModel(db, carpetaAdjuntos: TestDb.NuevaCarpeta(), dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCartaCommand.Execute(null);
+
+        Assert.Contains(
+            Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
+            Assert.Single(dialogo.Errores));
+        Assert.Null(vm.Edicion!.RutaCarta);
+    }
+
+    [Fact]
+    public void Eliminar_CuandoSeConfirma_BorraLaFilaYLosAdjuntos()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = CopiarAdjunto(carpeta, "cv.pdf") };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string rutaCv = solicitud.RutaCv!;
+
+        vm.EliminarCommand.Execute(null);
+
+        Assert.Empty(db.Solicitudes);
+        Assert.Null(vm.Edicion);
+        Assert.False(File.Exists(rutaCv));
+    }
+
+    [Fact]
+    public void Eliminar_CuandoElUsuarioNoConfirma_NoBorraNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = false };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+
+        vm.EliminarCommand.Execute(null);
+
+        Assert.Single(dialogo.Confirmaciones);
+        Assert.Equal(1, db.Solicitudes.Count());
+        Assert.NotNull(vm.Edicion);
+    }
+
+    [Fact]
+    public void Eliminar_CuandoFallaLaBase_AvisaDeErrorYNoCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
+
+        vm.EliminarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Edicion);
+    }
+
+    [Fact]
+    public void ExportarCsv_ConDestinoEscribeEInforma()
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.SaveChanges();
+        var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        Assert.True(File.Exists(dialogo.DestinoElegido));
+        Assert.Single(dialogo.Informes);
+        Assert.Empty(dialogo.Errores);
+    }
+
+    [Fact]
+    public void ExportarCsv_CuandoSeCancela_NoEscribeNiInforma()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { DestinoElegido = null };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        Assert.Empty(dialogo.Informes);
+        Assert.Empty(dialogo.Errores);
+    }
+
+    [Fact]
+    public void ExportarCsv_CuandoNoSePuedeEscribir_AvisaDeError()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso
+        {
+            DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "no", "existe", "salida.csv"),
+        };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.Empty(dialogo.Informes);
+    }
+
+    [Fact]
+    public void AbrirEnlace_ConUrlLaAbreSinEspacios()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.EnlaceOferta = "  https://ejemplo.com/oferta  ";
+
+        vm.AbrirEnlaceCommand.Execute(null);
+
+        Assert.Equal("https://ejemplo.com/oferta", Assert.Single(dialogo.EnlacesAbiertos));
+    }
+
+    [Fact]
+    public void AbrirEnlace_SinUrlNoLlamaAlNavegador()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AbrirEnlaceCommand.Execute(null);
+
+        Assert.Empty(dialogo.EnlacesAbiertos);
+    }
+
+    [Fact]
+    public void AbrirEnlace_CuandoFalla_AvisaPeroNoRevienta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { AbrirEnlaceLanza = true };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.EnlaceOferta = "https://ejemplo.com";
+
+        vm.AbrirEnlaceCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
     }
 
     // ---------------------------------------------------------------- Paginación

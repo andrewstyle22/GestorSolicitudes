@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041</TargetFramework>
-<UseWPF>true</UseWPF>
+    <UseWPF>true</UseWPF>
     <!-- Necesario para el System.Drawing Icon del icono de la bandeja del sistema. -->
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
@@ -13,10 +13,10 @@
     <LangVersion>latest</LangVersion>
     <ApplicationIcon>Resources\appicon.ico</ApplicationIcon>
 
-	<SelfContained>true</SelfContained>
+    <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <DebugType>None</DebugType>
+    <DebugType Condition="'$(Configuration)' == 'Release'">None</DebugType>
     <!-- Genera el XML de documentación: StyleCop lo necesita para analizar los comentarios
          (si no, avisa con SA0001). Como la documentación no es obligatoria en este proyecto,
          no avisamos por miembros sin documentar (CS1573/CS1591/CS1712). -->
@@ -30,9 +30,6 @@
          no se compilan a BAML y la app revienta buscando el recurso. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <EnableDefaultPageItems>false</EnableDefaultPageItems>
-	
-	
-	
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,6 +49,11 @@
     </Page>
 
     <Page Include="Views\VisorAdjuntoWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+
+    <Page Include="Views\FilaAdjunto.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

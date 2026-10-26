@@ -1,4 +1,3 @@
-using Xunit;
 using GestorSolicitudes.Models;
 
 namespace GestorSolicitudes.Tests;
@@ -113,7 +112,6 @@ public class SolicitudTests
             Estado = EstadoSolicitud.Enviada,
             ProximoSeguimiento = DateTime.Today.AddDays(-1)
         };
-        Assert.True(s.SeguimientoPendiente);
         Assert.True(s.SeguimientoPendiente);
     }
 

@@ -71,16 +71,35 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
   /p:CoverletOutput="<temp>\coverage" /p:CoverletOutputFormat=opencover` y filtrar
   las líneas `+` del `git diff <merge-base> HEAD` contra el `coverage.opencover.xml`
   (sumatorio de líneas y de `bec`/`bev` por línea nueva).
+- **Comprueba que el reporte no está vacío**: si el XML pesa unos cientos de bytes y
+  el `Summary` trae `numSequencePoints="0"`, coverlet no ha podido mapear ninguna
+  línea. No es que los tests no cubran: es que falta el PDB (ver más abajo).
 - Tests que dependen del dispatcher WPF: `[StaFact]` (Xunit.StaFact). `[StaFact]`
   y `[Theory]` no pueden coexistir en el mismo test (xUnit1002).
+
+## Cobertura a 0,0% en todos los ficheros
+
+Si Sonar muestra `0.0%` y las líneas sin cubrir coinciden con el total de cada
+fichero, el problema es el reporte, no los tests. En este repo la causa fue
+`<DebugType>None</DebugType>` en `GestorSolicitudes.csproj`: sin PDB, coverlet no
+puede asociar los puntos de secuencia y genera un OpenCover vacío. `None` solo hace
+falta al publicar, así que se condiciona a Release:
+
+```xml
+<DebugType Condition="'$(Configuration)' == 'Release'">None</DebugType>
+```
+
+`dotnet test` compila en Debug, así que el CI recupera el PDB y la cobertura real
+(~89% de líneas en este repo). Después de tocar esto, vuelve a mirar el tamaño del
+`coverage.opencover.xml`, no solo el código de salida de `dotnet test`.
 
 ## Convenciones de este repo que se deben respetar
 
 - La solución es `.slnx`. Todo texto, comentario y mensaje de commit en español.
-- Los `MessageBox` viven en el ViewModel por decisión de diseño: **no** convertir
-  diálogos/`Process.Start` en interfaces inyectables para "subir cobertura" como
-  hace un `public`. La cobertura del gate no se arregla así: lo único sin cubrir
-  suelen ser líneas de `MessageBox`, que una interfaz de diálogo no ataca.
+- Los diálogos van por `IDialogoService` (inyectado): `MessageBox`, `OpenFileDialog`,
+  `SaveFileDialog` y `Process.Start` solo viven en `DialogoService` (Views). No volver a
+  meter `MessageBox` en un ViewModel. La lógica de los comandos se prueba con un
+  `DialogoFalso`, así que la cobertura se arregla probando el comando, no excluyéndolo.
 - Para añadir propiedades a `Solicitud` o XAML nuevo, seguir AGENTS.md
   (`VerificarColumnasFaltantes`, `<Page>` declarado en el csproj).
 - Un issue nuevo de Sonar que es falso positivo del diseño (p.ej. S2077 en el
@@ -132,6 +151,43 @@ y su arreglo para no repetirlo:
   o un `Regex` estático construido con timeout. Ya pasó en `DocumentoHelper.cs`.
   Regla general: nunca uses los atajos `Regex.IsMatch/Match/Replace/Split` sin timeout
   sobre texto que viene de un fichero.
+- **S3881 (`Fix this implementation of 'IDisposable' to conform to the dispose pattern`)
+  y CA1816 (`Change Dispose() to call GC.SuppressFinalize`)**: un `IDisposable` sin
+  finalizador se resuelve **sellando la clase** (`public sealed partial class ...`) y
+  llamando a `GC.SuppressFinalize(this)` al final de `Dispose()`. Si la clase no puede
+  sellarse (se hereda), hace falta `protected virtual void Dispose(bool disposing)` y
+  `Dispose()` llama a `Dispose(true)` + `GC.SuppressFinalize(this)`. Ya pasó en
+  `MainViewModel`. No añadas un finalizador solo para callar la regla.
+- **S1117 (`Rename 'x' which hides the field with the same name`)**: una variable local
+  o de patrón (`if (this.Edicion is not Solicitud edicion)`) que se llama igual que un
+  campo generado (`edicion`) oculta el campo. Renombra la local/parámetro (`solicitud`)
+  y deja el campo con su nombre. Cuidado con `[ObservableProperty]`: el campo privado y
+  la propiedad pública comparten nombre en PascalCase.
+- **S3878 (`Prefer 'static readonly' fields over constant array arguments...`)**: no
+  crees arrays literales en cada llamada (`Assert.Equal(new[] { ... }, ...)`). Usa un
+  `private static readonly` en la clase del test o evita el array (`lista.Take(n)`,
+  `lista.Skip(n)`). Ya pasó en `PaginadorTests` y `LocalizacionTests`.
+- **S1135 (`Complete the task associated to this 'TODO' comment`)**: la regla busca la
+  etiqueta `TODO`, pero también muerde el **"todo" español** de los comentarios
+  ("de que todo fue bien"). Si aparece en un comentario que no es una tarea pendiente,
+  reescribe la frase ("la operación terminó bien") en vez de añadir un `NOSONAR`.
+  Ya pasó en `IDialogoService.cs` y `ArquitecturaTests.cs`.
+- **Duplicación (`Duplicated Lines`)**: una lógica extraída a un helper pero sin
+  conectar deja dos copias y Sonar marca la nueva. Conecta el helper y borra la
+  copia vieja: `MainViewModel.ConstruirCsv` delegó en `CsvExportador.Construir` y
+  desaparecieron las ~50 líneas duplicadas. Antes de extraer, busca el cuerpo que ya
+  existe (`Select-String -Pattern 'Csv\.Empresa|CsvHelper\.Escapar'`) y no copies el
+  bloque.
+
+## Barrido antes de dar por cerrados los issues
+
+Sonar no corre en local, pero estos patrones se encuentran con `grep`/`Select-String`:
+
+- `IDisposable|Dispose\(` en `*.cs` (¿hay otra clase que lo implemente?).
+- `\bedicion\b` (o el nombre del campo) en el fichero tocado: locales/parámetros que
+  lo ocultan.
+- `Assert\.(Equal|Contains)\(new` y `new\[\]` dentro de llamadas: arrays constantes.
+- `\btodo\b` (sin distinguir mayúsculas) en comentarios: falsos TODO en español.
 
 ## Errores que ya hemos puesto
 

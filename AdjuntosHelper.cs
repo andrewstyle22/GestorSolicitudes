@@ -1,5 +1,6 @@
 ﻿namespace GestorSolicitudes.Helpers;
 
+using System.Diagnostics;
 using System.IO;
 
 /// <summary>
@@ -17,10 +18,7 @@ public static class AdjuntosHelper
         "adjuntos");
 
     /// <summary>Copia el fichero elegido a la carpeta de adjuntos y devuelve su nueva ruta.</summary>
-    public static string Copiar(string origen, string etiqueta) => CopiarEn(origen, etiqueta, Carpeta);
-
-    /// <summary>Copia a una carpeta concreta (sobrecarga interna usada por los tests).</summary>
-    internal static string CopiarEn(string origen, string etiqueta, string carpeta)
+    public static string Copiar(string origen, string etiqueta, string carpeta)
     {
         Directory.CreateDirectory(carpeta);
 
@@ -32,11 +30,8 @@ public static class AdjuntosHelper
         return destino;
     }
 
-    /// <summary>Borra un adjunto solo si es de nuestra carpeta. Los errores se ignoran.</summary>
-    public static void Eliminar(string? ruta) => EliminarDe(ruta, Carpeta);
-
-    /// <summary>Borra de una carpeta concreta (sobrecarga interna usada por los tests).</summary>
-    internal static void EliminarDe(string? ruta, string carpeta)
+    /// <summary>Borra un adjunto solo si es de la carpeta de adjuntos. Los errores se ignoran.</summary>
+    public static void Eliminar(string? ruta, string carpeta)
     {
         if (string.IsNullOrWhiteSpace(ruta))
         {
@@ -59,9 +54,10 @@ public static class AdjuntosHelper
                 File.Delete(ruta);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Dejar un fichero huérfano es mejor que romper la aplicación.
+            // Dejar un fichero huérfano es mejor que romper la aplicación, pero se deja rastro.
+            Debug.WriteLine($"No se pudo borrar el adjunto '{ruta}': {ex}");
         }
     }
 }

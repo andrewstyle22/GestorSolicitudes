@@ -1,5 +1,5 @@
-using Xunit;
 using System.IO;
+using GestorSolicitudes.Data;
 using Microsoft.Data.Sqlite;
 
 namespace GestorSolicitudes.Tests;
@@ -29,7 +29,7 @@ public class VerificarColumnasTests
             crear.ExecuteNonQuery();
         }
 
-        App.VerificarColumnasFaltantes(ruta);
+        EsquemaDb.VerificarColumnasFaltantes(ruta);
 
         using (var conexion = new SqliteConnection($"Data Source={ruta}"))
         {
@@ -68,8 +68,8 @@ public class VerificarColumnasTests
             crear.ExecuteNonQuery();
         }
 
-        App.VerificarColumnasFaltantes(ruta);
-        App.VerificarColumnasFaltantes(ruta);
+        EsquemaDb.VerificarColumnasFaltantes(ruta);
+        EsquemaDb.VerificarColumnasFaltantes(ruta);
 
         Assert.True(File.Exists(ruta));
     }
@@ -95,7 +95,7 @@ public class VerificarColumnasTests
             crear.ExecuteNonQuery();
         }
 
-        App.VerificarColumnasFaltantes(ruta);
+        EsquemaDb.VerificarColumnasFaltantes(ruta);
 
         using (var conexion = new SqliteConnection($"Data Source={ruta}"))
         {

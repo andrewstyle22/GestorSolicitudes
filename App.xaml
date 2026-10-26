@@ -13,6 +13,7 @@
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
         <conv:EstadoEsRechazadaAVisibilidadConverter x:Key="EstadoEsRechazadaAVisibilidad" />
         <conv:NuloACadenaConverter x:Key="NuloACadena" />
+        <conv:FechaCortaConverter x:Key="FechaCorta" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 
         <!-- ============ Paleta ============ -->
@@ -29,6 +30,13 @@
         <!-- Cabecera de la tabla: un gris un punto más apagado que las filas (blanco del panel)
              para que los nombres de las columnas se lean sin gritar. -->
         <SolidColorBrush x:Key="Cabecera"    Color="#E2E8F0" />
+
+        <!-- Colores de la gráfica del embudo: la leyenda y las barras leen de aquí.
+             El prefijo Color. evita chocar con las claves de texto Grafica.* de la leyenda. -->
+        <SolidColorBrush x:Key="Color.Enviadas"    Color="#94A3B8" />
+        <SolidColorBrush x:Key="Color.Respondidas" Color="#2563EB" />
+        <SolidColorBrush x:Key="Color.Entrevistas" Color="#7C3AED" />
+        <SolidColorBrush x:Key="Color.Ofertas"     Color="#059669" />
 
         <!-- ============ Texto ============ -->
         <Style x:Key="Etiqueta" TargetType="TextBlock">
@@ -72,35 +80,35 @@
         </Style>
 
         <!-- ============ Botones ============ -->
+        <!-- Plantilla compartida por BotonBase y BotonDesplegable: Button y ToggleButton son
+             hermanos, así que el TargetType común es ButtonBase. -->
+        <ControlTemplate x:Key="BotonPlano" TargetType="{x:Type ButtonBase}">
+            <Border x:Name="borde"
+                    CornerRadius="6"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="borde" Property="Opacity" Value="0.85" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter TargetName="borde" Property="Opacity" Value="0.45" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
         <Style x:Key="BotonBase" TargetType="Button">
             <Setter Property="Padding" Value="14,8" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="borde"
-                                CornerRadius="6"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="borde" Property="Opacity" Value="0.85" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="borde" Property="Opacity" Value="0.45" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Template" Value="{StaticResource BotonPlano}" />
         </Style>
 
         <Style x:Key="BotonPrimario" TargetType="Button" BasedOn="{StaticResource BotonBase}">
@@ -133,29 +141,13 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource Texto}" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="borde"
-                                CornerRadius="6"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="borde" Property="Opacity" Value="0.85" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="borde" Property="BorderBrush" Value="{StaticResource Acento}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Template" Value="{StaticResource BotonPlano}" />
+            <Style.Triggers>
+                <!-- El borde del panel abierto: el TemplateBinding del borde común lee esta propiedad. -->
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource Acento}" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <!-- ============ Cabeceras de columnas ============ -->

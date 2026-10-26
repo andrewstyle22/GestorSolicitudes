@@ -1,4 +1,3 @@
-using Xunit;
 using System.Globalization;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
@@ -12,6 +11,8 @@ namespace GestorSolicitudes.Tests;
 /// </summary>
 public class LocalizacionTests
 {
+    private static readonly Idioma[] IdiomasEsperados = [Idioma.Castellano, Idioma.Ingles, Idioma.Aleman];
+
     [Fact]
     public void Texto_TraduceConElIdiomaPedidoSinTocarElActivo()
     {
@@ -78,7 +79,7 @@ public class LocalizacionTests
         Assert.Equal("Español", idiomas[0].Nombre);
         Assert.Equal("English", idiomas[1].Nombre);
         Assert.Equal("Deutsch", idiomas[2].Nombre);
-        Assert.Equal(new[] { Idioma.Castellano, Idioma.Ingles, Idioma.Aleman }, idiomas.Select(i => i.Idioma));
+        Assert.Equal(IdiomasEsperados, idiomas.Select(i => i.Idioma));
     }
 
     [Fact]
@@ -90,11 +91,11 @@ public class LocalizacionTests
     }
 
     [Fact]
-    public void TextoDeLasEstadisticasDependenDelIdioma()
+    public void MetricaDias_EstaEnLosTresIdiomas()
     {
-        Assert.Equal("3 días", $"{3} {Localizacion.Texto(Idioma.Castellano, "Metrica.Dias")}");
-        Assert.Equal("3 days", $"{3} {Localizacion.Texto(Idioma.Ingles, "Metrica.Dias")}");
-        Assert.Equal("3 Tage", $"{3} {Localizacion.Texto(Idioma.Aleman, "Metrica.Dias")}");
+        Assert.Equal("días", Localizacion.Texto(Idioma.Castellano, "Metrica.Dias"));
+        Assert.Equal("days", Localizacion.Texto(Idioma.Ingles, "Metrica.Dias"));
+        Assert.Equal("Tage", Localizacion.Texto(Idioma.Aleman, "Metrica.Dias"));
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-# Gestor de candidaturas
+﻿# Gestor de candidaturas
 
 Aplicación de escritorio para llevar el control de las ofertas de empleo a las que te inscribes:
 a quién, cuándo, qué te contestaron y cuándo toca volver a insistir.
@@ -44,7 +44,8 @@ entre los tres idiomas), el `AppDbContext` contra una base SQLite temporal,
 la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas).
 También corre **ArchUnitNET**: reglas de arquitectura que vigilan que las capas solo dependan
 "hacia abajo" (lo típico: los ViewModels no tocan las Vistas, las Vistas solo se usan desde el
-arranque). Un `MessageBox` nuevo en el ViewModel o un using de más a una capa prohibida se cae en el CI.
+arranque). Un using de más a una capa prohibida, o un `MessageBox` colado en un ViewModel, se cae
+en el CI.
 La app se abre a los tests con `[assembly: InternalsVisibleTo("GestorSolicitudes.Tests")]` y el
 ViewModel se construye con un contexto apuntando a una base temporal, para no tocar tu histórico.
 
@@ -75,7 +76,8 @@ el campo "día de la entrevista" te da la próxima de un vistazo y el historial 
 *Adjuntar* se **copian** a `%APPDATA%\GestorSolicitudes\adjuntos` con un nombre interno único (no se
 enlaza el original, así que sobreviven aunque muevas o borres el fichero de origen); el nombre que
 ves en pantalla es el original tal como lo elegiste, no el nombre interno. Se borran junto con la
-candidatura, al pulsar *Quitar*, o si cancelas una candidatura nueva sin llegar a guardarla.
+candidatura, o si cancelas una candidatura nueva sin llegar a guardarla. Al sustituir o quitar uno, el
+fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigue teniendo su adjunto.
 
 ## Detalles que quizá no se vean a simple vista
 
@@ -148,19 +150,30 @@ un `using` a `Views` dentro de un ViewModel tumba el CI.
 
 ```
 Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] para los textos de la UI
-AppDbContext.cs → SQLite: EnsureCreated + ALTER TABLE de columnas nuevas
+AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
+EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
 Localizacion.cs → traducciones (es/en/de), cultura y selector de idioma
 Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
 AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
+Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)
 ColumnaItem.cs → columna ocultable del selector (namespace ViewModels)
+IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
+DialogoService.cs → implementación WPF de IDialogoService (MessageBox, Open/SaveFileDialog)
 CsvHelper.cs → escapa los campos del CSV de exportación; su normalización de texto (minúsculas sin
-                 tildes) la usa también la búsqueda
+                  tildes) la usa también la búsqueda
+EmbudoHelper.cs → lógica del embudo (máximo, periodos, rangos, conteos)
+EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
+CsvExportador.cs → exportación CSV pura (cabecera + filas)
+EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
+ReglasSolicitud.cs → reglas de negocio puras (datos obligatorios, seguimiento, hito inicial)
 MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, exportación y columnas
+                 (sin WPF: habla con IDialogoService)
 App.xaml → tema y estilos compartidos (botones, campos, desplegables)
-App.xaml.cs → arranque, cultura, preferencias y comprobación de columnas al abrir la base
+App.xaml.cs → arranque, cultura y preferencias
 Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
+Views/FilaAdjunto.xaml(.cs) → fila de un adjunto (CV o carta): etiqueta, nombre y botones
 Views/VentanaRequisitos.xaml(.cs) → ventana de lectura de los requisitos
 Resources/appicon.ico → icono de la ventana, del ejecutable y de la bandeja
 GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQLite, estilos de las
@@ -194,9 +207,13 @@ dotnet ef database update
 
 y cambia `EnsureCreated()` por `db.Database.Migrate()` en `App.xaml.cs`.
 
-**Los `MessageBox` viven en el ViewModel.** No es MVVM de manual; lo ortodoxo sería un
-`IDialogService` inyectado. Para una herramienta personal es ruido, pero si la usas como proyecto
-de portfolio, extraer ese servicio es la primera mejora que un revisor va a buscar.
+**Los diálogos pasan por `IDialogoService`.** El ViewModel no toca WPF: pide avisos,
+confirmaciones, elegir fichero y abrir enlaces a la interfaz (`IDialogoService`, en `ViewModels`),
+que implementa `DialogoService` en `.Views` con `MessageBox` y los diálogos de WPF. Los tests
+inyectan un falso y así se prueban comandos que antes quedaban fuera por
+`[ExcludeFromCodeCoverage]` (`Guardar` inválido, `Eliminar`, `ExportarCsv`, `Adjuntar`,
+`AbrirEnlace`). Un test de fuentes vigila que ningún ViewModel vuelva a llamar a `MessageBox`,
+`OpenFileDialog`, `SaveFileDialog` ni `Process.Start`.
 
 **Estilo guiado por StyleCop.** El analizador `StyleCop.Analyzers` corre sobre la app con un juego
 mínimo de reglas activas (ver `.editorconfig` y `stylecop.json`): nada de documentación XML
