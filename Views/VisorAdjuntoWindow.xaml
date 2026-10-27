@@ -1,11 +1,19 @@
 <Window x:Class="GestorSolicitudes.Views.VisorAdjuntoWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Visor"
+        Title="{DynamicResource Visor.Titulo}"
         Height="760"
         Width="960"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="CanResize">
+        ResizeMode="CanResize"
+        FontFamily="Segoe UI">
+    <Window.Background>
+        <StaticResource ResourceKey="Fondo" />
+    </Window.Background>
+    <Window.Foreground>
+        <StaticResource ResourceKey="Texto" />
+    </Window.Foreground>
+
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -15,7 +23,7 @@
         <ScrollViewer x:Name="ScrollContenido" Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto">
-            <StackPanel x:Name="PanelPaginas" />
+            <Image x:Name="ImagenPagina" Stretch="Uniform" />
         </ScrollViewer>
 
         <TextBox x:Name="CajaTexto"
@@ -39,17 +47,42 @@
                    VerticalAlignment="Center"
                    TextAlignment="Center" />
 
-        <StackPanel Grid.Row="1"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,10,0,0">
-            <Button Content="{DynamicResource Boton.Descargar}"
-                    Padding="12,6"
-                    Margin="0,0,8,0"
-                    Click="Descargar_Click" />
-            <Button Content="{DynamicResource Boton.Cerrar}"
-                    Padding="12,6"
-                    Click="Cerrar_Click" />
-        </StackPanel>
+        <Grid Grid.Row="1" Margin="0,10,0,0">
+            <StackPanel x:Name="BarraPaginas"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Visibility="Collapsed">
+                <Button x:Name="AnteriorBoton"
+                        Content="‹"
+                        Style="{StaticResource BotonSecundario}"
+                        Padding="10,4"
+                        ToolTip="{DynamicResource Paginacion.Anterior}"
+                        AutomationProperties.Name="{DynamicResource Paginacion.Anterior}"
+                        Click="Anterior_Click" />
+                <TextBlock x:Name="TextoPagina"
+                           Margin="10,0"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource TextoSuave}" />
+                <Button x:Name="SiguienteBoton"
+                        Content="›"
+                        Style="{StaticResource BotonSecundario}"
+                        Padding="10,4"
+                        ToolTip="{DynamicResource Paginacion.Siguiente}"
+                        AutomationProperties.Name="{DynamicResource Paginacion.Siguiente}"
+                        Click="Siguiente_Click" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button Content="{DynamicResource Boton.Descargar}"
+                        Style="{StaticResource BotonPrimario}"
+                        Margin="0,0,8,0"
+                        Click="Descargar_Click" />
+                <Button Content="{DynamicResource Boton.Cerrar}"
+                        Style="{StaticResource BotonSecundario}"
+                        Click="Cerrar_Click" />
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

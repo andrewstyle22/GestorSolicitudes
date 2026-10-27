@@ -214,6 +214,10 @@ public static class Localizacion
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Requisitos del cargo"),
 
+        // ----- Visor de adjuntos -----
+        ("Visor.Titulo", "Visor"),
+        ("Visor.Pagina", "Página {0} de {1}"),
+
         // ----- Selector de idioma -----
         ("Selector.ToolTip", "Idioma de la interfaz"),
         ("Idioma.Espanol", "Español"),
@@ -465,6 +469,10 @@ public static class Localizacion
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Job requirements"),
 
+        // ----- Visor de adjuntos -----
+        ("Visor.Titulo", "Viewer"),
+        ("Visor.Pagina", "Page {0} of {1}"),
+
         // ----- Selector de idioma -----
         ("Selector.ToolTip", "Interface language"),
         ("Idioma.Espanol", "Spanish"),
@@ -715,6 +723,10 @@ public static class Localizacion
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Anforderungen an die Stelle"),
+
+        // ----- Visor de adjuntos -----
+        ("Visor.Titulo", "Betrachter"),
+        ("Visor.Pagina", "Seite {0} von {1}"),
 
         // ----- Selector de idioma -----
         ("Selector.ToolTip", "Sprache der Oberfläche"),
