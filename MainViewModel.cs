@@ -22,10 +22,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private readonly AppDbContext db;
     private readonly string rutaColumnas;
-    private readonly string carpetaAdjuntos;
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
-    private readonly List<string> adjuntosCopiados = new();
+    private readonly GestorAdjuntos adjuntos;
     private bool actualizandoIdioma;
 
     // Constructor con base de datos, preferencias y servicios propios: los tests usan una base
@@ -41,7 +40,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         this.db = db;
         this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
-        this.carpetaAdjuntos = carpetaAdjuntos ?? AdjuntosHelper.Carpeta;
+        this.adjuntos = new GestorAdjuntos(carpetaAdjuntos ?? AdjuntosHelper.Carpeta);
         this.dialogo = dialogo ?? new DialogosNulos();
         this.cambiarIdioma = cambiarIdioma ?? (_ => { });
 
@@ -698,8 +697,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            string nuevaRuta = AdjuntosHelper.Copiar(origen, adjunto.Etiqueta, this.carpetaAdjuntos);
-            this.adjuntosCopiados.Add(nuevaRuta);
+            string nuevaRuta = this.adjuntos.Copiar(origen, adjunto.Etiqueta);
             adjunto.Asignar(editar, nuevaRuta, Path.GetFileName(origen));
         }
         catch (Exception ex)
@@ -754,8 +752,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         return (entrada.Property(s => s.RutaCv).OriginalValue,
                 entrada.Property(s => s.RutaCarta).OriginalValue);
     }
-
-    private void EliminarAdjunto(string? ruta) => AdjuntosHelper.Eliminar(ruta, this.carpetaAdjuntos);
 
     [RelayCommand]
     private void Nueva()
@@ -846,7 +842,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.EliminarAdjuntosSustituidos(solicitud, (cvAnterior, cartaAnterior));
+        this.adjuntos.DescartarSustituidas(solicitud, (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
     }
 
@@ -906,42 +902,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>
-    /// Borra los adjuntos que la base ya no apunta tras guardar. Se hace aquí y no antes:
-    /// si el guardado falla, la base sigue apuntando a un fichero que sigue existiendo.
-    /// </summary>
-    private void EliminarAdjuntosSustituidos(Solicitud solicitud, (string? Cv, string? Carta) anteriores)
-    {
-        if (anteriores.Cv != solicitud.RutaCv)
-        {
-            this.EliminarAdjunto(anteriores.Cv);
-        }
-
-        if (anteriores.Carta != solicitud.RutaCarta)
-        {
-            this.EliminarAdjunto(anteriores.Carta);
-        }
-
-        this.EliminarCopiasDeLaEdicion(solicitud.RutaCv, solicitud.RutaCarta);
-    }
-
-    /// <summary>
-    /// Borra las copias hechas durante la edición salvo las que se quieren conservar.
-    /// Sin argumentos las borra todas: es lo que toca al cancelar o al eliminar la fila.
-    /// </summary>
-    private void EliminarCopiasDeLaEdicion(string? conservarCv = null, string? conservarCarta = null)
-    {
-        foreach (string ruta in this.adjuntosCopiados)
-        {
-            if (ruta != conservarCv && ruta != conservarCarta)
-            {
-                this.EliminarAdjunto(ruta);
-            }
-        }
-
-        this.adjuntosCopiados.Clear();
-    }
-
     /// <summary>Cierra el panel y refresca lista, cabecera y embudo.</summary>
     private void CerrarEdicion()
     {
@@ -959,7 +919,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.EliminarAdjuntosNoGuardados(solicitud);
+        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
+        (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
+            ? (null, null)
+            : this.RutasGuardadas(solicitud);
+
+        this.adjuntos.DescartarNoGuardadas(solicitud, (cvGuardado, cartaGuardada));
 
         // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
@@ -968,29 +933,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Edicion = null;
         this.SolicitudSeleccionada = null;
         this.Recargar();
-    }
-
-    /// <summary>
-    /// Borra las copias hechas durante la edición que se descarta. Los adjuntos que ya
-    /// estaban guardados se quedan, porque la base sigue apuntando a ellos.
-    /// </summary>
-    private void EliminarAdjuntosNoGuardados(Solicitud solicitud)
-    {
-        (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
-            ? (null, null)
-            : this.RutasGuardadas(solicitud);
-
-        if (solicitud.RutaCv != cvGuardado)
-        {
-            this.EliminarAdjunto(solicitud.RutaCv);
-        }
-
-        if (solicitud.RutaCarta != cartaGuardada)
-        {
-            this.EliminarAdjunto(solicitud.RutaCarta);
-        }
-
-        this.EliminarCopiasDeLaEdicion();
     }
 
     [RelayCommand]
@@ -1021,9 +963,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.EliminarAdjunto(cv);
-        this.EliminarAdjunto(carta);
-        this.EliminarCopiasDeLaEdicion();
+        this.adjuntos.Eliminar(cv);
+        this.adjuntos.Eliminar(carta);
+        this.adjuntos.DescartarCopias();
 
         this.Edicion = null;
         this.SolicitudSeleccionada = null;
