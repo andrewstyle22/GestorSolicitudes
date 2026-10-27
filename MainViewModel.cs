@@ -284,15 +284,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Solicitud? solicitudSeleccionada;
 
-    partial void OnSolicitudSeleccionadaChanged(Solicitud? value)
+    partial void OnSolicitudSeleccionadaChanged(Solicitud? value) => this.Seleccionar(value);
+
+    /// <summary>
+    /// Abre una fila en el panel de detalle. Hace E/S a propósito (carga el historial, que
+    /// solo usa el detalle) y por eso es un método explícito: el setter existe solo porque
+    /// el DataGrid enlaza <c>SelectedItem</c> en dos direcciones.
+    /// </summary>
+    private void Seleccionar(Solicitud? value)
     {
         // Ignoramos el null que manda el DataGrid al recargar la lista o al pulsar "Nueva".
         if (value is not null)
         {
-            // El historial solo lo usa el panel de detalle: se carga al abrir la fila,
-            // no en cada pulsación del buscador.
             this.db.Entry(value).Collection(s => s.Eventos).Load();
-            Edicion = value;
+            this.Edicion = value;
         }
     }
 
