@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Hardcodet.Wpf.TaskbarNotification;
 
@@ -172,17 +171,6 @@ public partial class MainWindow : Window
     }
 
     // ------------------------------------------------------------ Detalle
-
-    /// <summary>Muestra los requisitos del cargo en una ventana grande si hay texto.</summary>
-    private void VerRequisitos_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: Solicitud solicitud }
-            && !string.IsNullOrWhiteSpace(solicitud.Requisitos))
-        {
-            var ventana = new VentanaRequisitos(solicitud.Requisitos) { Owner = this };
-            ventana.ShowDialog();
-        }
-    }
 
     /// <summary>Abre el CV o la carta que muestra la fila de adjunto pulsada.</summary>
     private void AbrirAdjunto_Click(object? sender, EventArgs e) =>

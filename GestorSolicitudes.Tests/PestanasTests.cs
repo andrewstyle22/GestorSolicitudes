@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -5,6 +6,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Resources;
 using GestorSolicitudes;
+using GestorSolicitudes.Models;
+using GestorSolicitudes.ViewModels;
 using GestorSolicitudes.Views;
 
 namespace GestorSolicitudes.Tests;
@@ -118,6 +121,49 @@ public class PestanasTests
         {
             Assert.True(icono.Width >= 16);
         }
+
+        // Las pestañas y la cabecera de métricas son UserControl: no basta con que existan,
+        // sus enlaces tienen que resolver. Un path mal escrito deja el campo vacío y el botón
+        // sin comando, sin avisar en ningún sitio.
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(
+            db,
+            rutaColumnas: Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt"),
+            carpetaAdjuntos: TestDb.NuevaCarpeta());
+        vm.Edicion = new Solicitud
+        {
+            Empresa = "ACME",
+            Puesto = "Programador",
+            EnlaceOferta = "https://ejemplo.test/oferta",
+            Notas = "hablar el lunes",
+            RutaCv = @"C:\cv.pdf",
+        };
+
+        var detalleOferta = new PestanaOferta { DataContext = vm };
+        Dibujar(detalleOferta);
+        Assert.Contains(Descendientes<TextBox>(detalleOferta), t => t.Text == "https://ejemplo.test/oferta");
+        Assert.Contains(Descendientes<Button>(detalleOferta), b => ReferenceEquals(b.Command, vm.AbrirEnlaceCommand));
+
+        var detalleSeguimiento = new PestanaSeguimiento { DataContext = vm };
+        Dibujar(detalleSeguimiento);
+        Assert.Contains(Descendientes<TextBox>(detalleSeguimiento), t => t.Text == "hablar el lunes");
+
+        var detalleAdjuntos = new PestanaAdjuntos { DataContext = vm };
+        Dibujar(detalleAdjuntos);
+        Assert.Contains(
+            Descendientes<FilaAdjunto>(detalleAdjuntos),
+            f => ReferenceEquals(f.ComandoAdjuntar, vm.AdjuntarCvCommand));
+
+        var metricas = new CabeceraMetricas { DataContext = vm };
+        Dibujar(metricas);
+        Assert.Equal(12, Descendientes<TextBlock>(metricas).Count());
+    }
+
+    private static void Dibujar(FrameworkElement elemento)
+    {
+        elemento.Measure(new Size(420, 700));
+        elemento.Arrange(new Rect(0, 0, 420, 700));
+        elemento.UpdateLayout();
     }
 
     private static IEnumerable<T> Descendientes<T>(DependencyObject raiz)
