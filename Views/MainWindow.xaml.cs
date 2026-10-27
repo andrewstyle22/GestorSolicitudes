@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -20,7 +19,6 @@ public partial class MainWindow : Window
     private const int MinutosEntreAvisos = 5;
 
     private readonly MainViewModel vm;
-    private readonly AppDbContext db;
     private readonly IDialogoService dialogo;
     private readonly HashSet<int> idsVencidosAvisados = new();
     private readonly Stream? flujoIcono;
@@ -33,13 +31,12 @@ public partial class MainWindow : Window
         $"pack://application:,,,/{typeof(MainWindow).Assembly.GetName().Name};component/Resources/appicon.ico",
         UriKind.Absolute);
 
-    public MainWindow()
+    public MainWindow(MainViewModel vm, IDialogoService dialogo)
     {
         this.InitializeComponent();
 
-        this.db = new AppDbContext();
-        this.dialogo = new DialogoService();
-        this.vm = new MainViewModel(this.db, dialogo: this.dialogo, cambiarIdioma: Localizacion.Cambiar);
+        this.vm = vm;
+        this.dialogo = dialogo;
         this.DataContext = this.vm;
 
         // El icono de la ventana sale de la misma ruta que el de la bandeja: una sola fuente.
@@ -219,11 +216,7 @@ public partial class MainWindow : Window
         this.IconoBandeja.Visibility = Visibility.Hidden;
         this.temporizadorRecordatorios?.Stop();
 
-        // El evento de idioma es estático: si no se suelta, retiene el ViewModel.
-        this.vm.Dispose();
-
-        // La ventana creó la base y los recursos de la bandeja, así que los libera ella.
-        this.db.Dispose();
+        // La base y el ViewModel los libera App; aquí solo los recursos propios de la ventana.
         this.IconoBandeja.Dispose();
         this.flujoIcono?.Dispose();
 
