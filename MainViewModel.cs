@@ -21,7 +21,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private const string ClaveError = "Error";
 
     private readonly AppDbContext db;
-    private readonly string rutaColumnas;
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
     private readonly GestorAdjuntos adjuntos;
@@ -39,13 +38,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Action<Idioma>? cambiarIdioma = null)
     {
         this.db = db;
-        this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
+        this.ColumnasVm = new ColumnasViewModel(rutaColumnas);
         this.adjuntos = new GestorAdjuntos(carpetaAdjuntos ?? AdjuntosHelper.Carpeta);
         this.dialogo = dialogo ?? new DialogosNulos();
         this.cambiarIdioma = cambiarIdioma ?? (_ => { });
 
         this.CargarTextosLocalizados();
-        this.CargarColumnas();
 
         // Asignación directa al campo para no disparar la recarga dos veces.
         this.estadoFiltroItem = this.EstadosFiltro[0];
@@ -129,64 +127,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         // Los nombres de las columnas ocultables salen del diccionario, así que también
         // se releen al cambiar de idioma.
-        foreach (ColumnaItem columna in this.Columnas)
-        {
-            columna.RefrescarNombre();
-        }
+        this.ColumnasVm.RefrescarNombres();
     }
 
     // ---------------------------------------------------------------- Columnas
 
-    /// <summary>
-    /// Columnas de la tabla que el usuario puede ocultar. Empresa, Puesto, Estado y
-    /// Enviada no entran aquí: se ven siempre.
-    /// </summary>
-    internal static readonly (string Columna, string Clave)[] ColumnasOcultables =
-    [
-        ("Dias", "Columna.Dias"),
-        ("PrimeraRespuesta", "Columna.PrimeraRespuesta"),
-        ("Entrevista", "Columna.Entrevista"),
-        ("Seguimiento", "Columna.Seguimiento"),
-        ("Interes", "Columna.Interes"),
-        ("Portal", "Columna.Portal"),
-    ];
-
-    public ObservableCollection<ColumnaItem> Columnas { get; } = new();
-
-    /// <summary>Abre y cierra la lista de checkboxes del botón "Columnas".</summary>
-    [ObservableProperty]
-    private bool panelColumnasAbierto;
-
-    /// <summary>
-    /// La vista se suscribe para ocultar las columnas del DataGrid: un DataGridColumn no
-    /// hereda el DataContext y no se puede enlazar, así que el aviso llega por aquí.
-    /// </summary>
-    public event Action? ColumnaVisibilidadCambiada;
-
-    /// <summary>Las columnas ocultables con el estado guardado, o todas si no hay preferencia.</summary>
-    private void CargarColumnas()
-    {
-        HashSet<string>? guardadas = ColumnasHelper.CargarDe(this.rutaColumnas);
-
-        foreach ((string columna, string clave) in ColumnasOcultables)
-        {
-            this.Columnas.Add(new ColumnaItem(
-                columna,
-                clave,
-                guardadas is null || guardadas.Contains(columna),
-                this.GuardarColumnas));
-        }
-    }
-
-    /// <summary>Guarda la preferencia y avisa a la vista para que aplique el nuevo estado.</summary>
-    private void GuardarColumnas()
-    {
-        ColumnasHelper.GuardarEn(
-            this.rutaColumnas,
-            this.Columnas.Where(c => c.Visible).Select(c => c.Columna));
-
-        this.ColumnaVisibilidadCambiada?.Invoke();
-    }
+    /// <summary>Preferencia de columnas visibles y estado del panel del botón "Columnas".</summary>
+    public ColumnasViewModel ColumnasVm { get; }
 
     /// <summary>
     /// Al cambiar de idioma: se refrescan los desplegables, la lista, las estadísticas y la

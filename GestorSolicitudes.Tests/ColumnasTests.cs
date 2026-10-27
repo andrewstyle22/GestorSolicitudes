@@ -112,8 +112,8 @@ public class ColumnasTests
 
         Assert.Equal(
             ["Dias", "PrimeraRespuesta", "Entrevista", "Seguimiento", "Interes", "Portal"],
-            vm.Columnas.Select(c => c.Columna));
-        Assert.All(vm.Columnas, c => Assert.True(c.Visible));
+            vm.ColumnasVm.Columnas.Select(c => c.Columna));
+        Assert.All(vm.ColumnasVm.Columnas, c => Assert.True(c.Visible));
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class ColumnasTests
 
         Assert.Equal(
             [true, false, false, false, false, true],
-            vm.Columnas.Select(c => c.Visible));
+            vm.ColumnasVm.Columnas.Select(c => c.Visible));
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public class ColumnasTests
 
         // La clave guardada es a la vez el x:Name de la columna y el sufijo de Columna.*:
         // si una se queda atrás, el botón mostraría la clave en crudo.
-        Assert.All(vm.Columnas, c => Assert.True(Localizacion.Contiene(c.Clave)));
+        Assert.All(vm.ColumnasVm.Columnas, c => Assert.True(Localizacion.Contiene(c.Clave)));
     }
 
     [Fact]
@@ -148,9 +148,9 @@ public class ColumnasTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db, ruta);
         int avisos = 0;
-        vm.ColumnaVisibilidadCambiada += () => avisos++;
+        vm.ColumnasVm.ColumnaVisibilidadCambiada += () => avisos++;
 
-        vm.Columnas.First(c => c.Columna == "Entrevista").Visible = false;
+        vm.ColumnasVm.Columnas.First(c => c.Columna == "Entrevista").Visible = false;
 
         Assert.Equal(1, avisos);
 
@@ -166,10 +166,10 @@ public class ColumnasTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db, RutaTemporal());
 
-        Assert.False(vm.PanelColumnasAbierto);
+        Assert.False(vm.ColumnasVm.PanelColumnasAbierto);
 
-        vm.PanelColumnasAbierto = true;
+        vm.ColumnasVm.PanelColumnasAbierto = true;
 
-        Assert.True(vm.PanelColumnasAbierto);
+        Assert.True(vm.ColumnasVm.PanelColumnasAbierto);
     }
 }

@@ -407,7 +407,7 @@
                                     VerticalAlignment="Center" HorizontalAlignment="Right">
                             <ToggleButton Margin="0,0,8,0"
                                           Style="{StaticResource BotonDesplegable}"
-                                          IsChecked="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                          IsChecked="{Binding ColumnasVm.PanelColumnasAbierto, Mode=TwoWay}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{DynamicResource Columnas.Boton}" />
                                     <TextBlock Text="▾" Margin="6,0,0,0" />
@@ -417,12 +417,12 @@
                                     <Popup Placement="Bottom"
                                            AllowsTransparency="True"
                                            StaysOpen="False"
-                                           IsOpen="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                           IsOpen="{Binding ColumnasVm.PanelColumnasAbierto, Mode=TwoWay}">
                                         <Border Background="{StaticResource Panel}"
                                                 BorderBrush="{StaticResource Borde}"
                                                 BorderThickness="1" CornerRadius="6"
                                                 Padding="12,8" MinWidth="190">
-                                            <ItemsControl ItemsSource="{Binding Columnas}">
+                                            <ItemsControl ItemsSource="{Binding ColumnasVm.Columnas}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <CheckBox Content="{Binding Nombre}"

@@ -61,14 +61,14 @@ public partial class MainWindow : Window
 
         // Un DataGridColumn no hereda el DataContext, así que su visibilidad no se puede
         // enlazar: la fija la vista al construirse y cada vez que cambia una casilla.
-        this.vm.ColumnaVisibilidadCambiada += this.AplicarVisibilidadColumnas;
+        this.vm.ColumnasVm.ColumnaVisibilidadCambiada += this.AplicarVisibilidadColumnas;
         this.AplicarVisibilidadColumnas();
     }
 
     /// <summary>Muestra u oculta las columnas que el usuario puede decidir.</summary>
     private void AplicarVisibilidadColumnas()
     {
-        foreach (ColumnaItem columna in this.vm.Columnas)
+        foreach (ColumnaItem columna in this.vm.ColumnasVm.Columnas)
         {
             // El x:Name de cada columna genera el campo con el que se llega desde aquí.
             DataGridColumn columnaVista = columna.Columna switch
