@@ -2,15 +2,16 @@ namespace GestorSolicitudes.Views;
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Windows;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.ViewModels;
 using Microsoft.Win32;
 
 /// <summary>
-/// Implementación WPF de <see cref="IDialogoService"/>: el único sitio del programa que muestra
-/// un MessageBox o abre un diálogo de fichero. Aísla a los ViewModels de WPF y hace testables
-/// sus comandos (los tests inyectan un falso en vez de esta clase).
+/// Implementación WPF de <see cref="IDialogoService"/>: concentra los MessageBox y los diálogos
+/// de fichero de los ViewModels y de las ventanas de la app. El aviso de fallo de arranque de
+/// <see cref="App"/> sigue mostrándose directamente porque todavía no hay servicio creado.
 /// </summary>
 [ExcludeFromCodeCoverage] // Diálogos WPF: no hay UI automatizable.
 internal sealed class DialogoService : IDialogoService
@@ -45,6 +46,7 @@ internal sealed class DialogoService : IDialogoService
             Title = titulo,
             Filter = filtro,
             FileName = nombrePropuesto,
+            DefaultExt = Path.GetExtension(nombrePropuesto),
         };
 
         return dialogo.ShowDialog() == true ? dialogo.FileName : null;

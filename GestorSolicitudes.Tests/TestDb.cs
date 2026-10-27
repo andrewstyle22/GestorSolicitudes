@@ -1,5 +1,6 @@
 using System.IO;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Helpers;
 
 namespace GestorSolicitudes.Tests;
 
@@ -44,5 +45,13 @@ internal static class TestDb
         var db = new AppDbContext(NuevaRuta());
         db.Database.EnsureCreated();
         return db;
+    }
+
+    /// <summary>Crea un adjunto de prueba dentro de la carpeta indicada y devuelve su ruta.</summary>
+    internal static string CrearAdjuntoEn(string carpeta, string nombre)
+    {
+        string origen = Path.Combine(NuevaCarpeta(), nombre);
+        File.WriteAllText(origen, "contenido");
+        return AdjuntosHelper.Copiar(origen, "adjunto", carpeta);
     }
 }

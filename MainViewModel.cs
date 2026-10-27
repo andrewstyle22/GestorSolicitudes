@@ -24,22 +24,26 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly string rutaColumnas;
     private readonly string carpetaAdjuntos;
     private readonly IDialogoService dialogo;
+    private readonly Action<Idioma> cambiarIdioma;
     private readonly List<string> adjuntosCopiados = new();
     private bool actualizandoIdioma;
 
-    // Constructor con base de datos, preferencias y servicio de diálogos propios: los tests usan
-    // una base temporal, no tocan la preferencia real de %APPDATA% y observan los avisos con un
-    // falso. Sin servicio, los diálogos se ignoran (DialogosNulos).
+    // Constructor con base de datos, preferencias y servicios propios: los tests usan una base
+    // temporal, no tocan la preferencia real de %APPDATA% y observan los avisos con un falso.
+    // Sin servicio, los diálogos se ignoran (DialogosNulos). Sin cambiarIdioma, cambiar la
+    // propiedad no toca la cultura global: en producción se pasa Localizacion.Cambiar.
     internal MainViewModel(
         AppDbContext db,
         string? rutaColumnas = null,
         string? carpetaAdjuntos = null,
-        IDialogoService? dialogo = null)
+        IDialogoService? dialogo = null,
+        Action<Idioma>? cambiarIdioma = null)
     {
         this.db = db;
         this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
         this.carpetaAdjuntos = carpetaAdjuntos ?? AdjuntosHelper.Carpeta;
         this.dialogo = dialogo ?? new DialogosNulos();
+        this.cambiarIdioma = cambiarIdioma ?? (_ => { });
 
         this.CargarTextosLocalizados();
         this.CargarColumnas();
@@ -98,7 +102,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private IReadOnlyList<IdiomaItem> idiomasDisponibles = Localizacion.IdiomasDisponibles();
 
-    partial void OnIdiomaActualChanged(Idioma value) => Localizacion.Cambiar(value);
+    partial void OnIdiomaActualChanged(Idioma value) => this.cambiarIdioma(value);
 
     /// <summary>
     /// Reconstruye los desplegables y nombres de idioma con los textos del idioma activo.
@@ -138,8 +142,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// Columnas de la tabla que el usuario puede ocultar. Empresa, Puesto, Estado y
     /// Enviada no entran aquí: se ven siempre.
     /// </summary>
-    internal static readonly string[] ColumnasOcultables =
-        ["Dias", "PrimeraRespuesta", "Entrevista", "Seguimiento", "Interes", "Portal"];
+    internal static readonly (string Columna, string Clave)[] ColumnasOcultables =
+    [
+        ("Dias", "Columna.Dias"),
+        ("PrimeraRespuesta", "Columna.PrimeraRespuesta"),
+        ("Entrevista", "Columna.Entrevista"),
+        ("Seguimiento", "Columna.Seguimiento"),
+        ("Interes", "Columna.Interes"),
+        ("Portal", "Columna.Portal"),
+    ];
 
     public ObservableCollection<ColumnaItem> Columnas { get; } = new();
 
@@ -158,10 +169,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         HashSet<string>? guardadas = ColumnasHelper.CargarDe(this.rutaColumnas);
 
-        foreach (string columna in ColumnasOcultables)
+        foreach ((string columna, string clave) in ColumnasOcultables)
         {
             this.Columnas.Add(new ColumnaItem(
                 columna,
+                clave,
                 guardadas is null || guardadas.Contains(columna),
                 this.GuardarColumnas));
         }
@@ -571,16 +583,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void ActualizarEstadisticas()
     {
-        // Solo las columnas que miran los cálculos; el resto de la fila no hace falta.
+        // Se leen las entidades completas: las estadísticas usan propiedades [NotMapped] y
+        // proyectar a un DTO obligaría a duplicar sus cálculos. La consulta de solo lectura
+        // queda fuera del change tracking.
         List<Solicitud> paraCalculo = this.db.Solicitudes
             .AsNoTracking()
-            .Select(s => new Solicitud
-            {
-                Estado = s.Estado,
-                FechaSolicitud = s.FechaSolicitud,
-                FechaPrimeraRespuesta = s.FechaPrimeraRespuesta,
-                ProximoSeguimiento = s.ProximoSeguimiento,
-            })
             .ToList();
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(paraCalculo);
@@ -643,10 +650,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         return this.db.Solicitudes
             .AsNoTracking()
             .Where(s => s.ProximoSeguimiento != null && s.ProximoSeguimiento.Value.Date <= hoy)
-            .Where(s => s.Estado != EstadoSolicitud.OfertaAceptada
-                && s.Estado != EstadoSolicitud.OfertaRechazada
-                && s.Estado != EstadoSolicitud.Rechazada
-                && s.Estado != EstadoSolicitud.Retirada)
+            .Where(s => !EstadoSolicitudExtensiones.Cerrados.Contains(s.Estado))
             .Select(s => new SeguimientoVencido(s.Id, s.Empresa, s.Puesto, s.ProximoSeguimiento))
             .ToList();
     }
@@ -1009,10 +1013,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
         (string? cv, string? carta) = this.RutasGuardadas(this.Edicion);
 
-        if (this.EliminarSolicitud(this.Edicion) is Exception error)
+        if (!this.TryEliminarSolicitud(this.Edicion, out Exception? error))
         {
             this.dialogo.Error(
-                string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error.Message),
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error!.Message),
                 Localizacion.Texto(ClaveError));
             return;
         }
@@ -1028,20 +1032,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Borra la candidatura de la base. Devuelve el fallo en vez de lanzarlo para poder avisar;
-    /// <c>null</c> significa que se borró bien.
+    /// Borra la candidatura de la base. Devuelve <c>false</c> y el fallo en <paramref name="error"/>
+    /// si no se pudo borrar, para que el comando avise sin lanzar.
     /// </summary>
-    internal Exception? EliminarSolicitud(Solicitud solicitud)
+    internal bool TryEliminarSolicitud(Solicitud solicitud, out Exception? error)
     {
         try
         {
             this.db.Solicitudes.Remove(solicitud);
             this.db.SaveChanges();
-            return null;
+            error = null;
+            return true;
         }
         catch (Exception ex)
         {
-            return ex;
+            error = ex;
+            return false;
         }
     }
 
@@ -1105,10 +1111,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (this.EscribirCsv(destino) is Exception error)
+        if (!this.TryEscribirCsv(destino, out Exception? error))
         {
             this.dialogo.Error(
-                string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error.Message),
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error!.Message),
                 Localizacion.Texto(ClaveError));
             return;
         }
@@ -1119,19 +1125,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Escribe el CSV. Devuelve el fallo en vez de lanzarlo para poder avisar;
-    /// <c>null</c> significa que se escribió bien.
+    /// Escribe el CSV. Devuelve <c>false</c> y el fallo en <paramref name="error"/> si no se pudo
+    /// escribir, para que el comando avise sin lanzar.
     /// </summary>
-    internal Exception? EscribirCsv(string ruta)
+    internal bool TryEscribirCsv(string ruta, out Exception? error)
     {
         try
         {
             File.WriteAllText(ruta, this.ConstruirCsv(), new UTF8Encoding(true));
-            return null;
+            error = null;
+            return true;
         }
         catch (Exception ex)
         {
-            return ex;
+            error = ex;
+            return false;
         }
     }
 

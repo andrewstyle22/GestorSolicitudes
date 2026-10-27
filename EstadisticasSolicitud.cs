@@ -28,10 +28,17 @@ public static class EstadisticasSolicitud
         double? tasa = total == 0 ? null : (double)conRespuesta / total;
         double? media = dias.Count == 0 ? null : dias.Average();
 
-        return new ResumenEstadisticas(total, solicitudes.Count(s => s.EstaAbierta),
-            solicitudes.Count(s => s.Estado is EstadoSolicitud.EntrevistaRrhh or EstadoSolicitud.EntrevistaTecnica or EstadoSolicitud.EntrevistaFinal or EstadoSolicitud.PruebaTecnica),
-            solicitudes.Count(s => s.Estado is EstadoSolicitud.OfertaRecibida or EstadoSolicitud.OfertaAceptada or EstadoSolicitud.OfertaRechazada),
-            solicitudes.Count(s => s.SeguimientoPendiente),
+        int abiertas = solicitudes.Count(s => s.EstaAbierta);
+        int enEntrevista = solicitudes.Count(s => s.Estado.EsEntrevista());
+        int ofertas = solicitudes.Count(s => s.Estado.EsOferta());
+        int seguimientosPendientes = solicitudes.Count(s => s.SeguimientoPendiente);
+
+        return new ResumenEstadisticas(
+            total,
+            abiertas,
+            enEntrevista,
+            ofertas,
+            seguimientosPendientes,
             tasa,
             media);
     }

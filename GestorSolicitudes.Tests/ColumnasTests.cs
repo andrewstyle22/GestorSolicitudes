@@ -69,7 +69,7 @@ public class ColumnasTests
     public void ColumnaItem_CambiarVisibleAvisaYNotifica()
     {
         int avisos = 0;
-        var columna = new ColumnaItem("Dias", true, () => avisos++);
+        var columna = new ColumnaItem("Dias", "Columna.Dias", true, () => avisos++);
 
         columna.Visible = false;
 
@@ -81,7 +81,7 @@ public class ColumnasTests
     public void ColumnaItem_MarcarLoMismoNoAvisa()
     {
         int avisos = 0;
-        var columna = new ColumnaItem("Dias", true, () => avisos++);
+        var columna = new ColumnaItem("Dias", "Columna.Dias", true, () => avisos++);
 
         columna.Visible = true;
 
@@ -91,7 +91,7 @@ public class ColumnasTests
     [Fact]
     public void ColumnaItem_NombreSaleDelDiccionarioYSeRefresca()
     {
-        var columna = new ColumnaItem("PrimeraRespuesta", true, () => { });
+        var columna = new ColumnaItem("PrimeraRespuesta", "Columna.PrimeraRespuesta", true, () => { });
         var notificados = new List<string?>();
         columna.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
 
@@ -108,7 +108,7 @@ public class ColumnasTests
     public void Columnas_SinPreferenciaSonLasSeisVisibles()
     {
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db, RutaTemporal());
+        using var vm = new MainViewModel(db, RutaTemporal());
 
         Assert.Equal(
             ["Dias", "PrimeraRespuesta", "Entrevista", "Seguimiento", "Interes", "Portal"],
@@ -123,7 +123,7 @@ public class ColumnasTests
         ColumnasHelper.GuardarEn(ruta, ["Dias", "Portal"]);
 
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db, ruta);
+        using var vm = new MainViewModel(db, ruta);
 
         Assert.Equal(
             [true, false, false, false, false, true],
@@ -134,11 +134,11 @@ public class ColumnasTests
     public void Columnas_CadaClaveTieneSuTextoEnElDiccionario()
     {
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db, RutaTemporal());
+        using var vm = new MainViewModel(db, RutaTemporal());
 
         // La clave guardada es a la vez el x:Name de la columna y el sufijo de Columna.*:
         // si una se queda atrás, el botón mostraría la clave en crudo.
-        Assert.All(vm.Columnas, c => Assert.True(Localizacion.Contiene("Columna." + c.Columna)));
+        Assert.All(vm.Columnas, c => Assert.True(Localizacion.Contiene(c.Clave)));
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class ColumnasTests
     {
         string ruta = RutaTemporal();
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db, ruta);
+        using var vm = new MainViewModel(db, ruta);
         int avisos = 0;
         vm.ColumnaVisibilidadCambiada += () => avisos++;
 
@@ -164,7 +164,7 @@ public class ColumnasTests
     public void PanelColumnasAbierto_EmpiezaCerradoYAbreAlPedirlo()
     {
         using var db = TestDb.NuevoContexto();
-        var vm = new MainViewModel(db, RutaTemporal());
+        using var vm = new MainViewModel(db, RutaTemporal());
 
         Assert.False(vm.PanelColumnasAbierto);
 

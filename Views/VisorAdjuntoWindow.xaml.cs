@@ -6,7 +6,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using GestorSolicitudes.Helpers;
-using Microsoft.Win32;
+using GestorSolicitudes.ViewModels;
 using Windows.Data.Pdf;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -18,11 +18,13 @@ using Windows.Storage.Streams;
 public partial class VisorAdjuntoWindow : Window
 {
     private readonly string ruta;
+    private readonly IDialogoService dialogo;
 
-    public VisorAdjuntoWindow(string ruta)
+    public VisorAdjuntoWindow(string ruta, IDialogoService dialogo)
     {
         this.InitializeComponent();
         this.ruta = ruta;
+        this.dialogo = dialogo;
         this.Title = Path.GetFileName(ruta);
         this.Loaded += async (_, _) => await this.CargarContenidoAsync();
     }
@@ -102,36 +104,31 @@ public partial class VisorAdjuntoWindow : Window
     {
         if (!File.Exists(this.ruta))
         {
-            MessageBox.Show(
+            this.dialogo.Informar(
                 Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
-                Localizacion.Texto("Titulo.Adjunto"),
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                Localizacion.Texto("Titulo.Adjunto"));
             return;
         }
 
-        var dialogo = new SaveFileDialog
-        {
-            Title = Localizacion.Texto("Boton.Descargar"),
-            FileName = Path.GetFileName(this.ruta),
-            Filter = Localizacion.Texto("Dialogo.FiltroAdjuntos"),
-            DefaultExt = Path.GetExtension(this.ruta),
-        };
+        string? destino = this.dialogo.ElegirDestino(
+            Localizacion.Texto("Boton.Descargar"),
+            Localizacion.Texto("Dialogo.FiltroAdjuntos"),
+            Path.GetFileName(this.ruta));
 
-        if (dialogo.ShowDialog(this) == true)
+        if (destino is null)
         {
-            try
-            {
-                File.Copy(this.ruta, dialogo.FileName, true);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
-                    Localizacion.Texto("Error"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
+            return;
+        }
+
+        try
+        {
+            File.Copy(this.ruta, destino, true);
+        }
+        catch (Exception ex)
+        {
+            this.dialogo.Error(
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
+                Localizacion.Texto("Error"));
         }
     }
 

@@ -124,10 +124,7 @@ public class Solicitud
         : null;
 
     [NotMapped]
-    public bool EstaAbierta => this.Estado is not (EstadoSolicitud.OfertaAceptada
-        or EstadoSolicitud.OfertaRechazada
-        or EstadoSolicitud.Rechazada
-        or EstadoSolicitud.Retirada);
+    public bool EstaAbierta => !this.Estado.EstaCerrada();
 
     [NotMapped]
     public bool HuboRespuesta => this.FechaPrimeraRespuesta.HasValue;

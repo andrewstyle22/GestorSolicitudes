@@ -33,10 +33,10 @@ public partial class FuentesTests
         List<string> nombres = NombresDeColumna();
 
         Assert.Equal(6, MainViewModel.ColumnasOcultables.Length);
-        foreach (string columna in MainViewModel.ColumnasOcultables)
+        foreach ((string columna, string clave) in MainViewModel.ColumnasOcultables)
         {
             Assert.Contains(columna, nombres);
-            Assert.True(Localizacion.Contiene($"Columna.{columna}"), $"Falta la clave Columna.{columna}.");
+            Assert.True(Localizacion.Contiene(clave), $"Falta la clave {clave}.");
         }
     }
 

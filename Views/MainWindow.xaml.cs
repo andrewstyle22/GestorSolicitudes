@@ -21,6 +21,7 @@ public partial class MainWindow : Window
 
     private readonly MainViewModel vm;
     private readonly AppDbContext db;
+    private readonly IDialogoService dialogo;
     private readonly HashSet<int> idsVencidosAvisados = new();
     private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
@@ -37,7 +38,8 @@ public partial class MainWindow : Window
         this.InitializeComponent();
 
         this.db = new AppDbContext();
-        this.vm = new MainViewModel(this.db, dialogo: new DialogoService());
+        this.dialogo = new DialogoService();
+        this.vm = new MainViewModel(this.db, dialogo: this.dialogo, cambiarIdioma: Localizacion.Cambiar);
         this.DataContext = this.vm;
 
         // El icono de la ventana sale de la misma ruta que el de la bandeja: una sola fuente.
@@ -193,22 +195,22 @@ public partial class MainWindow : Window
     {
         if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
         {
-            MessageBox.Show(
+            this.dialogo.Informar(
                 Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
-                Localizacion.Texto("Titulo.Adjunto"), MessageBoxButton.OK, MessageBoxImage.Information);
+                Localizacion.Texto("Titulo.Adjunto"));
             return;
         }
 
         try
         {
-            var ventana = new VisorAdjuntoWindow(ruta.Trim()) { Owner = this };
+            var ventana = new VisorAdjuntoWindow(ruta.Trim(), this.dialogo) { Owner = this };
             ventana.ShowDialog();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            this.dialogo.Avisar(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
-                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto("Error"));
         }
     }
 
