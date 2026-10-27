@@ -198,55 +198,40 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     // Al cambiar el tamaño se repagina la lista, quedándose en la página actual si sigue existiendo.
     partial void OnTamanoPaginaChanged(int value) => this.Recargar();
 
-    /// <summary>Página actual, contando desde 1.</summary>
+    /// <summary>Página actual, el rango y si se puede mover cada flecha: un solo estado.</summary>
     [ObservableProperty]
-    private int paginaActual = 1;
-
-    [ObservableProperty]
-    private int totalPaginas;
+    private ResultadoPagina<Solicitud> pagina =
+        new(Array.Empty<Solicitud>(), 1, 0, 0, 0, 0);
 
     /// <summary>Texto "1-10 de 47" que se ve junto a las flechas.</summary>
-    [ObservableProperty]
-    private string rangoPagina = string.Empty;
-
-    [ObservableProperty]
-    private bool puedeIrAInicio;
-
-    [ObservableProperty]
-    private bool puedeRetroceder;
-
-    [ObservableProperty]
-    private bool puedeAvanzar;
-
-    [ObservableProperty]
-    private bool puedeIrAlFinal;
+    public string RangoPagina => this.Pagina.Total == 0
+        ? $"0 {Localizacion.Texto("Paginacion.De")} 0"
+        : $"{this.Pagina.Desde + 1}-{this.Pagina.Hasta} {Localizacion.Texto("Paginacion.De")} {this.Pagina.Total}";
 
     [RelayCommand]
     private void IrAInicio() => this.IrAPagina(1);
 
     [RelayCommand]
-    private void IrAtras() => this.IrAPagina(this.PaginaActual - 1);
+    private void IrAtras() => this.IrAPagina(this.Pagina.PaginaActual - 1);
 
     [RelayCommand]
-    private void IrAdelante() => this.IrAPagina(this.PaginaActual + 1);
+    private void IrAdelante() => this.IrAPagina(this.Pagina.PaginaActual + 1);
 
     [RelayCommand]
-    private void IrAlFinal() => this.IrAPagina(this.TotalPaginas);
+    private void IrAlFinal() => this.IrAPagina(this.Pagina.TotalPaginas);
 
     private void IrAPagina(int pagina)
     {
-        int destino = Math.Clamp(pagina, 1, Math.Max(this.TotalPaginas, 1));
+        int destino = Math.Clamp(pagina, 1, Math.Max(this.Pagina.TotalPaginas, 1));
 
-        if (destino == this.PaginaActual)
+        if (destino == this.Pagina.PaginaActual)
         {
             return;
         }
 
-        this.PaginaActual = destino;
-
         // Recargar vuelve a filtrar la base y vuelve a recortar: un solo camino para los filtros
         // y para las flechas, sin listas intermedias que se queden desfasadas.
-        this.Recargar();
+        this.Recargar(destino);
     }
 
     /// <summary>
@@ -255,23 +240,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// se formatea el rango con el idioma activo. WPF no pagina las vistas de colección, así que
     /// la exportación a CSV no pasa por esta lista y sigue saliendo entera.
     /// </summary>
-    private void Paginar(List<Solicitud> filtradas)
+    private void Paginar(List<Solicitud> filtradas, int? pagina = null)
     {
-        ResultadoPagina<Solicitud> pagina = Paginador.Paginar(filtradas, this.TamanoPagina, this.PaginaActual);
+        this.Pagina = Paginador.Paginar(
+            filtradas,
+            this.TamanoPagina,
+            pagina ?? this.Pagina.PaginaActual);
 
-        this.TotalPaginas = pagina.TotalPaginas;
-        this.PaginaActual = pagina.PaginaActual;
-        this.Solicitudes = new ObservableCollection<Solicitud>(pagina.Elementos);
+        this.Solicitudes = new ObservableCollection<Solicitud>(this.Pagina.Elementos);
 
-        this.PuedeIrAInicio = pagina.PuedeIrAInicio;
-        this.PuedeRetroceder = pagina.PuedeRetroceder;
-        this.PuedeAvanzar = pagina.PuedeAvanzar;
-        this.PuedeIrAlFinal = pagina.PuedeIrAlFinal;
-
-        string de = Localizacion.Texto("Paginacion.De");
-        this.RangoPagina = pagina.Total == 0
-            ? $"0 {de} 0"
-            : $"{pagina.Desde + 1}-{pagina.Hasta} {de} {pagina.Total}";
+        // El rango es texto traducido: se recalcula aunque la página sea la misma (cambio de idioma).
+        this.OnPropertyChanged(nameof(this.RangoPagina));
     }
 
     // ---------------------------------------------------------------- Filtros
@@ -471,8 +450,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Recarga la lista, los filtros y las estadísticas. Público: la ventana lo
     /// usa para refrescar los contadores tras avisar de seguimientos vencidos.
+    /// Con <paramref name="pagina"/>, repagina sobre esa página en vez de la actual.
     /// </summary>
-    public void Recargar()
+    public void Recargar(int? pagina = null)
     {
         IQueryable<Solicitud> consulta = this.db.Solicitudes;
 
@@ -505,7 +485,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             lista = lista.Where(s => s.SeguimientoPendiente).ToList();
         }
 
-        this.Paginar(lista);
+        this.Paginar(lista, pagina);
         this.ActualizarEstadisticas();
         this.ActualizarLimitesEmbudo();
     }

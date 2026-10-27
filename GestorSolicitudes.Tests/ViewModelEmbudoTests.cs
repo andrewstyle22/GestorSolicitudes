@@ -143,6 +143,8 @@ public class ViewModelEmbudoTests
         Assert.Equal(1, recargas);
         // Los botones de la gráfica usan un convertidor y hay que reevaluarlos.
         Assert.Contains(nameof(MainViewModel.VerGrafica), notificadas);
+        // El rango de paginación es texto traducido y también se repinta.
+        Assert.Contains(nameof(MainViewModel.RangoPagina), notificadas);
     }
 
     [Fact]

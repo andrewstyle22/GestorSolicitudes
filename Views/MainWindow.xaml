@@ -617,25 +617,25 @@
 
                             <Button Content="|◀" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeIrAInicio}"
+                                    IsEnabled="{Binding Pagina.PuedeIrAInicio}"
                                     Command="{Binding IrAInicioCommand}"
                                     ToolTip="{DynamicResource Paginacion.Primero}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Primero}" />
                             <Button Content="◀" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeRetroceder}"
+                                    IsEnabled="{Binding Pagina.PuedeRetroceder}"
                                     Command="{Binding IrAtrasCommand}"
                                     ToolTip="{DynamicResource Paginacion.Anterior}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Anterior}" />
                             <Button Content="▶" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeAvanzar}"
+                                    IsEnabled="{Binding Pagina.PuedeAvanzar}"
                                     Command="{Binding IrAdelanteCommand}"
                                     ToolTip="{DynamicResource Paginacion.Siguiente}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Siguiente}" />
                             <Button Content="▶|" Padding="8,2"
                                     Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeIrAlFinal}"
+                                    IsEnabled="{Binding Pagina.PuedeIrAlFinal}"
                                     Command="{Binding IrAlFinalCommand}"
                                     ToolTip="{DynamicResource Paginacion.Ultimo}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Ultimo}" />
