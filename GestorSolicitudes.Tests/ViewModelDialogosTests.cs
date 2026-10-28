@@ -274,4 +274,20 @@ public class ViewModelDialogosTests
         Assert.Single(dialogo.Avisos);
     }
 
+    [Theory]
+    [InlineData("mailto:alguien@example.com")]
+    [InlineData("ejemplo.com")]
+    public void AbrirEnlace_ConEnlaceQueNoEsWeb_AvisaYNoLoAbre(string enlace)
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.EnlaceOferta = enlace;
+
+        vm.AbrirEnlaceCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Empty(dialogo.EnlacesAbiertos);
+    }
 }

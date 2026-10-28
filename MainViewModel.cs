@@ -934,9 +934,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        string limpia = url.Trim();
+        if (!Enlaces.EsWeb(limpia))
+        {
+            // El servicio se calla con lo que no es http/https; aquí el usuario se entera.
+            this.dialogo.Avisar(Localizacion.Texto("Mensaje.EnlaceNoValido"), Localizacion.Texto(ClaveError));
+            return;
+        }
+
         try
         {
-            this.dialogo.AbrirEnlace(url.Trim());
+            this.dialogo.AbrirEnlace(limpia);
         }
         catch (Exception ex)
         {
