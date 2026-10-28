@@ -162,7 +162,31 @@ y su arreglo para no repetirlo:
   o de patrón (`if (this.Edicion is not Solicitud edicion)`) que se llama igual que un
   campo generado (`edicion`) oculta el campo. Renombra la local/parámetro (`solicitud`)
   y deja el campo con su nombre. Cuidado con `[ObservableProperty]`: el campo privado y
-  la propiedad pública comparten nombre en PascalCase.
+  la propiedad pública comparten nombre en PascalCase. Ya pasó también en `App.xaml.cs`
+  con `AppDbContext db = new();` tapando el campo `db`: el local pasó a `contexto`.
+- **S2930 (`Dispose 'x' when it is no longer needed`)**: es un **bug**, no un estilo, y
+  tumba el rating de fiabilidad: es el único de los seis que puso el gate en rojo. Todo
+  `IDisposable` guardado en un campo se libera. Una `Window` no tiene `Dispose`, así que
+  se cancela y se libera en `Closed`:
+  `this.Closed += (_, _) => { this.cancelacion.Cancel(); this.cancelacion.Dispose(); };`.
+  Es seguro liberar tras cancelar: los `CancellationToken` ya capturados siguen
+  respondiendo a `IsCancellationRequested`. Ya pasó en `Views/VisorAdjuntoWindow.xaml.cs`.
+- **S1192 (`Define a constant instead of using this literal 'X' N times`)**: un literal
+  repetido 3 o más veces en el mismo fichero va a `private const string`. Ya pasó en
+  `VisorAdjuntoWindow` con `"Mensaje.NoSePuedePrevisualizar"` (4 veces). Las claves
+  repetidas en los tres diccionarios de `Localizacion.cs` no cuentan, y `MainViewModel`
+  ya tiene `ClaveError` para `"Error"`.
+- **S3267 (`Loops should be simplified using the 'Where' LINQ method`)**: un `foreach`
+  cuya única lógica es un `if`, o un `if (...) continue;`, se sustituye por `Where`.
+  Ya pasó en `GestorAdjuntos.DescartarCopias`, `MainWindow.ComprobarSeguimientosVencidos`,
+  `EsquemaDb.VerificarColumnasFaltantes` y `CsvHelper.NormalizarBusqueda`. Cuidado con
+  los efectos secundarios: en `MainWindow` el arreglo es
+  `Where(v => this.idsVencidosAvisados.Add(v.Id))`, que filtra y marca en la misma
+  pasada; deja un comentario explicándolo.
+- **S3242 (`Change return type of method 'X' ... for improved performance`)**: un método
+  privado que solo devuelve un tipo concreto debe declararlo
+  (`SolidColorBrush` en vez de `Brush` en `EstadoAColorConverter.Crear`). Los campos
+  pueden seguir siendo del tipo base.
 - **S3878 (`Prefer 'static readonly' fields over constant array arguments...`)**: no
   crees arrays literales en cada llamada (`Assert.Equal(new[] { ... }, ...)`). Usa un
   `private static readonly` en la clase del test o evita el array (`lista.Take(n)`,
@@ -184,8 +208,12 @@ y su arreglo para no repetirlo:
 Sonar no corre en local, pero estos patrones se encuentran con `grep`/`Select-String`:
 
 - `IDisposable|Dispose\(` en `*.cs` (¿hay otra clase que lo implemente?).
-- `\bedicion\b` (o el nombre del campo) en el fichero tocado: locales/parámetros que
-  lo ocultan.
+- `CancellationTokenSource`, `MemoryStream`, `StreamReader`... en campos sin `using` ni
+  `Dispose`: S2930 (bug, tumba el gate).
+- `\bedicion\b` (o el nombre del campo) en el fichero tocado: locales/parámetros que lo
+  ocultan, incluidos los `Tipo nombre = new();`.
+- `foreach` seguido en la línea siguiente de un `if` o un `continue`: S3267.
+- `'"([^"]{3,})"'` contado por fichero: si un literal sale 3+ veces, S1192.
 - `Assert\.(Equal|Contains)\(new` y `new\[\]` dentro de llamadas: arrays constantes.
 - `\btodo\b` (sin distinguir mayúsculas) en comentarios: falsos TODO en español.
 
@@ -206,3 +234,7 @@ Sonar no corre en local, pero estos patrones se encuentran con `grep`/`Select-St
 - Medir solo líneas (ignorar condiciones) y dar el gate por superado.
 - Excluir un método completo que contenía líneas cubiertas.
 - Subestimar el tiempo de re-análisis de SonarCloud tras el push.
+- **Confundir un aviso con un fallo del gate.** Un issue nuevo de tipo *bug* (p.ej.
+  S2930) tumba la fiabilidad y el gate; un *code smell* nuevo solo baja la
+  mantenibilidad y aguanta una deuda pequeña. Arregla todos los del código nuevo,
+  pero prioriza los bugs.
