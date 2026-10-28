@@ -55,14 +55,17 @@ public class LocalizacionTests
     [Fact]
     public void TodosLosIdiomasCubrenLasMismasClaves()
     {
-        IReadOnlyCollection<string> claves = Localizacion.Claves();
+        IReadOnlyCollection<string> claves = Localizacion.Claves(Idioma.Castellano);
         Assert.NotEmpty(claves);
 
         foreach (Idioma idioma in Enum.GetValues<Idioma>())
         {
+            // Mismos conjuntos: comparar los textos no sirve porque Texto cae al castellano.
+            Assert.Equal(claves.Order(), Localizacion.Claves(idioma).Order());
+
             foreach (string clave in claves)
             {
-                // Ni una clave sin traducir ni vacía en ningún idioma.
+                // Ni una clave vacía en ningún idioma.
                 Assert.False(
                     string.IsNullOrWhiteSpace(Localizacion.Texto(idioma, clave)),
                     $"La clave '{clave}' no tiene texto en {idioma}.");
@@ -96,6 +99,20 @@ public class LocalizacionTests
         Assert.Equal("días", Localizacion.Texto(Idioma.Castellano, "Metrica.Dias"));
         Assert.Equal("days", Localizacion.Texto(Idioma.Ingles, "Metrica.Dias"));
         Assert.Equal("Tage", Localizacion.Texto(Idioma.Aleman, "Metrica.Dias"));
+    }
+
+    [Theory]
+    [InlineData(Idioma.Castellano, "por por")]
+    [InlineData(Idioma.Ingles, "by by")]
+    [InlineData(Idioma.Aleman, "nach nach")]
+    public void TituloDeLaGrafica_NoDuplicaLaPreposicion(Idioma idioma, string duplicada)
+    {
+        string titulo = string.Format(
+            Localizacion.Cultura(idioma),
+            Localizacion.Texto(idioma, "Grafica.Titulo"),
+            Localizacion.Texto(idioma, "Grafica.TituloMes"));
+
+        Assert.DoesNotContain(duplicada, titulo);
     }
 
     [Fact]

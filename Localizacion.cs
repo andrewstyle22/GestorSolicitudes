@@ -54,7 +54,7 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  Nueva candidatura"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Embudo de los últimos 12 periodos, por {0} (enviadas → respondidas → entrevistas → ofertas)"),
+        ("Grafica.Titulo", "Embudo de los últimos 12 periodos, {0} (enviadas → respondidas → entrevistas → ofertas)"),
         ("Grafica.TituloMes", "por mes"),
         ("Grafica.TituloSemana", "por semana"),
         ("Grafica.TituloDia", "por día"),
@@ -67,7 +67,7 @@ public static class Localizacion
         ("Grafica.Respondidas", "Respondidas"),
         ("Grafica.Entrevistas", "Entrevistas"),
         ("Grafica.Ofertas", "Ofertas"),
-("Grafica.Ver", "Gráfico"),
+        ("Grafica.Ver", "Gráfico"),
         ("Grafica.Ocultar", "Ocultar gráfica"),
 
         ("GranularidadEmbudo.Mes", "Mes"),
@@ -154,7 +154,7 @@ public static class Localizacion
         ("Historial.Titulo", "HISTORIAL"),
         ("Historial.Anadir", "+ Añadir"),
 
-        // ----- Camios comunes -----
+        // ----- Campos comunes -----
         ("Campo.Nombre", "Nombre"),
         ("Campo.Email", "Email"),
         ("Campo.Telefono", "Teléfono"),
@@ -213,6 +213,10 @@ public static class Localizacion
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Requisitos del cargo"),
+
+        // ----- Visor de adjuntos -----
+        ("Visor.Titulo", "Visor"),
+        ("Visor.Pagina", "Página {0} de {1}"),
 
         // ----- Selector de idioma -----
         ("Selector.ToolTip", "Idioma de la interfaz"),
@@ -305,7 +309,7 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  New application"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Funnel for the last 12 periods, by {0} (sent → answered → interviews → offers)"),
+        ("Grafica.Titulo", "Funnel for the last 12 periods, {0} (sent → answered → interviews → offers)"),
         ("Grafica.TituloMes", "by month"),
         ("Grafica.TituloSemana", "by week"),
         ("Grafica.TituloDia", "by day"),
@@ -318,7 +322,7 @@ public static class Localizacion
         ("Grafica.Respondidas", "Answered"),
         ("Grafica.Entrevistas", "Interviews"),
         ("Grafica.Ofertas", "Offers"),
-("Grafica.Ver", "Chart"),
+        ("Grafica.Ver", "Chart"),
         ("Grafica.Ocultar", "Hide chart"),
 
         ("GranularidadEmbudo.Mes", "Month"),
@@ -405,7 +409,7 @@ public static class Localizacion
         ("Historial.Titulo", "HISTORY"),
         ("Historial.Anadir", "+ Add"),
 
-        // ----- Camios comunes -----
+        // ----- Campos comunes -----
         ("Campo.Nombre", "Name"),
         ("Campo.Email", "Email"),
         ("Campo.Telefono", "Phone"),
@@ -464,6 +468,10 @@ public static class Localizacion
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Job requirements"),
+
+        // ----- Visor de adjuntos -----
+        ("Visor.Titulo", "Viewer"),
+        ("Visor.Pagina", "Page {0} of {1}"),
 
         // ----- Selector de idioma -----
         ("Selector.ToolTip", "Interface language"),
@@ -556,10 +564,10 @@ public static class Localizacion
         ("Boton.NuevaCandidatura", "+  Neue Bewerbung"),
 
         // ----- Gráfica -----
-        ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, nach {0} (gesendet → Antworten → Interviews → Angebote)"),
-        ("Grafica.TituloMes", "nach Monat"),
-        ("Grafica.TituloSemana", "nach Woche"),
-        ("Grafica.TituloDia", "nach Tag"),
+        ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, {0} (gesendet → Antworten → Interviews → Angebote)"),
+        ("Grafica.TituloMes", "nach Monaten"),
+        ("Grafica.TituloSemana", "nach Wochen"),
+        ("Grafica.TituloDia", "nach Tagen"),
         ("Grafica.Granularidad", "Gruppieren nach"),
         ("Grafica.Anterior", "Vorheriger Zeitraum"),
         ("Grafica.Siguiente", "Nächster Zeitraum"),
@@ -569,7 +577,7 @@ public static class Localizacion
         ("Grafica.Respondidas", "Beantwortet"),
         ("Grafica.Entrevistas", "Interviews"),
         ("Grafica.Ofertas", "Angebote"),
-("Grafica.Ver", "Diagramm"),
+        ("Grafica.Ver", "Diagramm"),
         ("Grafica.Ocultar", "Diagramm ausblenden"),
 
         ("GranularidadEmbudo.Mes", "Monat"),
@@ -581,7 +589,7 @@ public static class Localizacion
         ("Filtro.BuscarToolTip", "Suche nach Unternehmen, Position, Technologie, Standort oder Portal"),
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
-        ("Filtro.SeguimientoPendiente", "Follow-up fällig"),
+        ("Filtro.SeguimientoPendiente", "Nachverfolgung fällig"),
         ("Filtro.SinEspecificar", "Nicht angegeben"),
         ("Filtro.TodosLosEstados", "Alle Status"),
 
@@ -595,7 +603,7 @@ public static class Localizacion
         ("Columna.DiasToolTip", "Tage seit dem Versand; nach Abschluss, wie lange der Prozess gedauert hat"),
         ("Columna.PrimeraRespuesta", "1. Antwort"),
         ("Columna.Entrevista", "Interview"),
-        ("Columna.Seguimiento", "Follow-up"),
+        ("Columna.Seguimiento", "Nachverfolgung"),
         ("Columna.Interes", "Interesse"),
         ("Columna.Portal", "Portal"),
 
@@ -614,7 +622,7 @@ public static class Localizacion
         ("Detalle.VerTodas", "Alle anzeigen"),
         ("Detalle.VerTodasToolTip", "Filtert die Liste auf alle Bewerbungen dieses Unternehmens"),
         ("Pestana.Oferta", "Angebot"),
-        ("Pestana.Seguimiento", "Follow-up"),
+        ("Pestana.Seguimiento", "Nachverfolgung"),
         ("Pestana.AdjuntosHistorial", "Anhänge & Verlauf"),
 
         // ----- Pestaña Oferta -----
@@ -640,7 +648,7 @@ public static class Localizacion
         ("Seguimiento.FechaSolicitud", "Bewerbungsdatum"),
         ("Seguimiento.PrimeraContestacion", "Erste Antwort"),
         ("Seguimiento.DiaEntrevista", "Tag des Interviews"),
-        ("Seguimiento.ProximoSeguimiento", "Nächstes Follow-up"),
+        ("Seguimiento.ProximoSeguimiento", "Nächste Nachverfolgung"),
         ("Seguimiento.ProximoSeguimientoToolTip", "Wann du wieder schreiben solltest, falls keine Nachricht kommt"),
         ("Seguimiento.FechaCierre", "Abschlussdatum"),
         ("Seguimiento.RespuestaEmpresa", "Antwort des Unternehmens"),
@@ -656,7 +664,7 @@ public static class Localizacion
         ("Historial.Titulo", "VERLAUF"),
         ("Historial.Anadir", "+ Hinzufügen"),
 
-        // ----- Camios comunes -----
+        // ----- Campos comunes -----
         ("Campo.Nombre", "Name"),
         ("Campo.Email", "E-Mail"),
         ("Campo.Telefono", "Telefon"),
@@ -674,11 +682,11 @@ public static class Localizacion
 
         // ----- Bandeja -----
         ("Bandeja.Abrir", "Bewerbungstracker öffnen"),
-        ("Bandeja.Comprobar", "Follow-ups jetzt prüfen"),
+        ("Bandeja.Comprobar", "Nachverfolgungen jetzt prüfen"),
         ("Bandeja.Salir", "Beenden"),
-        ("Bandeja.SeguimientoVencido", "Follow-up überfällig"),
+        ("Bandeja.SeguimientoVencido", "Nachverfolgung überfällig"),
         ("Bandeja.VencidoTexto", "{0} — {1}. Fällig seit {2}."),
-        ("Bandeja.VencidosMultiples", "{0} überfällige Follow-ups"),
+        ("Bandeja.VencidosMultiples", "{0} überfällige Nachverfolgungen"),
         ("Bandeja.RecordatorioLinea", "• {0} — {1}"),
 
         // ----- Diálogos de fichero -----
@@ -716,6 +724,10 @@ public static class Localizacion
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Anforderungen an die Stelle"),
 
+        // ----- Visor de adjuntos -----
+        ("Visor.Titulo", "Betrachter"),
+        ("Visor.Pagina", "Seite {0} von {1}"),
+
         // ----- Selector de idioma -----
         ("Selector.ToolTip", "Sprache der Oberfläche"),
         ("Idioma.Espanol", "Spanisch"),
@@ -734,7 +746,7 @@ public static class Localizacion
         ("Csv.DiasHastaRespuesta", "Tage bis Antwort"),
         ("Csv.Entrevista", "Interview"),
         ("Csv.Cierre", "Abschluss"),
-        ("Csv.ProximoSeguimiento", "Nächstes Follow-up"),
+        ("Csv.ProximoSeguimiento", "Nächste Nachverfolgung"),
         ("Csv.SalarioMin", "Mindestgehalt"),
         ("Csv.SalarioMax", "Höchstgehalt"),
         ("Csv.Pretension", "Gehaltsvorstellung"),
@@ -770,7 +782,7 @@ public static class Localizacion
         ("TipoEvento.Llamada", "Anruf / Screening"),
         ("TipoEvento.PruebaTecnica", "Technischer Test"),
         ("TipoEvento.Entrevista", "Interview"),
-        ("TipoEvento.Seguimiento", "Follow-up gesendet"),
+        ("TipoEvento.Seguimiento", "Nachverfolgung gesendet"),
         ("TipoEvento.Oferta", "Angebot"),
         ("TipoEvento.Rechazo", "Absage"),
         ("MotivoRechazo.Salario", "Gehalt / Vorstellung"),
@@ -833,8 +845,8 @@ public static class Localizacion
             .Select(i => new IdiomaItem(i, NombrePropio(i)))
             .ToList();
 
-    /// <summary>Todas las claves conocidas, para comprobar que ningún idioma se queda atrás.</summary>
-    public static IReadOnlyCollection<string> Claves() => TextoCastellano.Keys.ToArray();
+    /// <summary>Las claves de un idioma, para comprobar que los tres diccionarios tienen las mismas.</summary>
+    public static IReadOnlyCollection<string> Claves(Idioma idioma) => Tablas[idioma].Keys.ToArray();
 
     /// <summary>
     /// Decide el idioma inicial (preferencia guardada o, si no hay, el del sistema), fija la

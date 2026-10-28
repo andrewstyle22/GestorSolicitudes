@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Views;
+namespace GestorSolicitudes.Views;
 
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -6,8 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using GestorSolicitudes.Data;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Hardcodet.Wpf.TaskbarNotification;
 
@@ -16,24 +14,32 @@ using Hardcodet.Wpf.TaskbarNotification;
 [ExcludeFromCodeCoverage]
 public partial class MainWindow : Window
 {
+    private const int SegundosAntesDelPrimerAviso = 20;
+    private const int MinutosEntreAvisos = 5;
+
     private readonly MainViewModel vm;
+    private readonly IDialogoService dialogo;
     private readonly HashSet<int> idsVencidosAvisados = new();
     private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
 
-    // Recurso del icono, como ruta relativa al ensamblado principal. WPF solo lo resuelve con
-    // el ";component", y montar la ruta con el nombre real del ensamblado evita el
-    // "pack://application:,,,/<ensamblado>;component/..." absoluto, que queda obsoleto
-    // en cuanto se renombra el proyecto.
-    private static readonly Uri RutaIcono = new(
-        $"/{typeof(MainWindow).Assembly.GetName().Name};component/Resources/appicon.ico", UriKind.Relative);
+    // Ruta absoluta al recurso empaquetado. BitmapFrame.Create no resuelve la forma relativa
+    // ("/Ensamblado;component/..."): la interpreta como ruta de fichero. El nombre del
+    // ensamblado se toma del propio tipo, así que renombrar el proyecto no rompe la ruta.
+    internal static readonly Uri RutaIcono = new(
+        $"pack://application:,,,/{typeof(MainWindow).Assembly.GetName().Name};component/Resources/appicon.ico",
+        UriKind.Absolute);
 
-    public MainWindow()
+    public MainWindow(MainViewModel vm, IDialogoService dialogo)
     {
         this.InitializeComponent();
 
-        this.vm = new MainViewModel(new AppDbContext(), dialogo: new DialogoService());
+        this.vm = vm;
+        this.dialogo = dialogo;
         this.DataContext = this.vm;
+
+        // El icono de la ventana sale de la misma ruta que el de la bandeja: una sola fuente.
+        this.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(RutaIcono);
 
         // Ctrl+N nueva candidatura, Ctrl+S guardar.
         this.InputBindings.Add(new KeyBinding(this.vm.NuevaCommand, Key.N, ModifierKeys.Control));
@@ -51,17 +57,17 @@ public partial class MainWindow : Window
 
         // Un DataGridColumn no hereda el DataContext, así que su visibilidad no se puede
         // enlazar: la fija la vista al construirse y cada vez que cambia una casilla.
-        this.vm.ColumnaVisibilidadCambiada += this.AplicarVisibilidadColumnas;
+        this.vm.ColumnasVm.ColumnaVisibilidadCambiada += this.AplicarVisibilidadColumnas;
         this.AplicarVisibilidadColumnas();
     }
 
     /// <summary>Muestra u oculta las columnas que el usuario puede decidir.</summary>
     private void AplicarVisibilidadColumnas()
     {
-        foreach (ColumnaItem columna in this.vm.Columnas)
+        foreach (ColumnaItem columna in this.vm.ColumnasVm.Columnas)
         {
             // El x:Name de cada columna genera el campo con el que se llega desde aquí.
-            DataGridColumn? cd = columna.Columna switch
+            DataGridColumn columnaVista = columna.Columna switch
             {
                 "Dias" => this.Dias,
                 "PrimeraRespuesta" => this.PrimeraRespuesta,
@@ -72,10 +78,7 @@ public partial class MainWindow : Window
                 _ => throw new InvalidOperationException($"Columna desconocida en la visibilidad: {columna.Columna}"),
             };
 
-            if (cd is not null)
-            {
-                cd.Visibility = columna.Visible ? Visibility.Visible : Visibility.Collapsed;
-            }
+            columnaVista.Visibility = columna.Visible ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -87,10 +90,10 @@ public partial class MainWindow : Window
     /// </summary>
     private void ArrancarRecordatorios()
     {
-        this.temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+        this.temporizadorRecordatorios = new DispatcherTimer { Interval = TimeSpan.FromSeconds(SegundosAntesDelPrimerAviso) };
         this.temporizadorRecordatorios.Tick += (_, _) =>
         {
-            this.temporizadorRecordatorios.Interval = TimeSpan.FromMinutes(5);
+            this.temporizadorRecordatorios.Interval = TimeSpan.FromMinutes(MinutosEntreAvisos);
             this.ComprobarSeguimientosVencidos();
         };
         this.temporizadorRecordatorios.Start();
@@ -98,10 +101,14 @@ public partial class MainWindow : Window
 
     private void ComprobarSeguimientosVencidos()
     {
-        List<Solicitud> vencidos = this.vm.SeguimientosVencidosAhora();
-        List<Solicitud> nuevos = vencidos
-            .Where(s => this.idsVencidosAvisados.Add(s.Id))
-            .ToList();
+        List<SeguimientoVencido> vencidos = this.vm.SeguimientosVencidosAhora();
+
+        // El aviso es una vez por sesión, pero solo para los que siguen vencidos: así el
+        // HashSet no crece con filas que ya se resolvieron o se borraron.
+        this.idsVencidosAvisados.IntersectWith(vencidos.Select(s => s.Id));
+
+        // Add devuelve false si ya estaba avisado: filtra y marca en la misma pasada.
+        var nuevos = vencidos.Where(vencido => this.idsVencidosAvisados.Add(vencido.Id)).ToList();
 
         if (nuevos.Count == 0)
         {
@@ -110,7 +117,7 @@ public partial class MainWindow : Window
 
         if (nuevos.Count == 1)
         {
-            Solicitud s = nuevos[0];
+            SeguimientoVencido s = nuevos[0];
             this.IconoBandeja.ShowBalloonTip(
                 Localizacion.Texto("Bandeja.SeguimientoVencido"),
                 string.Format(
@@ -159,17 +166,6 @@ public partial class MainWindow : Window
 
     // ------------------------------------------------------------ Detalle
 
-    /// <summary>Muestra los requisitos del cargo en una ventana grande si hay texto.</summary>
-    private void VerRequisitos_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: Solicitud solicitud }
-            && !string.IsNullOrWhiteSpace(solicitud.Requisitos))
-        {
-            var ventana = new VentanaRequisitos(solicitud.Requisitos) { Owner = this };
-            ventana.ShowDialog();
-        }
-    }
-
     /// <summary>Abre el CV o la carta que muestra la fila de adjunto pulsada.</summary>
     private void AbrirAdjunto_Click(object? sender, EventArgs e) =>
         this.AbrirAdjunto((sender as FilaAdjunto)?.Ruta);
@@ -178,31 +174,34 @@ public partial class MainWindow : Window
     {
         if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
         {
-            MessageBox.Show(
+            this.dialogo.Informar(
                 Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
-                Localizacion.Texto("Titulo.Adjunto"), MessageBoxButton.OK, MessageBoxImage.Information);
+                Localizacion.Texto("Titulo.Adjunto"));
             return;
         }
 
         try
         {
-            var ventana = new VisorAdjuntoWindow(ruta.Trim()) { Owner = this };
+            var ventana = new VisorAdjuntoWindow(ruta.Trim(), this.dialogo) { Owner = this };
             ventana.ShowDialog();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            this.dialogo.Avisar(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
-                Localizacion.Texto("Error"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                Localizacion.Texto("Error"));
         }
     }
 
     protected override void OnClosed(System.EventArgs e)
     {
         this.IconoBandeja.Visibility = Visibility.Hidden;
+        this.temporizadorRecordatorios?.Stop();
 
-        // El evento de idioma es estático: si no se suelta, retiene el ViewModel.
-        this.vm.Dispose();
+        // La base y el ViewModel los libera App; aquí solo los recursos propios de la ventana.
+        this.IconoBandeja.Dispose();
+        this.flujoIcono?.Dispose();
+
         base.OnClosed(e);
     }
 }

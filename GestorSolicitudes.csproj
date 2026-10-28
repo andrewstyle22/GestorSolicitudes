@@ -58,6 +58,26 @@
       <SubType>Designer</SubType>
     </Page>
 
+    <Page Include="Views\CabeceraMetricas.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+
+    <Page Include="Views\PestanaOferta.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+
+    <Page Include="Views\PestanaSeguimiento.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+
+    <Page Include="Views\PestanaAdjuntos.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+
     <Resource Include="Resources\appicon.ico" />
   </ItemGroup>
 

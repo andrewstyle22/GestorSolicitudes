@@ -5,7 +5,6 @@
         xmlns:loc="clr-namespace:GestorSolicitudes"
         xmlns:views="clr-namespace:GestorSolicitudes.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GestorSolicitudes.Views.MainWindow"
-        Icon="/GestorSolicitudes;component/Resources/appicon.ico"
         Title="{DynamicResource TituloVentana}"
         Height="780" Width="1525"
         MinHeight="600" MinWidth="1080"
@@ -14,25 +13,6 @@
         >
 
     <Window.Resources>
-
-        <!-- Tarjeta de métrica de la cabecera -->
-        <Style x:Key="ValorMetrica" TargetType="{x:Type TextBlock}">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Texto}" />
-        </Style>
-
-        <Style x:Key="TituloMetrica" TargetType="{x:Type TextBlock}">
-            <Setter Property="FontSize" Value="10" />
-            <Setter Property="Foreground" Value="{StaticResource TextoSuave}" />
-            <Setter Property="Margin" Value="0,1,0,0" />
-        </Style>
-
-        <Style x:Key="SeparadorMetrica" TargetType="{x:Type Border}">
-            <Setter Property="Width" Value="1" />
-            <Setter Property="Background" Value="{StaticResource Borde}" />
-            <Setter Property="Margin" Value="20,4,20,4" />
-        </Style>
 
         <!-- Celda de la tabla: las columnas comparten alineación y recorte; sólo Empresa
              (negrita) e Interés (color) añaden algo sobre esta base. -->
@@ -88,38 +68,7 @@
                                FontSize="12" Foreground="{StaticResource TextoSuave}" />
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <StackPanel>
-                        <TextBlock Text="{Binding TotalSolicitudes}" Style="{StaticResource ValorMetrica}" />
-                        <TextBlock Text="{DynamicResource Metrica.Enviadas}" Style="{StaticResource TituloMetrica}" />
-                    </StackPanel>
-                    <Border Style="{StaticResource SeparadorMetrica}" />
-                    <StackPanel>
-                        <TextBlock Text="{Binding ProcesosAbiertos}" Style="{StaticResource ValorMetrica}" />
-                        <TextBlock Text="{DynamicResource Metrica.Abiertas}" Style="{StaticResource TituloMetrica}" />
-                    </StackPanel>
-                    <Border Style="{StaticResource SeparadorMetrica}" />
-                    <StackPanel>
-                        <TextBlock Text="{Binding EnEntrevista}" Style="{StaticResource ValorMetrica}" />
-                        <TextBlock Text="{DynamicResource Metrica.EnProceso}" Style="{StaticResource TituloMetrica}" />
-                    </StackPanel>
-                    <Border Style="{StaticResource SeparadorMetrica}" />
-                    <StackPanel>
-                        <TextBlock Text="{Binding OfertasRecibidas}" Style="{StaticResource ValorMetrica}" />
-                        <TextBlock Text="{DynamicResource Metrica.Ofertas}" Style="{StaticResource TituloMetrica}" />
-                    </StackPanel>
-                    <Border Style="{StaticResource SeparadorMetrica}" />
-                    <StackPanel>
-                        <TextBlock Text="{Binding TasaRespuesta}" Style="{StaticResource ValorMetrica}" />
-                        <TextBlock Text="{DynamicResource Metrica.TasaRespuesta}" Style="{StaticResource TituloMetrica}" />
-                    </StackPanel>
-                    <Border Style="{StaticResource SeparadorMetrica}" />
-                    <StackPanel>
-                        <TextBlock Text="{Binding MediaDiasRespuesta}" Style="{StaticResource ValorMetrica}" />
-                        <TextBlock Text="{DynamicResource Metrica.MediaRespuesta}" Style="{StaticResource TituloMetrica}" />
-                    </StackPanel>
-                </StackPanel>
+                <views:CabeceraMetricas Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" />
 
                 <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
@@ -375,7 +324,7 @@
                             <!-- El TextBox de WPF no tiene Placeholder: se pinta un texto
                                  encima que solo se ve mientras el campo está vacío. -->
                             <Grid Grid.Column="0">
-                                <TextBox x:Name="Buscar_empresas" MinWidth="160"
+                                <TextBox x:Name="BuscarEmpresas" MinWidth="160"
                                          Style="{StaticResource Campo}"
                                          Text="{Binding TextoBusqueda, Delay=250, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="{DynamicResource Filtro.BuscarToolTip}" />
@@ -387,7 +336,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Text, ElementName=Buscar_empresas}" Value="">
+                                                <DataTrigger Binding="{Binding Text, ElementName=BuscarEmpresas}" Value="">
                                                     <Setter Property="Visibility" Value="Visible" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -408,7 +357,7 @@
                                     VerticalAlignment="Center" HorizontalAlignment="Right">
                             <ToggleButton Margin="0,0,8,0"
                                           Style="{StaticResource BotonDesplegable}"
-                                          IsChecked="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                          IsChecked="{Binding ColumnasVm.PanelColumnasAbierto, Mode=TwoWay}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{DynamicResource Columnas.Boton}" />
                                     <TextBlock Text="▾" Margin="6,0,0,0" />
@@ -418,12 +367,12 @@
                                     <Popup Placement="Bottom"
                                            AllowsTransparency="True"
                                            StaysOpen="False"
-                                           IsOpen="{Binding PanelColumnasAbierto, Mode=TwoWay}">
+                                           IsOpen="{Binding ColumnasVm.PanelColumnasAbierto, Mode=TwoWay}">
                                         <Border Background="{StaticResource Panel}"
                                                 BorderBrush="{StaticResource Borde}"
                                                 BorderThickness="1" CornerRadius="6"
                                                 Padding="12,8" MinWidth="190">
-                                            <ItemsControl ItemsSource="{Binding Columnas}">
+                                            <ItemsControl ItemsSource="{Binding ColumnasVm.Columnas}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <CheckBox Content="{Binding Nombre}"
@@ -502,7 +451,7 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn x:Name="Estado" Width="150">
+                            <DataGridTemplateColumn Width="150">
                                 <DataGridTemplateColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Estado}" />
@@ -604,7 +553,7 @@
                                     VerticalAlignment="Center">
                             <TextBlock Text="{DynamicResource Paginacion.PorPagina}"
                                        VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <ComboBox x:Name="SelectorFilasPagina" Width="64"
+                            <ComboBox Width="64"
                                       Style="{StaticResource CampoCombo}"
                                       ItemsSource="{Binding TamanosPagina}"
                                       SelectedItem="{Binding TamanoPagina}" />
@@ -612,31 +561,31 @@
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal"
                                     VerticalAlignment="Center">
-                            <TextBlock x:Name="RangoTexto" Text="{Binding RangoPagina}"
+                            <TextBlock Text="{Binding RangoPagina}"
                                        VerticalAlignment="Center" Margin="0,0,12,0" MinWidth="90"
                                        TextAlignment="Right" />
 
-                            <Button x:Name="BotonPrimeraPagina" Content="|◀" Margin="0,0,4,0"
+                            <Button Content="|◀" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeIrAInicio}"
+                                    IsEnabled="{Binding Pagina.PuedeIrAInicio}"
                                     Command="{Binding IrAInicioCommand}"
                                     ToolTip="{DynamicResource Paginacion.Primero}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Primero}" />
-                            <Button x:Name="BotonPaginaAnterior" Content="◀" Margin="0,0,4,0"
+                            <Button Content="◀" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeRetroceder}"
+                                    IsEnabled="{Binding Pagina.PuedeRetroceder}"
                                     Command="{Binding IrAtrasCommand}"
                                     ToolTip="{DynamicResource Paginacion.Anterior}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Anterior}" />
-                            <Button x:Name="BotonPaginaSiguiente" Content="▶" Margin="0,0,4,0"
+                            <Button Content="▶" Margin="0,0,4,0"
                                     Padding="8,2" Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeAvanzar}"
+                                    IsEnabled="{Binding Pagina.PuedeAvanzar}"
                                     Command="{Binding IrAdelanteCommand}"
                                     ToolTip="{DynamicResource Paginacion.Siguiente}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Siguiente}" />
-                            <Button x:Name="BotonUltimaPagina" Content="▶|" Padding="8,2"
+                            <Button Content="▶|" Padding="8,2"
                                     Style="{StaticResource BotonSecundario}"
-                                    IsEnabled="{Binding PuedeIrAlFinal}"
+                                    IsEnabled="{Binding Pagina.PuedeIrAlFinal}"
                                     Command="{Binding IrAlFinalCommand}"
                                     ToolTip="{DynamicResource Paginacion.Ultimo}"
                                     AutomationProperties.Name="{DynamicResource Paginacion.Ultimo}" />
@@ -650,7 +599,7 @@
                           Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}" />
 
             <!-- Detalle -->
-            <Border x:Name="NuevaCandidatura" Grid.Column="3" Background="{StaticResource Panel}"
+            <Border Grid.Column="3" Background="{StaticResource Panel}"
                     BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8"
                     Width="440" MinWidth="380"
                     Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}">
@@ -665,7 +614,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Cabecera fija: lo mínimo que siempre debe verse -->
-                        <StackPanel Grid.Row="0" DataContext="{Binding Edicion}" Margin="18,14,18,10">
+                        <StackPanel Grid.Row="0" Margin="18,14,18,10">
 
                             <TextBlock Text="{DynamicResource Detalle.Empresa}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
                             <Grid>
@@ -673,312 +622,30 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Style="{StaticResource Campo}" Text="{Binding Empresa}" Margin="9,0,0,0" />
+                                <TextBox Grid.Column="0" Style="{StaticResource Campo}" Text="{Binding Edicion.Empresa}" Margin="9,0,0,0" />
                                 <Button Grid.Column="1" Content="{DynamicResource Detalle.VerTodas}" Margin="6,0,9,0"
                                         Style="{StaticResource BotonSecundario}"
                                         ToolTip="{DynamicResource Detalle.VerTodasToolTip}"
-                                        Command="{Binding DataContext.VerCandidaturasDeEstaEmpresaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                        Command="{Binding VerCandidaturasDeEstaEmpresaCommand}" />
                             </Grid>
 
                             <TextBlock Text="{DynamicResource Detalle.Puesto}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                            <TextBox Style="{StaticResource Campo}" Text="{Binding Puesto}" Margin="9,0,10,0" />
+                            <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.Puesto}" Margin="9,0,10,0" />
                         </StackPanel>
 
                         <!-- Pestañas: Oferta / Seguimiento / Adjuntos e historial -->
                         <TabControl Grid.Row="1" Style="{StaticResource Pestanas}" Height="355" VerticalAlignment="Top">
 
                             <TabItem Header="{DynamicResource Pestana.Oferta}" Style="{StaticResource Pestana}">
-                                <ScrollViewer Margin="3,0,-12,0">
-                                    <StackPanel DataContext="{Binding Edicion}">
-
-                                        <TextBlock Text="{DynamicResource Oferta.EnlaceOferta}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" Style="{StaticResource Campo}"
-                                                     Text="{Binding EnlaceOferta}" Margin="9,0,10,0" />
-                                            <Button Grid.Column="1" Content="{DynamicResource Boton.Abrir}" Margin="0,0,6,0"
-                                                    Style="{StaticResource BotonSecundario}"
-                                                    Command="{Binding DataContext.AbrirEnlaceCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
-                                        </Grid>
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{DynamicResource Oferta.PortalOrigen}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                                                <TextBox Style="{StaticResource Campo}" Text="{Binding Portal}"
-                                                         ToolTip="{DynamicResource Oferta.PortalToolTip}" Margin="9,0,0,0" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{DynamicResource Oferta.ViaContacto}" Style="{StaticResource Etiqueta}" Margin="0,10,9,3" />
-                                                <ComboBox Style="{StaticResource CampoCombo}"
-                                                          ItemsSource="{Binding DataContext.Origenes, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                          DisplayMemberPath="Descripcion"
-                                                          SelectedValuePath="Valor"
-                                                          SelectedValue="{Binding Origen}"
-                                                          ToolTip="{DynamicResource Oferta.ViaContactoToolTip}" Width="182" Margin="0,0,9,0" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{DynamicResource Oferta.Ubicacion}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                                                <TextBox Style="{StaticResource Campo}" Text="{Binding Ubicacion}" Margin="9,0,0,0" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{DynamicResource Oferta.Modalidad}" Style="{StaticResource Etiqueta}" Margin="0,10,9,3" />
-                                                <ComboBox Style="{StaticResource CampoCombo}"
-                                                          ItemsSource="{Binding DataContext.Modalidades, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                          DisplayMemberPath="Descripcion"
-                                                          SelectedValuePath="Valor"
-                                                          SelectedValue="{Binding Modalidad}" Width="182" Margin="0,0,9,0" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <TextBlock Text="{DynamicResource Oferta.Interes}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                        <ComboBox Style="{StaticResource CampoCombo}" HorizontalAlignment="Left" MinWidth="120"
-                                                  ItemsSource="{Binding DataContext.NivelesInteres, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                  SelectedItem="{Binding Interes}" Width="101" Margin="9,0,0,0" />
-
-                                        <TextBlock Text="{DynamicResource Oferta.Tecnologias}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                        <TextBox Style="{StaticResource Campo}" Text="{Binding Tecnologias}"
-                                                 ToolTip="{DynamicResource Oferta.TecnologiasToolTip}" Margin="9,0,9,0" />
-
-                                        <Grid Margin="9,0,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{DynamicResource Oferta.SalarioMin}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                                                <TextBox Style="{StaticResource Campo}"
-                                                         Text="{Binding SalarioMin, TargetNullValue=''}" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{DynamicResource Oferta.SalarioMax}" Style="{StaticResource Etiqueta}" />
-                                                <TextBox Style="{StaticResource Campo}"
-                                                         Text="{Binding SalarioMax, TargetNullValue=''}" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="4" Margin="9,0,9,0">
-                                                <TextBlock Text="{DynamicResource Oferta.Pretension}" Style="{StaticResource Etiqueta}" Margin="0,10,9,3" />
-                                                <TextBox Style="{StaticResource Campo}"
-                                                         Text="{Binding PretensionSalarial, TargetNullValue=''}" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <TextBlock Text="{DynamicResource Oferta.Requisitos}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                        <Grid Margin="7,0,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" Style="{StaticResource CampoMultilinea}"
-                                                     MinHeight="90"
-                                                     Text="{Binding Requisitos}"
-                                                     ToolTip="{DynamicResource Oferta.RequisitosToolTip}" />
-                                            <Button Grid.Column="1" Content="{DynamicResource Boton.Leer}" Margin="8,0,9,0"
-                                                    Padding="12,8" VerticalAlignment="Center"
-                                                    Style="{StaticResource BotonSecundario}"
-                                                    Click="VerRequisitos_Click" />
-                                        </Grid>
-
-                                    </StackPanel>
-                                </ScrollViewer>
+                                <views:PestanaOferta />
                             </TabItem>
 
                             <TabItem Header="{DynamicResource Pestana.Seguimiento}" Style="{StaticResource Pestana}">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="9,0,8,0">
-                                    <StackPanel DataContext="{Binding Edicion}">
-
-                                        <TextBlock Text="{DynamicResource Seguimiento.EstadoActual}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                                        <ComboBox Style="{StaticResource CampoCombo}"
-                                                  ItemsSource="{Binding DataContext.Estados, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                  DisplayMemberPath="Descripcion"
-                                                  SelectedValuePath="Valor"
-                                                  SelectedValue="{Binding Estado}" Margin="9,0,9,0" />
-
-                                        <StackPanel Visibility="{Binding Estado, Converter={StaticResource EstadoEsRechazadaAVisibilidad}}">
-                                            <TextBlock Text="{DynamicResource Seguimiento.MotivoRechazo}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                            <ComboBox Style="{StaticResource CampoCombo}"
-                                                      ItemsSource="{Binding DataContext.MotivosRechazo, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                      DisplayMemberPath="Descripcion"
-                                                      SelectedValuePath="Valor"
-                                                      SelectedValue="{Binding MotivoRechazo}" Margin="9,0,9,0" />
-                                        </StackPanel>
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{DynamicResource Seguimiento.FechaSolicitud}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                                                <DatePicker Style="{StaticResource CampoFecha}"
-                                                            SelectedDate="{Binding FechaSolicitud}" Margin="9,0,0,0" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{DynamicResource Seguimiento.PrimeraContestacion}" Style="{StaticResource Etiqueta}" Margin="0,10,9,3" />
-                                                <DatePicker Style="{StaticResource CampoFecha}"
-                                                            SelectedDate="{Binding FechaPrimeraRespuesta}" Margin="0,0,9,0" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="12" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{DynamicResource Seguimiento.DiaEntrevista}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                                                <DatePicker Style="{StaticResource CampoFecha}"
-                                                            SelectedDate="{Binding FechaEntrevista}" Margin="9,0,0,0" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{DynamicResource Seguimiento.ProximoSeguimiento}" Style="{StaticResource Etiqueta}" Margin="0,10,8,3" />
-                                                <DatePicker Style="{StaticResource CampoFecha}"
-                                                            SelectedDate="{Binding ProximoSeguimiento}"
-                                                            ToolTip="{DynamicResource Seguimiento.ProximoSeguimientoToolTip}" Margin="0,0,9,0" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <TextBlock Text="{DynamicResource Seguimiento.FechaCierre}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                        <DatePicker Style="{StaticResource CampoFecha}"
-                                                    SelectedDate="{Binding FechaCierre}" Margin="9,0,9,0" />
-
-                                        <TextBlock Text="{DynamicResource Seguimiento.RespuestaEmpresa}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                        <TextBox Style="{StaticResource CampoMultilinea}"
-                                                 Text="{Binding RespuestaEmpresa}" Margin="9,0,9,0" />
-
-                                        <TextBlock Text="{DynamicResource Seguimiento.Contacto}" Style="{StaticResource TituloSeccion}" Margin="9,18,9,2" />
-
-                                        <Grid Margin="9,0,9,2">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{DynamicResource Campo.Nombre}" Style="{StaticResource Etiqueta}" />
-                                                <TextBox Style="{StaticResource Campo}" Text="{Binding ContactoNombre}" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{DynamicResource Campo.Email}" Style="{StaticResource Etiqueta}" />
-                                                <TextBox Style="{StaticResource Campo}" Text="{Binding ContactoEmail}" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="4">
-                                                <TextBlock Text="{DynamicResource Campo.Telefono}" Style="{StaticResource Etiqueta}" />
-                                                <TextBox Style="{StaticResource Campo}" Text="{Binding ContactoTelefono}" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <TextBlock Text="{DynamicResource Campo.Notas}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                                        <TextBox Style="{StaticResource CampoMultilinea}" Text="{Binding Notas}" Margin="9,0,9,0" />
-
-                                    </StackPanel>
-                                </ScrollViewer>
+                                <views:PestanaSeguimiento />
                             </TabItem>
 
                             <TabItem Header="{DynamicResource Pestana.AdjuntosHistorial}" Style="{StaticResource Pestana}">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <StackPanel DataContext="{Binding Edicion}">
-
-                                        <TextBlock Text="{DynamicResource Adjuntos.Titulo}" Style="{StaticResource TituloSeccion}" Margin="9,18,9,2" />
-                                        <TextBlock Text="{DynamicResource Adjuntos.Texto}"
-                                                   FontSize="11" Foreground="{StaticResource TextoSuave}" Margin="9,0,9,0" />
-
-                                        <Border BorderBrush="{StaticResource Borde}" BorderThickness="1"
-                                                CornerRadius="6" Padding="10" Margin="9,8,9,0">
-                                            <StackPanel>
-                                                <views:FilaAdjunto Margin="0,2,0,8"
-                                                                   Etiqueta="{DynamicResource Adjuntos.Curriculum}"
-                                                                   Texto="{Binding NombreCv, ConverterParameter=Adjuntos.CurriculumSinAdjuntar, Converter={StaticResource NuloACadena}}"
-                                                                   Ruta="{Binding RutaCv}"
-                                                                   ComandoAdjuntar="{Binding DataContext.AdjuntarCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                                   ComandoQuitar="{Binding DataContext.QuitarCvCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                                   Abrir="AbrirAdjunto_Click" />
-
-                                                <views:FilaAdjunto Etiqueta="{DynamicResource Adjuntos.Carta}"
-                                                                   Texto="{Binding NombreCarta, ConverterParameter=Adjuntos.CartaSinAdjuntar, Converter={StaticResource NuloACadena}}"
-                                                                   Ruta="{Binding RutaCarta}"
-                                                                   ComandoAdjuntar="{Binding DataContext.AdjuntarCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                                   ComandoQuitar="{Binding DataContext.QuitarCartaCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                                   Abrir="AbrirAdjunto_Click" />
-                                            </StackPanel>
-                                        </Border>
-
-                                        <!-- Historial -->
-                                        <Grid Margin="0,18,0,2">
-                                            <TextBlock Text="{DynamicResource Historial.Titulo}" Style="{StaticResource TituloSeccion}"
-                                                       Margin="9,0,0,0" VerticalAlignment="Center" />
-                                            <Button Content="{DynamicResource Historial.Anadir}" HorizontalAlignment="Right"
-                                                    Padding="10,4" FontSize="12"
-                                                    Style="{StaticResource BotonSecundario}"
-                                                    Command="{Binding DataContext.AnadirEventoCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Margin="0,0,9,0" />
-                                        </Grid>
-
-                                        <ItemsControl ItemsSource="{Binding Eventos}" Margin="9,6,9,0">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="{StaticResource Borde}" BorderThickness="1"
-                                                            CornerRadius="6" Padding="8" Margin="0,0,0,6">
-                                                        <Grid>
-                                                            <Grid.RowDefinitions>
-                                                                <RowDefinition Height="Auto" />
-                                                                <RowDefinition Height="Auto" />
-                                                            </Grid.RowDefinitions>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <DatePicker Grid.Row="0" Grid.Column="0" Width="120"
-                                                                        FontSize="12"
-                                                                        SelectedDate="{Binding Fecha}" />
-
-                                                            <ComboBox Grid.Row="0" Grid.Column="1" Margin="6,0,0,0"
-                                                                      FontSize="12"
-                                                                      ItemsSource="{Binding DataContext.TiposEvento, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                                      DisplayMemberPath="Descripcion"
-                                                                      SelectedValuePath="Valor"
-                                                                      SelectedValue="{Binding Tipo}" />
-
-                                                            <Button Grid.Row="0" Grid.Column="2" Content="✕"
-                                                                    Margin="6,0,0,0" Padding="8,3" FontSize="12"
-                                                                    Style="{StaticResource BotonPeligro}"
-                                                                    Command="{Binding DataContext.EliminarEventoCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                                    CommandParameter="{Binding}" />
-
-                                                            <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                                                     Margin="0,6,0,0" FontSize="12"
-                                                                     Style="{StaticResource Campo}"
-                                                                     Text="{Binding Descripcion}" />
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-
-                                    </StackPanel>
-                                </ScrollViewer>
+                                <views:PestanaAdjuntos AbrirSolicitado="AbrirAdjunto_Click" />
                             </TabItem>
 
                         </TabControl>

@@ -32,11 +32,11 @@ public partial class FuentesTests
     {
         List<string> nombres = NombresDeColumna();
 
-        Assert.Equal(6, MainViewModel.ColumnasOcultables.Length);
-        foreach (string columna in MainViewModel.ColumnasOcultables)
+        Assert.Equal(6, ColumnasViewModel.ColumnasOcultables.Length);
+        foreach ((string columna, string clave) in ColumnasViewModel.ColumnasOcultables)
         {
             Assert.Contains(columna, nombres);
-            Assert.True(Localizacion.Contiene($"Columna.{columna}"), $"Falta la clave Columna.{columna}.");
+            Assert.True(Localizacion.Contiene(clave), $"Falta la clave {clave}.");
         }
     }
 
@@ -67,6 +67,19 @@ public partial class FuentesTests
         foreach (string clave in claves)
         {
             Assert.False(Localizacion.Contiene(clave), $"El recurso '{clave}' pisa la clave de texto del mismo nombre.");
+        }
+    }
+
+    [Fact]
+    public void NingunFicheroDeTextoTieneCaracteresDeReemplazo()
+    {
+        IEnumerable<string> ficheros = FicherosDeCodigo()
+            .Concat(FicherosDeXaml())
+            .Concat(FicherosDeTest());
+
+        foreach (string fichero in ficheros)
+        {
+            Assert.DoesNotContain("\uFFFD", File.ReadAllText(fichero));
         }
     }
 
@@ -154,6 +167,9 @@ public partial class FuentesTests
     private static IEnumerable<string> FicherosDeXaml() =>
         Directory.EnumerateFiles(Raiz, "*.xaml", SearchOption.TopDirectoryOnly)
             .Concat(Directory.EnumerateFiles(Path.Combine(Raiz, "Views"), "*.xaml"));
+
+    private static IEnumerable<string> FicherosDeTest() =>
+        Directory.EnumerateFiles(Path.Combine(Raiz, "GestorSolicitudes.Tests"), "*.cs");
 
     private static string RaizDelProyecto()
     {

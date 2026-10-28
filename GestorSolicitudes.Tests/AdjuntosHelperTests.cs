@@ -45,6 +45,22 @@ public class AdjuntosHelperTests
     }
 
     [Fact]
+    public void Eliminar_NoBorraUnFicheroQueEscapaDeLaCarpetaConPuntosSuspensivos()
+    {
+        string carpeta = Path.Combine(TestDb.NuevaCarpeta(), "adjuntos");
+        Directory.CreateDirectory(carpeta);
+        string fuera = Path.Combine(Path.GetDirectoryName(carpeta)!, "otro.pdf");
+        File.WriteAllText(fuera, "datos");
+
+        // La ruta empieza por la carpeta, pero al canonicalizar sale de ella.
+        string trampa = Path.Combine(carpeta, "..", "otro.pdf");
+
+        AdjuntosHelper.Eliminar(trampa, carpeta);
+
+        Assert.True(File.Exists(fuera));
+    }
+
+    [Fact]
     public void Eliminar_NuloOEnBlancoNoLanza()
     {
         string carpeta = TestDb.NuevaCarpeta();

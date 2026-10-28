@@ -11,6 +11,9 @@ using GestorSolicitudes.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
+/// <summary>Lo mínimo que necesita el aviso de la bandeja, sin arrastrar la entidad completa.</summary>
+internal sealed record SeguimientoVencido(int Id, string Empresa, string Puesto, DateTime? ProximoSeguimiento);
+
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
@@ -18,27 +21,29 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private const string ClaveError = "Error";
 
     private readonly AppDbContext db;
-    private readonly string rutaColumnas;
-    private readonly string carpetaAdjuntos;
     private readonly IDialogoService dialogo;
+    private readonly Action<Idioma> cambiarIdioma;
+    private readonly GestorAdjuntos adjuntos;
     private bool actualizandoIdioma;
 
-    // Constructor con base de datos, preferencias y servicio de diálogos propios: los tests usan
-    // una base temporal, no tocan la preferencia real de %APPDATA% y observan los avisos con un
-    // falso. Sin servicio, los diálogos se ignoran (DialogosNulos).
+    // Constructor con base de datos, preferencias y servicios propios: los tests usan una base
+    // temporal, no tocan la preferencia real de %APPDATA% y observan los avisos con un falso.
+    // Sin servicio, los diálogos se ignoran (DialogosNulos). Sin cambiarIdioma, cambiar la
+    // propiedad no toca la cultura global: en producción se pasa Localizacion.Cambiar.
     internal MainViewModel(
         AppDbContext db,
         string? rutaColumnas = null,
         string? carpetaAdjuntos = null,
-        IDialogoService? dialogo = null)
+        IDialogoService? dialogo = null,
+        Action<Idioma>? cambiarIdioma = null)
     {
         this.db = db;
-        this.rutaColumnas = rutaColumnas ?? ColumnasHelper.Ruta;
-        this.carpetaAdjuntos = carpetaAdjuntos ?? AdjuntosHelper.Carpeta;
+        this.ColumnasVm = new ColumnasViewModel(rutaColumnas);
+        this.adjuntos = new GestorAdjuntos(carpetaAdjuntos ?? AdjuntosHelper.Carpeta);
         this.dialogo = dialogo ?? new DialogosNulos();
+        this.cambiarIdioma = cambiarIdioma ?? (_ => { });
 
         this.CargarTextosLocalizados();
-        this.CargarColumnas();
 
         // Asignación directa al campo para no disparar la recarga dos veces.
         this.estadoFiltroItem = this.EstadosFiltro[0];
@@ -94,7 +99,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private IReadOnlyList<IdiomaItem> idiomasDisponibles = Localizacion.IdiomasDisponibles();
 
-    partial void OnIdiomaActualChanged(Idioma value) => Localizacion.Cambiar(value);
+    partial void OnIdiomaActualChanged(Idioma value) => this.cambiarIdioma(value);
 
     /// <summary>
     /// Reconstruye los desplegables y nombres de idioma con los textos del idioma activo.
@@ -122,56 +127,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         // Los nombres de las columnas ocultables salen del diccionario, así que también
         // se releen al cambiar de idioma.
-        foreach (ColumnaItem columna in this.Columnas)
-        {
-            columna.RefrescarNombre();
-        }
+        this.ColumnasVm.RefrescarNombres();
     }
 
     // ---------------------------------------------------------------- Columnas
 
-    /// <summary>
-    /// Columnas de la tabla que el usuario puede ocultar. Empresa, Puesto, Estado y
-    /// Enviada no entran aquí: se ven siempre.
-    /// </summary>
-    internal static readonly string[] ColumnasOcultables =
-        ["Dias", "PrimeraRespuesta", "Entrevista", "Seguimiento", "Interes", "Portal"];
-
-    public ObservableCollection<ColumnaItem> Columnas { get; } = new();
-
-    /// <summary>Abre y cierra la lista de checkboxes del botón "Columnas".</summary>
-    [ObservableProperty]
-    private bool panelColumnasAbierto;
-
-    /// <summary>
-    /// La vista se suscribe para ocultar las columnas del DataGrid: un DataGridColumn no
-    /// hereda el DataContext y no se puede enlazar, así que el aviso llega por aquí.
-    /// </summary>
-    public event Action? ColumnaVisibilidadCambiada;
-
-    /// <summary>Las columnas ocultables con el estado guardado, o todas si no hay preferencia.</summary>
-    private void CargarColumnas()
-    {
-        HashSet<string>? guardadas = ColumnasHelper.CargarDe(this.rutaColumnas);
-
-        foreach (string columna in ColumnasOcultables)
-        {
-            this.Columnas.Add(new ColumnaItem(
-                columna,
-                guardadas is null || guardadas.Contains(columna),
-                this.GuardarColumnas));
-        }
-    }
-
-    /// <summary>Guarda la preferencia y avisa a la vista para que aplique el nuevo estado.</summary>
-    private void GuardarColumnas()
-    {
-        ColumnasHelper.GuardarEn(
-            this.rutaColumnas,
-            this.Columnas.Where(c => c.Visible).Select(c => c.Columna));
-
-        this.ColumnaVisibilidadCambiada?.Invoke();
-    }
+    /// <summary>Preferencia de columnas visibles y estado del panel del botón "Columnas".</summary>
+    public ColumnasViewModel ColumnasVm { get; }
 
     /// <summary>
     /// Al cambiar de idioma: se refrescan los desplegables, la lista, las estadísticas y la
@@ -183,6 +145,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </remarks>
     internal void CuandoCambiaIdioma(object? sender, Idioma idioma)
     {
+        // El ComboBox se sincroniza aunque el cambio venga de fuera del ViewModel.
+        this.IdiomaActual = idioma;
+
         EstadoSolicitud? filtro = this.EstadoFiltroItem?.Valor as EstadoSolicitud?;
 
         // Mientras se reasignan los desplegables, el filtro no debe recargar por su cuenta:
@@ -233,55 +198,40 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     // Al cambiar el tamaño se repagina la lista, quedándose en la página actual si sigue existiendo.
     partial void OnTamanoPaginaChanged(int value) => this.Recargar();
 
-    /// <summary>Página actual, contando desde 1.</summary>
+    /// <summary>Página actual, el rango y si se puede mover cada flecha: un solo estado.</summary>
     [ObservableProperty]
-    private int paginaActual = 1;
-
-    [ObservableProperty]
-    private int totalPaginas;
+    private ResultadoPagina<Solicitud> pagina =
+        new(Array.Empty<Solicitud>(), 1, 0, 0, 0, 0);
 
     /// <summary>Texto "1-10 de 47" que se ve junto a las flechas.</summary>
-    [ObservableProperty]
-    private string rangoPagina = string.Empty;
-
-    [ObservableProperty]
-    private bool puedeIrAInicio;
-
-    [ObservableProperty]
-    private bool puedeRetroceder;
-
-    [ObservableProperty]
-    private bool puedeAvanzar;
-
-    [ObservableProperty]
-    private bool puedeIrAlFinal;
+    public string RangoPagina => this.Pagina.Total == 0
+        ? $"0 {Localizacion.Texto("Paginacion.De")} 0"
+        : $"{this.Pagina.Desde + 1}-{this.Pagina.Hasta} {Localizacion.Texto("Paginacion.De")} {this.Pagina.Total}";
 
     [RelayCommand]
     private void IrAInicio() => this.IrAPagina(1);
 
     [RelayCommand]
-    private void IrAtras() => this.IrAPagina(this.PaginaActual - 1);
+    private void IrAtras() => this.IrAPagina(this.Pagina.PaginaActual - 1);
 
     [RelayCommand]
-    private void IrAdelante() => this.IrAPagina(this.PaginaActual + 1);
+    private void IrAdelante() => this.IrAPagina(this.Pagina.PaginaActual + 1);
 
     [RelayCommand]
-    private void IrAlFinal() => this.IrAPagina(this.TotalPaginas);
+    private void IrAlFinal() => this.IrAPagina(this.Pagina.TotalPaginas);
 
     private void IrAPagina(int pagina)
     {
-        int destino = Math.Clamp(pagina, 1, Math.Max(this.TotalPaginas, 1));
+        int destino = Math.Clamp(pagina, 1, Math.Max(this.Pagina.TotalPaginas, 1));
 
-        if (destino == this.PaginaActual)
+        if (destino == this.Pagina.PaginaActual)
         {
             return;
         }
 
-        this.PaginaActual = destino;
-
         // Recargar vuelve a filtrar la base y vuelve a recortar: un solo camino para los filtros
         // y para las flechas, sin listas intermedias que se queden desfasadas.
-        this.Recargar();
+        this.Recargar(destino);
     }
 
     /// <summary>
@@ -290,23 +240,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// se formatea el rango con el idioma activo. WPF no pagina las vistas de colección, así que
     /// la exportación a CSV no pasa por esta lista y sigue saliendo entera.
     /// </summary>
-    private void Paginar(List<Solicitud> filtradas)
+    private void Paginar(List<Solicitud> filtradas, int? pagina = null)
     {
-        ResultadoPagina<Solicitud> pagina = Paginador.Paginar(filtradas, this.TamanoPagina, this.PaginaActual);
+        this.Pagina = Paginador.Paginar(
+            filtradas,
+            this.TamanoPagina,
+            pagina ?? this.Pagina.PaginaActual);
 
-        this.TotalPaginas = pagina.TotalPaginas;
-        this.PaginaActual = pagina.PaginaActual;
-        this.Solicitudes = new ObservableCollection<Solicitud>(pagina.Elementos);
+        this.Solicitudes = new ObservableCollection<Solicitud>(this.Pagina.Elementos);
 
-        this.PuedeIrAInicio = pagina.PuedeIrAInicio;
-        this.PuedeRetroceder = pagina.PuedeRetroceder;
-        this.PuedeAvanzar = pagina.PuedeAvanzar;
-        this.PuedeIrAlFinal = pagina.PuedeIrAlFinal;
-
-        string de = Localizacion.Texto("Paginacion.De");
-        this.RangoPagina = pagina.Total == 0
-            ? $"0 {de} 0"
-            : $"{pagina.Desde + 1}-{pagina.Hasta} {de} {pagina.Total}";
+        // El rango es texto traducido: se recalcula aunque la página sea la misma (cambio de idioma).
+        this.OnPropertyChanged(nameof(this.RangoPagina));
     }
 
     // ---------------------------------------------------------------- Filtros
@@ -340,11 +284,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Solicitud? solicitudSeleccionada;
 
-    partial void OnSolicitudSeleccionadaChanged(Solicitud? value)
+    partial void OnSolicitudSeleccionadaChanged(Solicitud? value) => this.Seleccionar(value);
+
+    /// <summary>
+    /// Abre una fila en el panel de detalle. Hace E/S a propósito (carga el historial, que
+    /// solo usa el detalle) y por eso es un método explícito: el setter existe solo porque
+    /// el DataGrid enlaza <c>SelectedItem</c> en dos direcciones.
+    /// </summary>
+    private void Seleccionar(Solicitud? value)
     {
         // Ignoramos el null que manda el DataGrid al recargar la lista o al pulsar "Nueva".
         if (value is not null)
-            Edicion = value;
+        {
+            this.db.Entry(value).Collection(s => s.Eventos).Load();
+            this.Edicion = value;
+        }
     }
 
     /// <summary>Entidad mostrada en el panel de detalle.</summary>
@@ -436,7 +390,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.TituloGrafica));
 
         // El suelo se mide en periodos, así que también cambia al cambiar de granularidad.
-        this.PuedeRetrocederPeriodo = this.PuedeRetrocederUnPeriodoMas;
+        this.ActualizarLimitesEmbudo();
 
         // El desplazamiento se conserva: si estabas tres meses atrás, al pasar a semanas
         // sigues tres semanas atrás, que es el mismo instante de la historia.
@@ -446,29 +400,44 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     partial void OnDesplazamientoPeriodoChanged(int value)
     {
         this.PuedeAvanzarPeriodo = value > 0;
-        this.PuedeRetrocederPeriodo = this.PuedeRetrocederUnPeriodoMas;
+        this.ActualizarLimitesEmbudo();
         this.RecargarEmbudoSiVisible();
     }
 
     /// <summary>
-    /// El rango de la gráfica va de la primera solicitud a hoy. Con la base vacía no hay
-    /// suelo conocido, así que se deja ir hacia atrás (solo se ve ceros).
+    /// Recalcula si la ventana puede retroceder otro periodo. El suelo es la primera
+    /// solicitud; con la base vacía no hay suelo conocido y se deja ir hacia atrás.
     /// </summary>
-    private bool PuedeRetrocederUnPeriodoMas =>
-        this.db.Solicitudes.Min(s => (DateTime?)s.FechaSolicitud) is not DateTime primera
-        || EmbudoHelper.CalcularPeriodos(this.GranularidadGrafica, this.DesplazamientoPeriodo + 1)[^1]
-            >= EmbudoHelper.InicioDePeriodo(primera, this.GranularidadGrafica);
+    private void ActualizarLimitesEmbudo()
+    {
+        DateTime? primera = this.db.Solicitudes.Min(s => (DateTime?)s.FechaSolicitud);
+
+        this.PuedeRetrocederPeriodo = primera is not DateTime suelo
+            || EmbudoHelper.CalcularPeriodos(this.GranularidadGrafica, this.DesplazamientoPeriodo + 1)[^1]
+                >= EmbudoHelper.InicioDePeriodo(suelo, this.GranularidadGrafica);
+    }
 
     /// <summary>Título de la gráfica, que nombra la granularidad activa (se repinta al cambiar de idioma).</summary>
     public string TituloGrafica => string.Format(
         Localizacion.CulturaActual,
         Localizacion.Texto("Grafica.Titulo"),
-        Localizacion.Texto($"Grafica.Titulo{(int)this.GranularidadGrafica}"));
+        TextoTitulo(this.GranularidadGrafica));
+
+    /// <summary>
+    /// Texto de la granularidad que completa el título. Se elige por valor del enum, no por
+    /// su número: las claves son TituloMes, TituloSemana y TituloDia.
+    /// </summary>
+    private static string TextoTitulo(GranularidadEmbudo granularidad) => granularidad switch
+    {
+        GranularidadEmbudo.Semana => Localizacion.Texto("Grafica.TituloSemana"),
+        GranularidadEmbudo.Dia => Localizacion.Texto("Grafica.TituloDia"),
+        _ => Localizacion.Texto("Grafica.TituloMes"),
+    };
 
     [RelayCommand]
     private void PeriodoAnterior()
     {
-        if (this.PuedeRetrocederUnPeriodoMas)
+        if (this.PuedeRetrocederPeriodo)
         {
             this.DesplazamientoPeriodo++;
         }
@@ -486,10 +455,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Recarga la lista, los filtros y las estadísticas. Público: la ventana lo
     /// usa para refrescar los contadores tras avisar de seguimientos vencidos.
+    /// Con <paramref name="pagina"/>, repagina sobre esa página en vez de la actual.
     /// </summary>
-    public void Recargar()
+    public void Recargar(int? pagina = null)
     {
-        IQueryable<Solicitud> consulta = this.db.Solicitudes.Include(s => s.Eventos);
+        IQueryable<Solicitud> consulta = this.db.Solicitudes;
 
         if (this.EstadoFiltroItem?.Valor is EstadoSolicitud estado)
         {
@@ -506,12 +476,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (!string.IsNullOrWhiteSpace(this.TextoBusqueda))
         {
             string texto = CsvHelper.NormalizarBusqueda(this.TextoBusqueda);
-            lista = lista.Where(s =>
-                CsvHelper.NormalizarBusqueda(s.Empresa).Contains(texto) ||
-                CsvHelper.NormalizarBusqueda(s.Puesto).Contains(texto) ||
-                (s.Tecnologias != null && CsvHelper.NormalizarBusqueda(s.Tecnologias).Contains(texto)) ||
-                (s.Ubicacion != null && CsvHelper.NormalizarBusqueda(s.Ubicacion).Contains(texto)) ||
-                (s.Portal != null && CsvHelper.NormalizarBusqueda(s.Portal).Contains(texto))).ToList();
+            lista = lista.Where(s => CamposBuscables(s).Contains(texto)).ToList();
         }
 
         // EstaAbierta y SeguimientoPendiente son [NotMapped]: se filtran en memoria.
@@ -525,13 +490,38 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             lista = lista.Where(s => s.SeguimientoPendiente).ToList();
         }
 
-        this.Paginar(lista);
+        this.Paginar(lista, pagina);
         this.ActualizarEstadisticas();
+        this.ActualizarLimitesEmbudo();
     }
 
+    /// <summary>
+    /// Los campos del buscador en una sola cadena ya normalizada. Se separan con salto de
+    /// línea para que una búsqueda no case a caballo entre dos campos.
+    /// </summary>
+    private static string CamposBuscables(Solicitud solicitud) =>
+        CsvHelper.NormalizarBusqueda(string.Join(
+            '\n',
+            solicitud.Empresa,
+            solicitud.Puesto,
+            solicitud.Tecnologias,
+            solicitud.Ubicacion,
+            solicitud.Portal));
+
+    /// <summary>
+    /// La cabecera mide la base entera, no la lista filtrada: los filtros solo recortan la tabla.
+    /// Así los totales no bailan al buscar o al marcar «Solo abiertas».
+    /// </summary>
     private void ActualizarEstadisticas()
     {
-        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(this.db.Solicitudes.ToList());
+        // Se leen las entidades completas: las estadísticas usan propiedades [NotMapped] y
+        // proyectar a un DTO obligaría a duplicar sus cálculos. La consulta de solo lectura
+        // queda fuera del change tracking.
+        List<Solicitud> paraCalculo = this.db.Solicitudes
+            .AsNoTracking()
+            .ToList();
+
+        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(paraCalculo);
 
         this.TotalSolicitudes = resumen.Total;
         this.ProcesosAbiertos = resumen.Abiertas;
@@ -584,43 +574,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.PeriodosEmbudo = EmbudoHelper.Calcular(todas, this.GranularidadGrafica, this.DesplazamientoPeriodo);
     }
 
-    /// <summary>Número de barras del embudo, sea cual sea la granularidad.</summary>
-    internal const int PeriodosDelEmbudo = 12;
-
-    /// <summary>
-    /// Los 12 periodos que terminan en el actual, de más antiguo a más reciente.
-    /// <paramref name="desplazamiento"/> los retrasa ese número de periodos.
-    /// </summary>
-    internal static List<DateTime> CalcularPeriodos(GranularidadEmbudo granularidad, int desplazamiento)
-    {
-        // Retroceder un periodo es meterse en el que contiene el día anterior: sirve igual
-        // para el mes (el día anterior ya es del mes pasado), para la semana (domingo) y
-        // para el día. Por eso no hace falta un "periodo anterior" aparte.
-        DateTime fin = EmbudoHelper.SiguientePeriodo(EmbudoHelper.InicioDePeriodo(DateTime.Today, granularidad), granularidad);
-
-        var periodos = new List<DateTime>(PeriodosDelEmbudo);
-        for (int i = 0; i < desplazamiento + PeriodosDelEmbudo; i++)
-        {
-            fin = EmbudoHelper.InicioDePeriodo(fin.AddDays(-1), granularidad);
-
-            if (i >= desplazamiento)
-            {
-                periodos.Add(fin);
-            }
-        }
-
-        periodos.Reverse();
-        return periodos;
-    }
-
-    /// <summary>Solicitudes abiertas cuyo siguiente seguimiento ya venció. Lo usa el icono de la bandeja.</summary>
-    public List<Solicitud> SeguimientosVencidosAhora()
+    /// <summary>Seguimientos vencidos de candidaturas abiertas. Lo usa el icono de la bandeja.</summary>
+    internal List<SeguimientoVencido> SeguimientosVencidosAhora()
     {
         DateTime hoy = DateTime.Today;
         return this.db.Solicitudes
+            .AsNoTracking()
             .Where(s => s.ProximoSeguimiento != null && s.ProximoSeguimiento.Value.Date <= hoy)
-            .ToList()
-            .Where(s => s.EstaAbierta)
+            .Where(s => !EstadoSolicitudExtensiones.Cerrados.Contains(s.Estado))
+            .Select(s => new SeguimientoVencido(s.Id, s.Empresa, s.Puesto, s.ProximoSeguimiento))
             .ToList();
     }
 
@@ -667,7 +629,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            string nuevaRuta = AdjuntosHelper.Copiar(origen, adjunto.Etiqueta, this.carpetaAdjuntos);
+            string nuevaRuta = this.adjuntos.Copiar(origen, adjunto.Etiqueta);
             adjunto.Asignar(editar, nuevaRuta, Path.GetFileName(origen));
         }
         catch (Exception ex)
@@ -711,15 +673,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Edicion = actual;
     }
 
-    /// <summary>Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.</summary>
+    /// <summary>
+    /// Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.
+    /// Exige que <paramref name="solicitud"/> esté en seguimiento por el contexto: si estuviera
+    /// separada, EF no conserva el valor original y devolvería el actual.
+    /// </summary>
     private (string? Cv, string? Carta) RutasGuardadas(Solicitud solicitud)
     {
         EntityEntry<Solicitud> entrada = this.db.Entry(solicitud);
         return (entrada.Property(s => s.RutaCv).OriginalValue,
                 entrada.Property(s => s.RutaCarta).OriginalValue);
     }
-
-    private void EliminarAdjunto(string? ruta) => AdjuntosHelper.Eliminar(ruta, this.carpetaAdjuntos);
 
     [RelayCommand]
     private void Nueva()
@@ -810,7 +774,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.EliminarAdjuntosSustituidos(solicitud, (cvAnterior, cartaAnterior));
+        this.adjuntos.DescartarSustituidas(solicitud, (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
     }
 
@@ -870,24 +834,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>
-    /// Borra los adjuntos que la base ya no apunta tras guardar. Se hace aquí y no antes:
-    /// si el guardado falla, la base sigue apuntando a un fichero que sigue existiendo.
-    /// </summary>
-    private void EliminarAdjuntosSustituidos(Solicitud solicitud, (string? Cv, string? Carta) anteriores)
-    {
-        // shortcut: reemplazar el mismo adjunto dos veces antes de guardar deja huérfano el intermedio.
-        if (anteriores.Cv != solicitud.RutaCv)
-        {
-            this.EliminarAdjunto(anteriores.Cv);
-        }
-
-        if (anteriores.Carta != solicitud.RutaCarta)
-        {
-            this.EliminarAdjunto(anteriores.Carta);
-        }
-    }
-
     /// <summary>Cierra el panel y refresca lista, cabecera y embudo.</summary>
     private void CerrarEdicion()
     {
@@ -905,7 +851,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.EliminarAdjuntosNoGuardados(solicitud);
+        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
+        (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
+            ? (null, null)
+            : this.RutasGuardadas(solicitud);
+
+        this.adjuntos.DescartarNoGuardadas(solicitud, (cvGuardado, cartaGuardada));
 
         // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
@@ -914,27 +865,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Edicion = null;
         this.SolicitudSeleccionada = null;
         this.Recargar();
-    }
-
-    /// <summary>
-    /// Borra las copias hechas durante la edición que se descarta. Los adjuntos que ya
-    /// estaban guardados se quedan, porque la base sigue apuntando a ellos.
-    /// </summary>
-    private void EliminarAdjuntosNoGuardados(Solicitud solicitud)
-    {
-        (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
-            ? (null, null)
-            : this.RutasGuardadas(solicitud);
-
-        if (solicitud.RutaCv != cvGuardado)
-        {
-            this.EliminarAdjunto(solicitud.RutaCv);
-        }
-
-        if (solicitud.RutaCarta != cartaGuardada)
-        {
-            this.EliminarAdjunto(solicitud.RutaCarta);
-        }
     }
 
     [RelayCommand]
@@ -954,19 +884,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        string? cv = this.Edicion.RutaCv;
-        string? carta = this.Edicion.RutaCarta;
+        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
+        (string? cv, string? carta) = this.RutasGuardadas(this.Edicion);
 
-        if (this.EliminarSolicitud(this.Edicion) is Exception error)
+        if (!this.TryEliminarSolicitud(this.Edicion, out Exception? error))
         {
             this.dialogo.Error(
-                string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error.Message),
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error!.Message),
                 Localizacion.Texto(ClaveError));
             return;
         }
 
-        this.EliminarAdjunto(cv);
-        this.EliminarAdjunto(carta);
+        this.adjuntos.Eliminar(cv);
+        this.adjuntos.Eliminar(carta);
+        this.adjuntos.DescartarCopias();
 
         this.Edicion = null;
         this.SolicitudSeleccionada = null;
@@ -974,18 +905,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.RecargarEmbudoSiVisible();
     }
 
-    /// <summary>Borra la candidatura de la base. Devuelve el fallo en vez de lanzarlo para poder avisar.</summary>
-    internal Exception? EliminarSolicitud(Solicitud solicitud)
+    /// <summary>
+    /// Borra la candidatura de la base. Devuelve <c>false</c> y el fallo en <paramref name="error"/>
+    /// si no se pudo borrar, para que el comando avise sin lanzar.
+    /// </summary>
+    internal bool TryEliminarSolicitud(Solicitud solicitud, out Exception? error)
     {
         try
         {
             this.db.Solicitudes.Remove(solicitud);
             this.db.SaveChanges();
-            return null;
+            error = null;
+            return true;
         }
         catch (Exception ex)
         {
-            return ex;
+            error = ex;
+            return false;
         }
     }
 
@@ -1049,33 +985,41 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (this.EscribirCsv(destino) is Exception error)
+        if (!this.TryEscribirCsv(destino, out Exception? error))
         {
             this.dialogo.Error(
-                string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error.Message),
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error!.Message),
                 Localizacion.Texto(ClaveError));
             return;
         }
 
         this.dialogo.Informar(
-            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.TotalSolicitudes),
+            string.Format(Localizacion.Texto("Csv.ExportadasN"), this.db.Solicitudes.Count()),
             Localizacion.Texto("Titulo.ExportacionCompletada"));
     }
 
-    /// <summary>Escribe el CSV. Devuelve el fallo en vez de lanzarlo para poder avisar.</summary>
-    internal Exception? EscribirCsv(string ruta)
+    /// <summary>
+    /// Escribe el CSV. Devuelve <c>false</c> y el fallo en <paramref name="error"/> si no se pudo
+    /// escribir, para que el comando avise sin lanzar.
+    /// </summary>
+    internal bool TryEscribirCsv(string ruta, out Exception? error)
     {
         try
         {
             File.WriteAllText(ruta, this.ConstruirCsv(), new UTF8Encoding(true));
-            return null;
+            error = null;
+            return true;
         }
         catch (Exception ex)
         {
-            return ex;
+            error = ex;
+            return false;
         }
     }
 
     internal string ConstruirCsv() =>
-        CsvExportador.Construir(this.db.Solicitudes.OrderByDescending(x => x.FechaSolicitud).ToList());
+        CsvExportador.Construir(this.db.Solicitudes
+            .OrderByDescending(x => x.FechaSolicitud)
+            .ThenByDescending(x => x.Id)
+            .ToList());
 }

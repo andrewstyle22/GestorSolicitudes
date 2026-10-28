@@ -1,4 +1,4 @@
-﻿namespace GestorSolicitudes.Converters;
+namespace GestorSolicitudes.Converters;
 
 using System.Globalization;
 using System.Windows;
@@ -45,30 +45,43 @@ public class EstadoAColorConverter : IValueConverter
 {
     private const string ColorEntrevista = "#7C3AED";
 
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        var color = value switch
-        {
-            EstadoSolicitud.Enviada => "#64748B",
-            EstadoSolicitud.EnRevision => "#0284C7",
-            EstadoSolicitud.PruebaTecnica => ColorEntrevista,
-            EstadoSolicitud.EntrevistaRrhh => ColorEntrevista,
-            EstadoSolicitud.EntrevistaTecnica => ColorEntrevista,
-            EstadoSolicitud.EntrevistaFinal => ColorEntrevista,
-            EstadoSolicitud.OfertaRecibida => "#059669",
-            EstadoSolicitud.OfertaAceptada => "#047857",
-            EstadoSolicitud.OfertaRechazada => "#B45309",
-            EstadoSolicitud.Rechazada => "#DC2626",
-            EstadoSolicitud.Retirada => "#B45309",
-            EstadoSolicitud.SinRespuesta => "#94A3B8",
-            _ => "#64748B",
-        };
+    // Pinceles congelados y compartidos: no se crea uno por celda ni por repintado.
+    private static readonly Brush Enviada = Crear("#64748B");
+    private static readonly Brush EnRevision = Crear("#0284C7");
+    private static readonly Brush Entrevista = Crear(ColorEntrevista);
+    private static readonly Brush OfertaRecibida = Crear("#059669");
+    private static readonly Brush OfertaAceptada = Crear("#047857");
+    private static readonly Brush OfertaRechazada = Crear("#B45309");
+    private static readonly Brush Rechazada = Crear("#DC2626");
+    private static readonly Brush SinRespuesta = Crear("#94A3B8");
 
-        return new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
-    }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value switch
+        {
+            EstadoSolicitud.Enviada => Enviada,
+            EstadoSolicitud.EnRevision => EnRevision,
+            EstadoSolicitud.PruebaTecnica => Entrevista,
+            EstadoSolicitud.EntrevistaRrhh => Entrevista,
+            EstadoSolicitud.EntrevistaTecnica => Entrevista,
+            EstadoSolicitud.EntrevistaFinal => Entrevista,
+            EstadoSolicitud.OfertaRecibida => OfertaRecibida,
+            EstadoSolicitud.OfertaAceptada => OfertaAceptada,
+            EstadoSolicitud.OfertaRechazada => OfertaRechazada,
+            EstadoSolicitud.Rechazada => Rechazada,
+            EstadoSolicitud.Retirada => OfertaRechazada,
+            EstadoSolicitud.SinRespuesta => SinRespuesta,
+            _ => Enviada,
+        };
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
+
+    private static SolidColorBrush Crear(string hex)
+    {
+        var pincel = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+        pincel.Freeze();
+        return pincel;
+    }
 }
 
 /// <summary>Texto del botón que muestra/oculta el panel de la gráfica de embudo.</summary>

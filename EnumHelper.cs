@@ -1,5 +1,6 @@
-﻿namespace GestorSolicitudes.Helpers;
+namespace GestorSolicitudes.Helpers;
 
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
 
@@ -8,11 +9,27 @@ public record EnumItem(object? Valor, string Descripcion);
 
 public static class EnumHelper
 {
+    // La clave incluye el idioma: al cambiar de idioma se pide otra entrada y no hay que invalidar.
+    private static readonly ConcurrentDictionary<(Idioma Idioma, Type Tipo, string Valor), string> Cache = new();
+
     /// <summary>
     /// Devuelve la descripción del valor en el idioma activo. Como los enums se guardan por su
     /// valor numérico, el texto mostrado puede cambiar de idioma sin tocar los datos.
     /// </summary>
     public static string Descripcion(Enum valor)
+    {
+        var claveCache = (Localizacion.IdiomaActual, valor.GetType(), valor.ToString());
+        if (Cache.TryGetValue(claveCache, out string? cacheada))
+        {
+            return cacheada;
+        }
+
+        string texto = DescripcionSinCache(valor);
+        Cache[claveCache] = texto;
+        return texto;
+    }
+
+    private static string DescripcionSinCache(Enum valor)
     {
         string clave = Clave(valor);
         if (Localizacion.Contiene(clave))

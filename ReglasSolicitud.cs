@@ -3,13 +3,13 @@ namespace GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
 /// <summary>
-/// Reglas de negocio pura para la operación de Guardar una solicitud.
+/// Reglas de negocio puras para la operación de Guardar una solicitud.
 /// Viven fuera del ViewModel para facilitar su prueba y mantener el ViewModel delgado.
 /// </summary>
 public static class ReglasSolicitud
 {
     /// <summary>
-    /// Verifica si los datos obligatorios (empuesto) están prellenados.
+    /// Verifica si los datos obligatorios (empresa y puesto) están rellenos.
     /// </summary>
     public static bool TieneDatosObligatorios(Solicitud solicitud) =>
         !string.IsNullOrWhiteSpace(solicitud.Empresa)

@@ -34,4 +34,12 @@ public class CsvExportadorTests
         Assert.Single(csv.TrimEnd().Split(Environment.NewLine));
         Assert.StartsWith(Localizacion.Texto("Csv.Empresa"), csv);
     }
+
+    [Fact]
+    public void Construir_TodasLasCabecerasEstanTraducidas()
+    {
+        string csv = CsvExportador.Construir(Array.Empty<Solicitud>());
+
+        Assert.DoesNotContain("Csv.", csv);
+    }
 }

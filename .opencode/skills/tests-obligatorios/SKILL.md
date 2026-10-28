@@ -1,6 +1,6 @@
 ---
 name: tests-obligatorios
-description: Aplica cuando se va a CREAR, EDITAR o ELIMINAR una función o método en este repo (GestorSolicitudes): todo cambio de función obliga a crear, editar o eliminar su test xUnit correspondiente y a dejar `dotnet test` en verde. Gatillos: "crear función", "añadir método", "modificar", "refactorizar", "borrar/quitar función", "tests", "dotnet test", "no romper los tests".
+description: 'Aplica cuando se va a CREAR, EDITAR o ELIMINAR una función o método en este repo (GestorSolicitudes): todo cambio de función obliga a crear, editar o eliminar su test xUnit correspondiente y a dejar `dotnet test` en verde. Gatillos: "crear función", "añadir método", "modificar", "refactorizar", "borrar/quitar función", "tests", "dotnet test", "no romper los tests".'
 ---
 
 # Tests obligatorios con cada cambio de función

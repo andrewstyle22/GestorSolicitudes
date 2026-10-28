@@ -92,6 +92,41 @@ public class SolicitudTests
         Assert.Equal(esperado, s.EstaAbierta);
     }
 
+    [Theory]
+    [InlineData(EstadoSolicitud.PruebaTecnica, true)]
+    [InlineData(EstadoSolicitud.EntrevistaRrhh, true)]
+    [InlineData(EstadoSolicitud.EntrevistaTecnica, true)]
+    [InlineData(EstadoSolicitud.EntrevistaFinal, true)]
+    [InlineData(EstadoSolicitud.Enviada, false)]
+    [InlineData(EstadoSolicitud.OfertaRecibida, false)]
+    public void EsEntrevista_SoloIncluyeLosEstadosDeEntrevista(EstadoSolicitud estado, bool esperado)
+    {
+        Assert.Equal(esperado, estado.EsEntrevista());
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.OfertaRecibida, true)]
+    [InlineData(EstadoSolicitud.OfertaAceptada, true)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, true)]
+    [InlineData(EstadoSolicitud.Enviada, false)]
+    [InlineData(EstadoSolicitud.EntrevistaFinal, false)]
+    public void EsOferta_SoloIncluyeLosEstadosDeOferta(EstadoSolicitud estado, bool esperado)
+    {
+        Assert.Equal(esperado, estado.EsOferta());
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.OfertaAceptada, true)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, true)]
+    [InlineData(EstadoSolicitud.Rechazada, true)]
+    [InlineData(EstadoSolicitud.Retirada, true)]
+    [InlineData(EstadoSolicitud.Enviada, false)]
+    [InlineData(EstadoSolicitud.EntrevistaTecnica, false)]
+    public void EstaCerrada_SoloIncluyeLosEstadosTerminales(EstadoSolicitud estado, bool esperado)
+    {
+        Assert.Equal(esperado, estado.EstaCerrada());
+    }
+
     [Fact]
     public void HuboRespuesta_ConFechaEsTrue()
     {

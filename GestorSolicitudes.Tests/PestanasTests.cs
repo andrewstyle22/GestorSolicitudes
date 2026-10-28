@@ -1,9 +1,13 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Resources;
 using GestorSolicitudes;
+using GestorSolicitudes.Models;
+using GestorSolicitudes.ViewModels;
 using GestorSolicitudes.Views;
 
 namespace GestorSolicitudes.Tests;
@@ -11,13 +15,13 @@ namespace GestorSolicitudes.Tests;
 public class PestanasTests
 {
     /// <summary>
-    /// Los estilos que dependen de una plantilla (las pesta�as del panel de detalle y el
-    /// bot�n del desplegable de columnas) viven en App.xaml y solo se resuelven al
+    /// Los estilos que dependen de una plantilla (las pestañas del panel de detalle y el
+    /// botón del desplegable de columnas) viven en App.xaml y solo se resuelven al
     /// aplicarse, no al compilar: este test carga los recursos (sin pasar por OnStartup,
-    /// que crear�a la base real) y fuerza el dibujo para que se construyan las plantillas
+    /// que crearía la base real) y fuerza el dibujo para que se construyan las plantillas
     /// y se activen los triggers.
-    /// Solo puede existir una Application por AppDomain, as� que todos los estilos con
-    /// plantilla se comprueban aqu� y en un �nico test.
+    /// Solo puede existir una Application por AppDomain, así que todos los estilos con
+    /// plantilla se comprueban aquí y en un único test.
     /// </summary>
     [StaFact]
     public void AppXaml_LosEstilosConPlantillaSeComponenAlPintar()
@@ -37,7 +41,7 @@ public class PestanasTests
         pestanas.Items.Add(new TabItem { Style = estiloPestana, Header = "Seguimiento", IsSelected = true });
 
         // El layout del TabControl genera el TabPanel (IsItemsHost), aplica las
-        // plantillas de los TabItem y activa los triggers con los Est�ticos de
+        // plantillas de los TabItem y activa los triggers con los Estáticos de
         // recurso del subrayado de acento.
         pestanas.Measure(new Size(400, 300));
         pestanas.Arrange(new Rect(0, 0, 400, 300));
@@ -46,7 +50,7 @@ public class PestanasTests
         Assert.NotNull(pestanas.Template);
         Assert.True(((TabItem)pestanas.Items[1]).IsSelected);
 
-        // El bot�n de "Columnas": sin plantilla propia ser�a un rect�ngulo gris, y el
+        // El botón de "Columnas": sin plantilla propia sería un rectángulo gris, y el
         // trigger de IsChecked es lo que pinta el borde de acento al abrirse la lista.
         var estiloBoton = (Style)app.Resources["BotonDesplegable"]!;
         Assert.Equal(typeof(ToggleButton), estiloBoton.TargetType);
@@ -105,17 +109,61 @@ public class PestanasTests
             FontWeights.SemiBold,
             estiloCabecera.Setters.OfType<Setter>().Single(s => s.Property == TextBlock.FontWeightProperty).Value);
 
-        // El icono de la bandeja se carga del recurso empaquetado, as� que se comprueba
-        // que existe y trae los tama�os que usa la bandeja, con la misma ruta que usa
-        // MainWindow: relativa al ensamblado principal y sin "pack://" absoluto.
-        StreamResourceInfo? recurso = Application.GetResourceStream(
-            new Uri($"/{typeof(App).Assembly.GetName().Name};component/Resources/appicon.ico", UriKind.Relative));
+        // El icono de la ventana sale de una ruta absoluta: BitmapFrame.Create no resuelve
+        // la forma relativa y la trataría como una ruta de fichero. El de la bandeja usa
+        // la misma ruta, así que se comprueba que ambas formas leen el recurso.
+        BitmapFrame iconoVentana = BitmapFrame.Create(MainWindow.RutaIcono);
+        Assert.True(iconoVentana.PixelWidth >= 16);
 
+        StreamResourceInfo? recurso = Application.GetResourceStream(MainWindow.RutaIcono);
         Assert.NotNull(recurso);
         using (var icono = new System.Drawing.Icon(recurso!.Stream))
         {
             Assert.True(icono.Width >= 16);
         }
+
+        // Las pestañas y la cabecera de métricas son UserControl: no basta con que existan,
+        // sus enlaces tienen que resolver. Un path mal escrito deja el campo vacío y el botón
+        // sin comando, sin avisar en ningún sitio.
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(
+            db,
+            rutaColumnas: Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt"),
+            carpetaAdjuntos: TestDb.NuevaCarpeta());
+        vm.Edicion = new Solicitud
+        {
+            Empresa = "ACME",
+            Puesto = "Programador",
+            EnlaceOferta = "https://ejemplo.test/oferta",
+            Notas = "hablar el lunes",
+            RutaCv = @"C:\cv.pdf",
+        };
+
+        var detalleOferta = new PestanaOferta { DataContext = vm };
+        Dibujar(detalleOferta);
+        Assert.Contains(Descendientes<TextBox>(detalleOferta), t => t.Text == "https://ejemplo.test/oferta");
+        Assert.Contains(Descendientes<Button>(detalleOferta), b => ReferenceEquals(b.Command, vm.AbrirEnlaceCommand));
+
+        var detalleSeguimiento = new PestanaSeguimiento { DataContext = vm };
+        Dibujar(detalleSeguimiento);
+        Assert.Contains(Descendientes<TextBox>(detalleSeguimiento), t => t.Text == "hablar el lunes");
+
+        var detalleAdjuntos = new PestanaAdjuntos { DataContext = vm };
+        Dibujar(detalleAdjuntos);
+        Assert.Contains(
+            Descendientes<FilaAdjunto>(detalleAdjuntos),
+            f => ReferenceEquals(f.ComandoAdjuntar, vm.AdjuntarCvCommand));
+
+        var metricas = new CabeceraMetricas { DataContext = vm };
+        Dibujar(metricas);
+        Assert.Equal(12, Descendientes<TextBlock>(metricas).Count());
+    }
+
+    private static void Dibujar(FrameworkElement elemento)
+    {
+        elemento.Measure(new Size(420, 700));
+        elemento.Arrange(new Rect(0, 0, 420, 700));
+        elemento.UpdateLayout();
     }
 
     private static IEnumerable<T> Descendientes<T>(DependencyObject raiz)
