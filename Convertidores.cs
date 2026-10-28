@@ -76,7 +76,7 @@ public class EstadoAColorConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 
-    private static Brush Crear(string hex)
+    private static SolidColorBrush Crear(string hex)
     {
         var pincel = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
         pincel.Freeze();

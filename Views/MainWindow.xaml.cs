@@ -107,14 +107,8 @@ public partial class MainWindow : Window
         // HashSet no crece con filas que ya se resolvieron o se borraron.
         this.idsVencidosAvisados.IntersectWith(vencidos.Select(s => s.Id));
 
-        var nuevos = new List<SeguimientoVencido>();
-        foreach (SeguimientoVencido vencido in vencidos)
-        {
-            if (this.idsVencidosAvisados.Add(vencido.Id))
-            {
-                nuevos.Add(vencido);
-            }
-        }
+        // Add devuelve false si ya estaba avisado: filtra y marca en la misma pasada.
+        var nuevos = vencidos.Where(vencido => this.idsVencidosAvisados.Add(vencido.Id)).ToList();
 
         if (nuevos.Count == 0)
         {

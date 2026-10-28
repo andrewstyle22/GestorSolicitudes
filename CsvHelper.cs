@@ -19,13 +19,9 @@ public static class CsvHelper
         string descompuesto = valor.ToLowerInvariant().Normalize(NormalizationForm.FormD);
         var sb = new StringBuilder(descompuesto.Length);
 
-        foreach (char c in descompuesto)
+        foreach (char c in descompuesto.Where(
+            caracter => CharUnicodeInfo.GetUnicodeCategory(caracter) != UnicodeCategory.NonSpacingMark))
         {
-            if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark)
-            {
-                continue;
-            }
-
             sb.Append(c);
         }
 

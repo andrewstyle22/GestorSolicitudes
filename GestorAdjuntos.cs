@@ -69,12 +69,9 @@ public sealed class GestorAdjuntos
     /// </summary>
     public void DescartarCopias(string? conservarCv = null, string? conservarCarta = null)
     {
-        foreach (string ruta in this.copias)
+        foreach (string ruta in this.copias.Where(copia => copia != conservarCv && copia != conservarCarta))
         {
-            if (ruta != conservarCv && ruta != conservarCarta)
-            {
-                this.Eliminar(ruta);
-            }
+            this.Eliminar(ruta);
         }
 
         this.copias.Clear();

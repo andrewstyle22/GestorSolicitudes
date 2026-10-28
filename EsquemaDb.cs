@@ -48,13 +48,11 @@ internal static class EsquemaDb
             ("ContactoTelefono", TextoNulo),
         };
 
-        foreach ((string columna, string definicion) in nuevas)
-        {
-            if (columnas.Contains(columna))
-            {
-                continue;
-            }
+        IEnumerable<(string Columna, string Definicion)> faltantes =
+            nuevas.Where(nueva => !columnas.Contains(nueva.Columna));
 
+        foreach ((string columna, string definicion) in faltantes)
+        {
             using var command = conexion.CreateCommand();
             command.CommandText = $"ALTER TABLE Solicitudes ADD COLUMN \"{columna}\" {definicion};";
             command.ExecuteNonQuery();

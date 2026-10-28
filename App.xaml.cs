@@ -25,10 +25,10 @@ public partial class App : Application
         // cultura de fechas/números e inyección de los textos como recursos de aplicación.
         Localizacion.Inicializar();
 
-        AppDbContext db = new();
+        AppDbContext contexto = new();
         try
         {
-            db.Database.EnsureCreated();
+            contexto.Database.EnsureCreated();
 
             // EnsureCreated no versiona el esquema: si la base ya existía sin las
             // columnas nuevas, las añadimos aquí con un ALTER TABLE barato.
@@ -36,7 +36,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            db.Dispose();
+            contexto.Dispose();
             MessageBox.Show(
                 string.Format(Localizacion.Texto("Mensaje.ErrorBaseDatos"), ex.Message, AppDbContext.RutaBaseDatos),
                 Localizacion.Texto("Titulo.ErrorAlIniciar"), MessageBoxButton.OK, MessageBoxImage.Error);
@@ -44,9 +44,9 @@ public partial class App : Application
             return;
         }
 
-        this.db = db;
+        this.db = contexto;
         var dialogo = new DialogoService();
-        this.viewModel = new MainViewModel(db, dialogo: dialogo, cambiarIdioma: Localizacion.Cambiar);
+        this.viewModel = new MainViewModel(contexto, dialogo: dialogo, cambiarIdioma: Localizacion.Cambiar);
 
         // Creamos la ventana aquí en lugar de con StartupUri: así el fallo de arriba
         // aborta de verdad el arranque y no dependemos de resolver una URI de recurso.

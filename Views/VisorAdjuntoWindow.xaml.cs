@@ -18,6 +18,8 @@ using Windows.Storage.Streams;
 [ExcludeFromCodeCoverage] // Code-behind de diálogo: la UI no es automatizable.
 public partial class VisorAdjuntoWindow : Window
 {
+    private const string ClaveNoSePuedePrevisualizar = "Mensaje.NoSePuedePrevisualizar";
+
     private readonly string ruta;
     private readonly IDialogoService dialogo;
     private readonly CancellationTokenSource cancelacion = new();
@@ -35,8 +37,12 @@ public partial class VisorAdjuntoWindow : Window
         this.Loaded += this.AlCargar;
 
         // Al cerrar se cancela el render en curso: la ventana puede desaparecer antes de que
-        // Windows termine de pintar la página y no hay a quién enseñársela.
-        this.Closed += (_, _) => this.cancelacion.Cancel();
+        // Windows termine de pintar la página y no hay a quién enseñársela. Después se libera.
+        this.Closed += (_, _) =>
+        {
+            this.cancelacion.Cancel();
+            this.cancelacion.Dispose();
+        };
     }
 
     private async void AlCargar(object sender, RoutedEventArgs e)
@@ -62,7 +68,7 @@ public partial class VisorAdjuntoWindow : Window
                     this.MostrarTexto(DocumentoHelper.ExtraerTextoOdt(this.ruta));
                     break;
                 case ".doc":
-                    this.MostrarAviso(Localizacion.Texto("Mensaje.NoSePuedePrevisualizar"));
+                    this.MostrarAviso(Localizacion.Texto(ClaveNoSePuedePrevisualizar));
                     break;
                 default:
                     this.MostrarTexto(await File.ReadAllTextAsync(this.ruta, token));
@@ -77,7 +83,7 @@ public partial class VisorAdjuntoWindow : Window
 
             if (!token.IsCancellationRequested)
             {
-                this.MostrarAviso(Localizacion.Texto("Mensaje.NoSePuedePrevisualizar"));
+                this.MostrarAviso(Localizacion.Texto(ClaveNoSePuedePrevisualizar));
             }
         }
     }
@@ -89,7 +95,7 @@ public partial class VisorAdjuntoWindow : Window
 
         if (this.documento.PageCount == 0)
         {
-            this.MostrarAviso(Localizacion.Texto("Mensaje.NoSePuedePrevisualizar"));
+            this.MostrarAviso(Localizacion.Texto(ClaveNoSePuedePrevisualizar));
             return;
         }
 
@@ -174,7 +180,7 @@ public partial class VisorAdjuntoWindow : Window
         catch (Exception ex)
         {
             Debug.WriteLine($"No se pudo pasar de página en '{this.ruta}': {ex}");
-            this.MostrarAviso(Localizacion.Texto("Mensaje.NoSePuedePrevisualizar"));
+            this.MostrarAviso(Localizacion.Texto(ClaveNoSePuedePrevisualizar));
         }
         finally
         {
