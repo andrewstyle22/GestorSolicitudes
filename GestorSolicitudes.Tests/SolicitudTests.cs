@@ -7,43 +7,43 @@ public class SolicitudTests
     [Fact]
     public void DiasDesdeSolicitud_CalculaDiasBien()
     {
-        var s = new Solicitud { FechaSolicitud = DateTime.Today.AddDays(-5) };
-        Assert.Equal(5, s.DiasDesdeSolicitud);
+        var solicitud = new Solicitud { FechaSolicitud = DateTime.Today.AddDays(-5) };
+        Assert.Equal(5, solicitud.DiasDesdeSolicitud);
     }
 
     [Fact]
     public void DiasProceso_AbiertaCoincideConDiasDesdeSolicitud()
     {
-        var s = new Solicitud
+        var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Enviada,
             FechaSolicitud = DateTime.Today.AddDays(-5)
         };
-        Assert.Equal(s.DiasDesdeSolicitud, s.DiasProceso);
+        Assert.Equal(solicitud.DiasDesdeSolicitud, solicitud.DiasProceso);
     }
 
     [Fact]
     public void DiasProceso_CerradaMuestraLaDuracionHastaElCierre()
     {
-        var s = new Solicitud
+        var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Rechazada,
             FechaSolicitud = new DateTime(2026, 1, 10),
             FechaCierre = new DateTime(2026, 1, 21)
         };
-        Assert.Equal(11, s.DiasProceso);
+        Assert.Equal(11, solicitud.DiasProceso);
     }
 
     [Fact]
     public void DiasProceso_CerradaSinFechaDeCierreCaeAHoy()
     {
-        var s = new Solicitud
+        var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Rechazada,
             FechaSolicitud = DateTime.Today.AddDays(-3),
             FechaCierre = null
         };
-        Assert.Equal(3, s.DiasProceso);
+        Assert.Equal(3, solicitud.DiasProceso);
     }
 
     [Fact]
@@ -62,19 +62,19 @@ public class SolicitudTests
     public void DiasHastaRespuesta_ConRespuesta_DevuelveDias()
     {
         var baseFecha = new DateTime(2026, 1, 10);
-        var s = new Solicitud
+        var solicitud = new Solicitud
         {
             FechaSolicitud = baseFecha,
             FechaPrimeraRespuesta = baseFecha.AddDays(3)
         };
-        Assert.Equal(3, s.DiasHastaRespuesta);
+        Assert.Equal(3, solicitud.DiasHastaRespuesta);
     }
 
     [Fact]
     public void DiasHastaRespuesta_SinRespuesta_EsNull()
     {
-        var s = new Solicitud { FechaSolicitud = DateTime.Today };
-        Assert.Null(s.DiasHastaRespuesta);
+        var solicitud = new Solicitud { FechaSolicitud = DateTime.Today };
+        Assert.Null(solicitud.DiasHastaRespuesta);
     }
 
     [Theory]
@@ -88,8 +88,8 @@ public class SolicitudTests
     [InlineData(EstadoSolicitud.Retirada, false)]
     public void EstaAbierta_SegunEstado(EstadoSolicitud estado, bool esperado)
     {
-        var s = new Solicitud { Estado = estado };
-        Assert.Equal(esperado, s.EstaAbierta);
+        var solicitud = new Solicitud { Estado = estado };
+        Assert.Equal(esperado, solicitud.EstaAbierta);
     }
 
     [Theory]
@@ -142,48 +142,48 @@ public class SolicitudTests
     [Fact]
     public void SeguimientoPendiente_AbiertaConFechaVencidaEsTrue()
     {
-        var s = new Solicitud
+        var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Enviada,
             ProximoSeguimiento = DateTime.Today.AddDays(-1)
         };
-        Assert.True(s.SeguimientoPendiente);
+        Assert.True(solicitud.SeguimientoPendiente);
     }
 
     [Fact]
     public void SeguimientoPendiente_ConFechaFuturaEsFalse()
     {
-        var s = new Solicitud
+        var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Enviada,
             ProximoSeguimiento = DateTime.Today.AddDays(2)
         };
-        Assert.False(s.SeguimientoPendiente);
+        Assert.False(solicitud.SeguimientoPendiente);
     }
 
     [Fact]
     public void SeguimientoPendiente_CerradaEsFalse()
     {
-        var s = new Solicitud
+        var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Rechazada,
             ProximoSeguimiento = DateTime.Today.AddDays(-1)
         };
-        Assert.False(s.SeguimientoPendiente);
+        Assert.False(solicitud.SeguimientoPendiente);
     }
 
     [Fact]
     public void NombreCv_UsaNombreOriginalSiExiste()
     {
-        var s = new Solicitud { NombreOriginalCv = "mi-cv-final.pdf", RutaCv = @"C:\cualquier\cosa\a1b2.pdf" };
-        Assert.Equal("mi-cv-final.pdf", s.NombreCv);
+        var solicitud = new Solicitud { NombreOriginalCv = "mi-cv-final.pdf", RutaCv = @"C:\cualquier\cosa\a1b2.pdf" };
+        Assert.Equal("mi-cv-final.pdf", solicitud.NombreCv);
     }
 
     [Fact]
     public void NombreCv_SinNombreOriginalUsaNombreDelFichero()
     {
-        var s = new Solicitud { RutaCv = @"C:\cualquier\cosa\a1b2.pdf" };
-        Assert.Equal("a1b2.pdf", s.NombreCv);
+        var solicitud = new Solicitud { RutaCv = @"C:\cualquier\cosa\a1b2.pdf" };
+        Assert.Equal("a1b2.pdf", solicitud.NombreCv);
     }
 
     [Fact]

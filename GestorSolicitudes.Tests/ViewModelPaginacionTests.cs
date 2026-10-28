@@ -12,7 +12,7 @@ public class ViewModelPaginacionTests
 
     /// <summary>25 candidaturas con empresa "E00".."E24" y un día distinto cada una, para que el
     /// orden por fecha (descendente, el del ViewModel) sea previsible.</summary>
-    private static (AppDbContext Db, MainViewModel Vm) Con25()
+    private static (AppDbContext Db, MainViewModel Vm) ConVeinticincoSolicitudes()
     {
         var db = TestDb.NuevoContexto();
         for (int i = 1; i <= 25; i++)
@@ -32,7 +32,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_PorDefectoMuestraLasDiezPrimerasYUnaSolaPagina()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -64,7 +64,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_IrAdelanteMuestraLasSiguientesYRecortaLaUltima()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -91,7 +91,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_IrAlFinalVaALaUltimaPaginaEIrAInicioVuelveALaPrimera()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -117,7 +117,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_IrAtrasEnLaPrimeraPaginaNoHaceNada()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -132,7 +132,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_CambiarElTamanoRecortaLaPaginaActual()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -161,7 +161,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_FiltrarReduceElTotalYRecortaLaPagina()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {

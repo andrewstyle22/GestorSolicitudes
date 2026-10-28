@@ -162,7 +162,7 @@ AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
 DocumentoHelper.cs → extrae el texto de DOCX/ODT para el visor de adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
 Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)
-CsvHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqueda (minúsculas sin tildes)
+TextoHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqueda (minúsculas sin tildes)
 CsvExportador.cs → exportación CSV pura (cabecera + filas)
 EmbudoHelper.cs, EmbudoPeriodo.cs → lógica del embudo (máximo, periodos, rangos, conteos)
 EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)

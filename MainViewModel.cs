@@ -475,7 +475,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // acentos: normalizamos (minúsculas y sin tildes) el texto y los campos.
         if (!string.IsNullOrWhiteSpace(this.TextoBusqueda))
         {
-            string texto = CsvHelper.NormalizarBusqueda(this.TextoBusqueda);
+            string texto = TextoHelper.NormalizarBusqueda(this.TextoBusqueda);
             lista = lista.Where(s => CamposBuscables(s).Contains(texto)).ToList();
         }
 
@@ -500,7 +500,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// línea para que una búsqueda no case a caballo entre dos campos.
     /// </summary>
     private static string CamposBuscables(Solicitud solicitud) =>
-        CsvHelper.NormalizarBusqueda(string.Join(
+        TextoHelper.NormalizarBusqueda(string.Join(
             '\n',
             solicitud.Empresa,
             solicitud.Puesto,

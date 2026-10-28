@@ -17,12 +17,12 @@ public static class CsvExportador
     /// </summary>
     private static readonly (string Clave, Func<Solicitud, string> Valor)[] Columnas =
     [
-        ("Csv.Empresa", s => CsvHelper.Escapar(s.Empresa)),
-        ("Csv.Puesto", s => CsvHelper.Escapar(s.Puesto)),
-        ("Csv.Estado", s => CsvHelper.Escapar(EnumHelper.Descripcion(s.Estado))),
-        ("Csv.Portal", s => CsvHelper.Escapar(s.Portal)),
-        ("Csv.Ubicacion", s => CsvHelper.Escapar(s.Ubicacion)),
-        ("Csv.Modalidad", s => CsvHelper.Escapar(EnumHelper.Descripcion(s.Modalidad))),
+        ("Csv.Empresa", s => TextoHelper.Escapar(s.Empresa)),
+        ("Csv.Puesto", s => TextoHelper.Escapar(s.Puesto)),
+        ("Csv.Estado", s => TextoHelper.Escapar(EnumHelper.Descripcion(s.Estado))),
+        ("Csv.Portal", s => TextoHelper.Escapar(s.Portal)),
+        ("Csv.Ubicacion", s => TextoHelper.Escapar(s.Ubicacion)),
+        ("Csv.Modalidad", s => TextoHelper.Escapar(EnumHelper.Descripcion(s.Modalidad))),
         ("Csv.FechaSolicitud", s => s.FechaSolicitud.ToString(FormatoFecha)),
         ("Csv.PrimeraRespuesta", s => s.FechaPrimeraRespuesta?.ToString(FormatoFecha) ?? string.Empty),
         ("Csv.DiasHastaRespuesta", s => s.DiasHastaRespuesta?.ToString() ?? string.Empty),
@@ -33,12 +33,12 @@ public static class CsvExportador
         ("Csv.SalarioMax", s => s.SalarioMax?.ToString() ?? string.Empty),
         ("Csv.Pretension", s => s.PretensionSalarial?.ToString() ?? string.Empty),
         ("Csv.Interes", s => s.Interes.ToString()),
-        ("Csv.Tecnologias", s => CsvHelper.Escapar(s.Tecnologias)),
-        ("Csv.Contacto", s => CsvHelper.Escapar(s.ContactoNombre)),
-        ("Csv.EmailContacto", s => CsvHelper.Escapar(s.ContactoEmail)),
-        ("Csv.RespuestaEmpresa", s => CsvHelper.Escapar(s.RespuestaEmpresa)),
-        ("Csv.Notas", s => CsvHelper.Escapar(s.Notas)),
-        ("Csv.Enlace", s => CsvHelper.Escapar(s.EnlaceOferta)),
+        ("Csv.Tecnologias", s => TextoHelper.Escapar(s.Tecnologias)),
+        ("Csv.Contacto", s => TextoHelper.Escapar(s.ContactoNombre)),
+        ("Csv.EmailContacto", s => TextoHelper.Escapar(s.ContactoEmail)),
+        ("Csv.RespuestaEmpresa", s => TextoHelper.Escapar(s.RespuestaEmpresa)),
+        ("Csv.Notas", s => TextoHelper.Escapar(s.Notas)),
+        ("Csv.Enlace", s => TextoHelper.Escapar(s.EnlaceOferta)),
     ];
 
     /// <summary>CSV completo (cabecera + filas), en el orden en que lleguen las solicitudes.</summary>

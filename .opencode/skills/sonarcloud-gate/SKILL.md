@@ -46,7 +46,7 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
    no hace falta hacerlos `public`) y **cubrirlos con tests xUnit**. Ejemplos
    hechos: `ConstruirCsv`, `CargarColumnas`/`GuardarColumnas`, `EnviadaEnMes`.
    Los estáticos puros que no necesiten el
-   ViewModel van en `CsvHelper` (Helpers no puede depender de ViewModels).
+   ViewModel van en `TextoHelper` (Helpers no puede depender de ViewModels).
 2. **`[ExcludeFromCodeCoverage]` en métodos 100% de diálogo/MessageBox**
    (`OpenFileDialog`, `SaveFileDialog`, `Process.Start`...). Es el mecanismo que
    Sonar documenta para código no cubrible: coverlet lo saca del reporte y Sonar
@@ -179,7 +179,7 @@ y su arreglo para no repetirlo:
 - **S3267 (`Loops should be simplified using the 'Where' LINQ method`)**: un `foreach`
   cuya única lógica es un `if`, o un `if (...) continue;`, se sustituye por `Where`.
   Ya pasó en `GestorAdjuntos.DescartarCopias`, `MainWindow.ComprobarSeguimientosVencidos`,
-  `EsquemaDb.VerificarColumnasFaltantes` y `CsvHelper.NormalizarBusqueda`. Cuidado con
+  `EsquemaDb.VerificarColumnasFaltantes` y `TextoHelper.NormalizarBusqueda`. Cuidado con
   los efectos secundarios: en `MainWindow` el arreglo es
   `Where(v => this.idsVencidosAvisados.Add(v.Id))`, que filtra y marca en la misma
   pasada; deja un comentario explicándolo.
@@ -200,7 +200,7 @@ y su arreglo para no repetirlo:
   conectar deja dos copias y Sonar marca la nueva. Conecta el helper y borra la
   copia vieja: `MainViewModel.ConstruirCsv` delegó en `CsvExportador.Construir` y
   desaparecieron las ~50 líneas duplicadas. Antes de extraer, busca el cuerpo que ya
-  existe (`Select-String -Pattern 'Csv\.Empresa|CsvHelper\.Escapar'`) y no copies el
+  existe (`Select-String -Pattern 'Csv\.Empresa|TextoHelper\.Escapar'`) y no copies el
   bloque.
 
 ## Barrido antes de dar por cerrados los issues

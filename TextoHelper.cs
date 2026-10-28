@@ -4,10 +4,10 @@ using System.Globalization;
 using System.Text;
 
 /// <summary>
-/// Utilidades puras de CSV: normalización de texto para la búsqueda y escapado de
-/// campos al exportar. Sin estado ni dependencias: las usa el MainViewModel.
+/// Utilidades puras de texto: normalización para la búsqueda y escapado de campos al
+/// exportar a CSV. Sin estado ni dependencias: las usan el ViewModel y la exportación.
 /// </summary>
-public static class CsvHelper
+public static class TextoHelper
 {
     /// <summary>
     /// Minúsculas y sin tildes, para que la búsqueda ignore mayúsculas y acentos:
