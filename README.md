@@ -155,7 +155,9 @@ Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] p
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
 Traducciones.cs → diccionarios es/en/de y Texto (en Helpers, para que los helpers traduzcan)
-Localizacion.cs → idioma activo, cultura del hilo, preferencia guardada y recursos WPF
+Localizacion.cs → fachada del idioma: idioma activo, textos y cambio de idioma
+CulturaApp.cs → cultura del hilo, lenguaje de WPF y recursos de texto al aplicar un idioma
+PreferenciaIdioma.cs → idioma guardado en %APPDATA%\...\idioma.txt (o el del sistema)
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
 Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 
