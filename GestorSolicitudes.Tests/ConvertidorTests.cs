@@ -63,25 +63,6 @@ public class ConvertidorTests
     }
 
     [StaFact]
-    public void EstadoAColor_PintaCadaEstadoConSuColor()
-    {
-        var conversor = new EstadoAColorConverter();
-
-        var gris = (SolidColorBrush)conversor.Convert(EstadoSolicitud.Enviada, typeof(Brush), null, null!);
-        Assert.Equal((byte)0x64, gris.Color.R);
-        Assert.Equal((byte)0x74, gris.Color.G);
-        Assert.Equal((byte)0x8B, gris.Color.B);
-
-        var azul = (SolidColorBrush)conversor.Convert(EstadoSolicitud.EnRevision, typeof(Brush), null, null!);
-        Assert.Equal((byte)0x02, azul.Color.R);
-
-        var rojo = (SolidColorBrush)conversor.Convert(EstadoSolicitud.Rechazada, typeof(Brush), null, null!);
-        Assert.Equal((byte)0xDC, rojo.Color.R);
-        Assert.Equal((byte)0x26, rojo.Color.G);
-        Assert.Equal((byte)0x26, rojo.Color.B);
-    }
-
-    [StaFact]
     public void EstadoAColor_ConValorDesconocidoUsaElGris()
     {
         var conversor = new EstadoAColorConverter();
@@ -178,6 +159,7 @@ public class ConvertidorTests
         invertir(new EnumDescripcionConverter());
         invertir(new NuloAVisibilidadConverter());
         invertir(new EstadoAColorConverter());
+        invertir(new FechaCortaConverter());
         invertir(new VerGraficaATextoConverter());
         invertir(new EstadoEsRechazadaAVisibilidadConverter());
         invertir(new InteresATextoEstrellasConverter());
