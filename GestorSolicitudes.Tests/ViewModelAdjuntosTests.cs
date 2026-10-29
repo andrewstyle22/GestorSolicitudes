@@ -261,4 +261,71 @@ public class ViewModelAdjuntosTests
         Assert.Null(vm.Edicion);
     }
 
+    [Fact]
+    public void AdjuntoCv_SinFicheroMuestraElTextoDeSinAdjuntar()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+
+        Adjunto? cv = vm.AdjuntoCv;
+
+        Assert.NotNull(cv);
+        Assert.Null(cv.Ruta);
+        Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), cv.Nombre);
+    }
+
+    [Fact]
+    public void AdjuntoCarta_UsaElNombreOriginalYLaRuta()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.RutaCarta = @"C:\adjuntos\a1b2.pdf";
+        vm.Edicion.NombreOriginalCarta = "carta.pdf";
+
+        Adjunto? carta = vm.AdjuntoCarta;
+
+        Assert.Equal(@"C:\adjuntos\a1b2.pdf", carta!.Ruta);
+        Assert.Equal("carta.pdf", carta.Nombre);
+    }
+
+    [Fact]
+    public void AbrirAdjunto_ConFicheroExistente_LoPasaAlVisor()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        string ruta = TestDb.CrearAdjuntoEn(TestDb.NuevaCarpeta(), "cv.pdf");
+
+        vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
+
+        Assert.Equal(ruta, Assert.Single(dialogo.AdjuntosAbiertos));
+    }
+
+    [Fact]
+    public void AbrirAdjunto_SinFicheroInformaYNoLlamaAlVisor()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+
+        vm.AbrirAdjuntoCommand.Execute(new Adjunto(null, "Currículum sin adjuntar"));
+
+        Assert.Single(dialogo.Informes);
+        Assert.Empty(dialogo.AdjuntosAbiertos);
+    }
+
+    [Fact]
+    public void AbrirAdjunto_CuandoElVisorFalla_Avisa()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { VerAdjuntoLanza = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        string ruta = TestDb.CrearAdjuntoEn(TestDb.NuevaCarpeta(), "cv.pdf");
+
+        vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
+
+        Assert.Single(dialogo.Avisos);
+    }
 }

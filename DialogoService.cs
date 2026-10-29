@@ -61,4 +61,7 @@ internal sealed class DialogoService : IDialogoService
 
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
+
+    public void VerAdjunto(string ruta) =>
+        new VisorAdjuntoWindow(ruta, this) { Owner = Application.Current?.MainWindow }.ShowDialog();
 }

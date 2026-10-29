@@ -305,6 +305,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Solicitud? edicion;
 
+    // Los adjuntos se derivan de la edición: al repintar el panel se recalculan.
+    partial void OnEdicionChanged(Solicitud? value)
+    {
+        this.OnPropertyChanged(nameof(this.AdjuntoCv));
+        this.OnPropertyChanged(nameof(this.AdjuntoCarta));
+    }
+
     // ---------------------------------------------------------------- Estadísticas
     [ObservableProperty]
     private int totalSolicitudes;
@@ -591,7 +598,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian la etiqueta del fichero y las propiedades.</summary>
     private sealed record DescriptorAdjunto(string Etiqueta, Action<Solicitud, string?, string?> Asignar);
 
-    private static readonly DescriptorAdjunto AdjuntoCv = new(
+    private static readonly DescriptorAdjunto DescriptorCv = new(
         "cv",
         (solicitud, ruta, nombre) =>
         {
@@ -599,7 +606,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             solicitud.NombreOriginalCv = nombre;
         });
 
-    private static readonly DescriptorAdjunto AdjuntoCarta = new(
+    private static readonly DescriptorAdjunto DescriptorCarta = new(
         "carta",
         (solicitud, ruta, nombre) =>
         {
@@ -607,11 +614,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             solicitud.NombreOriginalCarta = nombre;
         });
 
-    [RelayCommand]
-    private void AdjuntarCv() => this.AdjuntarAdjunto(AdjuntoCv, Localizacion.Texto("Dialogo.SeleccionaCv"));
+    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    public Adjunto? AdjuntoCv => this.Edicion is null
+        ? null
+        : new Adjunto(
+            this.Edicion.RutaCv,
+            this.Edicion.NombreCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
+
+    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    public Adjunto? AdjuntoCarta => this.Edicion is null
+        ? null
+        : new Adjunto(
+            this.Edicion.RutaCarta,
+            this.Edicion.NombreCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     [RelayCommand]
-    private void AdjuntarCarta() => this.AdjuntarAdjunto(AdjuntoCarta, Localizacion.Texto("Dialogo.SeleccionaCarta"));
+    private void AdjuntarCv() => this.AdjuntarAdjunto(DescriptorCv, Localizacion.Texto("Dialogo.SeleccionaCv"));
+
+    [RelayCommand]
+    private void AdjuntarCarta() => this.AdjuntarAdjunto(DescriptorCarta, Localizacion.Texto("Dialogo.SeleccionaCarta"));
 
     private void AdjuntarAdjunto(DescriptorAdjunto adjunto, string titulo)
     {
@@ -646,10 +667,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void QuitarCv() => this.QuitarAdjunto(AdjuntoCv);
+    private void QuitarCv() => this.QuitarAdjunto(DescriptorCv);
 
     [RelayCommand]
-    private void QuitarCarta() => this.QuitarAdjunto(AdjuntoCarta);
+    private void QuitarCarta() => this.QuitarAdjunto(DescriptorCarta);
 
     /// <summary>
     /// Quita la ruta del adjunto, pero no el fichero: si el usuario cancela, el que
@@ -664,6 +685,34 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         adjunto.Asignar(this.Edicion, null, null);
         this.RefrescarPanelDetalle();
+    }
+
+    /// <summary>
+    /// Abre el CV o la carta en el visor. Avisa si el fichero ya no existe en disco.
+    /// Es un comando con parámetro: las dos filas de adjuntos usan el mismo.
+    /// </summary>
+    [RelayCommand]
+    private void AbrirAdjunto(Adjunto? adjunto)
+    {
+        string? ruta = adjunto?.Ruta;
+        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
+        {
+            this.dialogo.Informar(
+                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
+                Localizacion.Texto("Titulo.Adjunto"));
+            return;
+        }
+
+        try
+        {
+            this.dialogo.VerAdjunto(ruta.Trim());
+        }
+        catch (Exception ex)
+        {
+            this.dialogo.Avisar(
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
+                Localizacion.Texto(ClaveError));
+        }
     }
 
     private void RefrescarPanelDetalle()

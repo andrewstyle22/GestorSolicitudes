@@ -59,18 +59,6 @@ public class VerGraficaATextoConverter : IValueConverter
         throw new NotSupportedException();
 }
 
-/// <summary>Si el valor es una cadena no vacía la devuelve; si no, el texto de la clave localizada que llega por parámetro.</summary>
-public class NuloACadenaConverter : IValueConverter
-{
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is string s && !string.IsNullOrEmpty(s)
-            ? s
-            : Localizacion.Texto(parameter as string ?? string.Empty);
-
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        throw new NotSupportedException();
-}
-
 /// <summary>
 /// Visible solo cuando el estado es "Descartado por la empresa": es el único caso
 /// en el que tiene sentido preguntar el motivo del rechazo.

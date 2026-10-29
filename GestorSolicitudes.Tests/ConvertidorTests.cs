@@ -179,7 +179,6 @@ public class ConvertidorTests
         invertir(new NuloAVisibilidadConverter());
         invertir(new EstadoAColorConverter());
         invertir(new VerGraficaATextoConverter());
-        invertir(new NuloACadenaConverter());
         invertir(new EstadoEsRechazadaAVisibilidadConverter());
         invertir(new InteresATextoEstrellasConverter());
     }

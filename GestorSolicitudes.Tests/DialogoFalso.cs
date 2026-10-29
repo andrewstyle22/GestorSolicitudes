@@ -18,6 +18,8 @@ internal sealed class DialogoFalso : IDialogoService
 
     public List<string> EnlacesAbiertos { get; } = new();
 
+    public List<string> AdjuntosAbiertos { get; } = new();
+
     public bool RespuestaConfirmar { get; set; }
 
     public string? FicheroElegido { get; set; }
@@ -25,6 +27,8 @@ internal sealed class DialogoFalso : IDialogoService
     public string? DestinoElegido { get; set; }
 
     public bool AbrirEnlaceLanza { get; set; }
+
+    public bool VerAdjuntoLanza { get; set; }
 
     public bool Confirmar(string mensaje, string titulo)
     {
@@ -46,6 +50,15 @@ internal sealed class DialogoFalso : IDialogoService
     {
         this.EnlacesAbiertos.Add(url);
         if (this.AbrirEnlaceLanza)
+        {
+            throw new InvalidOperationException("no se pudo abrir");
+        }
+    }
+
+    public void VerAdjunto(string ruta)
+    {
+        this.AdjuntosAbiertos.Add(ruta);
+        if (this.VerAdjuntoLanza)
         {
             throw new InvalidOperationException("no se pudo abrir");
         }

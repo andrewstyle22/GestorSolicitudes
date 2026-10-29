@@ -52,7 +52,7 @@ public partial class App : Application
         // aborta de verdad el arranque y no dependemos de resolver una URI de recurso.
         // ShutdownMode="OnMainWindowClose" en App.xaml hace que cerrar la ventana
         // (con la X o con el menú "Salir" de la bandeja) termine la aplicación.
-        var ventana = new MainWindow(this.viewModel, dialogo);
+        var ventana = new MainWindow(this.viewModel);
         this.MainWindow = ventana;
         ventana.Show();
     }

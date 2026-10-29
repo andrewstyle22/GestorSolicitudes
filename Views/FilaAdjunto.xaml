@@ -17,8 +17,8 @@
 
         <TextBlock Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center"
                    TextTrimming="CharacterEllipsis"
-                   ToolTip="{Binding Ruta, ElementName=raiz}"
-                   Text="{Binding Texto, ElementName=raiz}" />
+                   ToolTip="{Binding Adjunto.Ruta, ElementName=raiz}"
+                   Text="{Binding Adjunto.Nombre, ElementName=raiz}" />
 
         <Button Grid.Column="2" Content="{DynamicResource Boton.Adjuntar}" Margin="0,0,6,0"
                 Padding="10,4" FontSize="12" Style="{StaticResource BotonSecundario}"
@@ -27,6 +27,8 @@
                 Padding="10,4" FontSize="12" Style="{StaticResource BotonSecundario}"
                 Command="{Binding ComandoQuitar, ElementName=raiz}" />
         <Button Grid.Column="4" Content="{DynamicResource Boton.Abrir}" Padding="10,4" FontSize="12"
-                Style="{StaticResource BotonSecundario}" Click="Abrir_Click" />
+                Style="{StaticResource BotonSecundario}"
+                Command="{Binding ComandoAbrir, ElementName=raiz}"
+                CommandParameter="{Binding Adjunto, ElementName=raiz}" />
     </Grid>
 </UserControl>

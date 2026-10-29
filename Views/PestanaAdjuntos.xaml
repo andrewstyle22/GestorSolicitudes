@@ -15,18 +15,16 @@
                 <StackPanel>
                     <views:FilaAdjunto Margin="0,2,0,8"
                                        Etiqueta="{DynamicResource Adjuntos.Curriculum}"
-                                       Texto="{Binding Edicion.NombreCv, ConverterParameter=Adjuntos.CurriculumSinAdjuntar, Converter={StaticResource NuloACadena}}"
-                                       Ruta="{Binding Edicion.RutaCv}"
+                                       Adjunto="{Binding AdjuntoCv}"
                                        ComandoAdjuntar="{Binding AdjuntarCvCommand}"
                                        ComandoQuitar="{Binding QuitarCvCommand}"
-                                       Abrir="AbrirAdjunto_Click" />
+                                       ComandoAbrir="{Binding AbrirAdjuntoCommand}" />
 
                     <views:FilaAdjunto Etiqueta="{DynamicResource Adjuntos.Carta}"
-                                       Texto="{Binding Edicion.NombreCarta, ConverterParameter=Adjuntos.CartaSinAdjuntar, Converter={StaticResource NuloACadena}}"
-                                       Ruta="{Binding Edicion.RutaCarta}"
+                                       Adjunto="{Binding AdjuntoCarta}"
                                        ComandoAdjuntar="{Binding AdjuntarCartaCommand}"
                                        ComandoQuitar="{Binding QuitarCartaCommand}"
-                                       Abrir="AbrirAdjunto_Click" />
+                                       ComandoAbrir="{Binding AbrirAdjuntoCommand}" />
                 </StackPanel>
             </Border>
 

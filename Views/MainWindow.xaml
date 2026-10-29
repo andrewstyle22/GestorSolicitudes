@@ -645,7 +645,7 @@
                             </TabItem>
 
                             <TabItem Header="{DynamicResource Pestana.AdjuntosHistorial}" Style="{StaticResource Pestana}">
-                                <views:PestanaAdjuntos AbrirSolicitado="AbrirAdjunto_Click" />
+                                <views:PestanaAdjuntos />
                             </TabItem>
 
                         </TabControl>
