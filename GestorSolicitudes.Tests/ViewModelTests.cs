@@ -19,7 +19,8 @@ public class ViewModelTests
         Assert.Null(vm.SolicitudSeleccionada);
         Assert.Equal("—", vm.TasaRespuesta);
         // El filtro por defecto es "Todos los estados"
-        Assert.Equal("Todos los estados", vm.EstadoFiltroItem!.Descripcion);
+        Assert.Null(vm.EstadoFiltroItem!.Valor);
+        Assert.Equal(Localizacion.Texto("Filtro.TodosLosEstados"), vm.EstadoFiltroItem.Descripcion);
     }
 
     [Fact]
@@ -318,8 +319,8 @@ public class ViewModelTests
         Assert.Equal(2, vm.TotalSolicitudes);
         Assert.Equal(2, vm.ProcesosAbiertos);
         Assert.Equal(0, vm.OfertasRecibidas);
-        Assert.Equal("50 %", vm.TasaRespuesta);
-        Assert.Equal("3 días", vm.MediaDiasRespuesta);
+        Assert.Equal(Porcentaje(0.5), vm.TasaRespuesta);
+        Assert.Equal(DiasDeMedia(3), vm.MediaDiasRespuesta);
     }
 
     [Fact]
@@ -354,8 +355,8 @@ public class ViewModelTests
         {
             vm.Recargar();
 
-            Assert.Equal("67 %", vm.TasaRespuesta);
-            Assert.Equal("3,5 días", vm.MediaDiasRespuesta);
+            Assert.Equal(Porcentaje(2.0 / 3.0), vm.TasaRespuesta);
+            Assert.Equal(DiasDeMedia(3.5), vm.MediaDiasRespuesta);
         }
         finally
         {
@@ -544,4 +545,10 @@ public class ViewModelTests
         Assert.Equal("Enviada", sola.Empresa);
     }
 
+    // Mismo formato que la cabecera, con la cultura del idioma activo: los tests comparan el
+    // número formateado, no el texto traducido congelado.
+    private static string Porcentaje(double valor) => valor.ToString("P0", Localizacion.CulturaActual);
+
+    private static string DiasDeMedia(double dias) =>
+        $"{dias.ToString("0.#", Localizacion.CulturaActual)} {Localizacion.Texto("Metrica.Dias")}";
 }

@@ -53,13 +53,13 @@ public class ConvertidorTests
         Assert.Equal(string.Empty, conversor.Convert(null, typeof(string), null, null!));
     }
 
-    [Theory]
-    [InlineData(true, "Ocultar gráfica")]
-    [InlineData(false, "Gráfico")]
-    public void VerGraficaATexto_DevuelveElTextoDelBoton(bool visible, string esperado)
+    [Fact]
+    public void VerGraficaATexto_DevuelveElTextoDelBoton()
     {
         var conversor = new VerGraficaATextoConverter();
-        Assert.Equal(esperado, conversor.Convert(visible, typeof(string), null, null!));
+
+        Assert.Equal(Localizacion.Texto("Grafica.Ocultar"), conversor.Convert(true, typeof(string), null, null!));
+        Assert.Equal(Localizacion.Texto("Grafica.Ver"), conversor.Convert(false, typeof(string), null, null!));
     }
 
     [StaFact]
