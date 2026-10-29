@@ -466,17 +466,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Recargar(int? pagina = null)
     {
-        IQueryable<Solicitud> consulta = this.db.Solicitudes;
-
-        if (this.EstadoFiltroItem?.Valor is EstadoSolicitud estado)
-        {
-            consulta = consulta.Where(s => s.Estado == estado);
-        }
-
-        List<Solicitud> lista = consulta
+        // Una sola lectura de la tabla por recarga: la cabecera cuenta sobre la base entera y
+        // los filtros son en memoria, así que no hace falta repetir la consulta para las
+        // estadísticas.
+        List<Solicitud> lista = this.db.Solicitudes
             .OrderByDescending(s => s.FechaSolicitud)
             .ThenByDescending(s => s.Id)
             .ToList();
+
+        this.ActualizarEstadisticas(lista);
+
+        if (this.EstadoFiltroItem?.Valor is EstadoSolicitud estado)
+        {
+            lista = lista.Where(s => s.Estado == estado).ToList();
+        }
 
         // La búsqueda de texto se hace en memoria porque SQLite no sabe ignorar
         // acentos: normalizamos (minúsculas y sin tildes) el texto y los campos.
@@ -498,7 +501,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Paginar(lista, pagina);
-        this.ActualizarEstadisticas();
         this.ActualizarLimitesEmbudo();
     }
 
@@ -519,16 +521,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// La cabecera mide la base entera, no la lista filtrada: los filtros solo recortan la tabla.
     /// Así los totales no bailan al buscar o al marcar «Solo abiertas».
     /// </summary>
-    private void ActualizarEstadisticas()
+    /// <remarks>
+    /// Se calcula sobre la lista completa que <see cref="Recargar"/> ya ha leído: la consulta
+    /// trae todas las entidades, así que repetirla solo para contar era una lectura de más.
+    /// </remarks>
+    private void ActualizarEstadisticas(IReadOnlyList<Solicitud> solicitudes)
     {
-        // Se leen las entidades completas: las estadísticas usan propiedades [NotMapped] y
-        // proyectar a un DTO obligaría a duplicar sus cálculos. La consulta de solo lectura
-        // queda fuera del change tracking.
-        List<Solicitud> paraCalculo = this.db.Solicitudes
-            .AsNoTracking()
-            .ToList();
-
-        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(paraCalculo);
+        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
 
         this.TotalSolicitudes = resumen.Total;
         this.ProcesosAbiertos = resumen.Abiertas;
