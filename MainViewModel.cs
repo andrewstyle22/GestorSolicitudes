@@ -578,7 +578,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         List<Solicitud> todas = this.db.Solicitudes.Include(s => s.Eventos).ToList();
 
-        this.PeriodosEmbudo = EmbudoHelper.Calcular(todas, this.GranularidadGrafica, this.DesplazamientoPeriodo);
+        this.PeriodosEmbudo = EmbudoHelper.Calcular(
+            todas,
+            this.GranularidadGrafica,
+            this.DesplazamientoPeriodo,
+            Localizacion.CulturaActual);
     }
 
     /// <summary>Seguimientos vencidos de candidaturas abiertas. Lo usa el icono de la bandeja.</summary>

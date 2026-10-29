@@ -204,7 +204,7 @@ public class ViewModelEmbudoTests
         Assert.Equal(0, vm.DesplazamientoPeriodo);
         Assert.False(vm.PuedeAvanzarPeriodo);
         Assert.Equal(
-            EmbudoHelper.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia),
+            EmbudoHelper.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia, Localizacion.CulturaActual),
             vm.PeriodosEmbudo[^1].Etiqueta);
     }
 

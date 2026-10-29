@@ -1,3 +1,4 @@
+using System.Globalization;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
@@ -5,6 +6,17 @@ namespace GestorSolicitudes.Tests;
 
 public class EmbudoHelperTests
 {
+    [Fact]
+    public void EtiquetaDePeriodo_UsaLaCulturaQueRecibeYNoLaDelHilo()
+    {
+        var inicio = new DateTime(2024, 5, 1);
+        CultureInfo ingles = CultureInfo.GetCultureInfo("en-US");
+
+        Assert.Equal(
+            inicio.ToString("MMM yyyy", ingles),
+            EmbudoHelper.EtiquetaDePeriodo(inicio, GranularidadEmbudo.Mes, ingles));
+    }
+
     [Fact]
     public void EnviadaEnRango_ReconoceElHitoDeEnvioDentroDelMes()
     {
