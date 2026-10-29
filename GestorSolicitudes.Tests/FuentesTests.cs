@@ -114,6 +114,24 @@ public partial class FuentesTests
         }
     }
 
+    [Fact]
+    public void LosBotonesDeCerrarExplicanQueHacen()
+    {
+        // Un «✕» no dice nada ni en voz alta ni al pasar el ratón: la acción va en el ToolTip
+        // y en AutomationProperties.Name, como en las flechas de paginación.
+        List<XElement> cruces = FicherosDeXaml()
+            .SelectMany(f => XDocument.Load(f).Descendants())
+            .Where(e => e.Name.LocalName == "Button" && (string?)e.Attribute("Content") == "✕")
+            .ToList();
+
+        Assert.NotEmpty(cruces);
+        foreach (XElement boton in cruces)
+        {
+            Assert.NotNull(boton.Attribute("ToolTip"));
+            Assert.NotNull(boton.Attribute("AutomationProperties.Name"));
+        }
+    }
+
     private static List<string> ClavesUsadas()
     {
         List<string> deCodigo = FicherosDeCodigo()

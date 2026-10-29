@@ -70,6 +70,8 @@
                                 <Button Grid.Row="0" Grid.Column="2" Content="✕"
                                         Margin="6,0,0,0" Padding="8,3" FontSize="12"
                                         Style="{StaticResource BotonPeligro}"
+                                        ToolTip="{DynamicResource Boton.Eliminar}"
+                                        AutomationProperties.Name="{DynamicResource Boton.Eliminar}"
                                         Command="{Binding DataContext.EliminarEventoCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                         CommandParameter="{Binding}" />
 
