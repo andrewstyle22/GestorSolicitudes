@@ -154,7 +154,8 @@ un `using` a `Views` dentro de un ViewModel tumba el CI.
 Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] para los textos de la UI
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
-Localizacion.cs → traducciones (es/en/de), cultura y selector de idioma
+Traducciones.cs → diccionarios es/en/de y Texto (en Helpers, para que los helpers traduzcan)
+Localizacion.cs → idioma activo, cultura del hilo, preferencia guardada y recursos WPF
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
 Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 

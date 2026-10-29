@@ -36,7 +36,7 @@ public static class ReglasSolicitud
             {
                 Fecha = solicitud.FechaSolicitud,
                 Tipo = TipoEvento.SolicitudEnviada,
-                Descripcion = Localizacion.Texto("Evento.CandidaturaEnviada"),
+                Descripcion = Traducciones.Texto("Evento.CandidaturaEnviada"),
             });
         }
     }

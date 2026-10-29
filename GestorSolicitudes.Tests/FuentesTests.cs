@@ -184,7 +184,7 @@ public partial class FuentesTests
         return carpeta!.FullName;
     }
 
-    [GeneratedRegex(@"Localizacion\.Texto\(""([^""]+)""")]
+    [GeneratedRegex(@"(?:Localizacion|Traducciones)\.Texto\(""([^""]+)""")]
     private static partial Regex ClaveEnCodigo();
 
     [GeneratedRegex(@"\{DynamicResource\s+([^\s}]+)\}")]

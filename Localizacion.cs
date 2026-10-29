@@ -1,817 +1,30 @@
 namespace GestorSolicitudes;
 
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Markup;
-
-/// <summary>Idioma de la interfaz. El selector de la cabecera se apoya en este enum.</summary>
-public enum Idioma
-{
-    Castellano,
-    Ingles,
-    Aleman,
-}
+using GestorSolicitudes.Helpers;
 
 /// <summary>Opción del selector de idioma: idioma + nombre tal como se ve en su propia lengua.</summary>
 public sealed record IdiomaItem(Idioma Idioma, string Nombre);
 
 /// <summary>
-/// Traducciones de toda la interfaz y gestión del idioma activo. La fuente única de los
-/// textos son los diccionarios de este archivo; el recurso XAML que se inyecta en la
-/// aplicación se construye a partir de ellos para que los {DynamicResource} se actualicen
-/// al cambiar de idioma sin reiniciar. La supresión de la regla de literales duplicados
-/// (S1192) es a propósito: la misma palabra se repite como clave y como texto en los tres
-/// idiomas, y definir constantes ensuciaría la tabla de traducciones.
+/// Fachada del idioma: decide el idioma activo, fija la cultura del hilo y mantiene los textos
+/// inyectados como recursos de Application. Los textos en sí y su consulta viven en
+/// <see cref="Traducciones"/> (Helpers), para que cualquier helper pueda traducir sin depender
+/// del Núcleo.
 /// </summary>
-[SuppressMessage("SonarAnalyzer.CSharp", "S1192",
-    Justification = "Las traducciones se repiten por naturaleza: la misma palabra es clave y valor en varios idiomas.")]
 public static class Localizacion
 {
     /// <summary>Se dispara al cambiar de idioma, para que la interfaz refresque lo que no usa DynamicResource.</summary>
     public static event EventHandler<Idioma>? IdiomaCambiado;
 
-    private static readonly IReadOnlyDictionary<string, string> TextoCastellano = Listar(
-        // ----- Ventana y cabecera -----
-        ("TituloVentana", "Gestor de candidaturas"),
-        ("SubtituloVentana", "Seguimiento de ofertas a las que me he inscrito"),
-        ("Error", "Error"),
-        ("Confirmar", "Confirmar"),
-
-        // ----- Métricas -----
-        ("Metrica.Enviadas", "Enviadas"),
-        ("Metrica.Abiertas", "Abiertas"),
-        ("Metrica.EnProceso", "En proceso"),
-        ("Metrica.Ofertas", "Ofertas"),
-        ("Metrica.TasaRespuesta", "Tasa de respuesta"),
-        ("Metrica.MediaRespuesta", "Media de respuesta"),
-        ("Metrica.Dias", "días"),
-
-        // ----- Botones de la cabecera -----
-        ("Boton.ExportarCsv", "Exportar CSV"),
-        ("Boton.NuevaCandidatura", "+  Nueva candidatura"),
-
-        // ----- Gráfica -----
-        ("Grafica.Titulo", "Embudo de los últimos 12 periodos, {0} (enviadas → respondidas → entrevistas → ofertas)"),
-        ("Grafica.TituloMes", "por mes"),
-        ("Grafica.TituloSemana", "por semana"),
-        ("Grafica.TituloDia", "por día"),
-        ("Grafica.Granularidad", "Agrupar por"),
-        ("Grafica.Anterior", "Periodo anterior"),
-        ("Grafica.Siguiente", "Periodo siguiente"),
-        ("Grafica.Hoy", "Hoy"),
-        ("Grafica.HoyToolTip", "Volver al periodo actual"),
-        ("Grafica.Enviadas", "Enviadas"),
-        ("Grafica.Respondidas", "Respondidas"),
-        ("Grafica.Entrevistas", "Entrevistas"),
-        ("Grafica.Ofertas", "Ofertas"),
-        ("Grafica.Ver", "Gráfico"),
-        ("Grafica.Ocultar", "Ocultar gráfica"),
-
-        ("GranularidadEmbudo.Mes", "Mes"),
-        ("GranularidadEmbudo.Semana", "Semana"),
-        ("GranularidadEmbudo.Dia", "Día"),
-
-        // ----- Filtros -----
-        ("Filtro.Buscar", "Buscar..."),
-        ("Filtro.BuscarToolTip", "Busca por empresa, puesto, tecnología, ubicación o portal"),
-        ("Filtro.BorrarBusqueda", "Borrar la búsqueda"),
-        ("Filtro.SoloAbiertas", "Solo abiertas"),
-        ("Filtro.SeguimientoPendiente", "Seguimiento pendiente"),
-        ("Filtro.SinEspecificar", "Sin especificar"),
-        ("Filtro.TodosLosEstados", "Todos los estados"),
-
-        // ----- Columnas de la tabla -----
-        ("Columnas.Boton", "Columnas"),
-        ("Columna.Empresa", "Empresa"),
-        ("Columna.Puesto", "Puesto"),
-        ("Columna.Estado", "Estado"),
-        ("Columna.Enviada", "Enviada"),
-        ("Columna.Dias", "Días"),
-        ("Columna.DiasToolTip", "Días desde el envío; si el proceso ya se cerró, cuánto duró hasta el cierre"),
-        ("Columna.PrimeraRespuesta", "1ª respuesta"),
-        ("Columna.Entrevista", "Entrevista"),
-        ("Columna.Seguimiento", "Seguimiento"),
-        ("Columna.Interes", "Interés"),
-        ("Columna.Portal", "Portal"),
-
-        // ----- Paginación de la tabla -----
-        ("Paginacion.PorPagina", "Filas por página"),
-        ("Paginacion.Primero", "Primera página"),
-        ("Paginacion.Anterior", "Página anterior"),
-        ("Paginacion.Siguiente", "Página siguiente"),
-        ("Paginacion.Ultimo", "Última página"),
-        ("Paginacion.De", "de"),
-
-        // ----- Panel de detalle -----
-        ("Detalle.Vacio", "Selecciona una candidatura de la lista\n o crea una nueva."),
-        ("Detalle.Empresa", "Empresa *"),
-        ("Detalle.Puesto", "Puesto *"),
-        ("Detalle.VerTodas", "Ver todas"),
-        ("Detalle.VerTodasToolTip", "Filtra la lista a todas las candidaturas de esta empresa"),
-        ("Pestana.Oferta", "Oferta"),
-        ("Pestana.Seguimiento", "Seguimiento"),
-        ("Pestana.AdjuntosHistorial", "Adjuntos e historial"),
-
-        // ----- Pestaña Oferta -----
-        ("Oferta.EnlaceOferta", "Enlace de la oferta"),
-        ("Oferta.PortalOrigen", "Portal de origen"),
-        ("Oferta.PortalToolTip", "LinkedIn, InfoJobs, Tecnoempleo, web de la empresa, referido..."),
-        ("Oferta.Ubicacion", "Ubicación"),
-        ("Oferta.Modalidad", "Modalidad"),
-        ("Oferta.ViaContacto", "Vía de contacto"),
-        ("Oferta.ViaContactoToolTip", "Cómo llegó el contacto: distinto de dónde estaba publicada la oferta"),
-        ("Oferta.Interes", "Interés (1-5)"),
-        ("Oferta.Tecnologias", "Tecnologías de la oferta"),
-        ("Oferta.TecnologiasToolTip", "Separadas por comas: C#, .NET 8, Vue, SQL Server..."),
-        ("Oferta.SalarioMin", "Salario mín."),
-        ("Oferta.SalarioMax", "Salario máx."),
-        ("Oferta.Pretension", "Mi pretensión"),
-        ("Oferta.Requisitos", "Requisitos del cargo"),
-        ("Oferta.RequisitosToolTip", "Requisitos, responsabilidades y funciones del puesto"),
-
-        // ----- Pestaña Seguimiento -----
-        ("Seguimiento.EstadoActual", "Estado actual"),
-        ("Seguimiento.MotivoRechazo", "Motivo del rechazo"),
-        ("Seguimiento.FechaSolicitud", "Fecha de solicitud"),
-        ("Seguimiento.PrimeraContestacion", "1ª contestación"),
-        ("Seguimiento.DiaEntrevista", "Día de la entrevista"),
-        ("Seguimiento.ProximoSeguimiento", "Próximo seguimiento"),
-        ("Seguimiento.ProximoSeguimientoToolTip", "Cuándo toca volver a escribir si no hay noticias"),
-        ("Seguimiento.FechaCierre", "Fecha de cierre"),
-        ("Seguimiento.RespuestaEmpresa", "Respuesta de la empresa"),
-        ("Seguimiento.Contacto", "CONTACTO"),
-
-        // ----- Pestaña Adjuntos e historial -----
-        ("Adjuntos.Titulo", "ADJUNTOS"),
-        ("Adjuntos.Texto", "El CV y la carta concretos que enviaste a esta oferta, guardados en copia local."),
-        ("Adjuntos.Curriculum", "Curriculum"),
-        ("Adjuntos.Carta", "Carta de presentación"),
-        ("Adjuntos.CurriculumSinAdjuntar", "Currículum sin adjuntar"),
-        ("Adjuntos.CartaSinAdjuntar", "Carta sin adjuntar"),
-        ("Historial.Titulo", "HISTORIAL"),
-        ("Historial.Anadir", "+ Añadir"),
-
-        // ----- Campos comunes -----
-        ("Campo.Nombre", "Nombre"),
-        ("Campo.Email", "Email"),
-        ("Campo.Telefono", "Teléfono"),
-        ("Campo.Notas", "Notas"),
-        ("Boton.Abrir", "Abrir"),
-        ("Boton.Quitar", "Quitar"),
-        ("Boton.Adjuntar", "Adjuntar…"),
-        ("Boton.Leer", "Leer"),
-        ("Boton.Eliminar", "Eliminar"),
-        ("Boton.Duplicar", "Duplicar"),
-        ("Boton.Cancelar", "Cancelar"),
-        ("Boton.Guardar", "Guardar"),
-        ("Boton.Cerrar", "Cerrar"),
-        ("Boton.Descargar", "Descargar"),
-
-        // ----- Bandeja -----
-        ("Bandeja.Abrir", "Abrir Gestor de candidaturas"),
-        ("Bandeja.Comprobar", "Comprobar seguimientos ahora"),
-        ("Bandeja.Salir", "Salir"),
-        ("Bandeja.SeguimientoVencido", "Seguimiento vencido"),
-        ("Bandeja.VencidoTexto", "{0} — {1}. Pendiente desde el {2}."),
-        ("Bandeja.VencidosMultiples", "{0} seguimientos vencidos"),
-        ("Bandeja.RecordatorioLinea", "• {0} — {1}"),
-
-        // ----- Diálogos de fichero -----
-        ("Dialogo.SeleccionaCv", "Selecciona el CV que enviaste"),
-        ("Dialogo.SeleccionaCarta", "Selecciona la carta de presentación"),
-        ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Currículos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Todos los archivos (*.*)|*.*"),
-        ("Dialogo.ExportarCandidaturas", "Exportar candidaturas"),
-
-        // ----- Mensajes -----
-        ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
-        ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
-        ("Mensaje.NoSePudoAbrirFichero", "No se pudo abrir el fichero: {0}"),
-        ("Mensaje.NoSePuedePrevisualizar", "No se puede previsualizar este formato. Usa Descargar para guardar una copia."),
-        ("Mensaje.NoSePudoAbrirEnlace", "No se pudo abrir el enlace: {0}"),
-        ("Mensaje.EnlaceNoValido", "El enlace no es una dirección web válida: solo se abren http y https."),
-        ("Mensaje.FaltanDatos", "La empresa y el puesto son obligatorios."),
-        ("Mensaje.NoSePudoGuardar", "No se pudo guardar: {0}"),
-        ("Mensaje.NoSePudoEliminar", "No se pudo eliminar: {0}"),
-        ("Mensaje.NoSePudoExportar", "No se pudo exportar el CSV: {0}"),
-        ("Mensaje.ConfirmarEliminar", "¿Eliminar la candidatura de {0} ({1})?"),
-        ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
-
-        // ----- Títulos de avisos -----
-        ("Titulo.Adjunto", "Adjunto"),
-        ("Titulo.Confirmar", "Confirmar"),
-        ("Titulo.FaltanDatos", "Faltan datos"),
-        ("Titulo.ExportacionCompletada", "Exportación completada"),
-        ("Titulo.ErrorAlIniciar", "Error al iniciar"),
-
-        // ----- Hitos del historial -----
-        ("Evento.CandidaturaEnviada", "Candidatura enviada"),
-
-        // ----- Duplicar / exportar -----
-        ("Duplicar.Nota", "Duplicada de la candidatura #{0} ({1}, {2})."),
-
-        // ----- Ventana de requisitos -----
-        ("VentanaRequisitos.Titulo", "Requisitos del cargo"),
-
-        // ----- Visor de adjuntos -----
-        ("Visor.Titulo", "Visor"),
-        ("Visor.Pagina", "Página {0} de {1}"),
-
-        // ----- Selector de idioma -----
-        ("Selector.ToolTip", "Idioma de la interfaz"),
-        ("Idioma.Espanol", "Español"),
-        ("Idioma.Ingles", "Inglés"),
-        ("Idioma.Aleman", "Alemán"),
-
-        // ----- Cabeceras del CSV de exportación -----
-        ("Csv.Empresa", "Empresa"),
-        ("Csv.Puesto", "Puesto"),
-        ("Csv.Estado", "Estado"),
-        ("Csv.Portal", "Portal"),
-        ("Csv.Ubicacion", "Ubicacion"),
-        ("Csv.Modalidad", "Modalidad"),
-        ("Csv.FechaSolicitud", "Fecha solicitud"),
-        ("Csv.PrimeraRespuesta", "Primera respuesta"),
-        ("Csv.DiasHastaRespuesta", "Dias hasta respuesta"),
-        ("Csv.Entrevista", "Entrevista"),
-        ("Csv.Cierre", "Cierre"),
-        ("Csv.ProximoSeguimiento", "Proximo seguimiento"),
-        ("Csv.SalarioMin", "Salario min"),
-        ("Csv.SalarioMax", "Salario max"),
-        ("Csv.Pretension", "Pretension"),
-        ("Csv.Interes", "Interes"),
-        ("Csv.Tecnologias", "Tecnologias"),
-        ("Csv.Contacto", "Contacto"),
-        ("Csv.EmailContacto", "Email contacto"),
-        ("Csv.RespuestaEmpresa", "Respuesta empresa"),
-        ("Csv.Notas", "Notas"),
-        ("Csv.Enlace", "Enlace"),
-        ("Csv.ExportadasN", "Exportadas {0} candidaturas."),
-
-        // ----- Enums (EstadoSolicitud, Modalidad, TipoEvento, MotivoRechazo, Origen) -----
-        ("EstadoSolicitud.Enviada", "Enviada"),
-        ("EstadoSolicitud.EnRevision", "En revisión"),
-        ("EstadoSolicitud.PruebaTecnica", "Prueba técnica"),
-        ("EstadoSolicitud.EntrevistaRrhh", "Entrevista RR. HH."),
-        ("EstadoSolicitud.EntrevistaTecnica", "Entrevista técnica"),
-        ("EstadoSolicitud.EntrevistaFinal", "Entrevista final"),
-        ("EstadoSolicitud.OfertaRecibida", "Oferta recibida"),
-        ("EstadoSolicitud.OfertaAceptada", "Oferta aceptada"),
-        ("EstadoSolicitud.OfertaRechazada", "Oferta rechazada por mí"),
-        ("EstadoSolicitud.Rechazada", "Descartado por la empresa"),
-        ("EstadoSolicitud.Retirada", "Retirada por mí"),
-        ("EstadoSolicitud.SinRespuesta", "Sin respuesta"),
-        ("Modalidad.SinIndicar", "Sin indicar"),
-        ("Modalidad.Presencial", "Presencial"),
-        ("Modalidad.Hibrido", "Híbrido"),
-        ("Modalidad.Remoto", "100 % remoto"),
-        ("TipoEvento.Nota", "Nota"),
-        ("TipoEvento.SolicitudEnviada", "Solicitud enviada"),
-        ("TipoEvento.Respuesta", "Respuesta de la empresa"),
-        ("TipoEvento.Llamada", "Llamada / screening"),
-        ("TipoEvento.PruebaTecnica", "Prueba técnica"),
-        ("TipoEvento.Entrevista", "Entrevista"),
-        ("TipoEvento.Seguimiento", "Seguimiento enviado"),
-        ("TipoEvento.Oferta", "Oferta"),
-        ("TipoEvento.Rechazo", "Rechazo"),
-        ("MotivoRechazo.Salario", "Salario / pretensión"),
-        ("MotivoRechazo.ExperienciaInsuficiente", "Experiencia insuficiente"),
-        ("MotivoRechazo.SeleccionaronOtroCandidato", "Seleccionaron a otro candidato"),
-        ("MotivoRechazo.CulturalFit", "No encajaba con el equipo/cultura"),
-        ("MotivoRechazo.PuestoCanceladoOPausado", "Puesto cancelado o pausado"),
-        ("MotivoRechazo.Otro", "Otro motivo"),
-        ("Origen.AplicacionDirecta", "Aplicación directa"),
-        ("Origen.RecruiterMeContacto", "Recruiter me contactó"),
-        ("Origen.Referido", "Referido por alguien"),
-        ("Origen.Networking", "Networking / evento"),
-        ("Origen.FeriaDeEmpleo", "Feria de empleo"),
-        ("Origen.Otro", "Otro"));
-
-    private static readonly IReadOnlyDictionary<string, string> TextoIngles = Listar(
-        // ----- Ventana y cabecera -----
-        ("TituloVentana", "Application Tracker"),
-        ("SubtituloVentana", "Track the job offers you have applied to"),
-        ("Error", "Error"),
-        ("Confirmar", "Confirm"),
-
-        // ----- Métricas -----
-        ("Metrica.Enviadas", "Sent"),
-        ("Metrica.Abiertas", "Open"),
-        ("Metrica.EnProceso", "In process"),
-        ("Metrica.Ofertas", "Offers"),
-        ("Metrica.TasaRespuesta", "Response rate"),
-        ("Metrica.MediaRespuesta", "Avg. response time"),
-        ("Metrica.Dias", "days"),
-
-        // ----- Botones de la cabecera -----
-        ("Boton.ExportarCsv", "Export CSV"),
-        ("Boton.NuevaCandidatura", "+  New application"),
-
-        // ----- Gráfica -----
-        ("Grafica.Titulo", "Funnel for the last 12 periods, {0} (sent → answered → interviews → offers)"),
-        ("Grafica.TituloMes", "by month"),
-        ("Grafica.TituloSemana", "by week"),
-        ("Grafica.TituloDia", "by day"),
-        ("Grafica.Granularidad", "Group by"),
-        ("Grafica.Anterior", "Previous period"),
-        ("Grafica.Siguiente", "Next period"),
-        ("Grafica.Hoy", "Today"),
-        ("Grafica.HoyToolTip", "Back to the current period"),
-        ("Grafica.Enviadas", "Sent"),
-        ("Grafica.Respondidas", "Answered"),
-        ("Grafica.Entrevistas", "Interviews"),
-        ("Grafica.Ofertas", "Offers"),
-        ("Grafica.Ver", "Chart"),
-        ("Grafica.Ocultar", "Hide chart"),
-
-        ("GranularidadEmbudo.Mes", "Month"),
-        ("GranularidadEmbudo.Semana", "Week"),
-        ("GranularidadEmbudo.Dia", "Day"),
-
-        // ----- Filtros -----
-        ("Filtro.Buscar", "Search..."),
-        ("Filtro.BuscarToolTip", "Search by company, position, technology, location or portal"),
-        ("Filtro.BorrarBusqueda", "Clear search"),
-        ("Filtro.SoloAbiertas", "Open only"),
-        ("Filtro.SeguimientoPendiente", "Follow-up due"),
-        ("Filtro.SinEspecificar", "Not specified"),
-        ("Filtro.TodosLosEstados", "All statuses"),
-
-        // ----- Columnas de la tabla -----
-        ("Columnas.Boton", "Columns"),
-        ("Columna.Empresa", "Company"),
-        ("Columna.Puesto", "Position"),
-        ("Columna.Estado", "Status"),
-        ("Columna.Enviada", "Sent"),
-        ("Columna.Dias", "Days"),
-        ("Columna.DiasToolTip", "Days since it was sent; once closed, how long the process lasted"),
-        ("Columna.PrimeraRespuesta", "1st response"),
-        ("Columna.Entrevista", "Interview"),
-        ("Columna.Seguimiento", "Follow-up"),
-        ("Columna.Interes", "Interest"),
-        ("Columna.Portal", "Portal"),
-
-        // ----- Paginación de la tabla -----
-        ("Paginacion.PorPagina", "Rows per page"),
-        ("Paginacion.Primero", "First page"),
-        ("Paginacion.Anterior", "Previous page"),
-        ("Paginacion.Siguiente", "Next page"),
-        ("Paginacion.Ultimo", "Last page"),
-        ("Paginacion.De", "of"),
-
-        // ----- Panel de detalle -----
-        ("Detalle.Vacio", "Select an application from the list\nor create a new one."),
-        ("Detalle.Empresa", "Company *"),
-        ("Detalle.Puesto", "Position *"),
-        ("Detalle.VerTodas", "View all"),
-        ("Detalle.VerTodasToolTip", "Filters the list to all applications from this company"),
-        ("Pestana.Oferta", "Offer"),
-        ("Pestana.Seguimiento", "Follow-up"),
-        ("Pestana.AdjuntosHistorial", "Attachments & history"),
-
-        // ----- Pestaña Oferta -----
-        ("Oferta.EnlaceOferta", "Offer link"),
-        ("Oferta.PortalOrigen", "Source portal"),
-        ("Oferta.PortalToolTip", "LinkedIn, InfoJobs, Tecnoempleo, company website, referral..."),
-        ("Oferta.Ubicacion", "Location"),
-        ("Oferta.Modalidad", "Mode"),
-        ("Oferta.ViaContacto", "Contact method"),
-        ("Oferta.ViaContactoToolTip", "How the contact came about, as opposed to where the offer was posted"),
-        ("Oferta.Interes", "Interest (1-5)"),
-        ("Oferta.Tecnologias", "Job technologies"),
-        ("Oferta.TecnologiasToolTip", "Comma separated: C#, .NET 8, Vue, SQL Server..."),
-        ("Oferta.SalarioMin", "Min. salary"),
-        ("Oferta.SalarioMax", "Max. salary"),
-        ("Oferta.Pretension", "My expected salary"),
-        ("Oferta.Requisitos", "Job requirements"),
-        ("Oferta.RequisitosToolTip", "Requirements, responsibilities and duties of the position"),
-
-        // ----- Pestaña Seguimiento -----
-        ("Seguimiento.EstadoActual", "Current status"),
-        ("Seguimiento.MotivoRechazo", "Reason for rejection"),
-        ("Seguimiento.FechaSolicitud", "Application date"),
-        ("Seguimiento.PrimeraContestacion", "First response"),
-        ("Seguimiento.DiaEntrevista", "Interview day"),
-        ("Seguimiento.ProximoSeguimiento", "Next follow-up"),
-        ("Seguimiento.ProximoSeguimientoToolTip", "When you should write again if there is no news"),
-        ("Seguimiento.FechaCierre", "Closing date"),
-        ("Seguimiento.RespuestaEmpresa", "Company response"),
-        ("Seguimiento.Contacto", "CONTACT"),
-
-        // ----- Pestaña Adjuntos e historial -----
-        ("Adjuntos.Titulo", "ATTACHMENTS"),
-        ("Adjuntos.Texto", "The exact CV and cover letter you sent for this offer, stored locally."),
-        ("Adjuntos.Curriculum", "CV"),
-        ("Adjuntos.Carta", "Cover letter"),
-        ("Adjuntos.CurriculumSinAdjuntar", "CV not attached"),
-        ("Adjuntos.CartaSinAdjuntar", "Cover letter not attached"),
-        ("Historial.Titulo", "HISTORY"),
-        ("Historial.Anadir", "+ Add"),
-
-        // ----- Campos comunes -----
-        ("Campo.Nombre", "Name"),
-        ("Campo.Email", "Email"),
-        ("Campo.Telefono", "Phone"),
-        ("Campo.Notas", "Notes"),
-        ("Boton.Abrir", "Open"),
-        ("Boton.Quitar", "Remove"),
-        ("Boton.Adjuntar", "Attach…"),
-        ("Boton.Leer", "Read"),
-        ("Boton.Eliminar", "Delete"),
-        ("Boton.Duplicar", "Duplicate"),
-        ("Boton.Cancelar", "Cancel"),
-        ("Boton.Guardar", "Save"),
-        ("Boton.Cerrar", "Close"),
-        ("Boton.Descargar", "Download"),
-
-        // ----- Bandeja -----
-        ("Bandeja.Abrir", "Open Application Tracker"),
-        ("Bandeja.Comprobar", "Check follow-ups now"),
-        ("Bandeja.Salir", "Exit"),
-        ("Bandeja.SeguimientoVencido", "Follow-up overdue"),
-        ("Bandeja.VencidoTexto", "{0} — {1}. Due since {2}."),
-        ("Bandeja.VencidosMultiples", "{0} follow-ups overdue"),
-        ("Bandeja.RecordatorioLinea", "• {0} — {1}"),
-
-        // ----- Diálogos de fichero -----
-        ("Dialogo.SeleccionaCv", "Select the CV you sent"),
-        ("Dialogo.SeleccionaCarta", "Select the cover letter"),
-        ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|CVs (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|All files (*.*)|*.*"),
-        ("Dialogo.ExportarCandidaturas", "Export applications"),
-
-        // ----- Mensajes -----
-        ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
-        ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
-        ("Mensaje.NoSePudoAbrirFichero", "Could not open the file: {0}"),
-        ("Mensaje.NoSePuedePrevisualizar", "This format cannot be previewed. Use Download to save a copy."),
-        ("Mensaje.NoSePudoAbrirEnlace", "Could not open the link: {0}"),
-        ("Mensaje.EnlaceNoValido", "The link is not a valid web address: only http and https are opened."),
-        ("Mensaje.FaltanDatos", "Company and position are required."),
-        ("Mensaje.NoSePudoGuardar", "Could not save: {0}"),
-        ("Mensaje.NoSePudoEliminar", "Could not delete: {0}"),
-        ("Mensaje.NoSePudoExportar", "Could not export the CSV: {0}"),
-        ("Mensaje.ConfirmarEliminar", "Delete the application for {0} ({1})?"),
-        ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
-
-        // ----- Títulos de avisos -----
-        ("Titulo.Adjunto", "Attachment"),
-        ("Titulo.Confirmar", "Confirm"),
-        ("Titulo.FaltanDatos", "Missing data"),
-        ("Titulo.ExportacionCompletada", "Export completed"),
-        ("Titulo.ErrorAlIniciar", "Startup error"),
-
-        // ----- Hitos del historial -----
-        ("Evento.CandidaturaEnviada", "Application sent"),
-
-        // ----- Duplicar / exportar -----
-        ("Duplicar.Nota", "Duplicated from application #{0} ({1}, {2})."),
-
-        // ----- Ventana de requisitos -----
-        ("VentanaRequisitos.Titulo", "Job requirements"),
-
-        // ----- Visor de adjuntos -----
-        ("Visor.Titulo", "Viewer"),
-        ("Visor.Pagina", "Page {0} of {1}"),
-
-        // ----- Selector de idioma -----
-        ("Selector.ToolTip", "Interface language"),
-        ("Idioma.Espanol", "Spanish"),
-        ("Idioma.Ingles", "English"),
-        ("Idioma.Aleman", "German"),
-
-        // ----- Cabeceras del CSV de exportación -----
-        ("Csv.Empresa", "Company"),
-        ("Csv.Puesto", "Position"),
-        ("Csv.Estado", "Status"),
-        ("Csv.Portal", "Portal"),
-        ("Csv.Ubicacion", "Location"),
-        ("Csv.Modalidad", "Work mode"),
-        ("Csv.FechaSolicitud", "Application date"),
-        ("Csv.PrimeraRespuesta", "First response"),
-        ("Csv.DiasHastaRespuesta", "Days to response"),
-        ("Csv.Entrevista", "Interview"),
-        ("Csv.Cierre", "Closing"),
-        ("Csv.ProximoSeguimiento", "Next follow-up"),
-        ("Csv.SalarioMin", "Min salary"),
-        ("Csv.SalarioMax", "Max salary"),
-        ("Csv.Pretension", "Expected salary"),
-        ("Csv.Interes", "Interest"),
-        ("Csv.Tecnologias", "Technologies"),
-        ("Csv.Contacto", "Contact"),
-        ("Csv.EmailContacto", "Contact email"),
-        ("Csv.RespuestaEmpresa", "Company response"),
-        ("Csv.Notas", "Notes"),
-        ("Csv.Enlace", "Link"),
-        ("Csv.ExportadasN", "Exported {0} applications."),
-
-        // ----- Enums (EstadoSolicitud, Modalidad, TipoEvento, MotivoRechazo, Origen) -----
-        ("EstadoSolicitud.Enviada", "Sent"),
-        ("EstadoSolicitud.EnRevision", "Under review"),
-        ("EstadoSolicitud.PruebaTecnica", "Technical test"),
-        ("EstadoSolicitud.EntrevistaRrhh", "HR interview"),
-        ("EstadoSolicitud.EntrevistaTecnica", "Technical interview"),
-        ("EstadoSolicitud.EntrevistaFinal", "Final interview"),
-        ("EstadoSolicitud.OfertaRecibida", "Offer received"),
-        ("EstadoSolicitud.OfertaAceptada", "Offer accepted"),
-        ("EstadoSolicitud.OfertaRechazada", "Offer declined by me"),
-        ("EstadoSolicitud.Rechazada", "Rejected by the company"),
-        ("EstadoSolicitud.Retirada", "Withdrawn by me"),
-        ("EstadoSolicitud.SinRespuesta", "No response"),
-        ("Modalidad.SinIndicar", "Not specified"),
-        ("Modalidad.Presencial", "On-site"),
-        ("Modalidad.Hibrido", "Hybrid"),
-        ("Modalidad.Remoto", "100% remote"),
-        ("TipoEvento.Nota", "Note"),
-        ("TipoEvento.SolicitudEnviada", "Application sent"),
-        ("TipoEvento.Respuesta", "Company response"),
-        ("TipoEvento.Llamada", "Call / screening"),
-        ("TipoEvento.PruebaTecnica", "Technical test"),
-        ("TipoEvento.Entrevista", "Interview"),
-        ("TipoEvento.Seguimiento", "Follow-up sent"),
-        ("TipoEvento.Oferta", "Offer"),
-        ("TipoEvento.Rechazo", "Rejection"),
-        ("MotivoRechazo.Salario", "Salary / expectation"),
-        ("MotivoRechazo.ExperienciaInsuficiente", "Insufficient experience"),
-        ("MotivoRechazo.SeleccionaronOtroCandidato", "Another candidate was chosen"),
-        ("MotivoRechazo.CulturalFit", "Did not fit the team/culture"),
-        ("MotivoRechazo.PuestoCanceladoOPausado", "Position cancelled or on hold"),
-        ("MotivoRechazo.Otro", "Other reason"),
-        ("Origen.AplicacionDirecta", "Direct application"),
-        ("Origen.RecruiterMeContacto", "Recruiter contacted me"),
-        ("Origen.Referido", "Referral"),
-        ("Origen.Networking", "Networking / event"),
-        ("Origen.FeriaDeEmpleo", "Job fair"),
-        ("Origen.Otro", "Other"));
-
-    private static readonly IReadOnlyDictionary<string, string> TextoAleman = Listar(
-        // ----- Ventana y cabecera -----
-        ("TituloVentana", "Bewerbungstracker"),
-        ("SubtituloVentana", "Verfolge die Stellenangebote, bei denen du dich beworben hast"),
-        ("Error", "Fehler"),
-        ("Confirmar", "Bestätigen"),
-
-        // ----- Métricas -----
-        ("Metrica.Enviadas", "Gesendet"),
-        ("Metrica.Abiertas", "Offen"),
-        ("Metrica.EnProceso", "In Bearbeitung"),
-        ("Metrica.Ofertas", "Angebote"),
-        ("Metrica.TasaRespuesta", "Antwortquote"),
-        ("Metrica.MediaRespuesta", "Ø Antwortzeit"),
-        ("Metrica.Dias", "Tage"),
-
-        // ----- Botones de la cabecera -----
-        ("Boton.ExportarCsv", "CSV exportieren"),
-        ("Boton.NuevaCandidatura", "+  Neue Bewerbung"),
-
-        // ----- Gráfica -----
-        ("Grafica.Titulo", "Trichter der letzten 12 Zeiträume, {0} (gesendet → Antworten → Interviews → Angebote)"),
-        ("Grafica.TituloMes", "nach Monaten"),
-        ("Grafica.TituloSemana", "nach Wochen"),
-        ("Grafica.TituloDia", "nach Tagen"),
-        ("Grafica.Granularidad", "Gruppieren nach"),
-        ("Grafica.Anterior", "Vorheriger Zeitraum"),
-        ("Grafica.Siguiente", "Nächster Zeitraum"),
-        ("Grafica.Hoy", "Heute"),
-        ("Grafica.HoyToolTip", "Zurück zum aktuellen Zeitraum"),
-        ("Grafica.Enviadas", "Gesendet"),
-        ("Grafica.Respondidas", "Beantwortet"),
-        ("Grafica.Entrevistas", "Interviews"),
-        ("Grafica.Ofertas", "Angebote"),
-        ("Grafica.Ver", "Diagramm"),
-        ("Grafica.Ocultar", "Diagramm ausblenden"),
-
-        ("GranularidadEmbudo.Mes", "Monat"),
-        ("GranularidadEmbudo.Semana", "Woche"),
-        ("GranularidadEmbudo.Dia", "Tag"),
-
-        // ----- Filtros -----
-        ("Filtro.Buscar", "Suchen..."),
-        ("Filtro.BuscarToolTip", "Suche nach Unternehmen, Position, Technologie, Standort oder Portal"),
-        ("Filtro.BorrarBusqueda", "Suche löschen"),
-        ("Filtro.SoloAbiertas", "Nur offene"),
-        ("Filtro.SeguimientoPendiente", "Nachverfolgung fällig"),
-        ("Filtro.SinEspecificar", "Nicht angegeben"),
-        ("Filtro.TodosLosEstados", "Alle Status"),
-
-        // ----- Columnas de la tabla -----
-        ("Columnas.Boton", "Spalten"),
-        ("Columna.Empresa", "Unternehmen"),
-        ("Columna.Puesto", "Position"),
-        ("Columna.Estado", "Status"),
-        ("Columna.Enviada", "Gesendet"),
-        ("Columna.Dias", "Tage"),
-        ("Columna.DiasToolTip", "Tage seit dem Versand; nach Abschluss, wie lange der Prozess gedauert hat"),
-        ("Columna.PrimeraRespuesta", "1. Antwort"),
-        ("Columna.Entrevista", "Interview"),
-        ("Columna.Seguimiento", "Nachverfolgung"),
-        ("Columna.Interes", "Interesse"),
-        ("Columna.Portal", "Portal"),
-
-        // ----- Paginación de la tabla -----
-        ("Paginacion.PorPagina", "Zeilen pro Seite"),
-        ("Paginacion.Primero", "Erste Seite"),
-        ("Paginacion.Anterior", "Vorherige Seite"),
-        ("Paginacion.Siguiente", "Nächste Seite"),
-        ("Paginacion.Ultimo", "Letzte Seite"),
-        ("Paginacion.De", "von"),
-
-        // ----- Panel de detalle -----
-        ("Detalle.Vacio", "Wähle eine Bewerbung aus der Liste\noder erstelle eine neue."),
-        ("Detalle.Empresa", "Unternehmen *"),
-        ("Detalle.Puesto", "Position *"),
-        ("Detalle.VerTodas", "Alle anzeigen"),
-        ("Detalle.VerTodasToolTip", "Filtert die Liste auf alle Bewerbungen dieses Unternehmens"),
-        ("Pestana.Oferta", "Angebot"),
-        ("Pestana.Seguimiento", "Nachverfolgung"),
-        ("Pestana.AdjuntosHistorial", "Anhänge & Verlauf"),
-
-        // ----- Pestaña Oferta -----
-        ("Oferta.EnlaceOferta", "Link zum Angebot"),
-        ("Oferta.PortalOrigen", "Ursprungsportal"),
-        ("Oferta.PortalToolTip", "LinkedIn, InfoJobs, Tecnoempleo, Unternehmenswebsite, Empfehlung..."),
-        ("Oferta.Ubicacion", "Standort"),
-        ("Oferta.Modalidad", "Arbeitsmodell"),
-        ("Oferta.ViaContacto", "Kontaktweg"),
-        ("Oferta.ViaContactoToolTip", "Wie der Kontakt entstanden ist, statt wo das Angebot veröffentlicht wurde"),
-        ("Oferta.Interes", "Interesse (1-5)"),
-        ("Oferta.Tecnologias", "Benötigte Technologien"),
-        ("Oferta.TecnologiasToolTip", "Kommagetrennt: C#, .NET 8, Vue, SQL Server..."),
-        ("Oferta.SalarioMin", "Mindestgehalt"),
-        ("Oferta.SalarioMax", "Höchstgehalt"),
-        ("Oferta.Pretension", "Meine Gehaltsvorstellung"),
-        ("Oferta.Requisitos", "Anforderungen an die Stelle"),
-        ("Oferta.RequisitosToolTip", "Anforderungen, Verantwortlichkeiten und Aufgaben der Position"),
-
-        // ----- Pestaña Seguimiento -----
-        ("Seguimiento.EstadoActual", "Aktueller Status"),
-        ("Seguimiento.MotivoRechazo", "Grund der Ablehnung"),
-        ("Seguimiento.FechaSolicitud", "Bewerbungsdatum"),
-        ("Seguimiento.PrimeraContestacion", "Erste Antwort"),
-        ("Seguimiento.DiaEntrevista", "Tag des Interviews"),
-        ("Seguimiento.ProximoSeguimiento", "Nächste Nachverfolgung"),
-        ("Seguimiento.ProximoSeguimientoToolTip", "Wann du wieder schreiben solltest, falls keine Nachricht kommt"),
-        ("Seguimiento.FechaCierre", "Abschlussdatum"),
-        ("Seguimiento.RespuestaEmpresa", "Antwort des Unternehmens"),
-        ("Seguimiento.Contacto", "KONTAKT"),
-
-        // ----- Pestaña Adjuntos e historial -----
-        ("Adjuntos.Titulo", "ANHÄNGE"),
-        ("Adjuntos.Texto", "Der konkrete Lebenslauf und das Anschreiben, die du für dieses Angebot eingereicht hast, lokal gespeichert."),
-        ("Adjuntos.Curriculum", "Lebenslauf"),
-        ("Adjuntos.Carta", "Anschreiben"),
-        ("Adjuntos.CurriculumSinAdjuntar", "Lebenslauf nicht angehängt"),
-        ("Adjuntos.CartaSinAdjuntar", "Anschreiben nicht angehängt"),
-        ("Historial.Titulo", "VERLAUF"),
-        ("Historial.Anadir", "+ Hinzufügen"),
-
-        // ----- Campos comunes -----
-        ("Campo.Nombre", "Name"),
-        ("Campo.Email", "E-Mail"),
-        ("Campo.Telefono", "Telefon"),
-        ("Campo.Notas", "Notizen"),
-        ("Boton.Abrir", "Öffnen"),
-        ("Boton.Quitar", "Entfernen"),
-        ("Boton.Adjuntar", "Anhängen…"),
-        ("Boton.Leer", "Lesen"),
-        ("Boton.Eliminar", "Löschen"),
-        ("Boton.Duplicar", "Duplizieren"),
-        ("Boton.Cancelar", "Abbrechen"),
-        ("Boton.Guardar", "Speichern"),
-        ("Boton.Cerrar", "Schließen"),
-        ("Boton.Descargar", "Herunterladen"),
-
-        // ----- Bandeja -----
-        ("Bandeja.Abrir", "Bewerbungstracker öffnen"),
-        ("Bandeja.Comprobar", "Nachverfolgungen jetzt prüfen"),
-        ("Bandeja.Salir", "Beenden"),
-        ("Bandeja.SeguimientoVencido", "Nachverfolgung überfällig"),
-        ("Bandeja.VencidoTexto", "{0} — {1}. Fällig seit {2}."),
-        ("Bandeja.VencidosMultiples", "{0} überfällige Nachverfolgungen"),
-        ("Bandeja.RecordatorioLinea", "• {0} — {1}"),
-
-        // ----- Diálogos de fichero -----
-        ("Dialogo.SeleccionaCv", "Wähle den Lebenslauf, den du eingereicht hast"),
-        ("Dialogo.SeleccionaCarta", "Wähle das Anschreiben"),
-        ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Lebensläufe (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Alle Dateien (*.*)|*.*"),
-        ("Dialogo.ExportarCandidaturas", "Bewerbungen exportieren"),
-
-        // ----- Mensajes -----
-        ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
-        ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
-        ("Mensaje.NoSePudoAbrirFichero", "Die Datei konnte nicht geöffnet werden: {0}"),
-        ("Mensaje.NoSePuedePrevisualizar", "Dieses Format kann nicht angezeigt werden. Nutze Herunterladen, um eine Kopie zu speichern."),
-        ("Mensaje.NoSePudoAbrirEnlace", "Der Link konnte nicht geöffnet werden: {0}"),
-        ("Mensaje.EnlaceNoValido", "Der Link ist keine gültige Webadresse: Nur http und https werden geöffnet."),
-        ("Mensaje.FaltanDatos", "Unternehmen und Position sind Pflichtfelder."),
-        ("Mensaje.NoSePudoGuardar", "Speichern fehlgeschlagen: {0}"),
-        ("Mensaje.NoSePudoEliminar", "Löschen fehlgeschlagen: {0}"),
-        ("Mensaje.NoSePudoExportar", "CSV-Export fehlgeschlagen: {0}"),
-        ("Mensaje.ConfirmarEliminar", "Bewerbung von {0} ({1}) löschen?"),
-        ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
-
-        // ----- Títulos de avisos -----
-        ("Titulo.Adjunto", "Anlage"),
-        ("Titulo.Confirmar", "Bestätigen"),
-        ("Titulo.FaltanDatos", "Fehlende Angaben"),
-        ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
-        ("Titulo.ErrorAlIniciar", "Startfehler"),
-
-        // ----- Hitos del historial -----
-        ("Evento.CandidaturaEnviada", "Bewerbung gesendet"),
-
-        // ----- Duplicar / exportar -----
-        ("Duplicar.Nota", "Dupliziert aus Bewerbung Nr. {0} ({1}, {2})."),
-
-        // ----- Ventana de requisitos -----
-        ("VentanaRequisitos.Titulo", "Anforderungen an die Stelle"),
-
-        // ----- Visor de adjuntos -----
-        ("Visor.Titulo", "Betrachter"),
-        ("Visor.Pagina", "Seite {0} von {1}"),
-
-        // ----- Selector de idioma -----
-        ("Selector.ToolTip", "Sprache der Oberfläche"),
-        ("Idioma.Espanol", "Spanisch"),
-        ("Idioma.Ingles", "Englisch"),
-        ("Idioma.Aleman", "Deutsch"),
-
-        // ----- Cabeceras del CSV de exportación -----
-        ("Csv.Empresa", "Unternehmen"),
-        ("Csv.Puesto", "Position"),
-        ("Csv.Estado", "Status"),
-        ("Csv.Portal", "Portal"),
-        ("Csv.Ubicacion", "Standort"),
-        ("Csv.Modalidad", "Arbeitsmodell"),
-        ("Csv.FechaSolicitud", "Bewerbungsdatum"),
-        ("Csv.PrimeraRespuesta", "Erste Antwort"),
-        ("Csv.DiasHastaRespuesta", "Tage bis Antwort"),
-        ("Csv.Entrevista", "Interview"),
-        ("Csv.Cierre", "Abschluss"),
-        ("Csv.ProximoSeguimiento", "Nächste Nachverfolgung"),
-        ("Csv.SalarioMin", "Mindestgehalt"),
-        ("Csv.SalarioMax", "Höchstgehalt"),
-        ("Csv.Pretension", "Gehaltsvorstellung"),
-        ("Csv.Interes", "Interesse"),
-        ("Csv.Tecnologias", "Technologien"),
-        ("Csv.Contacto", "Kontakt"),
-        ("Csv.EmailContacto", "Kontakt-E-Mail"),
-        ("Csv.RespuestaEmpresa", "Antwort des Unternehmens"),
-        ("Csv.Notas", "Notizen"),
-        ("Csv.Enlace", "Link"),
-        ("Csv.ExportadasN", "{0} Bewerbungen exportiert."),
-
-        // ----- Enums (EstadoSolicitud, Modalidad, TipoEvento, MotivoRechazo, Origen) -----
-        ("EstadoSolicitud.Enviada", "Gesendet"),
-        ("EstadoSolicitud.EnRevision", "In Prüfung"),
-        ("EstadoSolicitud.PruebaTecnica", "Technischer Test"),
-        ("EstadoSolicitud.EntrevistaRrhh", "HR-Interview"),
-        ("EstadoSolicitud.EntrevistaTecnica", "Technisches Interview"),
-        ("EstadoSolicitud.EntrevistaFinal", "Endgespräch"),
-        ("EstadoSolicitud.OfertaRecibida", "Angebot erhalten"),
-        ("EstadoSolicitud.OfertaAceptada", "Angebot angenommen"),
-        ("EstadoSolicitud.OfertaRechazada", "Angebot von mir abgelehnt"),
-        ("EstadoSolicitud.Rechazada", "Vom Unternehmen abgelehnt"),
-        ("EstadoSolicitud.Retirada", "Von mir zurückgezogen"),
-        ("EstadoSolicitud.SinRespuesta", "Keine Antwort"),
-        ("Modalidad.SinIndicar", "Nicht angegeben"),
-        ("Modalidad.Presencial", "Vor Ort"),
-        ("Modalidad.Hibrido", "Hybrid"),
-        ("Modalidad.Remoto", "100 % remote"),
-        ("TipoEvento.Nota", "Notiz"),
-        ("TipoEvento.SolicitudEnviada", "Bewerbung gesendet"),
-        ("TipoEvento.Respuesta", "Antwort des Unternehmens"),
-        ("TipoEvento.Llamada", "Anruf / Screening"),
-        ("TipoEvento.PruebaTecnica", "Technischer Test"),
-        ("TipoEvento.Entrevista", "Interview"),
-        ("TipoEvento.Seguimiento", "Nachverfolgung gesendet"),
-        ("TipoEvento.Oferta", "Angebot"),
-        ("TipoEvento.Rechazo", "Absage"),
-        ("MotivoRechazo.Salario", "Gehalt / Vorstellung"),
-        ("MotivoRechazo.ExperienciaInsuficiente", "Unzureichende Erfahrung"),
-        ("MotivoRechazo.SeleccionaronOtroCandidato", "Anderer Kandidat gewählt"),
-        ("MotivoRechazo.CulturalFit", "Passte nicht zu Team/Kultur"),
-        ("MotivoRechazo.PuestoCanceladoOPausado", "Position abgesagt oder pausiert"),
-        ("MotivoRechazo.Otro", "Anderer Grund"),
-        ("Origen.AplicacionDirecta", "Direktbewerbung"),
-        ("Origen.RecruiterMeContacto", "Recruiter kontaktierte mich"),
-        ("Origen.Referido", "Empfehlung"),
-        ("Origen.Networking", "Networking / Veranstaltung"),
-        ("Origen.FeriaDeEmpleo", "Jobmesse"),
-        ("Origen.Otro", "Sonstiges"));
-
-    private static readonly Dictionary<Idioma, IReadOnlyDictionary<string, string>> Tablas = new()
-    {
-        [Idioma.Castellano] = TextoCastellano,
-        [Idioma.Ingles] = TextoIngles,
-        [Idioma.Aleman] = TextoAleman,
-    };
-
     private static ResourceDictionary? diccionarioDeTextos;
 
     /// <summary>Gets idioma activo en este momento. Se decide al arrancar y cambia con el selector.</summary>
-    public static Idioma IdiomaActual { get; private set; } = Idioma.Castellano;
+    public static Idioma IdiomaActual => Traducciones.IdiomaActual;
 
     /// <summary>Gets cultura correspondiente al idioma activo.</summary>
     public static CultureInfo CulturaActual => Cultura(IdiomaActual);
@@ -825,31 +38,22 @@ public static class Localizacion
     };
 
     /// <summary>Traduce una clave con el idioma activo. Si falta, cae al castellano y, en último caso, a la propia clave.</summary>
-    public static string Texto(string clave) => Texto(IdiomaActual, clave);
+    public static string Texto(string clave) => Traducciones.Texto(clave);
 
     /// <summary>Traduce una clave a un idioma concreto, sin tocar el idioma activo.</summary>
-    public static string Texto(Idioma idioma, string clave)
-    {
-        if (Tablas[idioma].TryGetValue(clave, out string? traducido))
-        {
-            return traducido;
-        }
-
-        return TextoCastellano.TryGetValue(clave, out string? espanol) ? espanol : clave;
-    }
+    public static string Texto(Idioma idioma, string clave) => Traducciones.Texto(idioma, clave);
 
     /// <summary>Indica si una clave existe en las traducciones.</summary>
-    public static bool Contiene(string clave) =>
-        Tablas[IdiomaActual].ContainsKey(clave) || TextoCastellano.ContainsKey(clave);
+    public static bool Contiene(string clave) => Traducciones.Contiene(clave);
 
     /// <summary>Las tres opciones del selector de idioma, con su nombre en cada lengua.</summary>
     public static IReadOnlyList<IdiomaItem> IdiomasDisponibles() =>
         new[] { Idioma.Castellano, Idioma.Ingles, Idioma.Aleman }
-            .Select(i => new IdiomaItem(i, NombrePropio(i)))
+            .Select(i => new IdiomaItem(i, Traducciones.NombrePropio(i)))
             .ToList();
 
     /// <summary>Las claves de un idioma, para comprobar que los tres diccionarios tienen las mismas.</summary>
-    public static IReadOnlyCollection<string> Claves(Idioma idioma) => Tablas[idioma].Keys.ToArray();
+    public static IReadOnlyCollection<string> Claves(Idioma idioma) => Traducciones.Claves(idioma);
 
     /// <summary>
     /// Decide el idioma inicial (preferencia guardada o, si no hay, el del sistema), fija la
@@ -858,7 +62,7 @@ public static class Localizacion
     /// </summary>
     public static void Inicializar()
     {
-        IdiomaActual = CargarPreferenciaODetectar();
+        Traducciones.IdiomaActual = CargarPreferenciaODetectar();
         AplicarCulturaDelHilo();
         ConfigurarLenguajeInicial();
         AplicarRecursosDeApplication();
@@ -867,12 +71,12 @@ public static class Localizacion
     /// <summary>Cambia el idioma al instante: cultura, textos de la interfaz y aviso a los suscriptores.</summary>
     public static void Cambiar(Idioma idioma)
     {
-        if (idioma == IdiomaActual)
+        if (idioma == Traducciones.IdiomaActual)
         {
             return;
         }
 
-        IdiomaActual = idioma;
+        Traducciones.IdiomaActual = idioma;
         GuardarPreferencia(idioma);
         AplicarCulturaDelHilo();
         ActualizarLenguajeDeLasVentanas();
@@ -898,14 +102,14 @@ public static class Localizacion
         }
 
         var diccionario = new ResourceDictionary();
-        foreach (KeyValuePair<string, string> par in TextoCastellano)
+        foreach (KeyValuePair<string, string> par in Traducciones.Tabla(Idioma.Castellano))
         {
             diccionario[par.Key] = par.Value;
         }
 
         if (IdiomaActual != Idioma.Castellano)
         {
-            foreach (KeyValuePair<string, string> par in Tablas[IdiomaActual])
+            foreach (KeyValuePair<string, string> par in Traducciones.Tabla(IdiomaActual))
             {
                 diccionario[par.Key] = par.Value;
             }
@@ -914,14 +118,6 @@ public static class Localizacion
         diccionarioDeTextos = diccionario;
         recursos.MergedDictionaries.Add(diccionario);
     }
-
-    /// <summary>Nombre con el que cada idioma se nombra a sí mismo, fijo sea cual sea el activo.</summary>
-    private static string NombrePropio(Idioma idioma) => idioma switch
-    {
-        Idioma.Ingles => "English",
-        Idioma.Aleman => "Deutsch",
-        _ => "Español",
-    };
 
     private static void AplicarCulturaDelHilo()
     {
@@ -1002,7 +198,4 @@ public static class Localizacion
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "GestorSolicitudes",
         "idioma.txt");
-
-    private static IReadOnlyDictionary<string, string> Listar(params (string Clave, string Texto)[] pares) =>
-        pares.ToDictionary(p => p.Clave, p => p.Texto, StringComparer.Ordinal);
 }

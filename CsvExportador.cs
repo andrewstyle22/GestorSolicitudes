@@ -45,7 +45,7 @@ public static class CsvExportador
     public static string Construir(IEnumerable<Solicitud> solicitudes)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(string.Join(';', Columnas.Select(c => Localizacion.Texto(c.Clave))));
+        sb.AppendLine(string.Join(';', Columnas.Select(c => Traducciones.Texto(c.Clave))));
 
         foreach (Solicitud s in solicitudes)
         {

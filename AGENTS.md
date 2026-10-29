@@ -27,7 +27,7 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 
 ## UI y localización
 
-- Todo texto visible va por `Localizacion.Texto("Clave")`; la clave hay que añadirla en los tres idiomas (es/en/de) en `Localizacion.cs` o un test de paridad falla.
+- Todo texto visible va por `Localizacion.Texto("Clave")`; la clave hay que añadirla en los tres idiomas (es/en/de) en `Traducciones.cs` (`Helpers`) o un test de paridad falla.
 - Los enums llevan `[Description]` (texto de UI); `EnumHelper` traduce y cae a `[Description]` si falta la clave.
 - Los cambios de UI/columnas se acompañan de su test (hay tests de pestañas, columnas, filtros, botones).
 

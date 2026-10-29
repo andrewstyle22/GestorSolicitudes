@@ -174,7 +174,7 @@ y su arreglo para no repetirlo:
 - **S1192 (`Define a constant instead of using this literal 'X' N times`)**: un literal
   repetido 3 o más veces en el mismo fichero va a `private const string`. Ya pasó en
   `VisorAdjuntoWindow` con `"Mensaje.NoSePuedePrevisualizar"` (4 veces). Las claves
-  repetidas en los tres diccionarios de `Localizacion.cs` no cuentan, y `MainViewModel`
+  repetidas en los tres diccionarios de `Traducciones.cs` no cuentan, y `MainViewModel`
   ya tiene `ClaveError` para `"Error"`.
 - **S3267 (`Loops should be simplified using the 'Where' LINQ method`)**: un `foreach`
   cuya única lógica es un `if`, o un `if (...) continue;`, se sustituye por `Where`.
