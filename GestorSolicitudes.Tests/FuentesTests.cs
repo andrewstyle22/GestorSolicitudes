@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using GestorSolicitudes.ViewModels;
@@ -11,6 +12,12 @@ using GestorSolicitudes.ViewModels;
 /// Se leen los ficheros como texto porque en WPF solo puede existir una Application por
 /// AppDomain, así que no se puede abrir la ventana en un test más.
 /// </summary>
+/// <remarks>
+/// Límites conocidos: busca claves con expresiones regulares, así que no ve las que se
+/// componen en tiempo de ejecución; clasifica los ViewModels por el texto de su namespace y
+/// depende de la ruta del repositorio. Lo que se pueda comprobar con comportamiento
+/// (PestanasTests, ColumnasTests, ConvertidorTests) vive en esos tests, no aquí.
+/// </remarks>
 public partial class FuentesTests
 {
     private static readonly string Raiz = RaizDelProyecto();
@@ -84,13 +91,30 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LosFicherosFuenteEstanEnUtf8()
+    {
+        // File.ReadAllText sustituye los bytes inválidos por U+FFFD sin avisar; decodificar en
+        // modo estricto es lo que distingue "está en UTF-8" de "se pudo leer".
+        var estricto = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+        IEnumerable<string> ficheros = FicherosDeCodigo()
+            .Concat(FicherosDeXaml())
+            .Concat(FicherosDeTest());
+
+        foreach (string fichero in ficheros)
+        {
+            Exception? error = Record.Exception(() => estricto.GetString(File.ReadAllBytes(fichero)));
+            Assert.True(error is null, $"{Path.GetFileName(fichero)} no está en UTF-8: {error?.Message}");
+        }
+    }
+
+    [Fact]
     public void LasColumnasDeTextoCompartenElEstiloDeCelda()
     {
-        // Las nueve columnas de texto leen de EstiloCelda (o de un derivado con BasedOn);
+        // Las columnas de texto leen de EstiloCelda (o de un derivado con BasedOn);
         // un estilo incrustado por columna vuelve a desincronizar márgenes y recortes.
         List<XElement> deTexto = Columnas().Where(c => c.Name.LocalName == "DataGridTextColumn").ToList();
 
-        Assert.Equal(9, deTexto.Count);
+        Assert.NotEmpty(deTexto);
         Assert.All(deTexto, c => Assert.NotNull(c.Attribute("ElementStyle")));
         Assert.DoesNotContain(
             Columnas(),
