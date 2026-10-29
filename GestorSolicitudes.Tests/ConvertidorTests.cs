@@ -116,6 +116,18 @@ public class ConvertidorTests
         }
     }
 
+    [StaFact]
+    public void EstadoAColor_NingunEstadoSeQuedaSinColorPropio()
+    {
+        var conversor = new EstadoAColorConverter();
+
+        // Enviada es el gris por defecto a propósito; el resto no debe caer en él.
+        foreach (EstadoSolicitud estado in Enum.GetValues<EstadoSolicitud>().Except([EstadoSolicitud.Enviada]))
+        {
+            Assert.NotSame(ColoresEstado.PorDefecto, conversor.Convert(estado, typeof(Brush), null, null!));
+        }
+    }
+
     [Theory]
     [InlineData(EstadoSolicitud.Rechazada, Visibility.Visible)]
     [InlineData(EstadoSolicitud.Enviada, Visibility.Collapsed)]
