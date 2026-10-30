@@ -48,6 +48,19 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void CadaColumnaOcultableTieneSuCasoEnElMapaDeLaVentana()
+    {
+        // El code-behind traduce el nombre de la columna a su DataGridColumn con un switch.
+        // Si se renombra una columna o se mapea a otra, la casilla deja de ocultarla.
+        string codeBehind = File.ReadAllText(Path.Combine(Raiz, "Views", "MainWindow.xaml.cs"));
+
+        foreach ((string columna, _) in ColumnasViewModel.ColumnasOcultables)
+        {
+            Assert.Contains($"\"{columna}\" => this.{columna}", codeBehind);
+        }
+    }
+
+    [Fact]
     public void NingunaColumnaSustituyeElEstiloDeLaCabecera()
     {
         // Un HeaderStyle propio sustituye al ColumnHeaderStyle del DataGrid en vez de
