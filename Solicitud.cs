@@ -101,7 +101,7 @@ public class Solicitud
     public string? NombreOriginalCarta { get; set; }
 
     /// <summary>Gets or sets historial cronológico: cada llamada, prueba o entrevista.</summary>
-    public List<Evento> Eventos { get; set; } = new();
+    public List<Evento> Eventos { get; set; } = [];
 
     // --- Calculadas (no se guardan en base de datos) ---
     [NotMapped]
