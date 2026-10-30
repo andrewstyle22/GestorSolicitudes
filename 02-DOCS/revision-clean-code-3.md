@@ -3,7 +3,7 @@
 Alcance: código de producción (`*.cs`, `*.xaml`, `*.csproj`), tests, CI y documentación
 (`README.md`, `AGENTS.md`, `02-DOCS/`). La revisión se hizo sobre `HEAD 907031c`; después se
 aplicaron los bloques 1 y 2, y ya está cerrado el bloque 3 (3.1-3.8). El bloque 4 está
-dividido en 4.1-4.17 y sin empezar.
+dividido en 4.1-4.17 y **cerrado salvo 4.2 y 4.8**, que siguen pendientes.
 
 > **Verificación tras el bloque 1:** `dotnet test` → 232 tests correctos, 0 fallos.
 > `dotnet format GestorSolicitudes.slnx --verify-no-changes` → exit 0. Cobertura local con
@@ -20,8 +20,19 @@ dividido en 4.1-4.17 y sin empezar.
 > estilos ahora también instancia las tres pestañas y la cabecera de métricas y comprueba
 > que sus enlaces resuelven); `dotnet format GestorSolicitudes.slnx --verify-no-changes` →
 > exit 0. La app no se ha arrancado: la verificación es de tests, no visual.
+>
+> **Verificación tras 4.15-4.17:** `dotnet build GestorSolicitudes.slnx` → 0 errores, 0 avisos
+> (los avisos son errores desde `Directory.Build.props`, también en los tests); `dotnet test`
+> → 277 correctos, 0 fallos; `dotnet format GestorSolicitudes.slnx --verify-no-changes` →
+> exit 0; cobertura de líneas 94,3 % con el umbral de 90 que aplica el CI. `global.json` fija
+> el SDK 10.0.403 (`rollForward: latestFeature`) porque `.slnx` no se entiende antes del
+> 9.0.200, y los dos workflows instalan ahora `10.0.x`.
+>
+> **Verificación tras los avisos de Sonar:** `4a38192` (`Listar` devuelve `Dictionary`) y
+> `7ac156c` (expresiones de colección y campos `Dictionary`) → `dotnet test` 277 correctos,
+> `dotnet format` exit 0. El gate del PR no se ha comprobado: necesita push y análisis.
 
-## Estado verificado (tras el bloque 1, 26/10/2026)
+## Estado verificado (30/10/2026)
 
 > **Convención de identificadores:** los IDs de esta revisión se citan sin prefijo (`A1`,
 > `B1`...). Cuando se cita la revisión 2 se escribe `R2-A1`. El commit `907031c` habla de
@@ -39,10 +50,10 @@ La «fase 0» de la revisión 2 está cerrada. El bloque 1 de esta revisión tam
 | Revisión 3, bloque 1 | **Cerrado y commiteado** (`3be1207`) | A1, A2, A6, A10, C2, C3, C6, C7 y G2; 232 tests verdes; ver «Bloque 1 aplicado» |
 | Revisión 3, bloque 2 | **Cerrado y commiteado** (`7fa77c7`) | A3, A4, A5, A7, A8, A9, F1 y F7; 252 tests verdes; ver «Bloque 2 aplicado» |
 | Revisión 3, bloque 3 | **Cerrado y commiteado** (`2b10bcf`…`eaab361`) | B1, B4, B5, D3, D5, E1, E2 y E4; 258 tests verdes; ver «Bloque 3 dividido» |
-| Revisión 3, bloque 4 | **Dividido en 4.1-4.17, sin empezar** | B2, B3, C1, C8-C12, D1/D2/D4, E3/E5/E6, F3-F6, F8 y G1/G3/G4/G5; ver «Bloque 4 dividido» |
+| Revisión 3, bloque 4 | **Cerrado salvo 4.2 y 4.8** (`04f88c2`…`7ac156c`) | B2, C1, C8-C12, D2, D4, E3/E5/E6, F3-F6, F8, G1/G3/G4/G5 y B3b (4.9); B3a (reloj) y D1/C12 siguen abiertos; ver «Bloque 4 dividido» |
 
-`git status` solo muestra los tres documentos de revisión sin seguimiento. HEAD está en el
-último commit del bloque 3: no queda nada pendiente de los bloques 1-3.
+`git status` está limpio. HEAD es `7ac156c`, en la rama `andres/improve-code-3`: los bloques
+1-3 están cerrados y del bloque 4 solo quedan 4.2 (`DialogosNulos`) y 4.8 (reloj).
 
 Ese era el origen de la confusión: **el commit `9512fac` («Fase 1 A6: usa claves
 Grafica.TituloMes/Semana/Dia») es precisamente el que dejó el título roto**, porque
@@ -55,10 +66,10 @@ pero no se usaban.
 |---|---|---|
 | A1 | `TextoTitulo` elige la clave por valor del enum; `Grafica.Titulo` pierde la preposición que ya llevan `TituloMes/Semana/Dia` | `TituloGrafica_UsaLaTraduccionDeLaGranularidad` (3 casos) y `TituloDeLaGrafica_NoDuplicaLaPreposicion` (3 idiomas) |
 | A2 | `Eliminar` borra las rutas guardadas (`RutasGuardadas`), no las que el usuario cambió sin guardar | `Eliminar_ConElCvQuitadoSinGuardar_BorraElFicheroGuardado` y `Eliminar_ConElCvSustituidoSinGuardar_BorraElAnteriorYLaCopia` |
-| A6 | `AplicarVisibilidadColumnas` usa `DataGridColumn` no nulo; fuera el `if` inalcanzable | Sin test: code-behind `[ExcludeFromCodeCoverage]`, sin cambio de comportamiento |
+| A6 | `AplicarVisibilidadColumnas` usa `DataGridColumn` no nulo; fuera el `if` inalcanzable | `FuentesTests.CadaColumnaOcultableTieneSuCasoEnElMapaDeLaVentana` |
 | A10 | Fuera los 8 `x:Name` muertos; `Buscar_empresas` → `BuscarEmpresas` | `FuentesTests` de columnas y claves |
 | C2/C3/C6/C7 | `NuevaRuta` en una línea y sin comentario obsoleto; `TextoNulo` reutilizado; «puras»; sangría inglesa | Tests existentes de esquema y localización |
-| G2/F2 | `charset = utf-8`; comentarios de `PestanasTests` reparados; guardia contra `U+FFFD` | `NingunFicheroDeTextoTieneCaracteresDeReemplazo` |
+| G2/F2 | Bloque 1: `charset = utf-8`, comentarios de `PestanasTests` reparados y guardia contra `U+FFFD`. Después (`0c73d46`): `insert_final_newline`, `IDE0005`, `IDE0161` y `SA1101`; `CA1031`, `CA1305` y `CA1307` desactivadas con motivo | `NingunFicheroDeTextoTieneCaracteresDeReemplazo` y build sin avisos |
 
 La retirada del BOM de 14 `.cs` es el efecto de `charset = utf-8`: no cambia código, solo la
 codificación de la primera línea; se ha dejado porque el formateador la exige en cada
@@ -77,8 +88,9 @@ verificación.
 | F1 | `ViewModelTests` (1454 líneas) partido en `ViewModelTests` (CRUD y filtros), `ViewModelAdjuntosTests`, `ViewModelCsvTests`, `ViewModelDialogosTests`, `ViewModelEmbudoTests` y `ViewModelPaginacionTests`; todos los ViewModels van en `using` | 252 tests (los 78 de HEAD siguen presentes) |
 | F7 | Tests nuevos de A1 (tres granularidades), A2 (adjunto huérfano), A3 (clasificación) y cabeceras CSV traducidas | Ver filas anteriores |
 
-Pendiente del bloque 2: el test de A6 (mapa de columnas del code-behind) sigue sin existir;
-el code-behind está excluido de cobertura y A6 no cambió comportamiento.
+El test de A6 llegó después (`49e44e2`): comprueba que cada columna ocultable tiene su caso
+`"Nombre" => this.Nombre` en el `switch` del code-behind. No abre la ventana porque WPF solo
+admite una `Application` por AppDomain.
 
 ### Bloque 3 dividido
 
@@ -101,7 +113,7 @@ saliendo del árbol (`AncestorType=UserControl`), porque ahí el `DataContext` e
 La separación evita mezclar lógica con XAML: 3.1-3.5 son lógica con test, 3.6 es el visor y
 3.7-3.8 son extracción/estilos de XAML.
 
-### Bloque 4 dividido (propuesta)
+### Bloque 4 dividido
 
 Criterio: un commit por fila y cada fila deja `dotnet test` y `dotnet format` en verde. El
 tamaño (S/M/L) es esfuerzo, no riesgo.
@@ -109,22 +121,27 @@ tamaño (S/M/L) es esfuerzo, no riesgo.
 | Sub-bloque | Puntos | Cambio | Tamaño | Notas |
 |---|---|---|---|---|
 | 4.1 | C1, C8, C9 | Renombrados: `CsvHelper` → `TextoHelper`, `ViewModelStaticTests` → `TextoYCsvTests`, `cd`/`Con25`/`s` por sus nombres completos | S | Solo nombres; el compilador vigila. Los tests existentes cubren el comportamiento. |
-| 4.2 | D1, C12 | Decidir el `DialogosNulos` por defecto y quitar la traza del constructor | S/M | **Decisión 4**. Si el servicio pasa a obligatorio hay que tocar ~76 tests; por eso va aparte y después de 4.1. |
+| 4.2 | D1, C12 | Decidir el `DialogosNulos` por defecto y quitar la traza del constructor | S/M | **Decisión 4**. Si el servicio pasa a obligatorio hay que tocar 63 constructores de test; por eso va aparte y después de 4.1. |
 | 4.3 | D4 | `AbrirEnlace` avisa cuando la URL no es `http`/`https` (o el botón se deshabilita) | S | Test del servicio con un enlace `mailto:` y uno roto. |
 | 4.4 | C10, E5 | `FilaAdjunto`: un `ComandoAbrir` en vez del evento CLR, y una sola propiedad `Adjunto` (ruta + nombre) en vez de `Texto`+`Ruta` | M | Un fichero y sus dos usos; el manejador de la ventana desaparece. Toca `PestanasTests`. |
 | 4.5 | C11 | Colores de estado a una tabla con nombre; el pincel `OfertaRechazada` pasa a llamarse por su uso | M | `ConvertidorTests` no es STA: los colores tienen que ser estáticos de C#, no recursos de `App.xaml`. |
 | 4.6 | B2a | `Traducciones` (Helpers): los tres diccionarios, `Texto`, `Contiene`, `Claves`, `Listar` y `NombrePropio`; `Localizacion` queda de fachada | L | Movimiento mecánico de ~800 líneas. Rompe de paso la dependencia Helpers→Núcleo (decisión 7). |
 | 4.7 | B2b | `CulturaApp` (cultura del hilo, lenguaje de ventanas, `Cambiar`) y `PreferenciaIdioma` (`idioma.txt`) | M | `IdiomaActual` e `IdiomaCambiado` se quedan en la fachada. Si crece: 4.7a cultura / 4.7b fichero. |
-| 4.8 | B3a | Reloj inyectable para `DateTime.Today`/`Now` en modelo, `ReglasSolicitud` y `MainViewModel` | L | **Decisión 1** (`TimeProvider` o `IClock`). Toca casi todos los tests de fechas: va solo. |
+| 4.8 | B3a | Reloj inyectable para `DateTime.Today`/`Now` en el modelo (`Solicitud`, `Evento`), `EmbudoHelper` y `MainViewModel` | L | **Decisión 1** (`TimeProvider` o `IClock`). Toca casi todos los tests de fechas: va solo. |
 | 4.9 | B3b | `EmbudoHelper.EtiquetaDePeriodo` recibe la cultura en vez de leerla del hilo | S | Independiente de 4.8 aunque salga del mismo punto. |
 | 4.10 | D2 | `ActualizarEstadisticas` deja de lanzar una consulta completa por recarga (conteos en SQL o caché invalidada al escribir) | M | Medir con un contador de consultas en el test, no a ojo. |
 | 4.11 | E3, E6 | Medidas mágicas del XAML (`1525`, `394*`, `440`, `355`) a recursos o `*`+`MinWidth`, y `ToolTip`/`AutomationProperties` en los dos «✕» | M | Riesgo visual: la pantalla no se puede comprobar desde aquí. E6 entra por ser dos líneas del mismo XAML. |
 | 4.12 | F3, F4, F5 | Limpieza de tests: fuera el test de color redundante y `CadaTestUsaSuPropiaBase`, helper del esquema viejo, `TestDb.NuevoContexto` con ruta | M | No toca producción. |
 | 4.13 | F6 | Los tests que comparan literales traducidos («50 %», «1-10 de 25») pasan a comparar números o a componer el texto con `Localizacion.Texto` | S | |
-| 4.14 | F8, G4 | Test que rechaza `U+FFFD` y exige UTF-8 en `.cs`/`.xaml`; documentar los límites de `FuentesTests` y cambiar el «exactamente 9 columnas» por comportamiento | S/M | Hoy `PestanasTests` demuestra que nada detecta la corrupción. |
+| 4.14 | F8, G4 | Test que rechaza `U+FFFD` y exige UTF-8 en `.cs`/`.xaml`; documentar los límites de `FuentesTests` y cambiar el «exactamente 9 columnas» por comportamiento | S/M | El caso de `PestanasTests` demostró que nada detectaba la corrupción. |
 | 4.15 | G1 | `Directory.Build.props`: warnings como errores, analizadores y estilo en el build, también en el proyecto de tests | M | Último del código: se pone cuando ya no quedan warnings que arreglar. |
-| 4.16 | G3 | `global.json` y CI: fijar SDK, `dotnet build -warnaserror`, umbral de cobertura | M | **Comprobar antes de empezar**: el CI instala `8.0.x` y llama a `dotnet format .slnx`, y `.slnx` no se entiende hasta el SDK 9.0.200. Puede estar en rojo desde antes. |
+| 4.16 | G3 | `global.json` y CI: fijar SDK, `dotnet build -warnaserror`, umbral de cobertura | M | El CI instalaba `8.0.x`, que no entiende `.slnx` (hace falta 9.0.200 o superior); podía estar en rojo desde antes. |
 | 4.17 | G5 | Actualizar `02-DOCS/decisiones/*.md` con lo que dejen hecho 4.4-4.11 | S | Solo documentación. |
+
+Estado: **4.1, 4.3-4.7 y 4.9-4.17 hechos y commiteados**; **4.2 y 4.8 no han empezado**.
+4.2 obliga a tocar 63 constructores de test si el servicio pasa a obligatorio (`App` ya lo
+pasa siempre). 4.8 tiene 9 usos de `DateTime.Today` en producción (`Solicitud` 4, `Evento` 1,
+`EmbudoHelper` 1, `MainViewModel` 5) y 49 referencias en tests.
 
 Orden propuesto: 4.1 → 4.3 → 4.2 → 4.6 → 4.7 → 4.5 → 4.4 → 4.9 → 4.8 → 4.10 → 4.11 →
 4.12 → 4.13 → 4.14 → 4.15 → 4.16 → 4.17.
@@ -134,24 +151,27 @@ después lo que cambia comportamiento (reloj, consultas) y las puertas de calida
 cuando el árbol ya no tenga warnings. 4.16 se mira antes de nada porque puede condicionar el
 resto.
 
-Decisiones que hay que tomar dentro del bloque: **4.2** (`DialogosNulos` por defecto) y
-**4.8** (reloj). Fuera de los cuatro bloques siguen B6 (`ObservableCollection` en el POCO),
-D6 (clave `Error` duplicada) y las decisiones 2, 3 y 7 del apartado siguiente.
+Decisiones dentro del bloque: solo quedan **4.2** (`DialogosNulos` por defecto) y **4.8**
+(reloj). Fuera de los cuatro bloques, B6 (`ObservableCollection` en el POCO) se corrigió en
+`286734e` y D6 (clave `Error` duplicada) en `d4dd9f9`. La decisión 7 (Helpers→Núcleo) la
+resolvió 4.6.
 
 ## Veredicto rápido
 
 | Dimensión | Estado | Evidencia |
 |-----------|--------|-----------|
-| Corrección | **Rojo** | El título del embudo pide claves que no existen; al eliminar una fila se puede quedar un adjunto huérfano |
-| Responsabilidad única | **Rojo** | `MainViewModel` 1132 líneas; `Localizacion` 993; `Localizacion` sigue con cinco responsabilidades |
-| DRY / fuente única | Amarillo | Gran mejora (CSV, embudo, estilos, plantillas, `FilaAdjunto`), pero el estado «cerrado» está en tres sitios y quedan `x:Name` muertos |
-| Nombres | Amarillo | `CsvHelper` sigue haciendo normalización de texto; `ViewModelStaticTests` ya no prueba estáticos del ViewModel; `Con25`, `cd` |
-| Errores y estado | Amarillo | `Exception?` como valor de retorno; `DialogosNulos` silencioso; `MainViewModel` escribe `%APPDATA%` desde un setter |
-| Tests | Amarillo | Buena red y tests nuevos de adjuntos/CSV/diálogos; el test de claves tiene un punto ciego y `ViewModelTests` mide 1454 líneas |
-| Puertas de calidad | **Rojo** | Sin `Directory.Build.props`, sin reglas CA/IDE, sin `global.json`, sin umbral de cobertura |
-| Documentación | Amarillo | README coherente; el comentario de `DialogoService` («el único sitio que muestra un MessageBox») ya no es cierto |
+| Corrección | Verde | A1 y A2 corregidos con test: el título usa las claves de la granularidad y eliminar borra los adjuntos guardados |
+| Responsabilidad única | Amarillo | `MainViewModel` 1085 líneas; `Localizacion` queda en fachada de 73 líneas sobre `Traducciones`, `CulturaApp` y `PreferenciaIdioma` |
+| DRY / fuente única | Verde | Clasificación de estados única, columnas y adjuntos extraídos, sin `x:Name` muertos |
+| Nombres | Verde | `TextoHelper`, `TextoYCsvTests` y los nombres completos en tests (4.1) |
+| Errores y estado | Amarillo | `Exception?` fuera (`Try…` con `bool` + `out`); siguen el `DialogosNulos` por defecto (4.2) y la ausencia de reloj (4.8) |
+| Tests | Verde | 279 tests, cobertura 94,3 % de líneas y 78,71 % de ramas; `ViewModelTests` 552 líneas |
+| Puertas de calidad | Verde | `Directory.Build.props` con avisos como errores, `global.json`, StyleCop en tests y umbral de cobertura 90 % en CI |
+| Documentación | Verde | `02-DOCS/decisiones` y este documento describen el código; falta cerrar 4.2/4.8 |
 
 ## Los cinco puntos que más pesan
+
+Hallazgos originales; los cuatro primeros ya están corregidos:
 
 1. **El título de la gráfica muestra una clave en crudo.** `MainViewModel.TituloGrafica`
    construye `$"Grafica.Titulo{(int)GranularidadGrafica}"`, es decir, `Grafica.Titulo0`,
@@ -239,7 +259,7 @@ existen, pero el título no las usa (es el A1 de este documento).
 | B3 | `Solicitud.cs:54, 109, 117-119, 122-124, 136-138`; `Evento.cs:16`; `MainViewModel.cs:631, 751, 783, 1063`; `EmbudoHelper.cs:65`; `ReglasSolicitud.cs:24` | Inyectar un reloj (`TimeProvider`/`IClock`) o centralizar `DateTime.Today` en un `Reloj.Hoy`; el modelo puede recibir la fecha en sus cálculos. Pasar la cultura a `EmbudoHelper.EtiquetaDePeriodo`. | Tests dependientes del día real y del cambio de medianoche, y una función de fechas que además depende de la cultura global. |
 | B4 | `Views/MainWindow.xaml.cs:39-41`; `App.xaml.cs:43-45` | Mover la composición al arranque: `App` crea `AppDbContext`, `DialogoService` y `MainViewModel`, y la ventana recibe el ViewModel. Hoy la ventana es la raíz de composición de facto y la que libera la base. | La vista no debería decidir qué base de datos se abre; además hoy hay dos contextos en el arranque (uno para `EnsureCreated` y otro para la sesión). |
 | B5 | `MainViewModel.cs:232-317` | `Paginador` ya calcula todo, pero el ViewModel sigue exponiendo ocho propiedades (`PaginaActual`, `TotalPaginas`, `RangoPagina`, cuatro booleanos). Exponer un único `ResultadoPagina` o una propiedad `Pagina` y enlazar el XAML a ella. | Se ha movido el cálculo pero no el estado; quedan ocho setters que nadie debería tocar desde fuera. |
-| B6 | `Solicitud.cs:105` | Decisión: `ObservableCollection<Evento>` en un POCO. Si se mantiene, documentarlo como excepción consciente; si se cambia a `List`, refrescar el panel al añadir/borrar. | El modelo depende de una colección de UI, en contra de «POCO sin notificación». |
+| B6 | `Solicitud.cs:105` | **Corregido** (`286734e`): el POCO guarda `List<Evento>` y `MainViewModel.EventosEdicion` (observable) se rellena al cambiar `Edicion`. | El modelo ya no depende de una colección de UI, en contra de «POCO sin notificación». |
 
 ## C. Duplicación, nombres y código muerto
 
@@ -305,32 +325,34 @@ existen, pero el título no las usa (es el A1 de este documento).
 
 ## Orden recomendado
 
-**Bloque 1 — regresiones (2-3 horas; es la «fase 0» de este documento, no la de la revisión 2).**
-Ninguno está aplicado a HEAD `907031c`: A1 + su test, A2 + su test, A6, A10, C2, C3, C6, C7 y
-G2/F2 para la codificación. Cambios pequeños, con red, en un commit aparte.
+**Bloque 1 — regresiones.** Cerrado y commiteado (`3be1207`): A1 + su test, A2 + su test, A6,
+A10, C2, C3, C6, C7 y G2/F2 para la codificación.
 
-**Bloque 2 — verdad en el modelo y en los tests.** Aplicado en el árbol de trabajo: A3
+**Bloque 2 — verdad en el modelo y en los tests.** Cerrado y commiteado (`7fa77c7`): A3
 (clasificación única) + test, A5 (idioma sin `%APPDATA%`), A4 (claves tipadas), A7 (diálogos de
 las vistas), A8 (resultado de operación), F1 (partir `ViewModelTests` y liberar ViewModels), F7.
 
-**Bloque 3 - responsabilidades.** Dividido en 3.1-3.8 (ver «Bloque 3 dividido») y cerrado:
-B1 (adjuntos y columnas), B4, B5, D3, D5 y E1/E2/E4.
-No mezclar la extracción de XAML con la de lógica.
+**Bloque 3 — responsabilidades.** Cerrado (`2b10bcf`…`eaab361`): 3.1-3.8, con B1 (adjuntos y
+columnas), B4, B5, D3, D5 y E1/E2/E4.
 
-**Bloque 4 - cuando toque.** B2 (`Localizacion`), B3 (reloj), C1, C8-C12, D1/D2/D4, E3/E5/E6,
-F3-F6, F8, G1/G3/G4/G5. Dividido en 4.1-4.17 (ver «Bloque 4 dividido»).
+**Bloque 4 — limpieza y puertas.** Hecho salvo 4.2 y 4.8: B2 (`Localizacion`), C1, C8-C12,
+D2/D4, E3/E5/E6, F3-F6, F8 y G1/G3/G4/G5. Quedan D1/C12 (4.2, `DialogosNulos`) y B3a (4.8,
+reloj).
 
-## Decisiones que hay que tomar antes de tocar
+## Decisiones
 
-No son errores, son deuda consciente; conviene decidirlas explícitamente:
+No son errores, son deuda consciente. Siguen abiertas:
 
-1. **Reloj** (B3): `TimeProvider` de .NET 8 (sin paquete) o un `IClock` propio; afecta a tests de fechas y al embudo.
+1. **Reloj** (B3, 4.8): `TimeProvider` de .NET 8 (sin paquete) o un `IClock` propio; afecta a tests de fechas y al embudo.
 2. **Paginación en memoria o en SQL** (`02-DOCS/decisiones/paginacion-tabla.md`): SQL exige una columna normalizada y un `ALTER TABLE` nuevo; hoy el comportamiento está documentado y probado.
-3. **`ObservableCollection<Evento>` en el POCO** (B6): mantener la excepción documentada o cambiar a `List` y refrescar el panel.
-4. **`DialogosNulos` por defecto** (D1): comodidad para tests frente a un fallback que silencia avisos.
-5. **`Exception?` como valor de retorno** (A8): si se mantiene, tiparlo y documentarlo en los dos métodos.
-6. **Raíz de composición** (B4): `App` o `MainWindow`; hoy la ventana crea y libera la base.
-7. **`Helpers` depende del Núcleo**: `EmbudoHelper`, `CsvExportador`, `ReglasSolicitud` y `EnumHelper` usan `Localizacion` (namespace raíz), que es la capa superior. ArchUnit no lo vigila. O se mueve `Localizacion` a `Helpers`, o se acepta y se documenta como excepción consciente.
+3. **`DialogosNulos` por defecto** (D1, 4.2): comodidad para tests frente a un fallback que silencia avisos.
+
+Ya decididas:
+
+- **`Exception?` como valor de retorno** (A8): descartado; `TryEliminarSolicitud` y `TryEscribirCsv` devuelven `bool` + `out Exception?`.
+- **`ObservableCollection<Evento>` en el POCO** (B6): el POCO guarda `List<Evento>` y el ViewModel expone `EventosEdicion` para la vista (`286734e`).
+- **Raíz de composición** (B4): `App` crea la base, el servicio y el ViewModel, y los libera en `OnExit`.
+- **`Helpers` depende del Núcleo** (decisión 7): resuelta en 4.6; los textos viven en `Helpers.Traducciones` y ningún `*Helper.cs` usa `Localizacion`.
 
 ## Checklist de aceptación de la revisión
 
@@ -338,24 +360,23 @@ No son errores, son deuda consciente; conviene decidirlas explícitamente:
 - [x] Eliminar una fila borra todos los adjuntos que apuntaba la base, aunque se hayan quitado o sustituido sin guardar.
 - [x] Hay una sola definición de «estado cerrado» y la usan modelo, consultas y estadísticas.
 - [x] Ningún test escribe en `%APPDATA%` ni cambia la cultura global.
-- [ ] `MainViewModel` por debajo de ~600 líneas y sin E/S de fichero (adjuntos y columnas extraídos; hoy 858 líneas).
-- [ ] `Localizacion` dividida en traducciones, cultura y preferencia.
-- [ ] Ningún `x:Name`, `using` ni miembro público sin consumidor.
+- [ ] `MainViewModel` por debajo de ~600 líneas y sin E/S de fichero (adjuntos y columnas extraídos; hoy 1085 líneas).
+- [x] `Localizacion` dividida en traducciones, cultura y preferencia.
+- [x] Ningún `x:Name`, `using` ni miembro público sin consumidor. Barrido del 30/10/2026: los 23 `x:Name` del XAML tienen consumidor (code-behind o `ElementName`/`TargetName`); los `using` sobrantes los vigila `IDE0005` (aviso, y los avisos son errores); los miembros públicos e internos de producción se contrastaron con el texto de `.cs` y `.xaml`: los 11 candidatos del primer barrido tienen consumidor (enlace XAML o test).
 - [x] `ViewModelTests` por debajo de ~500 líneas por fichero y todos los ViewModels liberados.
-- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (232 tests); falta `dotnet build -warnaserror`.
+- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (279 tests); `dotnet build` verde con los avisos como errores.
 - [x] Ningún fuente contiene `U+FFFD`; codificación UTF-8 declarada en `.editorconfig`.
-- [ ] `DialogoService` y las decisiones de `02-DOCS` describen el código real.
+- [x] `DialogoService` y las decisiones de `02-DOCS` describen el código real.
 
 ## Anexo: comprobaciones ejecutadas
 
-- `dotnet --version` → `10.0.403`.
-- `dotnet test GestorSolicitudes.slnx` → 232 correctos, 0 fallos. Necesitó permiso
-  `danger-full-access`; con el sandbox normal `dotnet.exe` devolvía «Acceso denegado».
+Estado a 30/10/2026, HEAD `a84f67a` en `andres/improve-code-3`:
+
+- `dotnet --version` → `10.0.403`; `global.json` lo fija con `rollForward: latestFeature`.
+- `dotnet build GestorSolicitudes.slnx` → 0 errores, 0 avisos (son errores por `Directory.Build.props`).
+- `dotnet test GestorSolicitudes.slnx` → 279 correctos, 0 fallos.
 - `dotnet format GestorSolicitudes.slnx --verify-no-changes` → exit 0.
-- Cobertura local con `coverlet.msbuild` → 92,01 % de líneas y 77,69 % de ramas; el reporte
-  OpenCover se generó (no está vacío).
-- `git log` (con `safe.directory` puntual, sin tocar la configuración global) confirma que
-  HEAD es `907031c` (`refactor: cierra bloque C7-C14, B10-B12 y A6/A10 de la fase 3`), en la
-  rama `andres/improve-code-3`. `git status` muestra 22 ficheros modificados (14 de ellos solo
-  por la retirada del BOM al fijar `charset = utf-8`) y los tres documentos de revisión sin
-  seguimiento. El bloque 1 no se ha commiteado.
+- Cobertura local con `coverlet.msbuild` → 94,3 % de líneas, 78,71 % de ramas y 94 % de métodos; el CI exige 90 % de líneas.
+- Auditoría de miembros (30/10/2026): barrido de `public`/`internal` en las fuentes de producción y recuento de apariciones en todos los `.cs` y `.xaml`. Los 11 sospechosos (`Altura*` de `EmbudoPeriodo`, `DiasProceso`, `NivelesInteres`, `TamanosPagina` y los cuatro booleanos de `Paginador`) tienen consumidor en un enlace XAML o en un test. No hay código muerto que borrar.
+- `git status` limpio, sin ficheros sin seguimiento.
+- Los issues de SonarCloud (`4a38192`, `7ac156c`) están corregidos en local; el quality gate del PR no se ha comprobado porque necesita push y análisis.

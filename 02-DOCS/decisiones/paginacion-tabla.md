@@ -6,11 +6,16 @@ con desplegable de 5, 10, 20 o 30, cuatro flechas (primera, anterior, siguiente,
 última), el rango (`1-10 de 47`) y botones que se deshabilitan solos.
 
 El recorte lo hace el ViewModel: `Paginar(lista)` deja `Solicitudes` con la
-página actual y recalcula rango y botones, y `Recargar()` filtra y recorta, de
-modo que filtros y flechas comparten un único camino. Las flechas recortan el
-destino a las páginas que existen, cambiar el tamaño de página repagina
-manteniendo la actual si todavía existe, y una lista vacía muestra `0 de 0` sin
-páginas ni flechas activas.
+página actual y el estado (página, total, rango y habilitación de las flechas)
+vive en una sola propiedad `Pagina`, y `Recargar()` filtra y recorta, de modo que
+filtros y flechas comparten un único camino. Las flechas recortan el destino a
+las páginas que existen, cambiar el tamaño de página repagina manteniendo la
+actual si todavía existe, y una lista vacía muestra `0 de 0` sin páginas ni
+flechas activas.
+
+`Recargar()` lee la tabla una sola vez: la cabecera de métricas se calcula sobre
+esa lista completa y después los filtros se aplican en memoria, también el de
+estado. Antes lanzaba una segunda consulta de tabla entera por cada tecla.
 
 ## Decisiones
 

@@ -31,4 +31,8 @@ internal sealed class DialogosNulos : IDialogoService
     public void AbrirEnlace(string url)
     {
     }
+
+    public void VerAdjunto(string ruta)
+    {
+    }
 }

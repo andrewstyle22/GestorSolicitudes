@@ -1,34 +1,31 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.Sqlite;
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 public class AppDbContextTests
 {
     [Fact]
     public void Guardar_SolicitudConEventos_SeRecuperaCompleta()
     {
-        string ruta = TestDb.NuevaRuta();
         int id;
-        using (var db = new AppDbContext(ruta))
+        string ruta;
+        using (var db = TestDb.NuevoContexto(out ruta))
         {
-            db.Database.EnsureCreated();
             var solicitud = new Solicitud
             {
                 Empresa = "ACME",
                 Puesto = "Dev",
-                Estado = EstadoSolicitud.OfertaAceptada
+                Estado = EstadoSolicitud.OfertaAceptada,
             };
             solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Oferta, Descripcion = "¡Sí!" });
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
             id = solicitud.Id;
         }
-
-        Assert.True(id > 0);
 
         using var db2 = new AppDbContext(ruta);
         Solicitud? recuperada = db2.Solicitudes.Include(s => s.Eventos).FirstOrDefault(s => s.Id == id);
@@ -42,11 +39,10 @@ public class AppDbContextTests
     [Fact]
     public void BorrarSolicitud_EliminaSusEventosEnCascada()
     {
-        string ruta = TestDb.NuevaRuta();
         int id;
-        using (var db = new AppDbContext(ruta))
+        string ruta;
+        using (var db = TestDb.NuevoContexto(out ruta))
         {
-            db.Database.EnsureCreated();
             var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
             solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
             db.Solicitudes.Add(solicitud);
@@ -56,20 +52,12 @@ public class AppDbContextTests
 
         using (var db = new AppDbContext(ruta))
         {
-            Solicitud solicitud = db.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id);
-            db.Solicitudes.Remove(solicitud);
+            db.Solicitudes.Remove(db.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id));
             db.SaveChanges();
         }
 
         using var db2 = new AppDbContext(ruta);
         Assert.Equal(0, db2.Eventos.Count(e => e.SolicitudId == id));
-    }
-
-    [Fact]
-    public void CadaTestUsaSuPropiaBase()
-    {
-        using var db = TestDb.NuevoContexto();
-        Assert.Empty(db.Solicitudes);
     }
 
     [Fact]

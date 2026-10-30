@@ -18,8 +18,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
     // por el arranque de la app se apoyan en que por defecto el idioma es el castellano.
-    private const string ClaveError = "Error";
-
     private readonly AppDbContext db;
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
@@ -185,7 +183,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [ObservableProperty]
-    private ObservableCollection<Solicitud> solicitudes = new();
+    private ObservableCollection<Solicitud> solicitudes = [];
 
     // ---------------------------------------------------------------- Paginación
 
@@ -305,6 +303,29 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Solicitud? edicion;
 
+    /// <summary>
+    /// Copia observable del historial de <see cref="Edicion"/>: el POCO guarda una lista y la
+    /// vista necesita avisos al añadir o quitar. Los eventos son los mismos objetos.
+    /// </summary>
+    public ObservableCollection<Evento> EventosEdicion { get; } = [];
+
+    // Los adjuntos se derivan de la edición: al repintar el panel se recalculan.
+    partial void OnEdicionChanged(Solicitud? value)
+    {
+        this.EventosEdicion.Clear();
+
+        if (value is not null)
+        {
+            foreach (Evento evento in value.Eventos)
+            {
+                this.EventosEdicion.Add(evento);
+            }
+        }
+
+        this.OnPropertyChanged(nameof(this.AdjuntoCv));
+        this.OnPropertyChanged(nameof(this.AdjuntoCarta));
+    }
+
     // ---------------------------------------------------------------- Estadísticas
     [ObservableProperty]
     private int totalSolicitudes;
@@ -327,7 +348,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     /// <summary>Filas del embudo (una por mes, semana o día) con las cuatro series ya escaladas a porcentaje.</summary>
     [ObservableProperty]
-    private IReadOnlyList<EmbudoPeriodo> periodosEmbudo = new List<EmbudoPeriodo>();
+    private IReadOnlyList<EmbudoPeriodo> periodosEmbudo = [];
 
     /// <summary>Cada cuánto agrupa las barras: mes, semana o día.</summary>
     [ObservableProperty]
@@ -459,23 +480,26 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Recargar(int? pagina = null)
     {
-        IQueryable<Solicitud> consulta = this.db.Solicitudes;
-
-        if (this.EstadoFiltroItem?.Valor is EstadoSolicitud estado)
-        {
-            consulta = consulta.Where(s => s.Estado == estado);
-        }
-
-        List<Solicitud> lista = consulta
+        // Una sola lectura de la tabla por recarga: la cabecera cuenta sobre la base entera y
+        // los filtros son en memoria, así que no hace falta repetir la consulta para las
+        // estadísticas.
+        List<Solicitud> lista = this.db.Solicitudes
             .OrderByDescending(s => s.FechaSolicitud)
             .ThenByDescending(s => s.Id)
             .ToList();
+
+        this.ActualizarEstadisticas(lista);
+
+        if (this.EstadoFiltroItem?.Valor is EstadoSolicitud estado)
+        {
+            lista = lista.Where(s => s.Estado == estado).ToList();
+        }
 
         // La búsqueda de texto se hace en memoria porque SQLite no sabe ignorar
         // acentos: normalizamos (minúsculas y sin tildes) el texto y los campos.
         if (!string.IsNullOrWhiteSpace(this.TextoBusqueda))
         {
-            string texto = CsvHelper.NormalizarBusqueda(this.TextoBusqueda);
+            string texto = TextoHelper.NormalizarBusqueda(this.TextoBusqueda);
             lista = lista.Where(s => CamposBuscables(s).Contains(texto)).ToList();
         }
 
@@ -491,7 +515,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Paginar(lista, pagina);
-        this.ActualizarEstadisticas();
         this.ActualizarLimitesEmbudo();
     }
 
@@ -500,7 +523,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// línea para que una búsqueda no case a caballo entre dos campos.
     /// </summary>
     private static string CamposBuscables(Solicitud solicitud) =>
-        CsvHelper.NormalizarBusqueda(string.Join(
+        TextoHelper.NormalizarBusqueda(string.Join(
             '\n',
             solicitud.Empresa,
             solicitud.Puesto,
@@ -512,16 +535,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// La cabecera mide la base entera, no la lista filtrada: los filtros solo recortan la tabla.
     /// Así los totales no bailan al buscar o al marcar «Solo abiertas».
     /// </summary>
-    private void ActualizarEstadisticas()
+    /// <remarks>
+    /// Se calcula sobre la lista completa que <see cref="Recargar"/> ya ha leído: la consulta
+    /// trae todas las entidades, así que repetirla solo para contar era una lectura de más.
+    /// </remarks>
+    private void ActualizarEstadisticas(IReadOnlyList<Solicitud> solicitudes)
     {
-        // Se leen las entidades completas: las estadísticas usan propiedades [NotMapped] y
-        // proyectar a un DTO obligaría a duplicar sus cálculos. La consulta de solo lectura
-        // queda fuera del change tracking.
-        List<Solicitud> paraCalculo = this.db.Solicitudes
-            .AsNoTracking()
-            .ToList();
-
-        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(paraCalculo);
+        ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
 
         this.TotalSolicitudes = resumen.Total;
         this.ProcesosAbiertos = resumen.Abiertas;
@@ -571,7 +591,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         List<Solicitud> todas = this.db.Solicitudes.Include(s => s.Eventos).ToList();
 
-        this.PeriodosEmbudo = EmbudoHelper.Calcular(todas, this.GranularidadGrafica, this.DesplazamientoPeriodo);
+        this.PeriodosEmbudo = EmbudoHelper.Calcular(
+            todas,
+            this.GranularidadGrafica,
+            this.DesplazamientoPeriodo,
+            Localizacion.CulturaActual);
     }
 
     /// <summary>Seguimientos vencidos de candidaturas abiertas. Lo usa el icono de la bandeja.</summary>
@@ -591,7 +615,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian la etiqueta del fichero y las propiedades.</summary>
     private sealed record DescriptorAdjunto(string Etiqueta, Action<Solicitud, string?, string?> Asignar);
 
-    private static readonly DescriptorAdjunto AdjuntoCv = new(
+    private static readonly DescriptorAdjunto DescriptorCv = new(
         "cv",
         (solicitud, ruta, nombre) =>
         {
@@ -599,7 +623,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             solicitud.NombreOriginalCv = nombre;
         });
 
-    private static readonly DescriptorAdjunto AdjuntoCarta = new(
+    private static readonly DescriptorAdjunto DescriptorCarta = new(
         "carta",
         (solicitud, ruta, nombre) =>
         {
@@ -607,11 +631,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             solicitud.NombreOriginalCarta = nombre;
         });
 
-    [RelayCommand]
-    private void AdjuntarCv() => this.AdjuntarAdjunto(AdjuntoCv, Localizacion.Texto("Dialogo.SeleccionaCv"));
+    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    public Adjunto? AdjuntoCv => this.Edicion is null
+        ? null
+        : new Adjunto(
+            this.Edicion.RutaCv,
+            this.Edicion.NombreCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
+
+    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    public Adjunto? AdjuntoCarta => this.Edicion is null
+        ? null
+        : new Adjunto(
+            this.Edicion.RutaCarta,
+            this.Edicion.NombreCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     [RelayCommand]
-    private void AdjuntarCarta() => this.AdjuntarAdjunto(AdjuntoCarta, Localizacion.Texto("Dialogo.SeleccionaCarta"));
+    private void AdjuntarCv() => this.AdjuntarAdjunto(DescriptorCv, Localizacion.Texto("Dialogo.SeleccionaCv"));
+
+    [RelayCommand]
+    private void AdjuntarCarta() => this.AdjuntarAdjunto(DescriptorCarta, Localizacion.Texto("Dialogo.SeleccionaCarta"));
 
     private void AdjuntarAdjunto(DescriptorAdjunto adjunto, string titulo)
     {
@@ -636,7 +674,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAdjuntar"), ex.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
 
@@ -646,10 +684,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void QuitarCv() => this.QuitarAdjunto(AdjuntoCv);
+    private void QuitarCv() => this.QuitarAdjunto(DescriptorCv);
 
     [RelayCommand]
-    private void QuitarCarta() => this.QuitarAdjunto(AdjuntoCarta);
+    private void QuitarCarta() => this.QuitarAdjunto(DescriptorCarta);
 
     /// <summary>
     /// Quita la ruta del adjunto, pero no el fichero: si el usuario cancela, el que
@@ -664,6 +702,34 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         adjunto.Asignar(this.Edicion, null, null);
         this.RefrescarPanelDetalle();
+    }
+
+    /// <summary>
+    /// Abre el CV o la carta en el visor. Avisa si el fichero ya no existe en disco.
+    /// Es un comando con parámetro: las dos filas de adjuntos usan el mismo.
+    /// </summary>
+    [RelayCommand]
+    private void AbrirAdjunto(Adjunto? adjunto)
+    {
+        string? ruta = adjunto?.Ruta;
+        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
+        {
+            this.dialogo.Informar(
+                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
+                Localizacion.Texto("Titulo.Adjunto"));
+            return;
+        }
+
+        try
+        {
+            this.dialogo.VerAdjunto(ruta.Trim());
+        }
+        catch (Exception ex)
+        {
+            this.dialogo.Avisar(
+                string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
+                Localizacion.Texto(Traducciones.ClaveError));
+        }
     }
 
     private void RefrescarPanelDetalle()
@@ -829,7 +895,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return false;
         }
     }
@@ -891,7 +957,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error!.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
 
@@ -934,27 +1000,43 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        string limpia = url.Trim();
+        if (!Enlaces.EsWeb(limpia))
+        {
+            // El servicio se calla con lo que no es http/https; aquí el usuario se entera.
+            this.dialogo.Avisar(Localizacion.Texto("Mensaje.EnlaceNoValido"), Localizacion.Texto(Traducciones.ClaveError));
+            return;
+        }
+
         try
         {
-            this.dialogo.AbrirEnlace(url.Trim());
+            this.dialogo.AbrirEnlace(limpia);
         }
         catch (Exception ex)
         {
             this.dialogo.Avisar(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirEnlace"), ex.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
         }
     }
 
     [RelayCommand]
     private void AnadirEvento()
     {
-        this.Edicion?.Eventos.Add(new Evento
+        if (this.Edicion is not Solicitud solicitud)
+        {
+            return;
+        }
+
+        var evento = new Evento
         {
             Fecha = DateTime.Today,
             Tipo = TipoEvento.Nota,
             Descripcion = string.Empty,
-        });
+        };
+
+        solicitud.Eventos.Add(evento);
+        this.EventosEdicion.Add(evento);
     }
 
     [RelayCommand]
@@ -966,6 +1048,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Edicion.Eventos.Remove(evento);
+        this.EventosEdicion.Remove(evento);
         if (evento.Id != 0)
         {
             this.db.Eventos.Remove(evento);
@@ -989,7 +1072,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error!.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
 

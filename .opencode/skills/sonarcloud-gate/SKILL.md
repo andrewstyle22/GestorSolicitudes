@@ -46,7 +46,7 @@ El cuello de botella de este repo es la cobertura de `MainViewModel`: ahí vive 
    no hace falta hacerlos `public`) y **cubrirlos con tests xUnit**. Ejemplos
    hechos: `ConstruirCsv`, `CargarColumnas`/`GuardarColumnas`, `EnviadaEnMes`.
    Los estáticos puros que no necesiten el
-   ViewModel van en `CsvHelper` (Helpers no puede depender de ViewModels).
+   ViewModel van en `TextoHelper` (Helpers no puede depender de ViewModels).
 2. **`[ExcludeFromCodeCoverage]` en métodos 100% de diálogo/MessageBox**
    (`OpenFileDialog`, `SaveFileDialog`, `Process.Start`...). Es el mecanismo que
    Sonar documenta para código no cubrible: coverlet lo saca del reporte y Sonar
@@ -174,12 +174,12 @@ y su arreglo para no repetirlo:
 - **S1192 (`Define a constant instead of using this literal 'X' N times`)**: un literal
   repetido 3 o más veces en el mismo fichero va a `private const string`. Ya pasó en
   `VisorAdjuntoWindow` con `"Mensaje.NoSePuedePrevisualizar"` (4 veces). Las claves
-  repetidas en los tres diccionarios de `Localizacion.cs` no cuentan, y `MainViewModel`
+  repetidas en los tres diccionarios de `Traducciones.cs` no cuentan, y `MainViewModel`
   ya tiene `ClaveError` para `"Error"`.
 - **S3267 (`Loops should be simplified using the 'Where' LINQ method`)**: un `foreach`
   cuya única lógica es un `if`, o un `if (...) continue;`, se sustituye por `Where`.
   Ya pasó en `GestorAdjuntos.DescartarCopias`, `MainWindow.ComprobarSeguimientosVencidos`,
-  `EsquemaDb.VerificarColumnasFaltantes` y `CsvHelper.NormalizarBusqueda`. Cuidado con
+  `EsquemaDb.VerificarColumnasFaltantes` y `TextoHelper.NormalizarBusqueda`. Cuidado con
   los efectos secundarios: en `MainWindow` el arreglo es
   `Where(v => this.idsVencidosAvisados.Add(v.Id))`, que filtra y marca en la misma
   pasada; deja un comentario explicándolo.
@@ -191,6 +191,10 @@ y su arreglo para no repetirlo:
   crees arrays literales en cada llamada (`Assert.Equal(new[] { ... }, ...)`). Usa un
   `private static readonly` en la clase del test o evita el array (`lista.Take(n)`,
   `lista.Skip(n)`). Ya pasó en `PaginadorTests` y `LocalizacionTests`.
+- **S6612 (`Collection initialization can be simplified`)**: una propiedad o campo con
+  `= new()` / `= new List<T>()` pasa a expresión de colección (`= []`). Ya pasó en
+  `DialogoFalso`, `MainViewModel` y `MainWindow.xaml.cs`. Ojo: `[]` solo vale como
+  inicializador, no como argumento de un método si el proyecto no lo pide.
 - **S1135 (`Complete the task associated to this 'TODO' comment`)**: la regla busca la
   etiqueta `TODO`, pero también muerde el **"todo" español** de los comentarios
   ("de que todo fue bien"). Si aparece en un comentario que no es una tarea pendiente,
@@ -200,7 +204,7 @@ y su arreglo para no repetirlo:
   conectar deja dos copias y Sonar marca la nueva. Conecta el helper y borra la
   copia vieja: `MainViewModel.ConstruirCsv` delegó en `CsvExportador.Construir` y
   desaparecieron las ~50 líneas duplicadas. Antes de extraer, busca el cuerpo que ya
-  existe (`Select-String -Pattern 'Csv\.Empresa|CsvHelper\.Escapar'`) y no copies el
+  existe (`Select-String -Pattern 'Csv\.Empresa|TextoHelper\.Escapar'`) y no copies el
   bloque.
 
 ## Barrido antes de dar por cerrados los issues

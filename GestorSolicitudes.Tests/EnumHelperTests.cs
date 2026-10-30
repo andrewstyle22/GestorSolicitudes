@@ -1,7 +1,7 @@
+namespace GestorSolicitudes.Tests;
+
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
 
 public class EnumHelperTests
 {
@@ -40,6 +40,6 @@ public class EnumHelperTests
 
     private enum SinDescripcion
     {
-        Uno
+        Uno,
     }
 }

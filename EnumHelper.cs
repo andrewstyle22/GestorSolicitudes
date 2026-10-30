@@ -18,7 +18,7 @@ public static class EnumHelper
     /// </summary>
     public static string Descripcion(Enum valor)
     {
-        var claveCache = (Localizacion.IdiomaActual, valor.GetType(), valor.ToString());
+        var claveCache = (Traducciones.IdiomaActual, valor.GetType(), valor.ToString());
         if (Cache.TryGetValue(claveCache, out string? cacheada))
         {
             return cacheada;
@@ -32,9 +32,9 @@ public static class EnumHelper
     private static string DescripcionSinCache(Enum valor)
     {
         string clave = Clave(valor);
-        if (Localizacion.Contiene(clave))
+        if (Traducciones.Contiene(clave))
         {
-            return Localizacion.Texto(clave);
+            return Traducciones.Texto(clave);
         }
 
         // Fallback: el [Description] (castellano) o, si no, el nombre del valor en código.

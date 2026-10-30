@@ -154,7 +154,10 @@ un `using` a `Views` dentro de un ViewModel tumba el CI.
 Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] para los textos de la UI
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
-Localizacion.cs → traducciones (es/en/de), cultura y selector de idioma
+Traducciones.cs → diccionarios es/en/de y Texto (en Helpers, para que los helpers traduzcan)
+Localizacion.cs → fachada del idioma: idioma activo, textos y cambio de idioma
+CulturaApp.cs → cultura del hilo, lenguaje de WPF y recursos de texto al aplicar un idioma
+PreferenciaIdioma.cs → idioma guardado en %APPDATA%\...\idioma.txt (o el del sistema)
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
 Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 
@@ -162,7 +165,7 @@ AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
 DocumentoHelper.cs → extrae el texto de DOCX/ODT para el visor de adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
 Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)
-CsvHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqueda (minúsculas sin tildes)
+TextoHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqueda (minúsculas sin tildes)
 CsvExportador.cs → exportación CSV pura (cabecera + filas)
 EmbudoHelper.cs, EmbudoPeriodo.cs → lógica del embudo (máximo, periodos, rangos, conteos)
 EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)

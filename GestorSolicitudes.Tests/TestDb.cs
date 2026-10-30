@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Helpers;
-
-namespace GestorSolicitudes.Tests;
 
 /// <summary>
 /// Utilidades comunes: bases SQLite temporales y carpetas aisladas para que los
@@ -40,9 +40,13 @@ internal static class TestDb
 
     public static string NuevaRuta() => Path.Combine(NuevaCarpeta(), "test.db");
 
-    public static AppDbContext NuevoContexto()
+    public static AppDbContext NuevoContexto() => NuevoContexto(out _);
+
+    /// <summary>Contexto sobre una base temporal nueva; devuelve la ruta para poder reabrirla.</summary>
+    public static AppDbContext NuevoContexto(out string ruta)
     {
-        var db = new AppDbContext(NuevaRuta());
+        ruta = NuevaRuta();
+        var db = new AppDbContext(ruta);
         db.Database.EnsureCreated();
         return db;
     }

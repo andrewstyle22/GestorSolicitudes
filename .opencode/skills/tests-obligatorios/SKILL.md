@@ -24,8 +24,8 @@ el comportamiento real.
 ## Dónde va el test
 
 - Mira antes el fichero `*Tests.cs` que ya cubre esa clase o método
-  (`ViewModelTests`, `ViewModelStaticTests` —los estáticos, incluidos los de
-  `CsvHelper`—, `ConvertidorTests`, `LocalizacionTests`, `SolicitudTests`,
+  (`ViewModelTests`, `TextoYCsvTests` —texto de búsqueda y CSV—,
+  `EmbudoHelperTests`, `ConvertidorTests`, `LocalizacionTests`, `SolicitudTests`,
   `AdjuntosHelperTests`, ...) y añade junto a los existentes. No crees un fichero
   nuevo si ya existe el natural.
 - Nombre del test: `Método_ComportamientoEsperado`.

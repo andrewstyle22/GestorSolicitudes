@@ -1,19 +1,17 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using System.IO.Compression;
 using GestorSolicitudes.Helpers;
-
-namespace GestorSolicitudes.Tests;
 
 public class DocumentoHelperTests
 {
     [Fact]
     public void ExtraerTextoDocx_DevuelveElTextoDeLosParrafos()
     {
-        string ruta = EscribirZip(
-            "documento.docx",
-            "word/document.xml",
-            "<w:document><w:body><w:p><w:r><w:t>Hola mundo</w:t></w:r></w:p>"
-            + "<w:p><w:r><w:t>Segunda linea &amp; Cia</w:t></w:r></w:p></w:body></w:document>");
+        string xml = "<w:document><w:body><w:p><w:r><w:t>Hola mundo</w:t></w:r></w:p>"
+            + "<w:p><w:r><w:t>Segunda linea &amp; Cia</w:t></w:r></w:p></w:body></w:document>";
+        string ruta = EscribirZip("documento.docx", "word/document.xml", xml);
 
         string texto = DocumentoHelper.ExtraerTextoDocx(ruta);
 
@@ -25,12 +23,10 @@ public class DocumentoHelperTests
     [Fact]
     public void ExtraerTextoOdt_DevuelveElTextoDeLosParrafos()
     {
-        string ruta = EscribirZip(
-            "documento.odt",
-            "content.xml",
-            "<office:document-content><office:body><office:text>"
+        string xml = "<office:document-content><office:body><office:text>"
             + "<text:p>Hola desde LibreOffice</text:p><text:p>Segundo parrafo</text:p>"
-            + "</office:text></office:body></office:document-content>");
+            + "</office:text></office:body></office:document-content>";
+        string ruta = EscribirZip("documento.odt", "content.xml", xml);
 
         string texto = DocumentoHelper.ExtraerTextoOdt(ruta);
 

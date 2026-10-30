@@ -1,7 +1,7 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Helpers;
-
-namespace GestorSolicitudes.Tests;
 
 public class AdjuntosHelperTests
 {
@@ -69,7 +69,7 @@ public class AdjuntosHelperTests
         {
             AdjuntosHelper.Eliminar(null, carpeta);
             AdjuntosHelper.Eliminar("   ", carpeta);
-            AdjuntosHelper.Eliminar("", carpeta);
+            AdjuntosHelper.Eliminar(string.Empty, carpeta);
         });
 
         Assert.Null(excepcion);

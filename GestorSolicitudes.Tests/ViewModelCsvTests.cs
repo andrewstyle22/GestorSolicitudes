@@ -1,13 +1,12 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
-namespace GestorSolicitudes.Tests;
-
 public class ViewModelCsvTests
 {
     // ---------------- Exportación CSV ----------------
-
     [Fact]
     public void EscribirCsv_EnRutaValidaGuardaElContenido()
     {
@@ -70,5 +69,4 @@ public class ViewModelCsvTests
         // TotalSolicitudes sigue en 0: el aviso cuenta lo que se escribe, no la cabecera.
         Assert.Equal(string.Format(Localizacion.Texto("Csv.ExportadasN"), 2), Assert.Single(dialogo.Informes));
     }
-
 }

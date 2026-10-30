@@ -233,7 +233,7 @@ public partial class VisorAdjuntoWindow : Window
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
-                Localizacion.Texto("Error"));
+                Localizacion.Texto(Traducciones.ClaveError));
         }
     }
 

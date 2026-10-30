@@ -1,48 +1,21 @@
+namespace GestorSolicitudes.Tests;
+
+using System.Globalization;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
-namespace GestorSolicitudes.Tests;
-
-public class ViewModelStaticTests
+public class EmbudoHelperTests
 {
-    // ---------------- Normalización de búsqueda ----------------
-
     [Fact]
-    public void NormalizarBusqueda_QuitaTildesYMayusculas()
+    public void EtiquetaDePeriodo_UsaLaCulturaQueRecibeYNoLaDelHilo()
     {
-        Assert.Equal("metrica", CsvHelper.NormalizarBusqueda("Métrica"));
-        Assert.Equal("aeiou", CsvHelper.NormalizarBusqueda("ÁÉÍÓÚ"));
-        Assert.Equal("nino", CsvHelper.NormalizarBusqueda("Ñino"));
+        var inicio = new DateTime(2024, 5, 1);
+        CultureInfo ingles = CultureInfo.GetCultureInfo("en-US");
+
+        Assert.Equal(
+            inicio.ToString("MMM yyyy", ingles),
+            EmbudoHelper.EtiquetaDePeriodo(inicio, GranularidadEmbudo.Mes, ingles));
     }
-
-    // ---------------- Escapado para el CSV de exportación ----------------
-
-    [Fact]
-    public void Escapar_EncierraEntreComillas()
-    {
-        Assert.Equal("\"ACME\"", CsvHelper.Escapar("ACME"));
-    }
-
-    [Fact]
-    public void Escapar_ComillasInternasSeDoblan()
-    {
-        Assert.Equal("\"Dijo \"\"hola\"\"\"", CsvHelper.Escapar("Dijo \"hola\""));
-    }
-
-    [Fact]
-    public void Escapar_SaltosDeLineaSeSustituyenPorEspacios()
-    {
-        Assert.Equal("\"dos líneas\"", CsvHelper.Escapar("dos\nlíneas"));
-    }
-
-    [Fact]
-    public void Escapar_NuloOVacioDevuelveCadenaVacia()
-    {
-        Assert.Equal(string.Empty, CsvHelper.Escapar(null));
-        Assert.Equal(string.Empty, CsvHelper.Escapar(""));
-    }
-
-    // ---------------- Embudo ----------------
 
     [Fact]
     public void EnviadaEnRango_ReconoceElHitoDeEnvioDentroDelMes()

@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
 
 public class ViewModelEmbudoTests
 {
@@ -204,10 +204,9 @@ public class ViewModelEmbudoTests
         Assert.Equal(0, vm.DesplazamientoPeriodo);
         Assert.False(vm.PuedeAvanzarPeriodo);
         Assert.Equal(
-            EmbudoHelper.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia),
+            EmbudoHelper.EtiquetaDePeriodo(DateTime.Today, GranularidadEmbudo.Dia, Localizacion.CulturaActual),
             vm.PeriodosEmbudo[^1].Etiqueta);
     }
-
 
     [Fact]
     public void RecargarEmbudoSiVisible_ConLaGraficaVisibleRefrescaLosMeses()
@@ -250,5 +249,4 @@ public class ViewModelEmbudoTests
         Assert.Equal(suelo, EmbudoHelper.CalcularPeriodos(GranularidadEmbudo.Semana, vm.DesplazamientoPeriodo)[^1]);
         Assert.False(vm.PuedeRetrocederPeriodo);
     }
-
 }

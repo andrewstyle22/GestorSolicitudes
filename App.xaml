@@ -12,7 +12,6 @@
         <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
         <conv:EstadoEsRechazadaAVisibilidadConverter x:Key="EstadoEsRechazadaAVisibilidad" />
-        <conv:NuloACadenaConverter x:Key="NuloACadena" />
         <conv:FechaCortaConverter x:Key="FechaCorta" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 

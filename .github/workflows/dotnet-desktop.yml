@@ -14,13 +14,18 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v5
 
-    - name: Install .NET 8
+    - name: Install .NET 10
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
 
     - name: Verificar formato con StyleCop
       run: dotnet format GestorSolicitudes.slnx --verify-no-changes
 
     - name: Ejecutar tests (compila y corre la suite)
-      run: dotnet test
+      run: >
+        dotnet test
+        /p:CollectCoverage=true
+        /p:Threshold=90
+        /p:ThresholdType=line
+        /p:ThresholdStat=total

@@ -1,33 +1,15 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Data;
 using Microsoft.Data.Sqlite;
-
-namespace GestorSolicitudes.Tests;
 
 public class VerificarColumnasTests
 {
     [Fact]
     public void VerificarColumnas_AñadeLasColumnasNuevasAUnaBaseVieja()
     {
-        string ruta = TestDb.NuevaRuta();
-
-        // Simulamos una base de la primera versión: Solicitudes sin las columnas nuevas.
-        using (var conexion = new SqliteConnection($"Data Source={ruta}"))
-        {
-            conexion.Open();
-            using var crear = conexion.CreateCommand();
-            crear.CommandText = """
-                CREATE TABLE Solicitudes (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Empresa TEXT NOT NULL,
-                    Puesto TEXT NOT NULL,
-                    FechaSolicitud TEXT NOT NULL,
-                    Estado INTEGER NOT NULL,
-                    Interes INTEGER NOT NULL DEFAULT 3
-                );
-                """;
-            crear.ExecuteNonQuery();
-        }
+        string ruta = CrearTablaSolicitudesVieja();
 
         EsquemaDb.VerificarColumnasFaltantes(ruta);
 
@@ -39,10 +21,14 @@ public class VerificarColumnasTests
             using var lector = comando.ExecuteReader();
             var columnas = new List<string>();
             while (lector.Read())
+            {
                 columnas.Add(Convert.ToString(lector["name"])!);
+            }
 
             foreach (string esperada in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono" })
+            {
                 Assert.Contains(esperada, columnas);
+            }
         }
     }
 
@@ -52,21 +38,7 @@ public class VerificarColumnasTests
     public void VerificarColumnas_EsIdempotente(string columnaYaPresente)
     {
         // Si ya existe, llamar dos veces no debe romper nada.
-        string ruta = TestDb.NuevaRuta();
-        using (var conexion = new SqliteConnection($"Data Source={ruta}"))
-        {
-            conexion.Open();
-            using var crear = conexion.CreateCommand();
-            crear.CommandText = $$"""
-                CREATE TABLE Solicitudes (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Empresa TEXT NOT NULL,
-                    Puesto TEXT NOT NULL,
-                    {{columnaYaPresente}} TEXT NULL
-                );
-                """;
-            crear.ExecuteNonQuery();
-        }
+        string ruta = CrearTablaSolicitudesVieja(columnaYaPresente);
 
         EsquemaDb.VerificarColumnasFaltantes(ruta);
         EsquemaDb.VerificarColumnasFaltantes(ruta);
@@ -77,23 +49,7 @@ public class VerificarColumnasTests
     [Fact]
     public void VerificarColumnas_OrigenSeCreaEnteroNoNuloConDefaultACero()
     {
-        string ruta = TestDb.NuevaRuta();
-        using (var conexion = new SqliteConnection($"Data Source={ruta}"))
-        {
-            conexion.Open();
-            using var crear = conexion.CreateCommand();
-            crear.CommandText = """
-                CREATE TABLE Solicitudes (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Empresa TEXT NOT NULL,
-                    Puesto TEXT NOT NULL,
-                    FechaSolicitud TEXT NOT NULL,
-                    Estado INTEGER NOT NULL,
-                    Interes INTEGER NOT NULL DEFAULT 3
-                );
-                """;
-            crear.ExecuteNonQuery();
-        }
+        string ruta = CrearTablaSolicitudesVieja();
 
         EsquemaDb.VerificarColumnasFaltantes(ruta);
 
@@ -126,5 +82,31 @@ public class VerificarColumnasTests
             Assert.True(columnas.ContainsKey("ContactoTelefono"));
             Assert.False(columnas["ContactoTelefono"].NoNulo);
         }
+    }
+
+    /// <summary>
+    /// Base de la primera versión (sin las columnas que añade <see cref="EsquemaDb"/>) con
+    /// las columnas extra que pida el test, para simular una base que ya las tenía.
+    /// </summary>
+    private static string CrearTablaSolicitudesVieja(params string[] columnasExtra)
+    {
+        string ruta = TestDb.NuevaRuta();
+        string extra = string.Concat(columnasExtra.Select(c => $",\n    {c} TEXT NULL"));
+
+        using var conexion = new SqliteConnection($"Data Source={ruta}");
+        conexion.Open();
+        using var crear = conexion.CreateCommand();
+        crear.CommandText = $"""
+            CREATE TABLE Solicitudes (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Empresa TEXT NOT NULL,
+                Puesto TEXT NOT NULL,
+                FechaSolicitud TEXT NOT NULL,
+                Estado INTEGER NOT NULL,
+                Interes INTEGER NOT NULL DEFAULT 3{extra}
+            );
+            """;
+        crear.ExecuteNonQuery();
+        return ruta;
     }
 }

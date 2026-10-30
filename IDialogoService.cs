@@ -27,4 +27,7 @@ public interface IDialogoService
 
     /// <summary>Abre una URL en el navegador. Puede lanzar si el sistema no puede abrirla.</summary>
     void AbrirEnlace(string url);
+
+    /// <summary>Muestra el visor de un adjunto. Puede lanzar si el sistema no puede abrirlo.</summary>
+    void VerAdjunto(string ruta);
 }

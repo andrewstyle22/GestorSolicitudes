@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
 
 public class ViewModelPaginacionTests
 {
@@ -12,7 +12,7 @@ public class ViewModelPaginacionTests
 
     /// <summary>25 candidaturas con empresa "E00".."E24" y un día distinto cada una, para que el
     /// orden por fecha (descendente, el del ViewModel) sea previsible.</summary>
-    private static (AppDbContext Db, MainViewModel Vm) Con25()
+    private static (AppDbContext Db, MainViewModel Vm) ConVeinticincoSolicitudes()
     {
         var db = TestDb.NuevoContexto();
         for (int i = 1; i <= 25; i++)
@@ -32,7 +32,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_PorDefectoMuestraLasDiezPrimerasYUnaSolaPagina()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -43,7 +43,7 @@ public class ViewModelPaginacionTests
             Assert.Equal(10, vm.Solicitudes.Count);
             Assert.Equal("E01", vm.Solicitudes[0].Empresa);
             Assert.Equal("E10", vm.Solicitudes[9].Empresa);
-            Assert.Equal("1-10 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(1, 10, 25), vm.RangoPagina);
         }
     }
 
@@ -56,7 +56,7 @@ public class ViewModelPaginacionTests
         Assert.Empty(vm.Solicitudes);
         Assert.Equal(0, vm.Pagina.TotalPaginas);
         Assert.Equal(1, vm.Pagina.PaginaActual);
-        Assert.Equal("0 de 0", vm.RangoPagina);
+        Assert.Equal($"0 {Localizacion.Texto("Paginacion.De")} 0", vm.RangoPagina);
         Assert.False(vm.Pagina.PuedeAvanzar);
         Assert.False(vm.Pagina.PuedeIrAlFinal);
     }
@@ -64,20 +64,20 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_IrAdelanteMuestraLasSiguientesYRecortaLaUltima()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
             vm.IrAdelanteCommand.Execute(null);
             Assert.Equal(2, vm.Pagina.PaginaActual);
             Assert.Equal("E11", vm.Solicitudes[0].Empresa);
-            Assert.Equal("11-20 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(11, 20, 25), vm.RangoPagina);
             Assert.True(vm.Pagina.PuedeRetroceder);
             Assert.True(vm.Pagina.PuedeIrAInicio);
 
             vm.IrAdelanteCommand.Execute(null);
             Assert.Equal(3, vm.Pagina.PaginaActual);
-            Assert.Equal("21-25 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(21, 25, 25), vm.RangoPagina);
             Assert.Equal(5, vm.Solicitudes.Count);
 
             // Ya no hay más: la última flecha no mueve nada.
@@ -91,7 +91,7 @@ public class ViewModelPaginacionTests
     [Fact]
     public void Paginacion_IrAlFinalVaALaUltimaPaginaEIrAInicioVuelveALaPrimera()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -99,7 +99,7 @@ public class ViewModelPaginacionTests
 
             Assert.Equal(3, vm.Pagina.PaginaActual);
             Assert.Equal("E21", vm.Solicitudes[0].Empresa);
-            Assert.Equal("21-25 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(21, 25, 25), vm.RangoPagina);
 
             // En la última página solo se puede ir hacia atrás.
             Assert.True(vm.Pagina.PuedeRetroceder);
@@ -110,14 +110,14 @@ public class ViewModelPaginacionTests
 
             Assert.Equal(1, vm.Pagina.PaginaActual);
             Assert.Equal("E01", vm.Solicitudes[0].Empresa);
-            Assert.Equal("1-10 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(1, 10, 25), vm.RangoPagina);
         }
     }
 
     [Fact]
     public void Paginacion_IrAtrasEnLaPrimeraPaginaNoHaceNada()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -125,14 +125,14 @@ public class ViewModelPaginacionTests
 
             Assert.Equal(1, vm.Pagina.PaginaActual);
             Assert.False(vm.Pagina.PuedeRetroceder);
-            Assert.Equal("1-10 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(1, 10, 25), vm.RangoPagina);
         }
     }
 
     [Fact]
     public void Paginacion_CambiarElTamanoRecortaLaPaginaActual()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -141,12 +141,12 @@ public class ViewModelPaginacionTests
             Assert.Equal(5, vm.Pagina.TotalPaginas);
             Assert.Equal(1, vm.Pagina.PaginaActual);
             Assert.Equal(5, vm.Solicitudes.Count);
-            Assert.Equal("1-5 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(1, 5, 25), vm.RangoPagina);
 
             // 25 filas de 5 en 5: la última página es la quinta y va entera.
             vm.IrAlFinalCommand.Execute(null);
             Assert.Equal(5, vm.Pagina.PaginaActual);
-            Assert.Equal("21-25 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(21, 25, 25), vm.RangoPagina);
 
             vm.TamanoPagina = 20;
 
@@ -154,14 +154,14 @@ public class ViewModelPaginacionTests
 
             // La página 5 ya no existe con 20 por página, así que se recorta a la última.
             Assert.Equal(2, vm.Pagina.PaginaActual);
-            Assert.Equal("21-25 de 25", vm.RangoPagina);
+            Assert.Equal(Rango(21, 25, 25), vm.RangoPagina);
         }
     }
 
     [Fact]
     public void Paginacion_FiltrarReduceElTotalYRecortaLaPagina()
     {
-        var (db, vm) = Con25();
+        var (db, vm) = ConVeinticincoSolicitudes();
         using (db)
         using (vm)
         {
@@ -176,7 +176,11 @@ public class ViewModelPaginacionTests
             Assert.Equal(1, vm.Pagina.PaginaActual);
             Assert.Equal(10, vm.Solicitudes.Count);
             Assert.Equal("E10", vm.Solicitudes[0].Empresa);
-            Assert.Equal("1-10 de 10", vm.RangoPagina);
+            Assert.Equal(Rango(1, 10, 10), vm.RangoPagina);
         }
     }
+
+    /// <summary>El rango que compone el ViewModel, sin congelar el texto traducido de "de".</summary>
+    private static string Rango(int desde, int hasta, int total) =>
+        $"{desde}-{hasta} {Localizacion.Texto("Paginacion.De")} {total}";
 }

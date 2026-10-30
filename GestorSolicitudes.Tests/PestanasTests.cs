@@ -1,3 +1,5 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,8 +11,6 @@ using GestorSolicitudes;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using GestorSolicitudes.Views;
-
-namespace GestorSolicitudes.Tests;
 
 public class PestanasTests
 {
@@ -74,14 +74,16 @@ public class PestanasTests
         // La plantilla del botón es una sola: BotonBase y BotonDesplegable la comparten.
         var plantillaBoton = (ControlTemplate)app.Resources["BotonPlano"]!;
         Assert.Equal(typeof(ButtonBase), plantillaBoton.TargetType);
-        Assert.Same(plantillaBoton, ((Style)app.Resources["BotonBase"]!).Setters
-            .OfType<Setter>().Single(s => s.Property == Control.TemplateProperty).Value);
-        Assert.Same(plantillaBoton, estiloBoton.Setters
-            .OfType<Setter>().Single(s => s.Property == Control.TemplateProperty).Value);
+        Assert.Same(plantillaBoton, ValorDeEstilo((Style)app.Resources["BotonBase"]!, Control.TemplateProperty));
+        Assert.Same(plantillaBoton, ValorDeEstilo(estiloBoton, Control.TemplateProperty));
 
-        // La fila de adjunto es un solo control para CV y carta: la etiqueta y el nombre
-        // llegan por propiedades de dependencia y el XAML los resuelve con ElementName.
-        var fila = new FilaAdjunto { Etiqueta = "Currículum", Texto = "mi-cv.pdf", Ruta = @"C:\mi-cv.pdf" };
+        // La fila de adjunto es un solo control para CV y carta: la etiqueta y el adjunto
+        // (ruta + nombre) llegan por propiedades de dependencia y el XAML los resuelve con ElementName.
+        var fila = new FilaAdjunto
+        {
+            Etiqueta = "Currículum",
+            Adjunto = new Adjunto(@"C:\mi-cv.pdf", "mi-cv.pdf"),
+        };
         fila.Measure(new Size(500, 30));
         fila.Arrange(new Rect(0, 0, 500, 30));
         fila.UpdateLayout();
@@ -94,10 +96,8 @@ public class PestanasTests
         // tema de Windows, que es lo que pone el DataGrid si no se le da estilo.
         var estiloCabecera = (Style)app.Resources["CabeceraColumna"]!;
         Assert.Equal(typeof(DataGridColumnHeader), estiloCabecera.TargetType);
-        Assert.Equal(app.Resources["Cabecera"], estiloCabecera.Setters
-            .OfType<Setter>().Single(s => s.Property == Control.BackgroundProperty).Value);
-        Assert.Equal(app.Resources["Texto"], estiloCabecera.Setters
-            .OfType<Setter>().Single(s => s.Property == TextBlock.ForegroundProperty).Value);
+        Assert.Equal(app.Resources["Cabecera"], ValorDeEstilo(estiloCabecera, Control.BackgroundProperty));
+        Assert.Equal(app.Resources["Texto"], ValorDeEstilo(estiloCabecera, TextBlock.ForegroundProperty));
 
         var cabecera = new DataGridColumnHeader { Style = estiloCabecera };
         cabecera.Measure(new Size(120, 30));
@@ -152,7 +152,8 @@ public class PestanasTests
         Dibujar(detalleAdjuntos);
         Assert.Contains(
             Descendientes<FilaAdjunto>(detalleAdjuntos),
-            f => ReferenceEquals(f.ComandoAdjuntar, vm.AdjuntarCvCommand));
+            f => ReferenceEquals(f.ComandoAdjuntar, vm.AdjuntarCvCommand)
+                && ReferenceEquals(f.ComandoAbrir, vm.AbrirAdjuntoCommand));
 
         var metricas = new CabeceraMetricas { DataContext = vm };
         Dibujar(metricas);
@@ -165,6 +166,9 @@ public class PestanasTests
         elemento.Arrange(new Rect(0, 0, 420, 700));
         elemento.UpdateLayout();
     }
+
+    private static object? ValorDeEstilo(Style estilo, DependencyProperty propiedad) =>
+        estilo.Setters.OfType<Setter>().Single(s => s.Property == propiedad).Value;
 
     private static IEnumerable<T> Descendientes<T>(DependencyObject raiz)
         where T : DependencyObject

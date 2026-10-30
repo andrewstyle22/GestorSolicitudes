@@ -1,11 +1,11 @@
+namespace GestorSolicitudes.Tests;
+
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using GestorSolicitudes.Converters;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
 
 public class ConvertidorTests
 {
@@ -53,32 +53,13 @@ public class ConvertidorTests
         Assert.Equal(string.Empty, conversor.Convert(null, typeof(string), null, null!));
     }
 
-    [Theory]
-    [InlineData(true, "Ocultar gráfica")]
-    [InlineData(false, "Gráfico")]
-    public void VerGraficaATexto_DevuelveElTextoDelBoton(bool visible, string esperado)
+    [Fact]
+    public void VerGraficaATexto_DevuelveElTextoDelBoton()
     {
         var conversor = new VerGraficaATextoConverter();
-        Assert.Equal(esperado, conversor.Convert(visible, typeof(string), null, null!));
-    }
 
-    [StaFact]
-    public void EstadoAColor_PintaCadaEstadoConSuColor()
-    {
-        var conversor = new EstadoAColorConverter();
-
-        var gris = (SolidColorBrush)conversor.Convert(EstadoSolicitud.Enviada, typeof(Brush), null, null!);
-        Assert.Equal((byte)0x64, gris.Color.R);
-        Assert.Equal((byte)0x74, gris.Color.G);
-        Assert.Equal((byte)0x8B, gris.Color.B);
-
-        var azul = (SolidColorBrush)conversor.Convert(EstadoSolicitud.EnRevision, typeof(Brush), null, null!);
-        Assert.Equal((byte)0x02, azul.Color.R);
-
-        var rojo = (SolidColorBrush)conversor.Convert(EstadoSolicitud.Rechazada, typeof(Brush), null, null!);
-        Assert.Equal((byte)0xDC, rojo.Color.R);
-        Assert.Equal((byte)0x26, rojo.Color.G);
-        Assert.Equal((byte)0x26, rojo.Color.B);
+        Assert.Equal(Localizacion.Texto("Grafica.Ocultar"), conversor.Convert(true, typeof(string), null, null!));
+        Assert.Equal(Localizacion.Texto("Grafica.Ver"), conversor.Convert(false, typeof(string), null, null!));
     }
 
     [StaFact]
@@ -113,6 +94,18 @@ public class ConvertidorTests
         {
             var color = ((SolidColorBrush)conversor.Convert(estado, typeof(Brush), null, null!)).Color;
             Assert.Equal((Color)ColorConverter.ConvertFromString(hex), color);
+        }
+    }
+
+    [StaFact]
+    public void EstadoAColor_NingunEstadoSeQuedaSinColorPropio()
+    {
+        var conversor = new EstadoAColorConverter();
+
+        // Enviada es el gris por defecto a propósito; el resto no debe caer en él.
+        foreach (EstadoSolicitud estado in Enum.GetValues<EstadoSolicitud>().Except([EstadoSolicitud.Enviada]))
+        {
+            Assert.NotSame(ColoresEstado.PorDefecto, conversor.Convert(estado, typeof(Brush), null, null!));
         }
     }
 
@@ -166,8 +159,8 @@ public class ConvertidorTests
         invertir(new EnumDescripcionConverter());
         invertir(new NuloAVisibilidadConverter());
         invertir(new EstadoAColorConverter());
+        invertir(new FechaCortaConverter());
         invertir(new VerGraficaATextoConverter());
-        invertir(new NuloACadenaConverter());
         invertir(new EstadoEsRechazadaAVisibilidadConverter());
         invertir(new InteresATextoEstrellasConverter());
     }

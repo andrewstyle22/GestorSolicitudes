@@ -3,6 +3,7 @@ namespace GestorSolicitudes.Views;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GestorSolicitudes.ViewModels;
 
 /// <summary>
 /// Fila de un adjunto (CV o carta): etiqueta, nombre del fichero y los botones de
@@ -13,11 +14,8 @@ public partial class FilaAdjunto : UserControl
     public static readonly DependencyProperty EtiquetaProperty = DependencyProperty.Register(
         nameof(Etiqueta), typeof(string), typeof(FilaAdjunto), new PropertyMetadata(string.Empty));
 
-    public static readonly DependencyProperty TextoProperty = DependencyProperty.Register(
-        nameof(Texto), typeof(string), typeof(FilaAdjunto), new PropertyMetadata(string.Empty));
-
-    public static readonly DependencyProperty RutaProperty = DependencyProperty.Register(
-        nameof(Ruta), typeof(string), typeof(FilaAdjunto), new PropertyMetadata(null));
+    public static readonly DependencyProperty AdjuntoProperty = DependencyProperty.Register(
+        nameof(Adjunto), typeof(Adjunto), typeof(FilaAdjunto), new PropertyMetadata(null));
 
     public static readonly DependencyProperty ComandoAdjuntarProperty = DependencyProperty.Register(
         nameof(ComandoAdjuntar), typeof(ICommand), typeof(FilaAdjunto), new PropertyMetadata(null));
@@ -25,10 +23,10 @@ public partial class FilaAdjunto : UserControl
     public static readonly DependencyProperty ComandoQuitarProperty = DependencyProperty.Register(
         nameof(ComandoQuitar), typeof(ICommand), typeof(FilaAdjunto), new PropertyMetadata(null));
 
-    public FilaAdjunto() => this.InitializeComponent();
+    public static readonly DependencyProperty ComandoAbrirProperty = DependencyProperty.Register(
+        nameof(ComandoAbrir), typeof(ICommand), typeof(FilaAdjunto), new PropertyMetadata(null));
 
-    /// <summary>El usuario quiere ver el fichero; la ventana decide con qué visor.</summary>
-    public event EventHandler? Abrir;
+    public FilaAdjunto() => this.InitializeComponent();
 
     public string Etiqueta
     {
@@ -36,16 +34,11 @@ public partial class FilaAdjunto : UserControl
         set => this.SetValue(EtiquetaProperty, value);
     }
 
-    public string Texto
+    /// <summary>Ruta + nombre del fichero; con null la fila enseña el texto de "sin adjuntar".</summary>
+    public Adjunto? Adjunto
     {
-        get => (string)this.GetValue(TextoProperty);
-        set => this.SetValue(TextoProperty, value);
-    }
-
-    public string? Ruta
-    {
-        get => (string?)this.GetValue(RutaProperty);
-        set => this.SetValue(RutaProperty, value);
+        get => (Adjunto?)this.GetValue(AdjuntoProperty);
+        set => this.SetValue(AdjuntoProperty, value);
     }
 
     public ICommand? ComandoAdjuntar
@@ -60,5 +53,10 @@ public partial class FilaAdjunto : UserControl
         set => this.SetValue(ComandoQuitarProperty, value);
     }
 
-    private void Abrir_Click(object sender, RoutedEventArgs e) => this.Abrir?.Invoke(this, EventArgs.Empty);
+    /// <summary>Recibe el <see cref="Adjunto"/> de la fila como parámetro.</summary>
+    public ICommand? ComandoAbrir
+    {
+        get => (ICommand?)this.GetValue(ComandoAbrirProperty);
+        set => this.SetValue(ComandoAbrirProperty, value);
+    }
 }

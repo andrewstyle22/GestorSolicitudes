@@ -1,14 +1,13 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
-using Microsoft.EntityFrameworkCore;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
+using Microsoft.EntityFrameworkCore;
 
 public class ViewModelAdjuntosTests
 {
     // ---------------- Comandos del panel de detalle ----------------
-
     [Fact]
     public void AnadirEvento_AnadeUnaNotaConLaFechaDeHoy()
     {
@@ -21,8 +20,24 @@ public class ViewModelAdjuntosTests
         vm.AnadirEventoCommand.Execute(null);
 
         Evento nota = Assert.Single(vm.Edicion.Eventos);
+        Assert.Single(vm.EventosEdicion);
+        Assert.Same(nota, vm.EventosEdicion[0]);
         Assert.Equal(TipoEvento.Nota, nota.Tipo);
         Assert.Equal(DateTime.Today, nota.Fecha);
+    }
+
+    [Fact]
+    public void EdicionNula_VaciaElHistorialDeLaVista()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        vm.Edicion = solicitud;
+
+        vm.Edicion = null;
+
+        Assert.Empty(vm.EventosEdicion);
     }
 
     [Fact]
@@ -49,10 +64,14 @@ public class ViewModelAdjuntosTests
         vm.Recargar();
         vm.Edicion = solicitud;
 
+        // La vista recibe una copia observable con los mismos eventos que el POCO.
+        Assert.Equal(solicitud.Eventos, vm.EventosEdicion);
+
         Evento persistido = solicitud.Eventos.First(e => e.Id != 0);
         vm.EliminarEventoCommand.Execute(persistido);
 
         Assert.DoesNotContain(persistido, solicitud.Eventos);
+        Assert.DoesNotContain(persistido, vm.EventosEdicion);
         Assert.Equal(EntityState.Deleted, db.Entry(persistido).State);
     }
 
@@ -261,4 +280,71 @@ public class ViewModelAdjuntosTests
         Assert.Null(vm.Edicion);
     }
 
+    [Fact]
+    public void AdjuntoCv_SinFicheroMuestraElTextoDeSinAdjuntar()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+
+        Adjunto? cv = vm.AdjuntoCv;
+
+        Assert.NotNull(cv);
+        Assert.Null(cv.Ruta);
+        Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), cv.Nombre);
+    }
+
+    [Fact]
+    public void AdjuntoCarta_UsaElNombreOriginalYLaRuta()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.RutaCarta = @"C:\adjuntos\a1b2.pdf";
+        vm.Edicion.NombreOriginalCarta = "carta.pdf";
+
+        Adjunto? carta = vm.AdjuntoCarta;
+
+        Assert.Equal(@"C:\adjuntos\a1b2.pdf", carta!.Ruta);
+        Assert.Equal("carta.pdf", carta.Nombre);
+    }
+
+    [Fact]
+    public void AbrirAdjunto_ConFicheroExistente_LoPasaAlVisor()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        string ruta = TestDb.CrearAdjuntoEn(TestDb.NuevaCarpeta(), "cv.pdf");
+
+        vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
+
+        Assert.Equal(ruta, Assert.Single(dialogo.AdjuntosAbiertos));
+    }
+
+    [Fact]
+    public void AbrirAdjunto_SinFicheroInformaYNoLlamaAlVisor()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+
+        vm.AbrirAdjuntoCommand.Execute(new Adjunto(null, "Currículum sin adjuntar"));
+
+        Assert.Single(dialogo.Informes);
+        Assert.Empty(dialogo.AdjuntosAbiertos);
+    }
+
+    [Fact]
+    public void AbrirAdjunto_CuandoElVisorFalla_Avisa()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { VerAdjuntoLanza = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        string ruta = TestDb.CrearAdjuntoEn(TestDb.NuevaCarpeta(), "cv.pdf");
+
+        vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
+
+        Assert.Single(dialogo.Avisos);
+    }
 }

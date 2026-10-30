@@ -18,8 +18,7 @@ public partial class MainWindow : Window
     private const int MinutosEntreAvisos = 5;
 
     private readonly MainViewModel vm;
-    private readonly IDialogoService dialogo;
-    private readonly HashSet<int> idsVencidosAvisados = new();
+    private readonly HashSet<int> idsVencidosAvisados = [];
     private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
 
@@ -30,12 +29,11 @@ public partial class MainWindow : Window
         $"pack://application:,,,/{typeof(MainWindow).Assembly.GetName().Name};component/Resources/appicon.ico",
         UriKind.Absolute);
 
-    public MainWindow(MainViewModel vm, IDialogoService dialogo)
+    public MainWindow(MainViewModel vm)
     {
         this.InitializeComponent();
 
         this.vm = vm;
-        this.dialogo = dialogo;
         this.DataContext = this.vm;
 
         // El icono de la ventana sale de la misma ruta que el de la bandeja: una sola fuente.
@@ -162,35 +160,6 @@ public partial class MainWindow : Window
         }
 
         this.Activate();
-    }
-
-    // ------------------------------------------------------------ Detalle
-
-    /// <summary>Abre el CV o la carta que muestra la fila de adjunto pulsada.</summary>
-    private void AbrirAdjunto_Click(object? sender, EventArgs e) =>
-        this.AbrirAdjunto((sender as FilaAdjunto)?.Ruta);
-
-    private void AbrirAdjunto(string? ruta)
-    {
-        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
-        {
-            this.dialogo.Informar(
-                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
-                Localizacion.Texto("Titulo.Adjunto"));
-            return;
-        }
-
-        try
-        {
-            var ventana = new VisorAdjuntoWindow(ruta.Trim(), this.dialogo) { Owner = this };
-            ventana.ShowDialog();
-        }
-        catch (Exception ex)
-        {
-            this.dialogo.Avisar(
-                string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
-                Localizacion.Texto("Error"));
-        }
     }
 
     protected override void OnClosed(System.EventArgs e)

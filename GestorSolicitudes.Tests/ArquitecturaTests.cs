@@ -1,10 +1,10 @@
 namespace GestorSolicitudes.Tests;
 
-using GestorSolicitudes.ViewModels;
 using System.Text.RegularExpressions;
 using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.Loader;
+using GestorSolicitudes.ViewModels;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 /// <summary>

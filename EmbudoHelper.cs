@@ -19,7 +19,8 @@ public static class EmbudoHelper
     public static IReadOnlyList<EmbudoPeriodo> Calcular(
         IReadOnlyList<Solicitud> solicitudes,
         GranularidadEmbudo granularidad,
-        int desplazamiento)
+        int desplazamiento,
+        CultureInfo cultura)
     {
         List<DateTime> periodos = CalcularPeriodos(granularidad, desplazamiento);
 
@@ -45,7 +46,7 @@ public static class EmbudoHelper
 
         return periodos
             .Select((inicio, i) => new EmbudoPeriodo(
-                EtiquetaDePeriodo(inicio, granularidad),
+                EtiquetaDePeriodo(inicio, granularidad, cultura),
                 enviadas[i],
                 respondidas[i],
                 entrevistas[i],
@@ -96,17 +97,13 @@ public static class EmbudoHelper
     };
 
     /// <summary>Texto de la barra: mes y año, el lunes de la semana o el día de la semana, según la granularidad.</summary>
-    public static string EtiquetaDePeriodo(DateTime inicio, GranularidadEmbudo granularidad)
-    {
-        CultureInfo cultura = Localizacion.CulturaActual;
-
-        return granularidad switch
+    public static string EtiquetaDePeriodo(DateTime inicio, GranularidadEmbudo granularidad, CultureInfo cultura) =>
+        granularidad switch
         {
             GranularidadEmbudo.Semana => inicio.ToString("d MMM", cultura),
             GranularidadEmbudo.Dia => inicio.ToString("ddd d", cultura),
             _ => inicio.ToString("MMM yyyy", cultura),
         };
-    }
 
     /// <summary>Si la solicitud se envió (por historial o por fecha) dentro del rango [inicio, fin).</summary>
     public static bool EnviadaEnRango(Solicitud s, DateTime inicio, DateTime fin)
