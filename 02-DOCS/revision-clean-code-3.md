@@ -69,7 +69,7 @@ pero no se usaban.
 | A6 | `AplicarVisibilidadColumnas` usa `DataGridColumn` no nulo; fuera el `if` inalcanzable | `FuentesTests.CadaColumnaOcultableTieneSuCasoEnElMapaDeLaVentana` |
 | A10 | Fuera los 8 `x:Name` muertos; `Buscar_empresas` → `BuscarEmpresas` | `FuentesTests` de columnas y claves |
 | C2/C3/C6/C7 | `NuevaRuta` en una línea y sin comentario obsoleto; `TextoNulo` reutilizado; «puras»; sangría inglesa | Tests existentes de esquema y localización |
-| G2/F2 | `charset = utf-8`; comentarios de `PestanasTests` reparados; guardia contra `U+FFFD` | `NingunFicheroDeTextoTieneCaracteresDeReemplazo` |
+| G2/F2 | Bloque 1: `charset = utf-8`, comentarios de `PestanasTests` reparados y guardia contra `U+FFFD`. Después (`0c73d46`): `insert_final_newline`, `IDE0005`, `IDE0161` y `SA1101`; `CA1031`, `CA1305` y `CA1307` desactivadas con motivo | `NingunFicheroDeTextoTieneCaracteresDeReemplazo` y build sin avisos |
 
 La retirada del BOM de 14 `.cs` es el efecto de `charset = utf-8`: no cambia código, solo la
 codificación de la primera línea; se ha dejado porque el formateador la exige en cada
