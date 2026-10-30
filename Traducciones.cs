@@ -19,6 +19,9 @@ public enum Idioma
     Justification = "Las traducciones se repiten por naturaleza: la misma palabra es clave y valor en varios idiomas.")]
 public static class Traducciones
 {
+    /// <summary>Clave del título de los errores; la usan el ViewModel y las ventanas.</summary>
+    internal const string ClaveError = "Error";
+
     /// <summary>Idioma activo en este momento. Lo cambia <see cref="Localizacion.Cambiar"/>.</summary>
     public static Idioma IdiomaActual { get; internal set; } = Idioma.Castellano;
 

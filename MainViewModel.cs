@@ -18,8 +18,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     // La cultura de los números y fechas se toma del idioma activo; los tests que no pasan
     // por el arranque de la app se apoyan en que por defecto el idioma es el castellano.
-    private const string ClaveError = "Error";
-
     private readonly AppDbContext db;
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
@@ -660,7 +658,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAdjuntar"), ex.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
 
@@ -714,7 +712,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Avisar(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
         }
     }
 
@@ -881,7 +879,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoGuardar"), ex.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return false;
         }
     }
@@ -943,7 +941,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error!.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
 
@@ -990,7 +988,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (!Enlaces.EsWeb(limpia))
         {
             // El servicio se calla con lo que no es http/https; aquí el usuario se entera.
-            this.dialogo.Avisar(Localizacion.Texto("Mensaje.EnlaceNoValido"), Localizacion.Texto(ClaveError));
+            this.dialogo.Avisar(Localizacion.Texto("Mensaje.EnlaceNoValido"), Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
 
@@ -1002,7 +1000,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Avisar(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirEnlace"), ex.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
         }
     }
 
@@ -1049,7 +1047,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error!.Message),
-                Localizacion.Texto(ClaveError));
+                Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
 
