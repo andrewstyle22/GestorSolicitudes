@@ -1,14 +1,13 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
-using Microsoft.EntityFrameworkCore;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
+using Microsoft.EntityFrameworkCore;
 
 public class ViewModelAdjuntosTests
 {
     // ---------------- Comandos del panel de detalle ----------------
-
     [Fact]
     public void AnadirEvento_AnadeUnaNotaConLaFechaDeHoy()
     {

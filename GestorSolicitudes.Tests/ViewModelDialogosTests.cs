@@ -1,14 +1,13 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
-using Microsoft.EntityFrameworkCore;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
+using Microsoft.EntityFrameworkCore;
 
 public class ViewModelDialogosTests
 {
     // ---------------- Comandos con diálogos ----------------
-
     [Fact]
     public void Guardar_SinEmpresaOPuesto_AvisaYSigueEditando()
     {

@@ -1,11 +1,11 @@
+namespace GestorSolicitudes.Tests;
+
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using GestorSolicitudes.Converters;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
 
 public class ConvertidorTests
 {

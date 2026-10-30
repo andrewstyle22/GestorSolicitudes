@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
 
 /// <summary>
 /// Selector de columnas de la tabla: la preferencia se guarda en un fichero aparte
@@ -14,7 +14,6 @@ public class ColumnasTests
     private static string RutaTemporal() => Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt");
 
     // ---------------------------------------------------------------- Helper
-
     [Fact]
     public void GuardarEn_YCargarDe_DevuelvenLasMismasClaves()
     {
@@ -64,7 +63,6 @@ public class ColumnasTests
     }
 
     // ---------------------------------------------------------------- Item
-
     [Fact]
     public void ColumnaItem_CambiarVisibleAvisaYNotifica()
     {
@@ -103,7 +101,6 @@ public class ColumnasTests
     }
 
     // ---------------------------------------------------------------- ViewModel
-
     [Fact]
     public void Columnas_SinPreferenciaSonLasSeisVisibles()
     {

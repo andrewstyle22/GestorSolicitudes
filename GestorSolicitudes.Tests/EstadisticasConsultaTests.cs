@@ -1,11 +1,11 @@
+namespace GestorSolicitudes.Tests;
+
 using System.Data.Common;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-
-namespace GestorSolicitudes.Tests;
 
 /// <summary>
 /// La cabecera de métricas se calcula con la lista que la recarga ya ha leído: cambiar de

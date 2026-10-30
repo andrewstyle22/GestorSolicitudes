@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using System.Globalization;
 using System.IO;
 using GestorSolicitudes.Helpers;
-
-namespace GestorSolicitudes.Tests;
 
 /// <summary>idioma.txt: la preferencia se guarda en un fichero aparte (nunca en %APPDATA% desde los tests).</summary>
 public class PreferenciaIdiomaTests

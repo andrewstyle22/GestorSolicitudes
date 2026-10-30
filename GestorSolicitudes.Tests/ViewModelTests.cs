@@ -1,10 +1,10 @@
+namespace GestorSolicitudes.Tests;
+
 using System.Globalization;
-using Microsoft.EntityFrameworkCore;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
+using Microsoft.EntityFrameworkCore;
 
 public class ViewModelTests
 {
@@ -183,13 +183,13 @@ public class ViewModelTests
         {
             Empresa = "Vencida",
             Puesto = "A",
-            ProximoSeguimiento = DateTime.Today.AddDays(-1)
+            ProximoSeguimiento = DateTime.Today.AddDays(-1),
         });
         db.Solicitudes.Add(new Solicitud
         {
             Empresa = "Futura",
             Puesto = "B",
-            ProximoSeguimiento = DateTime.Today.AddDays(3)
+            ProximoSeguimiento = DateTime.Today.AddDays(3),
         });
         db.SaveChanges();
         vm.Recargar();
@@ -310,7 +310,7 @@ public class ViewModelTests
             Empresa = "A",
             Puesto = "P",
             FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(3)
+            FechaPrimeraRespuesta = baseFecha.AddDays(3),
         });
         db.Solicitudes.Add(new Solicitud { Empresa = "B", Puesto = "P", FechaSolicitud = baseFecha });
         db.SaveChanges();
@@ -335,14 +335,14 @@ public class ViewModelTests
             Empresa = "A",
             Puesto = "P",
             FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(2)
+            FechaPrimeraRespuesta = baseFecha.AddDays(2),
         });
         db.Solicitudes.Add(new Solicitud
         {
             Empresa = "B",
             Puesto = "P",
             FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(5)
+            FechaPrimeraRespuesta = baseFecha.AddDays(5),
         });
         db.Solicitudes.Add(new Solicitud { Empresa = "C", Puesto = "P", FechaSolicitud = baseFecha });
         db.SaveChanges();
@@ -374,20 +374,20 @@ public class ViewModelTests
         {
             Empresa = "Vencida abierta",
             Puesto = "A",
-            ProximoSeguimiento = DateTime.Today.AddDays(-1)
+            ProximoSeguimiento = DateTime.Today.AddDays(-1),
         });
         db.Solicitudes.Add(new Solicitud
         {
             Empresa = "Cerrada vencida",
             Puesto = "B",
             Estado = EstadoSolicitud.Rechazada,
-            ProximoSeguimiento = DateTime.Today.AddDays(-2)
+            ProximoSeguimiento = DateTime.Today.AddDays(-2),
         });
         db.Solicitudes.Add(new Solicitud
         {
             Empresa = "Abierta al día",
             Puesto = "C",
-            ProximoSeguimiento = DateTime.Today.AddDays(5)
+            ProximoSeguimiento = DateTime.Today.AddDays(5),
         });
         db.SaveChanges();
         vm.Recargar();
@@ -397,7 +397,6 @@ public class ViewModelTests
         Assert.Single(vencidos);
         Assert.Equal("Vencida abierta", vencidos[0].Empresa);
     }
-
 
     [Fact]
     public void VerCandidaturasDeEstaEmpresa_RellenaLaBusquedaConLaEmpresa()
@@ -427,7 +426,6 @@ public class ViewModelTests
     }
 
     // ---------------- Salidas tempranas y recarga ----------------
-
     [Fact]
     public void Guardar_SinEdicionNoHaceNada()
     {

@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.Sqlite;
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 public class AppDbContextTests
 {
@@ -19,7 +19,7 @@ public class AppDbContextTests
             {
                 Empresa = "ACME",
                 Puesto = "Dev",
-                Estado = EstadoSolicitud.OfertaAceptada
+                Estado = EstadoSolicitud.OfertaAceptada,
             };
             solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Oferta, Descripcion = "¡Sí!" });
             db.Solicitudes.Add(solicitud);

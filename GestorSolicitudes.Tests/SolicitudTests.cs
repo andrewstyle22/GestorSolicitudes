@@ -1,6 +1,6 @@
-using GestorSolicitudes.Models;
-
 namespace GestorSolicitudes.Tests;
+
+using GestorSolicitudes.Models;
 
 public class SolicitudTests
 {
@@ -17,7 +17,7 @@ public class SolicitudTests
         var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Enviada,
-            FechaSolicitud = DateTime.Today.AddDays(-5)
+            FechaSolicitud = DateTime.Today.AddDays(-5),
         };
         Assert.Equal(solicitud.DiasDesdeSolicitud, solicitud.DiasProceso);
     }
@@ -29,7 +29,7 @@ public class SolicitudTests
         {
             Estado = EstadoSolicitud.Rechazada,
             FechaSolicitud = new DateTime(2026, 1, 10),
-            FechaCierre = new DateTime(2026, 1, 21)
+            FechaCierre = new DateTime(2026, 1, 21),
         };
         Assert.Equal(11, solicitud.DiasProceso);
     }
@@ -41,7 +41,7 @@ public class SolicitudTests
         {
             Estado = EstadoSolicitud.Rechazada,
             FechaSolicitud = DateTime.Today.AddDays(-3),
-            FechaCierre = null
+            FechaCierre = null,
         };
         Assert.Equal(3, solicitud.DiasProceso);
     }
@@ -65,7 +65,7 @@ public class SolicitudTests
         var solicitud = new Solicitud
         {
             FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(3)
+            FechaPrimeraRespuesta = baseFecha.AddDays(3),
         };
         Assert.Equal(3, solicitud.DiasHastaRespuesta);
     }
@@ -145,7 +145,7 @@ public class SolicitudTests
         var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Enviada,
-            ProximoSeguimiento = DateTime.Today.AddDays(-1)
+            ProximoSeguimiento = DateTime.Today.AddDays(-1),
         };
         Assert.True(solicitud.SeguimientoPendiente);
     }
@@ -156,7 +156,7 @@ public class SolicitudTests
         var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Enviada,
-            ProximoSeguimiento = DateTime.Today.AddDays(2)
+            ProximoSeguimiento = DateTime.Today.AddDays(2),
         };
         Assert.False(solicitud.SeguimientoPendiente);
     }
@@ -167,7 +167,7 @@ public class SolicitudTests
         var solicitud = new Solicitud
         {
             Estado = EstadoSolicitud.Rechazada,
-            ProximoSeguimiento = DateTime.Today.AddDays(-1)
+            ProximoSeguimiento = DateTime.Today.AddDays(-1),
         };
         Assert.False(solicitud.SeguimientoPendiente);
     }

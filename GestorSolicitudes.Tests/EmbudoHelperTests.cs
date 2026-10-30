@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using System.Globalization;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
 
 public class EmbudoHelperTests
 {

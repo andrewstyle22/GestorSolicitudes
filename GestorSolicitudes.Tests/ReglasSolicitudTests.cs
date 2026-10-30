@@ -1,7 +1,7 @@
+namespace GestorSolicitudes.Tests;
+
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
 
 public class ReglasSolicitudTests
 {
@@ -16,7 +16,7 @@ public class ReglasSolicitudTests
     [Fact]
     public void TieneDatosObligatorios_RojoCuandoEmpresaVacia()
     {
-        var solicitud = new Solicitud { Empresa = "", Puesto = "Dev" };
+        var solicitud = new Solicitud { Empresa = string.Empty, Puesto = "Dev" };
 
         Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
     }
@@ -24,7 +24,7 @@ public class ReglasSolicitudTests
     [Fact]
     public void TieneDatosObligatorios_RojoCuandoPuestoVacio()
     {
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "" };
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = string.Empty };
 
         Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
     }
@@ -32,7 +32,7 @@ public class ReglasSolicitudTests
     [Fact]
     public void TieneDatosObligatorios_RojoCuandoAmbosVacios()
     {
-        var solicitud = new Solicitud { Empresa = "", Puesto = "" };
+        var solicitud = new Solicitud { Empresa = string.Empty, Puesto = string.Empty };
 
         Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
     }

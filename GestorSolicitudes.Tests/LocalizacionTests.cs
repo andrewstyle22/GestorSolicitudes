@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using System.Globalization;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
-
-namespace GestorSolicitudes.Tests;
 
 /// <summary>
 /// Los tests de localización son puros: usan la sobrecarga Texto(Idioma, clave)

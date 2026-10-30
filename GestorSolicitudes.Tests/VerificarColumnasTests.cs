@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Data;
 using Microsoft.Data.Sqlite;
-
-namespace GestorSolicitudes.Tests;
 
 public class VerificarColumnasTests
 {
@@ -21,10 +21,14 @@ public class VerificarColumnasTests
             using var lector = comando.ExecuteReader();
             var columnas = new List<string>();
             while (lector.Read())
+            {
                 columnas.Add(Convert.ToString(lector["name"])!);
+            }
 
             foreach (string esperada in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono" })
+            {
                 Assert.Contains(esperada, columnas);
+            }
         }
     }
 

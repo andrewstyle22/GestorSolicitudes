@@ -1,11 +1,10 @@
-using GestorSolicitudes.Helpers;
-
 namespace GestorSolicitudes.Tests;
+
+using GestorSolicitudes.Helpers;
 
 public class TextoYCsvTests
 {
     // ---------------- Normalización de búsqueda ----------------
-
     [Fact]
     public void NormalizarBusqueda_QuitaTildesYMayusculas()
     {
@@ -15,7 +14,6 @@ public class TextoYCsvTests
     }
 
     // ---------------- Escapado para el CSV de exportación ----------------
-
     [Fact]
     public void Escapar_EncierraEntreComillas()
     {
@@ -38,6 +36,6 @@ public class TextoYCsvTests
     public void Escapar_NuloOVacioDevuelveCadenaVacia()
     {
         Assert.Equal(string.Empty, TextoHelper.Escapar(null));
-        Assert.Equal(string.Empty, TextoHelper.Escapar(""));
+        Assert.Equal(string.Empty, TextoHelper.Escapar(string.Empty));
     }
 }

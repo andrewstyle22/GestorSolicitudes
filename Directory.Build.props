@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Ajustes comunes a la app y a los tests: los avisos del compilador y de los analizadores
+       paran el build, para que no entren sin que nadie los vea. Los umbrales de estilo están
+       en .editorconfig. -->
+  <PropertyGroup>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- EstiloCop necesita el XML de documentación para no avisar (SA0001). La documentación
+         obligatoria sigue desactivada en .editorconfig. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1573;1591;1712</NoWarn>
+  </PropertyGroup>
+
+</Project>

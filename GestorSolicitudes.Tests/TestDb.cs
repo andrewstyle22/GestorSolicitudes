@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using System.IO;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Helpers;
-
-namespace GestorSolicitudes.Tests;
 
 /// <summary>
 /// Utilidades comunes: bases SQLite temporales y carpetas aisladas para que los

@@ -1,8 +1,8 @@
+namespace GestorSolicitudes.Tests;
+
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
-
-namespace GestorSolicitudes.Tests;
 
 public class ViewModelPaginacionTests
 {
