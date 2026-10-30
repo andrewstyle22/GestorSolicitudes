@@ -829,6 +829,6 @@ public static class Traducciones
         _ => "Español",
     };
 
-    private static IReadOnlyDictionary<string, string> Listar(params (string Clave, string Texto)[] pares) =>
+    private static Dictionary<string, string> Listar(params (string Clave, string Texto)[] pares) =>
         pares.ToDictionary(p => p.Clave, p => p.Texto, StringComparer.Ordinal);
 }
