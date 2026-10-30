@@ -5,7 +5,6 @@ using System.Windows;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.ViewModels;
 using GestorSolicitudes.Views;
-using Microsoft.EntityFrameworkCore;
 
 public partial class App : Application
 {

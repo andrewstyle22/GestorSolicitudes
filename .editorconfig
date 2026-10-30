@@ -5,6 +5,22 @@ root = true
 # como están para no mezclar este cambio con una normalización masiva de codificaciones.
 [*.cs]
 charset = utf-8
+insert_final_newline = true
+
+# Usings sobrantes y namespace de fichero: el estilo del proyecto ya es file-scoped.
+dotnet_diagnostic.IDE0005.severity = warning
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_diagnostic.IDE0161.severity = warning
+
+# SA1101: prefijar con this. las llamadas a miembros propios.
+dotnet_diagnostic.SA1101.severity = warning
+
+# CA1031: los catch generales son deliberados (avisos de E/S y de arranque); no se activa.
+dotnet_diagnostic.CA1031.severity = none
+# CA1305 y CA1307: los textos usan la cultura de Localizacion.CulturaActual y las
+# comparaciones son de claves de UI, no de datos; no se activan.
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1307.severity = none
 
 # StyleCop: documentación obligatoria (familia SA1600-SA1699): no se exige.
 # Los comentarios XML existentes se conservan; el analizador simplemente no los impone.
