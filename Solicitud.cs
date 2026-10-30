@@ -1,6 +1,5 @@
 namespace GestorSolicitudes.Models;
 
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
@@ -102,7 +101,7 @@ public class Solicitud
     public string? NombreOriginalCarta { get; set; }
 
     /// <summary>Gets or sets historial cronológico: cada llamada, prueba o entrevista.</summary>
-    public ObservableCollection<Evento> Eventos { get; set; } = new();
+    public List<Evento> Eventos { get; set; } = new();
 
     // --- Calculadas (no se guardan en base de datos) ---
     [NotMapped]

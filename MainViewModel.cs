@@ -303,9 +303,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private Solicitud? edicion;
 
+    /// <summary>
+    /// Copia observable del historial de <see cref="Edicion"/>: el POCO guarda una lista y la
+    /// vista necesita avisos al añadir o quitar. Los eventos son los mismos objetos.
+    /// </summary>
+    public ObservableCollection<Evento> EventosEdicion { get; } = [];
+
     // Los adjuntos se derivan de la edición: al repintar el panel se recalculan.
     partial void OnEdicionChanged(Solicitud? value)
     {
+        this.EventosEdicion.Clear();
+
+        if (value is not null)
+        {
+            foreach (Evento evento in value.Eventos)
+            {
+                this.EventosEdicion.Add(evento);
+            }
+        }
+
         this.OnPropertyChanged(nameof(this.AdjuntoCv));
         this.OnPropertyChanged(nameof(this.AdjuntoCarta));
     }
@@ -1007,12 +1023,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AnadirEvento()
     {
-        this.Edicion?.Eventos.Add(new Evento
+        if (this.Edicion is not Solicitud solicitud)
+        {
+            return;
+        }
+
+        var evento = new Evento
         {
             Fecha = DateTime.Today,
             Tipo = TipoEvento.Nota,
             Descripcion = string.Empty,
-        });
+        };
+
+        solicitud.Eventos.Add(evento);
+        this.EventosEdicion.Add(evento);
     }
 
     [RelayCommand]
@@ -1024,6 +1048,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Edicion.Eventos.Remove(evento);
+        this.EventosEdicion.Remove(evento);
         if (evento.Id != 0)
         {
             this.db.Eventos.Remove(evento);

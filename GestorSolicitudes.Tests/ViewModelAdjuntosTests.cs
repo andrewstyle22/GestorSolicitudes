@@ -20,8 +20,24 @@ public class ViewModelAdjuntosTests
         vm.AnadirEventoCommand.Execute(null);
 
         Evento nota = Assert.Single(vm.Edicion.Eventos);
+        Assert.Single(vm.EventosEdicion);
+        Assert.Same(nota, vm.EventosEdicion[0]);
         Assert.Equal(TipoEvento.Nota, nota.Tipo);
         Assert.Equal(DateTime.Today, nota.Fecha);
+    }
+
+    [Fact]
+    public void EdicionNula_VaciaElHistorialDeLaVista()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        vm.Edicion = solicitud;
+
+        vm.Edicion = null;
+
+        Assert.Empty(vm.EventosEdicion);
     }
 
     [Fact]
@@ -48,10 +64,14 @@ public class ViewModelAdjuntosTests
         vm.Recargar();
         vm.Edicion = solicitud;
 
+        // La vista recibe una copia observable con los mismos eventos que el POCO.
+        Assert.Equal(solicitud.Eventos, vm.EventosEdicion);
+
         Evento persistido = solicitud.Eventos.First(e => e.Id != 0);
         vm.EliminarEventoCommand.Execute(persistido);
 
         Assert.DoesNotContain(persistido, solicitud.Eventos);
+        Assert.DoesNotContain(persistido, vm.EventosEdicion);
         Assert.Equal(EntityState.Deleted, db.Entry(persistido).State);
     }
 
