@@ -191,6 +191,10 @@ y su arreglo para no repetirlo:
   crees arrays literales en cada llamada (`Assert.Equal(new[] { ... }, ...)`). Usa un
   `private static readonly` en la clase del test o evita el array (`lista.Take(n)`,
   `lista.Skip(n)`). Ya pasó en `PaginadorTests` y `LocalizacionTests`.
+- **S6612 (`Collection initialization can be simplified`)**: una propiedad o campo con
+  `= new()` / `= new List<T>()` pasa a expresión de colección (`= []`). Ya pasó en
+  `DialogoFalso`, `MainViewModel` y `MainWindow.xaml.cs`. Ojo: `[]` solo vale como
+  inicializador, no como argumento de un método si el proyecto no lo pide.
 - **S1135 (`Complete the task associated to this 'TODO' comment`)**: la regla busca la
   etiqueta `TODO`, pero también muerde el **"todo" español** de los comentarios
   ("de que todo fue bien"). Si aparece en un comentario que no es una tarea pendiente,

@@ -22,7 +22,7 @@ public static class Traducciones
     /// <summary>Idioma activo en este momento. Lo cambia <see cref="Localizacion.Cambiar"/>.</summary>
     public static Idioma IdiomaActual { get; internal set; } = Idioma.Castellano;
 
-    private static readonly IReadOnlyDictionary<string, string> TextoCastellano = Listar(
+    private static readonly Dictionary<string, string> TextoCastellano = Listar(
         // ----- Ventana y cabecera -----
         ("TituloVentana", "Gestor de candidaturas"),
         ("SubtituloVentana", "Seguimiento de ofertas a las que me he inscrito"),
@@ -278,7 +278,7 @@ public static class Traducciones
         ("Origen.FeriaDeEmpleo", "Feria de empleo"),
         ("Origen.Otro", "Otro"));
 
-    private static readonly IReadOnlyDictionary<string, string> TextoIngles = Listar(
+    private static readonly Dictionary<string, string> TextoIngles = Listar(
         // ----- Ventana y cabecera -----
         ("TituloVentana", "Application Tracker"),
         ("SubtituloVentana", "Track the job offers you have applied to"),
@@ -534,7 +534,7 @@ public static class Traducciones
         ("Origen.FeriaDeEmpleo", "Job fair"),
         ("Origen.Otro", "Other"));
 
-    private static readonly IReadOnlyDictionary<string, string> TextoAleman = Listar(
+    private static readonly Dictionary<string, string> TextoAleman = Listar(
         // ----- Ventana y cabecera -----
         ("TituloVentana", "Bewerbungstracker"),
         ("SubtituloVentana", "Verfolge die Stellenangebote, bei denen du dich beworben hast"),

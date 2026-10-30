@@ -185,7 +185,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [ObservableProperty]
-    private ObservableCollection<Solicitud> solicitudes = new();
+    private ObservableCollection<Solicitud> solicitudes = [];
 
     // ---------------------------------------------------------------- Paginación
 
@@ -334,7 +334,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     /// <summary>Filas del embudo (una por mes, semana o día) con las cuatro series ya escaladas a porcentaje.</summary>
     [ObservableProperty]
-    private IReadOnlyList<EmbudoPeriodo> periodosEmbudo = new List<EmbudoPeriodo>();
+    private IReadOnlyList<EmbudoPeriodo> periodosEmbudo = [];
 
     /// <summary>Cada cuánto agrupa las barras: mes, semana o día.</summary>
     [ObservableProperty]

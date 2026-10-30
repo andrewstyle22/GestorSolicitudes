@@ -18,7 +18,7 @@ public partial class MainWindow : Window
     private const int MinutosEntreAvisos = 5;
 
     private readonly MainViewModel vm;
-    private readonly HashSet<int> idsVencidosAvisados = new();
+    private readonly HashSet<int> idsVencidosAvisados = [];
     private readonly Stream? flujoIcono;
     private DispatcherTimer? temporizadorRecordatorios;
 
