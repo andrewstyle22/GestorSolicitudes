@@ -42,3 +42,8 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 - Tests que dependen del dispatcher WPF usan `[StaFact]` (Xunit.StaFact).
 - Los tests ven miembros `internal` vía `InternalsVisibleTo("GestorSolicitudes.Tests")`.
 - El CI corre en `windows-latest`, incluido el análisis de SonarCloud.
+
+## Skills (`.opencode/skills/`)
+
+- **`tests-obligatorios`**: obligatoria al crear, editar o borrar una función. Deja `dotnet test` en verde.
+- **`sonarcloud-gate`**: obligatoria antes de commitear, subir o abrir un PR con cambios de código, aunque la tarea no mencione Sonar. Resume las condiciones del gate y los patrones que ya lo han tumbado (S2930, S6444, S6966, S1117, S1192, S3267...). No esperes a que SonarCloud marque el issue en el PR.

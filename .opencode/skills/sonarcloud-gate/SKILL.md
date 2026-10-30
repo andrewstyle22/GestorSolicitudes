@@ -1,6 +1,6 @@
 ---
 name: sonarcloud-gate
-description: 'Aplica cuando se trabaja sobre el análisis de SonarCloud de este repo (GestorSolicitudes): dejar en verde el Quality Gate, subir la cobertura de código nuevo o resolver issues nuevos del análisis. Gatillos: "sonarcloud", "quality gate", "cobertura", "coverage", "gate en rojo", "código nuevo", "issue de sonar", "análisis de sonar". El CI corre SonarCloud aparte (windows-latest para build/tests; SonarCloud sobre la rama del PR).'
+description: 'Aplica a cualquier cambio de código de este repo (GestorSolicitudes) antes de commitear, subir o abrir un PR, y cuando se trabaje con SonarCloud: dejar en verde el Quality Gate, subir la cobertura de código nuevo o resolver issues nuevos del análisis. Gatillos: "sonarcloud", "quality gate", "cobertura", "coverage", "gate en rojo", "código nuevo", "issue de sonar", "análisis de sonar", "commit", "PR", "push". El CI corre SonarCloud aparte (windows-latest para build/tests; SonarCloud sobre la rama del PR).'
 ---
 
 # Dejar el Quality Gate de SonarCloud en verde

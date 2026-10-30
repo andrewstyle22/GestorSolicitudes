@@ -13,8 +13,9 @@ a quién, cuándo, qué te contestaron y cuándo toca volver a insistir.
 
 ## Cómo ejecutarlo
 
+Desde la raíz del repositorio:
+
 ```bash
-cd GestorSolicitudes
 dotnet restore
 dotnet run
 ```
@@ -41,13 +42,16 @@ dotnet test
 xUnit sobre el código que admite pruebas sin abrir ventanas: validaciones y modelo de `Solicitud`,
 helpers (enum → texto, CSV, adjuntos, columnas visibles), la localización (cobertura y paridad de claves
 entre los tres idiomas), el `AppDbContext` contra una base SQLite temporal,
-la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas).
+la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas,
+embudo, paginación, adjuntos, diálogos y CSV).
 También corre **ArchUnitNET**: reglas de arquitectura que vigilan que las capas solo dependan
 "hacia abajo" (lo típico: los ViewModels no tocan las Vistas, las Vistas solo se usan desde el
 arranque). Un using de más a una capa prohibida, o un `MessageBox` colado en un ViewModel, se cae
 en el CI.
 La app se abre a los tests con `[assembly: InternalsVisibleTo("GestorSolicitudes.Tests")]` y el
 ViewModel se construye con un contexto apuntando a una base temporal, para no tocar tu histórico.
+El CI de GitHub Actions corre en `windows-latest`: compila, exige `dotnet format`, ejecuta
+`dotnet test` con umbral del 90 % de líneas y lanza el análisis de SonarCloud sobre la rama del PR.
 
 ## Qué se guarda de cada candidatura
 
@@ -145,13 +149,15 @@ el `.csproj` quita los usings implícitos de WinForms y de `System.Drawing` con 
 ## Estructura
 
 Los ficheros `.cs` viven en la raíz del proyecto; **la capa la marca el namespace**, no la carpeta:
-`GestorSolicitudes.Models`, `.Data`, `.Helpers`, `.Converters` → `.ViewModels` → `.Views`. Solo hay
-tres carpetas con contenido, `Views/` (las XAML), `Resources/` (el icono) y `GestorSolicitudes.Tests/`.
+`GestorSolicitudes.Models`, `.Data`, `.Helpers`, `.Converters` → `.ViewModels` → `.Views`. Las carpetas
+con contenido son `Views/` (las XAML), `Resources/` (el icono), `GestorSolicitudes.Tests/`, `02-DOCS/`
+(revisiones y decisiones de diseño) y `.opencode/skills/` (instrucciones para los agentes).
 Lo vigila ArchUnitNET: las capas solo dependen hacia abajo, así que un helper nuevo va en `.Helpers` y
 un `using` a `Views` dentro de un ViewModel tumba el CI.
 
 ```
-Solicitud.cs, Evento.cs, Enumeraciones.cs → modelo y enums con [Description] para los textos de la UI
+Solicitud.cs, Evento.cs, Adjunto.cs, Enumeraciones.cs → modelo, enums con [Description] y el adjunto que pinta la vista
+EstadoSolicitudExtensiones.cs → estados que cuentan como proceso cerrado
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
 Traducciones.cs → diccionarios es/en/de y Texto (en Helpers, para que los helpers traduzcan)
@@ -159,9 +165,10 @@ Localizacion.cs → fachada del idioma: idioma activo, textos y cambio de idioma
 CulturaApp.cs → cultura del hilo, lenguaje de WPF y recursos de texto al aplicar un idioma
 PreferenciaIdioma.cs → idioma guardado en %APPDATA%\...\idioma.txt (o el del sistema)
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
-Convertidores.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
+Convertidores.cs, ColoresEstado.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 
-AdjuntosHelper.cs → copia/borra el CV y la carta en %APPDATA%\...\adjuntos
+AdjuntosHelper.cs → copia un fichero suelto a %APPDATA%\...\adjuntos y borra solo lo que vive ahí
+GestorAdjuntos.cs → ciclo de vida de los adjuntos de una edición (copias, sustituciones y descartes)
 DocumentoHelper.cs → extrae el texto de DOCX/ODT para el visor de adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
 Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)
@@ -172,20 +179,24 @@ EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, m
 ReglasSolicitud.cs → reglas de negocio puras (datos obligatorios, seguimiento, hito inicial)
 Enlaces.cs → validación de los enlaces que se abren (solo http y https)
 
-ColumnaItem.cs → columna ocultable del selector (namespace ViewModels)
+ColumnaItem.cs, ColumnasViewModel.cs → columna ocultable y su preferencia guardada (namespace ViewModels)
 IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
-MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, duplicar, exportación y columnas
+MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, historial, duplicar, exportación y columnas
                  (sin WPF: habla con IDialogoService)
 
 DialogoService.cs, DialogosNulos.cs → implementación WPF y versión silenciosa de IDialogoService
 App.xaml, App.xaml.cs → tema, estilos compartidos, arranque, cultura y preferencias
 Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
+Views/CabeceraMetricas.xaml(.cs) → cabecera de métricas
+Views/PestanaOferta.xaml(.cs), PestanaSeguimiento.xaml(.cs), PestanaAdjuntos.xaml(.cs) → pestañas del detalle
 Views/FilaAdjunto.xaml(.cs) → fila de un adjunto (CV o carta): etiqueta, nombre y botones
 Views/VentanaRequisitos.xaml(.cs) → ventana de lectura de los requisitos
 Views/VisorAdjuntoWindow.xaml(.cs) → visor de PDF/DOCX/ODT sin abrir el programa externo
 Resources/appicon.ico → icono de la ventana, del ejecutable y de la bandeja
 GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQLite, estilos de las
                            ventanas y lógica del ViewModel
+02-DOCS/ → revisiones y decisiones de diseño
+.opencode/skills/ → skills del repo: tests-obligatorios y sonarcloud-gate
 ```
 
 ## Decisiones que conviene conocer antes de tocarlo
@@ -200,7 +211,9 @@ operación con `IDbContextFactory`.
 después de cada guardado, y el panel de detalle se "repinta" reasignando `Edicion = null; Edicion =
 actual;` tras adjuntar un fichero o cambiar el interés, en vez de refrescar solo ese campo. Con unos
 cientos de registros ni se nota; si algún día crece, el cambio natural es meter `ObservableObject`
-en `Solicitud`.
+en `Solicitud`. El historial es la excepción controlada: `Solicitud.Eventos` es una `List<Evento>` y
+`MainViewModel.EventosEdicion` es la `ObservableCollection` que enlaza la vista, rellenada al cambiar
+`Edicion` con los mismos objetos.
 
 **`EnsureCreated()` en lugar de migraciones.** Va bien para empezar, pero no versiona el esquema:
 si añades una propiedad nueva al modelo, la tabla existente no se actualiza sola. Cuando quieras
@@ -225,8 +238,10 @@ inyectan un falso y así se prueban comandos que antes quedaban fuera por
 
 **Estilo guiado por StyleCop.** El analizador `StyleCop.Analyzers` corre sobre la app con un juego
 mínimo de reglas activas (ver `.editorconfig` y `stylecop.json`): nada de documentación XML
-obligatoria ni cabeceras de copyright. `dotnet format` deja el código formateado y
-`dotnet format --verify-no-changes` verifica que no haya nada pendiente.
+obligatoria ni cabeceras de copyright. Además están activos `IDE0005` (usings sobrantes), `IDE0161`
+(namespace de fichero) y `SA1101` (`this.`), y `Directory.Build.props` trata los avisos como errores.
+`dotnet format` deja el código formateado y `dotnet format --verify-no-changes` verifica que no haya
+nada pendiente.
 
 ## Ideas para seguir
 
