@@ -152,8 +152,9 @@ cuando el árbol ya no tenga warnings. 4.16 se mira antes de nada porque puede c
 resto.
 
 Decisiones dentro del bloque: solo quedan **4.2** (`DialogosNulos` por defecto) y **4.8**
-(reloj). Fuera de los cuatro bloques sigue B6 (`ObservableCollection` en el POCO); D6 (clave
-`Error` duplicada) se corrigió en `d4dd9f9`. La decisión 7 (Helpers→Núcleo) la resolvió 4.6.
+(reloj). Fuera de los cuatro bloques, B6 (`ObservableCollection` en el POCO) se corrigió en
+`286734e` y D6 (clave `Error` duplicada) en `d4dd9f9`. La decisión 7 (Helpers→Núcleo) la
+resolvió 4.6.
 
 ## Veredicto rápido
 
@@ -164,7 +165,7 @@ Decisiones dentro del bloque: solo quedan **4.2** (`DialogosNulos` por defecto) 
 | DRY / fuente única | Verde | Clasificación de estados única, columnas y adjuntos extraídos, sin `x:Name` muertos |
 | Nombres | Verde | `TextoHelper`, `TextoYCsvTests` y los nombres completos en tests (4.1) |
 | Errores y estado | Amarillo | `Exception?` fuera (`Try…` con `bool` + `out`); siguen el `DialogosNulos` por defecto (4.2) y la ausencia de reloj (4.8) |
-| Tests | Verde | 278 tests, cobertura 94,3 % de líneas y 78,71 % de ramas; `ViewModelTests` 552 líneas |
+| Tests | Verde | 279 tests, cobertura 94,3 % de líneas y 78,71 % de ramas; `ViewModelTests` 552 líneas |
 | Puertas de calidad | Verde | `Directory.Build.props` con avisos como errores, `global.json`, StyleCop en tests y umbral de cobertura 90 % en CI |
 | Documentación | Verde | `02-DOCS/decisiones` y este documento describen el código; falta cerrar 4.2/4.8 |
 
@@ -258,7 +259,7 @@ existen, pero el título no las usa (es el A1 de este documento).
 | B3 | `Solicitud.cs:54, 109, 117-119, 122-124, 136-138`; `Evento.cs:16`; `MainViewModel.cs:631, 751, 783, 1063`; `EmbudoHelper.cs:65`; `ReglasSolicitud.cs:24` | Inyectar un reloj (`TimeProvider`/`IClock`) o centralizar `DateTime.Today` en un `Reloj.Hoy`; el modelo puede recibir la fecha en sus cálculos. Pasar la cultura a `EmbudoHelper.EtiquetaDePeriodo`. | Tests dependientes del día real y del cambio de medianoche, y una función de fechas que además depende de la cultura global. |
 | B4 | `Views/MainWindow.xaml.cs:39-41`; `App.xaml.cs:43-45` | Mover la composición al arranque: `App` crea `AppDbContext`, `DialogoService` y `MainViewModel`, y la ventana recibe el ViewModel. Hoy la ventana es la raíz de composición de facto y la que libera la base. | La vista no debería decidir qué base de datos se abre; además hoy hay dos contextos en el arranque (uno para `EnsureCreated` y otro para la sesión). |
 | B5 | `MainViewModel.cs:232-317` | `Paginador` ya calcula todo, pero el ViewModel sigue exponiendo ocho propiedades (`PaginaActual`, `TotalPaginas`, `RangoPagina`, cuatro booleanos). Exponer un único `ResultadoPagina` o una propiedad `Pagina` y enlazar el XAML a ella. | Se ha movido el cálculo pero no el estado; quedan ocho setters que nadie debería tocar desde fuera. |
-| B6 | `Solicitud.cs:105` | Decisión: `ObservableCollection<Evento>` en un POCO. Si se mantiene, documentarlo como excepción consciente; si se cambia a `List`, refrescar el panel al añadir/borrar. | El modelo depende de una colección de UI, en contra de «POCO sin notificación». |
+| B6 | `Solicitud.cs:105` | **Corregido** (`286734e`): el POCO guarda `List<Evento>` y `MainViewModel.EventosEdicion` (observable) se rellena al cambiar `Edicion`. | El modelo ya no depende de una colección de UI, en contra de «POCO sin notificación». |
 
 ## C. Duplicación, nombres y código muerto
 
@@ -344,12 +345,12 @@ No son errores, son deuda consciente. Siguen abiertas:
 
 1. **Reloj** (B3, 4.8): `TimeProvider` de .NET 8 (sin paquete) o un `IClock` propio; afecta a tests de fechas y al embudo.
 2. **Paginación en memoria o en SQL** (`02-DOCS/decisiones/paginacion-tabla.md`): SQL exige una columna normalizada y un `ALTER TABLE` nuevo; hoy el comportamiento está documentado y probado.
-3. **`ObservableCollection<Evento>` en el POCO** (B6): mantener la excepción documentada o cambiar a `List` y refrescar el panel.
-4. **`DialogosNulos` por defecto** (D1, 4.2): comodidad para tests frente a un fallback que silencia avisos.
+3. **`DialogosNulos` por defecto** (D1, 4.2): comodidad para tests frente a un fallback que silencia avisos.
 
 Ya decididas:
 
 - **`Exception?` como valor de retorno** (A8): descartado; `TryEliminarSolicitud` y `TryEscribirCsv` devuelven `bool` + `out Exception?`.
+- **`ObservableCollection<Evento>` en el POCO** (B6): el POCO guarda `List<Evento>` y el ViewModel expone `EventosEdicion` para la vista (`286734e`).
 - **Raíz de composición** (B4): `App` crea la base, el servicio y el ViewModel, y los libera en `OnExit`.
 - **`Helpers` depende del Núcleo** (decisión 7): resuelta en 4.6; los textos viven en `Helpers.Traducciones` y ningún `*Helper.cs` usa `Localizacion`.
 
@@ -363,7 +364,7 @@ Ya decididas:
 - [x] `Localizacion` dividida en traducciones, cultura y preferencia.
 - [x] Ningún `x:Name`, `using` ni miembro público sin consumidor. Barrido del 30/10/2026: los 23 `x:Name` del XAML tienen consumidor (code-behind o `ElementName`/`TargetName`); los `using` sobrantes los vigila `IDE0005` (aviso, y los avisos son errores); los miembros públicos e internos de producción se contrastaron con el texto de `.cs` y `.xaml`: los 11 candidatos del primer barrido tienen consumidor (enlace XAML o test).
 - [x] `ViewModelTests` por debajo de ~500 líneas por fichero y todos los ViewModels liberados.
-- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (278 tests); `dotnet build` verde con los avisos como errores.
+- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (279 tests); `dotnet build` verde con los avisos como errores.
 - [x] Ningún fuente contiene `U+FFFD`; codificación UTF-8 declarada en `.editorconfig`.
 - [x] `DialogoService` y las decisiones de `02-DOCS` describen el código real.
 
@@ -373,7 +374,7 @@ Estado a 30/10/2026, HEAD `a84f67a` en `andres/improve-code-3`:
 
 - `dotnet --version` → `10.0.403`; `global.json` lo fija con `rollForward: latestFeature`.
 - `dotnet build GestorSolicitudes.slnx` → 0 errores, 0 avisos (son errores por `Directory.Build.props`).
-- `dotnet test GestorSolicitudes.slnx` → 278 correctos, 0 fallos.
+- `dotnet test GestorSolicitudes.slnx` → 279 correctos, 0 fallos.
 - `dotnet format GestorSolicitudes.slnx --verify-no-changes` → exit 0.
 - Cobertura local con `coverlet.msbuild` → 94,3 % de líneas, 78,71 % de ramas y 94 % de métodos; el CI exige 90 % de líneas.
 - Auditoría de miembros (30/10/2026): barrido de `public`/`internal` en las fuentes de producción y recuento de apariciones en todos los `.cs` y `.xaml`. Los 11 sospechosos (`Altura*` de `EmbudoPeriodo`, `DiasProceso`, `NivelesInteres`, `TamanosPagina` y los cuatro booleanos de `Paginador`) tienen consumidor en un enlace XAML o en un test. No hay código muerto que borrar.
