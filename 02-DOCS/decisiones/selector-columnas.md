@@ -24,8 +24,14 @@ guardada, el nombre del diccionario (`Columna.PrimeraRespuesta`) y el `x:Name`
 coincidan.
 
 **La preferencia vive en `%APPDATA%\GestorSolicitudes\columnas.txt`** y
-`ColumnasHelper` la lee y escribe; si no hay fichero, todas las columnas están
-visibles. Los tests nunca tocan `%APPDATA%`: usan rutas temporales.
+`ColumnasHelper` la lee y escribe; `ColumnasViewModel` lleva las seis casillas y
+guarda al marcar. Si no hay fichero, todas las columnas están visibles. Los tests
+nunca tocan `%APPDATA%`: usan rutas temporales.
+
+**Una sola columna `*` en el cuerpo.** Las dos columnas en proporción `394*`/`75*`
+no repartían nada, porque la lista ocupaba las dos (`ColumnSpan=2`). Ahora la
+lista ocupa una columna `*` con `MinWidth` y el detalle la suya; la ventana abre
+a 1525x780 pero `MaxWidth`/`MaxHeight` siguen al área útil de la pantalla.
 
 ## Colocación
 

@@ -3,7 +3,7 @@
 Alcance: código de producción (`*.cs`, `*.xaml`, `*.csproj`), tests, CI y documentación
 (`README.md`, `AGENTS.md`, `02-DOCS/`). La revisión se hizo sobre `HEAD 907031c`; después se
 aplicaron los bloques 1 y 2, y ya está cerrado el bloque 3 (3.1-3.8). El bloque 4 está
-dividido en 4.1-4.17 y sin empezar.
+dividido en 4.1-4.17 y **cerrado** (4.1-4.17).
 
 > **Verificación tras el bloque 1:** `dotnet test` → 232 tests correctos, 0 fallos.
 > `dotnet format GestorSolicitudes.slnx --verify-no-changes` → exit 0. Cobertura local con
@@ -20,6 +20,13 @@ dividido en 4.1-4.17 y sin empezar.
 > estilos ahora también instancia las tres pestañas y la cabecera de métricas y comprueba
 > que sus enlaces resuelven); `dotnet format GestorSolicitudes.slnx --verify-no-changes` →
 > exit 0. La app no se ha arrancado: la verificación es de tests, no visual.
+>
+> **Verificación tras 4.15-4.17:** `dotnet build GestorSolicitudes.slnx` → 0 errores, 0 avisos
+> (los avisos son errores desde `Directory.Build.props`, también en los tests); `dotnet test`
+> → 277 correctos, 0 fallos; `dotnet format GestorSolicitudes.slnx --verify-no-changes` →
+> exit 0; cobertura de líneas 94,3 % con el umbral de 90 que aplica el CI. `global.json` fija
+> el SDK 10.0.403 (`rollForward: latestFeature`) porque `.slnx` no se entiende antes del
+> 9.0.200, y los dos workflows instalan ahora `10.0.x`.
 
 ## Estado verificado (tras el bloque 1, 26/10/2026)
 
@@ -39,7 +46,7 @@ La «fase 0» de la revisión 2 está cerrada. El bloque 1 de esta revisión tam
 | Revisión 3, bloque 1 | **Cerrado y commiteado** (`3be1207`) | A1, A2, A6, A10, C2, C3, C6, C7 y G2; 232 tests verdes; ver «Bloque 1 aplicado» |
 | Revisión 3, bloque 2 | **Cerrado y commiteado** (`7fa77c7`) | A3, A4, A5, A7, A8, A9, F1 y F7; 252 tests verdes; ver «Bloque 2 aplicado» |
 | Revisión 3, bloque 3 | **Cerrado y commiteado** (`2b10bcf`…`eaab361`) | B1, B4, B5, D3, D5, E1, E2 y E4; 258 tests verdes; ver «Bloque 3 dividido» |
-| Revisión 3, bloque 4 | **Dividido en 4.1-4.17, sin empezar** | B2, B3, C1, C8-C12, D1/D2/D4, E3/E5/E6, F3-F6, F8 y G1/G3/G4/G5; ver «Bloque 4 dividido» |
+| Revisión 3, bloque 4 | **Cerrado** (`04f88c2`…`4.14`) | B2, B3, C1, C8-C12, D1/D2/D4, E3/E5/E6, F3-F6, F8 y G1/G3/G4/G5; ver «Bloque 4 dividido» |
 
 `git status` solo muestra los tres documentos de revisión sin seguimiento. HEAD está en el
 último commit del bloque 3: no queda nada pendiente de los bloques 1-3.
@@ -338,13 +345,13 @@ No son errores, son deuda consciente; conviene decidirlas explícitamente:
 - [x] Eliminar una fila borra todos los adjuntos que apuntaba la base, aunque se hayan quitado o sustituido sin guardar.
 - [x] Hay una sola definición de «estado cerrado» y la usan modelo, consultas y estadísticas.
 - [x] Ningún test escribe en `%APPDATA%` ni cambia la cultura global.
-- [ ] `MainViewModel` por debajo de ~600 líneas y sin E/S de fichero (adjuntos y columnas extraídos; hoy 858 líneas).
-- [ ] `Localizacion` dividida en traducciones, cultura y preferencia.
+- [ ] `MainViewModel` por debajo de ~600 líneas y sin E/S de fichero (adjuntos y columnas extraídos; hoy 1085 líneas).
+- [x] `Localizacion` dividida en traducciones, cultura y preferencia.
 - [ ] Ningún `x:Name`, `using` ni miembro público sin consumidor.
 - [x] `ViewModelTests` por debajo de ~500 líneas por fichero y todos los ViewModels liberados.
-- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (232 tests); falta `dotnet build -warnaserror`.
+- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (277 tests); `dotnet build` verde con los avisos como errores.
 - [x] Ningún fuente contiene `U+FFFD`; codificación UTF-8 declarada en `.editorconfig`.
-- [ ] `DialogoService` y las decisiones de `02-DOCS` describen el código real.
+- [x] `DialogoService` y las decisiones de `02-DOCS` describen el código real.
 
 ## Anexo: comprobaciones ejecutadas
 
