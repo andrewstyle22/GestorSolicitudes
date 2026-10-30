@@ -66,7 +66,7 @@ pero no se usaban.
 |---|---|---|
 | A1 | `TextoTitulo` elige la clave por valor del enum; `Grafica.Titulo` pierde la preposición que ya llevan `TituloMes/Semana/Dia` | `TituloGrafica_UsaLaTraduccionDeLaGranularidad` (3 casos) y `TituloDeLaGrafica_NoDuplicaLaPreposicion` (3 idiomas) |
 | A2 | `Eliminar` borra las rutas guardadas (`RutasGuardadas`), no las que el usuario cambió sin guardar | `Eliminar_ConElCvQuitadoSinGuardar_BorraElFicheroGuardado` y `Eliminar_ConElCvSustituidoSinGuardar_BorraElAnteriorYLaCopia` |
-| A6 | `AplicarVisibilidadColumnas` usa `DataGridColumn` no nulo; fuera el `if` inalcanzable | Sin test: code-behind `[ExcludeFromCodeCoverage]`, sin cambio de comportamiento |
+| A6 | `AplicarVisibilidadColumnas` usa `DataGridColumn` no nulo; fuera el `if` inalcanzable | `FuentesTests.CadaColumnaOcultableTieneSuCasoEnElMapaDeLaVentana` |
 | A10 | Fuera los 8 `x:Name` muertos; `Buscar_empresas` → `BuscarEmpresas` | `FuentesTests` de columnas y claves |
 | C2/C3/C6/C7 | `NuevaRuta` en una línea y sin comentario obsoleto; `TextoNulo` reutilizado; «puras»; sangría inglesa | Tests existentes de esquema y localización |
 | G2/F2 | `charset = utf-8`; comentarios de `PestanasTests` reparados; guardia contra `U+FFFD` | `NingunFicheroDeTextoTieneCaracteresDeReemplazo` |
@@ -88,8 +88,9 @@ verificación.
 | F1 | `ViewModelTests` (1454 líneas) partido en `ViewModelTests` (CRUD y filtros), `ViewModelAdjuntosTests`, `ViewModelCsvTests`, `ViewModelDialogosTests`, `ViewModelEmbudoTests` y `ViewModelPaginacionTests`; todos los ViewModels van en `using` | 252 tests (los 78 de HEAD siguen presentes) |
 | F7 | Tests nuevos de A1 (tres granularidades), A2 (adjunto huérfano), A3 (clasificación) y cabeceras CSV traducidas | Ver filas anteriores |
 
-Pendiente del bloque 2: el test de A6 (mapa de columnas del code-behind) sigue sin existir;
-el code-behind está excluido de cobertura y A6 no cambió comportamiento.
+El test de A6 llegó después (`49e44e2`): comprueba que cada columna ocultable tiene su caso
+`"Nombre" => this.Nombre` en el `switch` del code-behind. No abre la ventana porque WPF solo
+admite una `Application` por AppDomain.
 
 ### Bloque 3 dividido
 
@@ -151,8 +152,8 @@ cuando el árbol ya no tenga warnings. 4.16 se mira antes de nada porque puede c
 resto.
 
 Decisiones dentro del bloque: solo quedan **4.2** (`DialogosNulos` por defecto) y **4.8**
-(reloj). Fuera de los cuatro bloques siguen B6 (`ObservableCollection` en el POCO) y D6 (clave
-`Error` duplicada); la decisión 7 (Helpers→Núcleo) la resolvió 4.6.
+(reloj). Fuera de los cuatro bloques sigue B6 (`ObservableCollection` en el POCO); D6 (clave
+`Error` duplicada) se corrigió en `d4dd9f9`. La decisión 7 (Helpers→Núcleo) la resolvió 4.6.
 
 ## Veredicto rápido
 
@@ -163,7 +164,7 @@ Decisiones dentro del bloque: solo quedan **4.2** (`DialogosNulos` por defecto) 
 | DRY / fuente única | Verde | Clasificación de estados única, columnas y adjuntos extraídos, sin `x:Name` muertos |
 | Nombres | Verde | `TextoHelper`, `TextoYCsvTests` y los nombres completos en tests (4.1) |
 | Errores y estado | Amarillo | `Exception?` fuera (`Try…` con `bool` + `out`); siguen el `DialogosNulos` por defecto (4.2) y la ausencia de reloj (4.8) |
-| Tests | Verde | 277 tests, cobertura 94,3 % de líneas y 78,71 % de ramas; `ViewModelTests` 552 líneas |
+| Tests | Verde | 278 tests, cobertura 94,3 % de líneas y 78,71 % de ramas; `ViewModelTests` 552 líneas |
 | Puertas de calidad | Verde | `Directory.Build.props` con avisos como errores, `global.json`, StyleCop en tests y umbral de cobertura 90 % en CI |
 | Documentación | Verde | `02-DOCS/decisiones` y este documento describen el código; falta cerrar 4.2/4.8 |
 
@@ -362,7 +363,7 @@ Ya decididas:
 - [x] `Localizacion` dividida en traducciones, cultura y preferencia.
 - [ ] Ningún `x:Name`, `using` ni miembro público sin consumidor. Barrido del 30/10/2026: los 23 `x:Name` del XAML tienen consumidor (code-behind o `ElementName`/`TargetName`); falta revisar `using` y miembros públicos.
 - [x] `ViewModelTests` por debajo de ~500 líneas por fichero y todos los ViewModels liberados.
-- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (277 tests); `dotnet build` verde con los avisos como errores.
+- [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (278 tests); `dotnet build` verde con los avisos como errores.
 - [x] Ningún fuente contiene `U+FFFD`; codificación UTF-8 declarada en `.editorconfig`.
 - [x] `DialogoService` y las decisiones de `02-DOCS` describen el código real.
 
@@ -372,7 +373,7 @@ Estado a 30/10/2026, HEAD `7ac156c` en `andres/improve-code-3`:
 
 - `dotnet --version` → `10.0.403`; `global.json` lo fija con `rollForward: latestFeature`.
 - `dotnet build GestorSolicitudes.slnx` → 0 errores, 0 avisos (son errores por `Directory.Build.props`).
-- `dotnet test GestorSolicitudes.slnx` → 277 correctos, 0 fallos.
+- `dotnet test GestorSolicitudes.slnx` → 278 correctos, 0 fallos.
 - `dotnet format GestorSolicitudes.slnx --verify-no-changes` → exit 0.
 - Cobertura local con `coverlet.msbuild` → 94,3 % de líneas, 78,71 % de ramas y 94 % de métodos; el CI exige 90 % de líneas.
 - `git status` limpio, sin ficheros sin seguimiento.
