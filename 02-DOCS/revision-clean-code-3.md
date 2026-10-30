@@ -361,7 +361,7 @@ Ya decididas:
 - [x] Ningún test escribe en `%APPDATA%` ni cambia la cultura global.
 - [ ] `MainViewModel` por debajo de ~600 líneas y sin E/S de fichero (adjuntos y columnas extraídos; hoy 1085 líneas).
 - [x] `Localizacion` dividida en traducciones, cultura y preferencia.
-- [ ] Ningún `x:Name`, `using` ni miembro público sin consumidor. Barrido del 30/10/2026: los 23 `x:Name` del XAML tienen consumidor (code-behind o `ElementName`/`TargetName`); falta revisar `using` y miembros públicos.
+- [x] Ningún `x:Name`, `using` ni miembro público sin consumidor. Barrido del 30/10/2026: los 23 `x:Name` del XAML tienen consumidor (code-behind o `ElementName`/`TargetName`); los `using` sobrantes los vigila `IDE0005` (aviso, y los avisos son errores); los miembros públicos e internos de producción se contrastaron con el texto de `.cs` y `.xaml`: los 11 candidatos del primer barrido tienen consumidor (enlace XAML o test).
 - [x] `ViewModelTests` por debajo de ~500 líneas por fichero y todos los ViewModels liberados.
 - [x] `dotnet format --verify-no-changes` y `dotnet test` verdes (278 tests); `dotnet build` verde con los avisos como errores.
 - [x] Ningún fuente contiene `U+FFFD`; codificación UTF-8 declarada en `.editorconfig`.
@@ -369,12 +369,13 @@ Ya decididas:
 
 ## Anexo: comprobaciones ejecutadas
 
-Estado a 30/10/2026, HEAD `7ac156c` en `andres/improve-code-3`:
+Estado a 30/10/2026, HEAD `a84f67a` en `andres/improve-code-3`:
 
 - `dotnet --version` → `10.0.403`; `global.json` lo fija con `rollForward: latestFeature`.
 - `dotnet build GestorSolicitudes.slnx` → 0 errores, 0 avisos (son errores por `Directory.Build.props`).
 - `dotnet test GestorSolicitudes.slnx` → 278 correctos, 0 fallos.
 - `dotnet format GestorSolicitudes.slnx --verify-no-changes` → exit 0.
 - Cobertura local con `coverlet.msbuild` → 94,3 % de líneas, 78,71 % de ramas y 94 % de métodos; el CI exige 90 % de líneas.
+- Auditoría de miembros (30/10/2026): barrido de `public`/`internal` en las fuentes de producción y recuento de apariciones en todos los `.cs` y `.xaml`. Los 11 sospechosos (`Altura*` de `EmbudoPeriodo`, `DiasProceso`, `NivelesInteres`, `TamanosPagina` y los cuatro booleanos de `Paginador`) tienen consumidor en un enlace XAML o en un test. No hay código muerto que borrar.
 - `git status` limpio, sin ficheros sin seguimiento.
 - Los issues de SonarCloud (`4a38192`, `7ac156c`) están corregidos en local; el quality gate del PR no se ha comprobado porque necesita push y análisis.
