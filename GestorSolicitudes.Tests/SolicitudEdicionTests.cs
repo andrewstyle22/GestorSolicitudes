@@ -28,4 +28,55 @@ public class SolicitudEdicionTests
         Assert.Equal("ACME", solicitud.Empresa);
         Assert.Equal("Dev", solicitud.Puesto);
     }
+
+    [Fact]
+    public void CargarDesde_CopiaLaOferta()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEnlaceOferta("https://ejemplo.test/oferta")
+            .ConPortal("LinkedIn")
+            .ConOrigen(Origen.Referido)
+            .ConUbicacion("Madrid")
+            .ConModalidad(Modalidad.Remoto)
+            .ConTecnologias("C#, .NET")
+            .ConRequisitos("3 años de experiencia")
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CargarDesde(solicitud);
+
+        Assert.Equal("https://ejemplo.test/oferta", editor.EnlaceOferta);
+        Assert.Equal("LinkedIn", editor.Portal);
+        Assert.Equal(Origen.Referido, editor.Origen);
+        Assert.Equal("Madrid", editor.Ubicacion);
+        Assert.Equal(Modalidad.Remoto, editor.Modalidad);
+        Assert.Equal("C#, .NET", editor.Tecnologias);
+        Assert.Equal("3 años de experiencia", editor.Requisitos);
+    }
+
+    [Fact]
+    public void AplicarOferta_VuelcaLaOferta()
+    {
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            EnlaceOferta = "https://ejemplo.test/oferta",
+            Portal = "LinkedIn",
+            Origen = Origen.Referido,
+            Ubicacion = "Madrid",
+            Modalidad = Modalidad.Remoto,
+            Tecnologias = "C#, .NET",
+            Requisitos = "3 años de experiencia",
+        };
+
+        editor.AplicarOferta(solicitud);
+
+        Assert.Equal("https://ejemplo.test/oferta", solicitud.EnlaceOferta);
+        Assert.Equal("LinkedIn", solicitud.Portal);
+        Assert.Equal(Origen.Referido, solicitud.Origen);
+        Assert.Equal("Madrid", solicitud.Ubicacion);
+        Assert.Equal(Modalidad.Remoto, solicitud.Modalidad);
+        Assert.Equal("C#, .NET", solicitud.Tecnologias);
+        Assert.Equal("3 años de experiencia", solicitud.Requisitos);
+    }
 }

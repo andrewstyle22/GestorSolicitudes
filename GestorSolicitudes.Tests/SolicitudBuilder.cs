@@ -20,6 +20,14 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConPortal(string? portal) => this.Asignar(s => s.Portal = portal);
 
+    public SolicitudBuilder ConOrigen(Origen origen) => this.Asignar(s => s.Origen = origen);
+
+    public SolicitudBuilder ConUbicacion(string? ubicacion) => this.Asignar(s => s.Ubicacion = ubicacion);
+
+    public SolicitudBuilder ConModalidad(Modalidad modalidad) => this.Asignar(s => s.Modalidad = modalidad);
+
+    public SolicitudBuilder ConRequisitos(string? requisitos) => this.Asignar(s => s.Requisitos = requisitos);
+
     public SolicitudBuilder ConTecnologias(string? tecnologias) => this.Asignar(s => s.Tecnologias = tecnologias);
 
     public SolicitudBuilder ConEnlaceOferta(string? enlace) => this.Asignar(s => s.EnlaceOferta = enlace);
