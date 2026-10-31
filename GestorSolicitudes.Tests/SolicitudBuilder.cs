@@ -42,6 +42,12 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConRespuestaEmpresa(string? respuesta) => this.Asignar(s => s.RespuestaEmpresa = respuesta);
 
+    public SolicitudBuilder ConContactoNombre(string? nombre) => this.Asignar(s => s.ContactoNombre = nombre);
+
+    public SolicitudBuilder ConContactoEmail(string? email) => this.Asignar(s => s.ContactoEmail = email);
+
+    public SolicitudBuilder ConContactoTelefono(string? telefono) => this.Asignar(s => s.ContactoTelefono = telefono);
+
     public SolicitudBuilder ConTecnologias(string? tecnologias) => this.Asignar(s => s.Tecnologias = tecnologias);
 
     public SolicitudBuilder ConEnlaceOferta(string? enlace) => this.Asignar(s => s.EnlaceOferta = enlace);

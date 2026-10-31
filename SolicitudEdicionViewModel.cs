@@ -71,6 +71,18 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
     [ObservableProperty]
     private string? respuestaEmpresa;
 
+    [ObservableProperty]
+    private string? contactoNombre;
+
+    [ObservableProperty]
+    private string? contactoEmail;
+
+    [ObservableProperty]
+    private string? contactoTelefono;
+
+    [ObservableProperty]
+    private string? notas;
+
     public void CargarDesde(Solicitud solicitud)
     {
         this.Empresa = solicitud.Empresa;
@@ -94,6 +106,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         this.ProximoSeguimiento = solicitud.ProximoSeguimiento;
         this.FechaCierre = solicitud.FechaCierre;
         this.RespuestaEmpresa = solicitud.RespuestaEmpresa;
+        this.ContactoNombre = solicitud.ContactoNombre;
+        this.ContactoEmail = solicitud.ContactoEmail;
+        this.ContactoTelefono = solicitud.ContactoTelefono;
+        this.Notas = solicitud.Notas;
     }
 
     public void AplicarIdentificacion(Solicitud solicitud)
@@ -131,5 +147,13 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         solicitud.ProximoSeguimiento = this.ProximoSeguimiento;
         solicitud.FechaCierre = this.FechaCierre;
         solicitud.RespuestaEmpresa = this.RespuestaEmpresa;
+    }
+
+    public void AplicarContacto(Solicitud solicitud)
+    {
+        solicitud.ContactoNombre = this.ContactoNombre;
+        solicitud.ContactoEmail = this.ContactoEmail;
+        solicitud.ContactoTelefono = this.ContactoTelefono;
+        solicitud.Notas = this.Notas;
     }
 }

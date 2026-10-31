@@ -173,4 +173,43 @@ public class SolicitudEdicionTests
         Assert.Equal(fecha.AddDays(4), solicitud.FechaCierre);
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
     }
+
+    [Fact]
+    public void CargarDesde_CopiaContactoYNotas()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConContactoNombre("Ana")
+            .ConContactoEmail("ana@ejemplo.test")
+            .ConContactoTelefono("600123456")
+            .ConNotas("Hablar el lunes")
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CargarDesde(solicitud);
+
+        Assert.Equal("Ana", editor.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", editor.ContactoEmail);
+        Assert.Equal("600123456", editor.ContactoTelefono);
+        Assert.Equal("Hablar el lunes", editor.Notas);
+    }
+
+    [Fact]
+    public void AplicarContacto_VuelcaContactoYNotas()
+    {
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            ContactoNombre = "Ana",
+            ContactoEmail = "ana@ejemplo.test",
+            ContactoTelefono = "600123456",
+            Notas = "Hablar el lunes",
+        };
+
+        editor.AplicarContacto(solicitud);
+
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitud.ContactoEmail);
+        Assert.Equal("600123456", solicitud.ContactoTelefono);
+        Assert.Equal("Hablar el lunes", solicitud.Notas);
+    }
 }
