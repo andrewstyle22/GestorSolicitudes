@@ -47,6 +47,30 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
     [ObservableProperty]
     private int interes = 3;
 
+    [ObservableProperty]
+    private EstadoSolicitud estado = EstadoSolicitud.Enviada;
+
+    [ObservableProperty]
+    private MotivoRechazo? motivoRechazo;
+
+    [ObservableProperty]
+    private DateTime fechaSolicitud = DateTime.Today;
+
+    [ObservableProperty]
+    private DateTime? fechaPrimeraRespuesta;
+
+    [ObservableProperty]
+    private DateTime? fechaEntrevista;
+
+    [ObservableProperty]
+    private DateTime? proximoSeguimiento;
+
+    [ObservableProperty]
+    private DateTime? fechaCierre;
+
+    [ObservableProperty]
+    private string? respuestaEmpresa;
+
     public void CargarDesde(Solicitud solicitud)
     {
         this.Empresa = solicitud.Empresa;
@@ -62,6 +86,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         this.SalarioMax = solicitud.SalarioMax;
         this.PretensionSalarial = solicitud.PretensionSalarial;
         this.Interes = solicitud.Interes;
+        this.Estado = solicitud.Estado;
+        this.MotivoRechazo = solicitud.MotivoRechazo;
+        this.FechaSolicitud = solicitud.FechaSolicitud;
+        this.FechaPrimeraRespuesta = solicitud.FechaPrimeraRespuesta;
+        this.FechaEntrevista = solicitud.FechaEntrevista;
+        this.ProximoSeguimiento = solicitud.ProximoSeguimiento;
+        this.FechaCierre = solicitud.FechaCierre;
+        this.RespuestaEmpresa = solicitud.RespuestaEmpresa;
     }
 
     public void AplicarIdentificacion(Solicitud solicitud)
@@ -87,5 +119,17 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         solicitud.SalarioMax = this.SalarioMax;
         solicitud.PretensionSalarial = this.PretensionSalarial;
         solicitud.Interes = this.Interes;
+    }
+
+    public void AplicarSeguimiento(Solicitud solicitud)
+    {
+        solicitud.Estado = this.Estado;
+        solicitud.MotivoRechazo = this.MotivoRechazo;
+        solicitud.FechaSolicitud = this.FechaSolicitud;
+        solicitud.FechaPrimeraRespuesta = this.FechaPrimeraRespuesta;
+        solicitud.FechaEntrevista = this.FechaEntrevista;
+        solicitud.ProximoSeguimiento = this.ProximoSeguimiento;
+        solicitud.FechaCierre = this.FechaCierre;
+        solicitud.RespuestaEmpresa = this.RespuestaEmpresa;
     }
 }

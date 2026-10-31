@@ -36,6 +36,12 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConInteres(int interes) => this.Asignar(s => s.Interes = interes);
 
+    public SolicitudBuilder ConMotivoRechazo(MotivoRechazo? motivo) => this.Asignar(s => s.MotivoRechazo = motivo);
+
+    public SolicitudBuilder ConFechaEntrevista(DateTime? fecha) => this.Asignar(s => s.FechaEntrevista = fecha);
+
+    public SolicitudBuilder ConRespuestaEmpresa(string? respuesta) => this.Asignar(s => s.RespuestaEmpresa = respuesta);
+
     public SolicitudBuilder ConTecnologias(string? tecnologias) => this.Asignar(s => s.Tecnologias = tecnologias);
 
     public SolicitudBuilder ConEnlaceOferta(string? enlace) => this.Asignar(s => s.EnlaceOferta = enlace);

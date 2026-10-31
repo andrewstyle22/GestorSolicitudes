@@ -116,4 +116,61 @@ public class SolicitudEdicionTests
         Assert.Null(solicitud.PretensionSalarial);
         Assert.Equal(3, solicitud.Interes);
     }
+
+    [Fact]
+    public void CargarDesde_CopiaElSeguimiento()
+    {
+        DateTime fecha = new(2026, 1, 10);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaSolicitud(fecha)
+            .ConFechaPrimeraRespuesta(fecha.AddDays(1))
+            .ConFechaEntrevista(fecha.AddDays(2))
+            .ConProximoSeguimiento(fecha.AddDays(3))
+            .ConFechaCierre(fecha.AddDays(4))
+            .ConRespuestaEmpresa("Buscamos otro perfil")
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CargarDesde(solicitud);
+
+        Assert.Equal(EstadoSolicitud.Rechazada, editor.Estado);
+        Assert.Equal(MotivoRechazo.Salario, editor.MotivoRechazo);
+        Assert.Equal(fecha, editor.FechaSolicitud);
+        Assert.Equal(fecha.AddDays(1), editor.FechaPrimeraRespuesta);
+        Assert.Equal(fecha.AddDays(2), editor.FechaEntrevista);
+        Assert.Equal(fecha.AddDays(3), editor.ProximoSeguimiento);
+        Assert.Equal(fecha.AddDays(4), editor.FechaCierre);
+        Assert.Equal("Buscamos otro perfil", editor.RespuestaEmpresa);
+    }
+
+    [Fact]
+    public void AplicarSeguimiento_VuelcaFechasYRespuesta()
+    {
+        DateTime fecha = new(2026, 2, 1);
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            Estado = EstadoSolicitud.OfertaRecibida,
+            MotivoRechazo = null,
+            FechaSolicitud = fecha,
+            FechaPrimeraRespuesta = fecha.AddDays(1),
+            FechaEntrevista = fecha.AddDays(2),
+            ProximoSeguimiento = fecha.AddDays(3),
+            FechaCierre = fecha.AddDays(4),
+            RespuestaEmpresa = "Oferta enviada",
+        };
+
+        editor.AplicarSeguimiento(solicitud);
+
+        Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
+        Assert.Null(solicitud.MotivoRechazo);
+        Assert.Equal(fecha, solicitud.FechaSolicitud);
+        Assert.Equal(fecha.AddDays(1), solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(fecha.AddDays(2), solicitud.FechaEntrevista);
+        Assert.Equal(fecha.AddDays(3), solicitud.ProximoSeguimiento);
+        Assert.Equal(fecha.AddDays(4), solicitud.FechaCierre);
+        Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
+    }
 }
