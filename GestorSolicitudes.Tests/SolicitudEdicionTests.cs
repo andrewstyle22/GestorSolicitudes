@@ -212,4 +212,16 @@ public class SolicitudEdicionTests
         Assert.Equal("600123456", solicitud.ContactoTelefono);
         Assert.Equal("Hablar el lunes", solicitud.Notas);
     }
+
+    [Fact]
+    public void AplicarA_SinGruposMigrados_NoTocaElModelo()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        var editor = new SolicitudEdicionViewModel { Empresa = "Otra", Puesto = "Otro" };
+
+        editor.AplicarA(solicitud);
+
+        Assert.Equal("ACME", solicitud.Empresa);
+        Assert.Equal("Dev", solicitud.Puesto);
+    }
 }

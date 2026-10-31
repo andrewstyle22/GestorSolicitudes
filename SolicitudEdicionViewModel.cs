@@ -83,6 +83,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
     [ObservableProperty]
     private string? notas;
 
+    public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
+
+    public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
+
     public void CargarDesde(Solicitud solicitud)
     {
         this.Empresa = solicitud.Empresa;
@@ -155,5 +159,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         solicitud.ContactoEmail = this.ContactoEmail;
         solicitud.ContactoTelefono = this.ContactoTelefono;
         solicitud.Notas = this.Notas;
+    }
+
+    /// <summary>
+    /// Vuelca al modelo solo los grupos cuya pestaña ya escribe en el editor. Mientras la UI
+    /// siga bindeada a la entidad, ese grupo no se toca para no pisar lo editado.
+    /// </summary>
+    public void AplicarA(Solicitud solicitud)
+    {
+        // Todavía no hay ninguna pestaña migrada: no se aplica ningún grupo.
     }
 }

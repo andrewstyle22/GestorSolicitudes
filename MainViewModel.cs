@@ -309,6 +309,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     public ObservableCollection<Evento> EventosEdicion { get; } = [];
 
+    /// <summary>Búfer de edición del panel de detalle; se recrea al abrir cada solicitud.</summary>
+    [ObservableProperty]
+    private SolicitudEdicionViewModel? editor;
+
     // Los adjuntos se derivan de la edición: al repintar el panel se recalculan.
     partial void OnEdicionChanged(Solicitud? value)
     {
@@ -322,6 +326,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
         }
 
+        this.Editor = value is null ? null : new SolicitudEdicionViewModel(value);
         this.OnPropertyChanged(nameof(this.AdjuntoCv));
         this.OnPropertyChanged(nameof(this.AdjuntoCarta));
     }
@@ -827,6 +832,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             return;
         }
+
+        this.Editor?.AplicarA(solicitud);
 
         bool esNueva = this.PrepararNueva(solicitud);
 

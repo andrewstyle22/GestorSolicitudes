@@ -69,6 +69,7 @@ public class ViewModelTests
         // Si el proceso sigue abierto, se propone el seguimiento a +7 días.
         Assert.Equal(DateTime.Today.AddDays(7), guardada.ProximoSeguimiento);
         Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
         Assert.Null(vm.SolicitudSeleccionada);
     }
 
@@ -177,6 +178,8 @@ public class ViewModelTests
 
         Assert.NotNull(vm.Edicion);
         Assert.Equal("ACME", vm.Edicion!.Empresa);
+        Assert.NotNull(vm.Editor);
+        Assert.Equal("ACME", vm.Editor.Empresa);
     }
 
     [Fact]
@@ -507,6 +510,7 @@ public class ViewModelTests
 
         Assert.Equal(EntityState.Detached, db.Entry(solicitud).State);
         Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
         Assert.Null(vm.SolicitudSeleccionada);
         Assert.Equal("ACME", Assert.Single(vm.Solicitudes).Empresa);
     }
