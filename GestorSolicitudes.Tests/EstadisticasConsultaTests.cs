@@ -19,8 +19,8 @@ public class EstadisticasConsultaTests
     {
         using var db = new ContextoContador();
         db.Database.EnsureCreated();
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
-        db.Solicitudes.Add(new Solicitud { Empresa = "Globex", Puesto = "Dev", Estado = EstadoSolicitud.Rechazada });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Globex").ConPuesto("Dev").ConEstado(EstadoSolicitud.Rechazada).Construir());
         db.SaveChanges();
 
         using var vm = new MainViewModel(db);

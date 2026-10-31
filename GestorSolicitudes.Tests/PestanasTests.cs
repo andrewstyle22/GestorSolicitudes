@@ -8,7 +8,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Resources;
 using GestorSolicitudes;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using GestorSolicitudes.Views;
 
@@ -130,14 +129,13 @@ public class PestanasTests
             db,
             rutaColumnas: Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt"),
             carpetaAdjuntos: TestDb.NuevaCarpeta());
-        vm.Edicion = new Solicitud
-        {
-            Empresa = "ACME",
-            Puesto = "Programador",
-            EnlaceOferta = "https://ejemplo.test/oferta",
-            Notas = "hablar el lunes",
-            RutaCv = @"C:\cv.pdf",
-        };
+        vm.Edicion = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Programador")
+            .ConEnlaceOferta("https://ejemplo.test/oferta")
+            .ConNotas("hablar el lunes")
+            .ConRutaCv(@"C:\cv.pdf")
+            .Construir();
 
         var detalleOferta = new PestanaOferta { DataContext = vm };
         Dibujar(detalleOferta);

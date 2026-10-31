@@ -2,7 +2,6 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Helpers;
-using GestorSolicitudes.Models;
 
 public class GestorAdjuntosTests
 {
@@ -25,7 +24,7 @@ public class GestorAdjuntosTests
         var gestor = new GestorAdjuntos(carpeta);
         string anterior = gestor.Copiar(Origen("cv.pdf"), "cv");
         string nueva = gestor.Copiar(Origen("cv-nuevo.pdf"), "cv");
-        var solicitud = new Solicitud { RutaCv = nueva };
+        var solicitud = new SolicitudBuilder().ConRutaCv(nueva).Construir();
 
         gestor.DescartarSustituidas(solicitud, (anterior, null));
 
@@ -40,7 +39,7 @@ public class GestorAdjuntosTests
         var gestor = new GestorAdjuntos(carpeta);
         string conservada = gestor.Copiar(Origen("cv.pdf"), "cv");
         string sobrante = gestor.Copiar(Origen("carta.pdf"), "carta");
-        var solicitud = new Solicitud { RutaCv = conservada };
+        var solicitud = new SolicitudBuilder().ConRutaCv(conservada).Construir();
 
         gestor.DescartarSustituidas(solicitud, (null, null));
 
@@ -56,7 +55,7 @@ public class GestorAdjuntosTests
         // La guardada es de una sesión anterior: no la recuerda este gestor.
         string guardada = AdjuntosHelper.Copiar(Origen("cv.pdf"), "cv", carpeta);
         string elegida = gestor.Copiar(Origen("cv-nuevo.pdf"), "cv");
-        var solicitud = new Solicitud { RutaCv = elegida };
+        var solicitud = new SolicitudBuilder().ConRutaCv(elegida).Construir();
 
         gestor.DescartarNoGuardadas(solicitud, (guardada, null));
 

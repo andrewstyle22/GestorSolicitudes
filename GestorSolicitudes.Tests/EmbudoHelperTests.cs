@@ -20,10 +20,9 @@ public class EmbudoHelperTests
     [Fact]
     public void EnviadaEnRango_ReconoceElHitoDeEnvioDentroDelMes()
     {
-        var conHito = new Solicitud
-        {
-            Eventos = { new Evento { Fecha = new DateTime(2026, 2, 10), Tipo = TipoEvento.SolicitudEnviada } },
-        };
+        var conHito = new SolicitudBuilder()
+            .ConEventos(new Evento { Fecha = new DateTime(2026, 2, 10), Tipo = TipoEvento.SolicitudEnviada })
+            .Construir();
 
         Assert.True(EmbudoHelper.EnviadaEnRango(conHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
@@ -31,7 +30,7 @@ public class EmbudoHelperTests
     [Fact]
     public void EnviadaEnRango_ReconoceLaFechaLibroCuandoNoHayHito()
     {
-        var sinHito = new Solicitud { FechaSolicitud = new DateTime(2026, 2, 15) };
+        var sinHito = new SolicitudBuilder().ConFechaSolicitud(new DateTime(2026, 2, 15)).Construir();
 
         Assert.True(EmbudoHelper.EnviadaEnRango(sinHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }
@@ -39,15 +38,14 @@ public class EmbudoHelperTests
     [Fact]
     public void EnviadaEnRango_DescartaFueraDelMesYConHitoFueraDelMes()
     {
-        var fueraDeRango = new Solicitud { FechaSolicitud = new DateTime(2026, 3, 1) };
+        var fueraDeRango = new SolicitudBuilder().ConFechaSolicitud(new DateTime(2026, 3, 1)).Construir();
 
         Assert.False(EmbudoHelper.EnviadaEnRango(fueraDeRango, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
 
-        var hitoFuera = new Solicitud
-        {
-            FechaSolicitud = new DateTime(2026, 1, 15),
-            Eventos = { new Evento { Fecha = new DateTime(2026, 1, 20), Tipo = TipoEvento.SolicitudEnviada } },
-        };
+        var hitoFuera = new SolicitudBuilder()
+            .ConFechaSolicitud(new DateTime(2026, 1, 15))
+            .ConEventos(new Evento { Fecha = new DateTime(2026, 1, 20), Tipo = TipoEvento.SolicitudEnviada })
+            .Construir();
 
         Assert.False(EmbudoHelper.EnviadaEnRango(hitoFuera, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
     }

@@ -8,15 +8,14 @@ public class CsvExportadorTests
     [Fact]
     public void Construir_IncluyeCabeceraTraducidaYLosDatosDeLaFila()
     {
-        var solicitud = new Solicitud
-        {
-            Empresa = "ACME",
-            Puesto = "Dev",
-            FechaSolicitud = new DateTime(2024, 5, 1),
-            Portal = "LinkedIn",
-            Estado = EstadoSolicitud.Enviada,
-            EnlaceOferta = "https://www.linkedin.com/jobs/view/abc",
-        };
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConFechaSolicitud(new DateTime(2024, 5, 1))
+            .ConPortal("LinkedIn")
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConEnlaceOferta("https://www.linkedin.com/jobs/view/abc")
+            .Construir();
 
         string csv = CsvExportador.Construir(new[] { solicitud });
 
