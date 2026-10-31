@@ -79,4 +79,41 @@ public class SolicitudEdicionTests
         Assert.Equal("C#, .NET", solicitud.Tecnologias);
         Assert.Equal("3 años de experiencia", solicitud.Requisitos);
     }
+
+    [Fact]
+    public void CargarDesde_CopiaElEconomicoYElInteres()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConSalarioMin(30000)
+            .ConSalarioMax(45000)
+            .ConPretensionSalarial(40000)
+            .ConInteres(5)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CargarDesde(solicitud);
+
+        Assert.Equal(30000, editor.SalarioMin);
+        Assert.Equal(45000, editor.SalarioMax);
+        Assert.Equal(40000, editor.PretensionSalarial);
+        Assert.Equal(5, editor.Interes);
+    }
+
+    [Fact]
+    public void AplicarEconomico_VuelcaNulos()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConSalarioMin(30000)
+            .ConSalarioMax(45000)
+            .ConPretensionSalarial(40000)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel { SalarioMin = null, SalarioMax = null, PretensionSalarial = null };
+
+        editor.AplicarEconomico(solicitud);
+
+        Assert.Null(solicitud.SalarioMin);
+        Assert.Null(solicitud.SalarioMax);
+        Assert.Null(solicitud.PretensionSalarial);
+        Assert.Equal(3, solicitud.Interes);
+    }
 }

@@ -35,6 +35,18 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
     [ObservableProperty]
     private string? requisitos;
 
+    [ObservableProperty]
+    private int? salarioMin;
+
+    [ObservableProperty]
+    private int? salarioMax;
+
+    [ObservableProperty]
+    private int? pretensionSalarial;
+
+    [ObservableProperty]
+    private int interes = 3;
+
     public void CargarDesde(Solicitud solicitud)
     {
         this.Empresa = solicitud.Empresa;
@@ -46,6 +58,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         this.Modalidad = solicitud.Modalidad;
         this.Tecnologias = solicitud.Tecnologias;
         this.Requisitos = solicitud.Requisitos;
+        this.SalarioMin = solicitud.SalarioMin;
+        this.SalarioMax = solicitud.SalarioMax;
+        this.PretensionSalarial = solicitud.PretensionSalarial;
+        this.Interes = solicitud.Interes;
     }
 
     public void AplicarIdentificacion(Solicitud solicitud)
@@ -63,5 +79,13 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         solicitud.Modalidad = this.Modalidad;
         solicitud.Tecnologias = this.Tecnologias;
         solicitud.Requisitos = this.Requisitos;
+    }
+
+    public void AplicarEconomico(Solicitud solicitud)
+    {
+        solicitud.SalarioMin = this.SalarioMin;
+        solicitud.SalarioMax = this.SalarioMax;
+        solicitud.PretensionSalarial = this.PretensionSalarial;
+        solicitud.Interes = this.Interes;
     }
 }

@@ -28,6 +28,14 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConRequisitos(string? requisitos) => this.Asignar(s => s.Requisitos = requisitos);
 
+    public SolicitudBuilder ConSalarioMin(int? salario) => this.Asignar(s => s.SalarioMin = salario);
+
+    public SolicitudBuilder ConSalarioMax(int? salario) => this.Asignar(s => s.SalarioMax = salario);
+
+    public SolicitudBuilder ConPretensionSalarial(int? salario) => this.Asignar(s => s.PretensionSalarial = salario);
+
+    public SolicitudBuilder ConInteres(int interes) => this.Asignar(s => s.Interes = interes);
+
     public SolicitudBuilder ConTecnologias(string? tecnologias) => this.Asignar(s => s.Tecnologias = tecnologias);
 
     public SolicitudBuilder ConEnlaceOferta(string? enlace) => this.Asignar(s => s.EnlaceOferta = enlace);
