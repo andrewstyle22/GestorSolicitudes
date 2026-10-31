@@ -61,6 +61,37 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void Guardar_FilaExistenteSinSeguimiento_ProponeFecha()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.SolicitudSeleccionada = solicitud;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Equal(DateTime.Today.AddDays(7), db.Solicitudes.Single().ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void Guardar_FilaExistenteConSeguimiento_ConservaLaFecha()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var seguimiento = DateTime.Today.AddDays(2);
+        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", ProximoSeguimiento = seguimiento };
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.SolicitudSeleccionada = solicitud;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Equal(seguimiento, db.Solicitudes.Single().ProximoSeguimiento);
+    }
+
+    [Fact]
     public void Guardar_AñadeElHitoEnviadaAlHistorial()
     {
         using var db = TestDb.NuevoContexto();
