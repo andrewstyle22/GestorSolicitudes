@@ -30,8 +30,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
         db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes"); // que SaveChanges falle dentro del try
 
         vm.GuardarCommand.Execute(null);

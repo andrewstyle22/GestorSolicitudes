@@ -38,15 +38,27 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void RellenarObligatorios_AsignaEmpresaYPuesto()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+
+        vm.RellenarObligatorios("ACME", "Dev");
+
+        Assert.Equal("ACME", vm.Edicion!.Empresa);
+        Assert.Equal("Dev", vm.Edicion.Puesto);
+    }
+
+    [Fact]
     public void Guardar_NuevaCandidaturaValida_PersisteYCierraElPanel()
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Desarrollador";
-        vm.Edicion.ContactoNombre = "Jefa";
+        vm.RellenarObligatorios("ACME", "Desarrollador");
+        vm.Edicion!.ContactoNombre = "Jefa";
         vm.GuardarCommand.Execute(null);
 
         Assert.Equal(1, vm.TotalSolicitudes);
@@ -98,8 +110,7 @@ public class ViewModelTests
         using var vm = new MainViewModel(db);
 
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Desarrollador";
+        vm.RellenarObligatorios("ACME", "Desarrollador");
         vm.GuardarCommand.Execute(null);
 
         Solicitud guardada = Assert.Single(vm.Solicitudes);
@@ -116,10 +127,9 @@ public class ViewModelTests
         using var vm = new MainViewModel(db);
 
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Desarrollador";
-        vm.Edicion.ContactoNombre = "Jefa";
-        vm.Edicion.FechaSolicitud = DateTime.Today.AddDays(-20);
+        vm.RellenarObligatorios("ACME", "Desarrollador");
+        vm.Edicion!.ContactoNombre = "Jefa";
+        vm.Edicion!.FechaSolicitud = DateTime.Today.AddDays(-20);
         vm.Edicion.ProximoSeguimiento = DateTime.Today.AddDays(-5);
         vm.GuardarCommand.Execute(null);
 

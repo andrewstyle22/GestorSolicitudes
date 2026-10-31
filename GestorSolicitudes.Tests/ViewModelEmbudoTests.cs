@@ -216,8 +216,7 @@ public class ViewModelEmbudoTests
         vm.VerGrafica = true;
 
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
         vm.GuardarCommand.Execute(null);
 
         Assert.Equal(12, vm.PeriodosEmbudo.Count);

@@ -14,12 +14,11 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
 
         vm.AnadirEventoCommand.Execute(null);
 
-        Evento nota = Assert.Single(vm.Edicion.Eventos);
+        Evento nota = Assert.Single(vm.Edicion!.Eventos);
         Assert.Single(vm.EventosEdicion);
         Assert.Same(nota, vm.EventosEdicion[0]);
         Assert.Equal(TipoEvento.Nota, nota.Tipo);
@@ -226,14 +225,13 @@ public class ViewModelAdjuntosTests
         var dialogo = new DialogoFalso { FicheroElegido = primero };
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
 
         vm.AdjuntarCvCommand.Execute(null);
-        string intermedio = vm.Edicion.RutaCv!;
+        string intermedio = vm.Edicion!.RutaCv!;
         dialogo.FicheroElegido = segundo;
         vm.AdjuntarCvCommand.Execute(null);
-        string final = vm.Edicion.RutaCv!;
+        string final = vm.Edicion!.RutaCv!;
 
         vm.GuardarCommand.Execute(null);
 
@@ -253,14 +251,13 @@ public class ViewModelAdjuntosTests
         var dialogo = new DialogoFalso { FicheroElegido = primero };
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
 
         vm.AdjuntarCvCommand.Execute(null);
-        string intermedio = vm.Edicion.RutaCv!;
+        string intermedio = vm.Edicion!.RutaCv!;
         dialogo.FicheroElegido = segundo;
         vm.AdjuntarCvCommand.Execute(null);
-        string final = vm.Edicion.RutaCv!;
+        string final = vm.Edicion!.RutaCv!;
 
         vm.CancelarCommand.Execute(null);
 
