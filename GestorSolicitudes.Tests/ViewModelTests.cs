@@ -65,7 +65,7 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.SolicitudSeleccionada = solicitud;
@@ -81,7 +81,7 @@ public class ViewModelTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         var seguimiento = DateTime.Today.AddDays(2);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", ProximoSeguimiento = seguimiento };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConProximoSeguimiento(seguimiento).Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.SolicitudSeleccionada = solicitud;
@@ -159,7 +159,7 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -175,8 +175,8 @@ public class ViewModelTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        db.Solicitudes.Add(new Solicitud { Empresa = "Abierta", Puesto = "A" });
-        db.Solicitudes.Add(new Solicitud { Empresa = "Cerrada", Puesto = "B", Estado = EstadoSolicitud.Rechazada });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Abierta").ConPuesto("A").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Cerrada").ConPuesto("B").ConEstado(EstadoSolicitud.Rechazada).Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -191,8 +191,8 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        db.Solicitudes.Add(new Solicitud { Empresa = "Abierta", Puesto = "A" });
-        db.Solicitudes.Add(new Solicitud { Empresa = "Cerrada", Puesto = "B", Estado = EstadoSolicitud.Rechazada });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Abierta").ConPuesto("A").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Cerrada").ConPuesto("B").ConEstado(EstadoSolicitud.Rechazada).Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -210,18 +210,16 @@ public class ViewModelTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "Vencida",
-            Puesto = "A",
-            ProximoSeguimiento = DateTime.Today.AddDays(-1),
-        });
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "Futura",
-            Puesto = "B",
-            ProximoSeguimiento = DateTime.Today.AddDays(3),
-        });
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("Vencida")
+            .ConPuesto("A")
+            .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
+            .Construir());
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("Futura")
+            .ConPuesto("B")
+            .ConProximoSeguimiento(DateTime.Today.AddDays(3))
+            .Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -237,8 +235,8 @@ public class ViewModelTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        db.Solicitudes.Add(new Solicitud { Empresa = "Grupo Métricas", Puesto = "Data" });
-        db.Solicitudes.Add(new Solicitud { Empresa = "Otra empresa", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Grupo Métricas").ConPuesto("Data").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Otra empresa").ConPuesto("Dev").Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -253,14 +251,13 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "ACME",
-            Puesto = "Dev",
-            Tecnologias = "Kubernetes, C#",
-            Portal = "InfoJobs",
-        });
-        db.Solicitudes.Add(new Solicitud { Empresa = "Otra", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConTecnologias("Kubernetes, C#")
+            .ConPortal("InfoJobs")
+            .Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Otra").ConPuesto("Dev").Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -276,7 +273,7 @@ public class ViewModelTests
     public void Recargar_NoTraeElHistorialYSeleccionarLaFilaSiLoCarga()
     {
         using var db = TestDb.NuevoContexto();
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
@@ -301,7 +298,7 @@ public class ViewModelTests
         // Con la base vacía no hay suelo: se puede retroceder.
         Assert.True(vm.PuedeRetrocederPeriodo);
 
-        db.Solicitudes.Add(new Solicitud { Empresa = "A", Puesto = "P", FechaSolicitud = DateTime.Today });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("A").ConPuesto("P").ConFechaSolicitud(DateTime.Today).Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -315,8 +312,8 @@ public class ViewModelTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        db.Solicitudes.Add(new Solicitud { Empresa = "Grupo Métricas", Puesto = "Data" });
-        db.Solicitudes.Add(new Solicitud { Empresa = "Otra empresa", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Grupo Métricas").ConPuesto("Data").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Otra empresa").ConPuesto("Dev").Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -336,14 +333,13 @@ public class ViewModelTests
         using var vm = new MainViewModel(db);
         var baseFecha = new DateTime(2026, 1, 10);
 
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "A",
-            Puesto = "P",
-            FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(3),
-        });
-        db.Solicitudes.Add(new Solicitud { Empresa = "B", Puesto = "P", FechaSolicitud = baseFecha });
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("A")
+            .ConPuesto("P")
+            .ConFechaSolicitud(baseFecha)
+            .ConFechaPrimeraRespuesta(baseFecha.AddDays(3))
+            .Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("B").ConPuesto("P").ConFechaSolicitud(baseFecha).Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -361,21 +357,19 @@ public class ViewModelTests
         using var vm = new MainViewModel(db);
         var baseFecha = new DateTime(2026, 1, 10);
 
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "A",
-            Puesto = "P",
-            FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(2),
-        });
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "B",
-            Puesto = "P",
-            FechaSolicitud = baseFecha,
-            FechaPrimeraRespuesta = baseFecha.AddDays(5),
-        });
-        db.Solicitudes.Add(new Solicitud { Empresa = "C", Puesto = "P", FechaSolicitud = baseFecha });
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("A")
+            .ConPuesto("P")
+            .ConFechaSolicitud(baseFecha)
+            .ConFechaPrimeraRespuesta(baseFecha.AddDays(2))
+            .Construir());
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("B")
+            .ConPuesto("P")
+            .ConFechaSolicitud(baseFecha)
+            .ConFechaPrimeraRespuesta(baseFecha.AddDays(5))
+            .Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("C").ConPuesto("P").ConFechaSolicitud(baseFecha).Construir());
         db.SaveChanges();
 
         // En GitHub Actions el hilo corre con en-US (o invariable); si el ViewModel
@@ -401,25 +395,22 @@ public class ViewModelTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "Vencida abierta",
-            Puesto = "A",
-            ProximoSeguimiento = DateTime.Today.AddDays(-1),
-        });
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "Cerrada vencida",
-            Puesto = "B",
-            Estado = EstadoSolicitud.Rechazada,
-            ProximoSeguimiento = DateTime.Today.AddDays(-2),
-        });
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "Abierta al día",
-            Puesto = "C",
-            ProximoSeguimiento = DateTime.Today.AddDays(5),
-        });
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("Vencida abierta")
+            .ConPuesto("A")
+            .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
+            .Construir());
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("Cerrada vencida")
+            .ConPuesto("B")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConProximoSeguimiento(DateTime.Today.AddDays(-2))
+            .Construir());
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("Abierta al día")
+            .ConPuesto("C")
+            .ConProximoSeguimiento(DateTime.Today.AddDays(5))
+            .Construir());
         db.SaveChanges();
         vm.Recargar();
 
@@ -495,7 +486,7 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -515,7 +506,7 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
 
@@ -531,7 +522,7 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
@@ -562,8 +553,8 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        db.Solicitudes.Add(new Solicitud { Empresa = "Enviada", Puesto = "A", Estado = EstadoSolicitud.Enviada });
-        db.Solicitudes.Add(new Solicitud { Empresa = "Rechazada", Puesto = "B", Estado = EstadoSolicitud.Rechazada });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Enviada").ConPuesto("A").ConEstado(EstadoSolicitud.Enviada).Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Rechazada").ConPuesto("B").ConEstado(EstadoSolicitud.Rechazada).Construir());
         db.SaveChanges();
         vm.Recargar();
 

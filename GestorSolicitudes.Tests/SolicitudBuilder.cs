@@ -20,6 +20,8 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConPortal(string? portal) => this.Asignar(s => s.Portal = portal);
 
+    public SolicitudBuilder ConTecnologias(string? tecnologias) => this.Asignar(s => s.Tecnologias = tecnologias);
+
     public SolicitudBuilder ConEnlaceOferta(string? enlace) => this.Asignar(s => s.EnlaceOferta = enlace);
 
     public SolicitudBuilder ConNotas(string? notas) => this.Asignar(s => s.Notas = notas);

@@ -31,7 +31,7 @@ public class ViewModelAdjuntosTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
         vm.Edicion = solicitud;
 
@@ -56,7 +56,7 @@ public class ViewModelAdjuntosTests
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today.AddDays(-1), Tipo = TipoEvento.SolicitudEnviada });
         solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
         db.Solicitudes.Add(solicitud);
@@ -81,7 +81,7 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf") };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf")).Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -105,7 +105,7 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCarta = TestDb.CrearAdjuntoEn(carpeta, "carta.pdf") };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConRutaCarta(TestDb.CrearAdjuntoEn(carpeta, "carta.pdf")).Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -128,7 +128,7 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf") };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf")).Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -150,7 +150,7 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf") };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf")).Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -173,7 +173,7 @@ public class ViewModelAdjuntosTests
         string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf") };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf")).Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -195,7 +195,7 @@ public class ViewModelAdjuntosTests
         string rutaAnterior = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf");
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = rutaAnterior };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConRutaCv(rutaAnterior).Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();

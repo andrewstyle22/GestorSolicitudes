@@ -30,6 +30,7 @@ public class SolicitudBuilderTests
             .ConEstado(EstadoSolicitud.Rechazada)
             .ConFechaSolicitud(fecha)
             .ConPortal("LinkedIn")
+            .ConTecnologias("C#, .NET")
             .ConEnlaceOferta("https://ejemplo.test/oferta")
             .ConNotas("nota")
             .ConRutaCv(@"C:\cv.pdf")
@@ -46,6 +47,7 @@ public class SolicitudBuilderTests
         Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
         Assert.Equal(fecha, solicitud.FechaSolicitud);
         Assert.Equal("LinkedIn", solicitud.Portal);
+        Assert.Equal("C#, .NET", solicitud.Tecnologias);
         Assert.Equal("https://ejemplo.test/oferta", solicitud.EnlaceOferta);
         Assert.Equal("nota", solicitud.Notas);
         Assert.Equal(@"C:\cv.pdf", solicitud.RutaCv);

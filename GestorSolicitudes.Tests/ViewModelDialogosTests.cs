@@ -1,7 +1,6 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -135,7 +134,11 @@ public class ViewModelDialogosTests
         string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf") };
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf"))
+            .Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -155,7 +158,7 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso { RespuestaConfirmar = false };
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -174,7 +177,7 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -191,7 +194,7 @@ public class ViewModelDialogosTests
     public void ExportarCsv_ConDestinoEscribeEInforma()
     {
         using var db = TestDb.NuevoContexto();
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
         var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
         using var vm = new MainViewModel(db, dialogo: dialogo);
