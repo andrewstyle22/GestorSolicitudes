@@ -130,8 +130,8 @@ public class ViewModelTests
         vm.NuevaCommand.Execute(null);
         vm.RellenarObligatorios("ACME", "Desarrollador");
         vm.Edicion!.ContactoNombre = "Jefa";
-        vm.Edicion!.FechaSolicitud = DateTime.Today.AddDays(-20);
-        vm.Edicion.ProximoSeguimiento = DateTime.Today.AddDays(-5);
+        vm.Editor!.FechaSolicitud = DateTime.Today.AddDays(-20);
+        vm.Editor.ProximoSeguimiento = DateTime.Today.AddDays(-5);
         vm.GuardarCommand.Execute(null);
 
         vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
