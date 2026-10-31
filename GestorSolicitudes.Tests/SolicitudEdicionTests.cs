@@ -263,6 +263,56 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void CargarDesde_CopiaLosAdjuntos()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConRutaCv(@"C:\adjuntos\abc.pdf")
+            .ConNombreOriginalCv("mi-cv.pdf")
+            .ConRutaCarta(@"C:\adjuntos\def.pdf")
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CargarDesde(solicitud);
+
+        Assert.Equal(@"C:\adjuntos\abc.pdf", editor.RutaCv);
+        Assert.Equal("mi-cv.pdf", editor.NombreOriginalCv);
+        Assert.Equal(@"C:\adjuntos\def.pdf", editor.RutaCarta);
+        Assert.Null(editor.NombreOriginalCarta);
+    }
+
+    [Fact]
+    public void AdjuntoCv_SinRuta_EsNulo()
+    {
+        var editor = new SolicitudEdicionViewModel();
+
+        Assert.Null(editor.AdjuntoCv);
+        Assert.Null(editor.AdjuntoCarta);
+    }
+
+    [Fact]
+    public void AdjuntoCv_UsaElNombreOriginalYSinNoHayElDelFichero()
+    {
+        var editor = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf", NombreOriginalCv = "mi-cv.pdf" };
+        var sinNombre = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf" };
+
+        Assert.Equal("mi-cv.pdf", editor.AdjuntoCv!.Nombre);
+        Assert.Equal("abc.pdf", sinNombre.AdjuntoCv!.Nombre);
+    }
+
+    [Fact]
+    public void AdjuntoCv_NotificaAlCambiarLaRutaONombre()
+    {
+        var editor = new SolicitudEdicionViewModel();
+        var notificados = new List<string?>();
+        editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
+
+        editor.RutaCv = @"C:\adjuntos\abc.pdf";
+        editor.NombreOriginalCv = "mi-cv.pdf";
+
+        Assert.Equal(2, notificados.Count(nombre => nombre == nameof(editor.AdjuntoCv)));
+    }
+
+    [Fact]
     public void AplicarA_VuelcaTodosLosGruposDelEditor()
     {
         DateTime fecha = new(2026, 2, 1);

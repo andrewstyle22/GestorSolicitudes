@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.ViewModels;
 
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GestorSolicitudes.Models;
 
@@ -86,6 +87,36 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     [ObservableProperty]
     private string? notas;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
+    private string? rutaCv;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
+    private string? nombreOriginalCv;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
+    private string? rutaCarta;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
+    private string? nombreOriginalCarta;
+
+    /// <summary>CV de la edición: nulo si no hay fichero, como en el panel.</summary>
+    public Adjunto? AdjuntoCv => this.RutaCv is null
+        ? null
+        : new Adjunto(
+            this.RutaCv,
+            this.NombreOriginalCv ?? Path.GetFileName(this.RutaCv) ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
+
+    /// <summary>Carta de la edición: nula si no hay fichero, como en el panel.</summary>
+    public Adjunto? AdjuntoCarta => this.RutaCarta is null
+        ? null
+        : new Adjunto(
+            this.RutaCarta,
+            this.NombreOriginalCarta ?? Path.GetFileName(this.RutaCarta) ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
+
     public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
 
     public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
@@ -127,6 +158,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ContactoEmail = solicitud.ContactoEmail;
         this.ContactoTelefono = solicitud.ContactoTelefono;
         this.Notas = solicitud.Notas;
+        this.RutaCv = solicitud.RutaCv;
+        this.NombreOriginalCv = solicitud.NombreOriginalCv;
+        this.RutaCarta = solicitud.RutaCarta;
+        this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
         this.ValidateAllProperties();
     }
 
