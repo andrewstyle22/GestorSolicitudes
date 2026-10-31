@@ -837,12 +837,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.Editor?.AplicarA(solicitud);
-
-        if (!this.Validar(solicitud))
+        if (!this.Validar())
         {
             return;
         }
+
+        this.Editor?.AplicarA(solicitud);
 
         bool esNueva = this.PrepararNueva(solicitud);
 
@@ -861,9 +861,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
-    private bool Validar(Solicitud solicitud)
+    private bool Validar()
     {
-        if (ReglasSolicitud.TieneDatosObligatorios(solicitud))
+        if (this.Editor?.HasErrors == false)
         {
             return true;
         }

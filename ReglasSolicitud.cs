@@ -9,13 +9,6 @@ using GestorSolicitudes.Models;
 public static class ReglasSolicitud
 {
     /// <summary>
-    /// Verifica si los datos obligatorios (empresa y puesto) están rellenos.
-    /// </summary>
-    public static bool TieneDatosObligatorios(Solicitud solicitud) =>
-        !string.IsNullOrWhiteSpace(solicitud.Empresa)
-        && !string.IsNullOrWhiteSpace(solicitud.Puesto);
-
-    /// <summary>
     /// Propone una fecha de seguimiento por defecto: 7 días después de la solicitud,
     /// solo si la solicitud está abierta y no tiene fecha de seguimiento.
     /// </summary>

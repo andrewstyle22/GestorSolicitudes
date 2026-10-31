@@ -24,6 +24,22 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void Guardar_LaValidacionLeeElEditor_NoLaEntidad()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME"; // la entidad no es la fuente de la validación
+        vm.Edicion.Puesto = "Dev";
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
     public void Guardar_CuandoFallaLaBase_AvisaDeErrorYNoCierraElPanel()
     {
         using var db = TestDb.NuevoContexto();

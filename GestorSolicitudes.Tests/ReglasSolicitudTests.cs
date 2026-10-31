@@ -6,38 +6,6 @@ using GestorSolicitudes.Models;
 public class ReglasSolicitudTests
 {
     [Fact]
-    public void TieneDatosObligatorios_VerdeCuandoEmpresaYPuestoLlenos()
-    {
-        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-
-        Assert.True(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
-    public void TieneDatosObligatorios_RojoCuandoEmpresaVacia()
-    {
-        var solicitud = new SolicitudBuilder().ConEmpresa(string.Empty).ConPuesto("Dev").Construir();
-
-        Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
-    public void TieneDatosObligatorios_RojoCuandoPuestoVacio()
-    {
-        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto(string.Empty).Construir();
-
-        Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
-    public void TieneDatosObligatorios_RojoCuandoAmbosVacios()
-    {
-        var solicitud = new SolicitudBuilder().ConEmpresa(string.Empty).ConPuesto(string.Empty).Construir();
-
-        Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
     public void ProponerSeguimiento_DaFechaCuandoEstaAbiertaYSinFecha()
     {
         var solicitud = new SolicitudBuilder()
