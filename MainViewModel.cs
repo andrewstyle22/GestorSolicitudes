@@ -1001,7 +1001,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AbrirEnlace()
     {
-        string? url = this.Edicion?.EnlaceOferta;
+        string? url = this.Editor?.EnlaceOferta;
         if (string.IsNullOrWhiteSpace(url))
         {
             return;

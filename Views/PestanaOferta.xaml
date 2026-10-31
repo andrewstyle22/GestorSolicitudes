@@ -13,7 +13,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0" Style="{StaticResource Campo}"
-                         Text="{Binding Edicion.EnlaceOferta}" Margin="9,0,10,0" />
+                         Text="{Binding Editor.EnlaceOferta}" Margin="9,0,10,0" />
                 <Button Grid.Column="1" Content="{DynamicResource Boton.Abrir}" Margin="0,0,6,0"
                         Style="{StaticResource BotonSecundario}"
                         Command="{Binding AbrirEnlaceCommand}" />
@@ -27,7 +27,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Oferta.PortalOrigen}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.Portal}"
+                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.Portal}"
                              ToolTip="{DynamicResource Oferta.PortalToolTip}" Margin="9,0,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
@@ -36,7 +36,7 @@
                               ItemsSource="{Binding Origenes}"
                               DisplayMemberPath="Descripcion"
                               SelectedValuePath="Valor"
-                              SelectedValue="{Binding Edicion.Origen}"
+                              SelectedValue="{Binding Editor.Origen}"
                               ToolTip="{DynamicResource Oferta.ViaContactoToolTip}" Width="182" Margin="0,0,9,0" />
                 </StackPanel>
             </Grid>
@@ -49,7 +49,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Oferta.Ubicacion}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.Ubicacion}" Margin="9,0,0,0" />
+                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.Ubicacion}" Margin="9,0,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="{DynamicResource Oferta.Modalidad}" Style="{StaticResource Etiqueta}" Margin="0,10,9,3" />
@@ -57,7 +57,7 @@
                               ItemsSource="{Binding Modalidades}"
                               DisplayMemberPath="Descripcion"
                               SelectedValuePath="Valor"
-                              SelectedValue="{Binding Edicion.Modalidad}" Width="182" Margin="0,0,9,0" />
+                              SelectedValue="{Binding Editor.Modalidad}" Width="182" Margin="0,0,9,0" />
                 </StackPanel>
             </Grid>
 
@@ -67,7 +67,7 @@
                       SelectedItem="{Binding Edicion.Interes}" Width="101" Margin="9,0,0,0" />
 
             <TextBlock Text="{DynamicResource Oferta.Tecnologias}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-            <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.Tecnologias}"
+            <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.Tecnologias}"
                      ToolTip="{DynamicResource Oferta.TecnologiasToolTip}" Margin="9,0,9,0" />
 
             <Grid Margin="9,0,0,0">
@@ -103,7 +103,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0" Style="{StaticResource CampoMultilinea}"
                          MinHeight="90"
-                         Text="{Binding Edicion.Requisitos}"
+                         Text="{Binding Editor.Requisitos}"
                          ToolTip="{DynamicResource Oferta.RequisitosToolTip}" />
                 <Button Grid.Column="1" Content="{DynamicResource Boton.Leer}" Margin="8,0,9,0"
                         Padding="12,8" VerticalAlignment="Center"

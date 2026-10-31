@@ -241,7 +241,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = "  https://ejemplo.com/oferta  ";
+        vm.Editor!.EnlaceOferta = "  https://ejemplo.com/oferta  ";
 
         vm.AbrirEnlaceCommand.Execute(null);
 
@@ -268,7 +268,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso { AbrirEnlaceLanza = true };
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = "https://ejemplo.com";
+        vm.Editor!.EnlaceOferta = "https://ejemplo.com";
 
         vm.AbrirEnlaceCommand.Execute(null);
 
@@ -284,7 +284,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = enlace;
+        vm.Editor!.EnlaceOferta = enlace;
 
         vm.AbrirEnlaceCommand.Execute(null);
 

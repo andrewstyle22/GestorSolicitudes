@@ -167,6 +167,6 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
     /// </summary>
     public void AplicarA(Solicitud solicitud)
     {
-        // Todavía no hay ninguna pestaña migrada: no se aplica ningún grupo.
+        this.AplicarOferta(solicitud);
     }
 }
