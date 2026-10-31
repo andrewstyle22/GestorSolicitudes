@@ -146,31 +146,55 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void AplicarSeguimiento_VuelcaFechasYRespuesta()
+    public void AplicarEstado_VuelcaEstadoYMotivo()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            Estado = EstadoSolicitud.OfertaRecibida,
+            MotivoRechazo = null,
+        };
+
+        editor.AplicarEstado(solicitud);
+
+        Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
+        Assert.Null(solicitud.MotivoRechazo);
+    }
+
+    [Fact]
+    public void AplicarFechas_VuelcaLasCincoFechas()
     {
         DateTime fecha = new(2026, 2, 1);
         Solicitud solicitud = new SolicitudBuilder().Construir();
         var editor = new SolicitudEdicionViewModel
         {
-            Estado = EstadoSolicitud.OfertaRecibida,
-            MotivoRechazo = null,
             FechaSolicitud = fecha,
             FechaPrimeraRespuesta = fecha.AddDays(1),
             FechaEntrevista = fecha.AddDays(2),
             ProximoSeguimiento = fecha.AddDays(3),
             FechaCierre = fecha.AddDays(4),
-            RespuestaEmpresa = "Oferta enviada",
         };
 
-        editor.AplicarSeguimiento(solicitud);
+        editor.AplicarFechas(solicitud);
 
-        Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
-        Assert.Null(solicitud.MotivoRechazo);
         Assert.Equal(fecha, solicitud.FechaSolicitud);
         Assert.Equal(fecha.AddDays(1), solicitud.FechaPrimeraRespuesta);
         Assert.Equal(fecha.AddDays(2), solicitud.FechaEntrevista);
         Assert.Equal(fecha.AddDays(3), solicitud.ProximoSeguimiento);
         Assert.Equal(fecha.AddDays(4), solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void AplicarRespuesta_VuelcaLaRespuestaDeLaEmpresa()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConRespuestaEmpresa("Antigua").Construir();
+        var editor = new SolicitudEdicionViewModel { RespuestaEmpresa = "Oferta enviada" };
+
+        editor.AplicarRespuesta(solicitud);
+
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
     }
 
@@ -216,13 +240,23 @@ public class SolicitudEdicionTests
     [Fact]
     public void AplicarA_SoloAplicaLosGruposMigrados()
     {
+        DateTime fecha = new(2026, 2, 1);
         Solicitud solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        var editor = new SolicitudEdicionViewModel { Empresa = "Otra", Puesto = "Otro", Portal = "LinkedIn" };
+        var editor = new SolicitudEdicionViewModel
+        {
+            Empresa = "Otra",
+            Puesto = "Otro",
+            Portal = "LinkedIn",
+            Estado = EstadoSolicitud.OfertaRecibida,
+            FechaSolicitud = fecha,
+        };
 
         editor.AplicarA(solicitud);
 
         Assert.Equal("ACME", solicitud.Empresa);
         Assert.Equal("Dev", solicitud.Puesto);
         Assert.Equal("LinkedIn", solicitud.Portal);
+        Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
+        Assert.NotEqual(fecha, solicitud.FechaSolicitud);
     }
 }

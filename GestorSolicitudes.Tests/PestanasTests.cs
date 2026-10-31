@@ -4,10 +4,12 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Resources;
 using GestorSolicitudes;
+using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using GestorSolicitudes.Views;
 
@@ -145,6 +147,22 @@ public class PestanasTests
         var detalleSeguimiento = new PestanaSeguimiento { DataContext = vm };
         Dibujar(detalleSeguimiento);
         Assert.Contains(Descendientes<TextBox>(detalleSeguimiento), t => t.Text == "hablar el lunes");
+        Assert.Contains(
+            Descendientes<ComboBox>(detalleSeguimiento),
+            c => BindingOperations.GetBinding(c, Selector.SelectedValueProperty)?.Path.Path == "Editor.Estado");
+
+        // El bloque del motivo de rechazo depende del estado a través del convertidor:
+        // solo aparece al marcar "Descartado por la empresa".
+        StackPanel panelMotivo = Descendientes<StackPanel>(detalleSeguimiento).Single(p =>
+            BindingOperations.GetBinding(p, UIElement.VisibilityProperty)?.Path.Path == "Editor.Estado");
+        Assert.Equal(Visibility.Collapsed, panelMotivo.Visibility);
+
+        vm.Editor!.Estado = EstadoSolicitud.Rechazada;
+        Assert.Equal(Visibility.Visible, panelMotivo.Visibility);
+
+        Assert.Contains(
+            Descendientes<ComboBox>(detalleSeguimiento),
+            c => BindingOperations.GetBinding(c, Selector.SelectedValueProperty)?.Path.Path == "Editor.MotivoRechazo");
 
         var detalleAdjuntos = new PestanaAdjuntos { DataContext = vm };
         Dibujar(detalleAdjuntos);

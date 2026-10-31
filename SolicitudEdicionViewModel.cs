@@ -141,15 +141,23 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         solicitud.Interes = this.Interes;
     }
 
-    public void AplicarSeguimiento(Solicitud solicitud)
+    public void AplicarEstado(Solicitud solicitud)
     {
         solicitud.Estado = this.Estado;
         solicitud.MotivoRechazo = this.MotivoRechazo;
+    }
+
+    public void AplicarFechas(Solicitud solicitud)
+    {
         solicitud.FechaSolicitud = this.FechaSolicitud;
         solicitud.FechaPrimeraRespuesta = this.FechaPrimeraRespuesta;
         solicitud.FechaEntrevista = this.FechaEntrevista;
         solicitud.ProximoSeguimiento = this.ProximoSeguimiento;
         solicitud.FechaCierre = this.FechaCierre;
+    }
+
+    public void AplicarRespuesta(Solicitud solicitud)
+    {
         solicitud.RespuestaEmpresa = this.RespuestaEmpresa;
     }
 
@@ -169,5 +177,6 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
     {
         this.AplicarOferta(solicitud);
         this.AplicarEconomico(solicitud);
+        this.AplicarEstado(solicitud);
     }
 }
