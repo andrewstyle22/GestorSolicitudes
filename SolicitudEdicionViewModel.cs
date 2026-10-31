@@ -181,5 +181,6 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         this.AplicarFechas(solicitud);
         this.AplicarRespuesta(solicitud);
         this.AplicarContacto(solicitud);
+        this.AplicarIdentificacion(solicitud);
     }
 }

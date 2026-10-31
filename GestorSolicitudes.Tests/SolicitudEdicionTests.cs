@@ -238,7 +238,7 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void AplicarA_SoloAplicaLosGruposMigrados()
+    public void AplicarA_VuelcaTodosLosGruposDelEditor()
     {
         DateTime fecha = new(2026, 2, 1);
         Solicitud solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
@@ -255,8 +255,8 @@ public class SolicitudEdicionTests
 
         editor.AplicarA(solicitud);
 
-        Assert.Equal("ACME", solicitud.Empresa);
-        Assert.Equal("Dev", solicitud.Puesto);
+        Assert.Equal("Otra", solicitud.Empresa);
+        Assert.Equal("Otro", solicitud.Puesto);
         Assert.Equal("LinkedIn", solicitud.Portal);
         Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
         Assert.Equal(fecha, solicitud.FechaSolicitud);

@@ -739,9 +739,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void RefrescarPanelDetalle()
     {
+        // El editor guarda lo escrito y aún no guardado: al repintar el panel se conserva,
+        // que reasignar la entidad lo recrearía desde cero y perdería esos cambios.
+        SolicitudEdicionViewModel? editor = this.Editor;
         Solicitud? actual = this.Edicion;
         this.Edicion = null;
         this.Edicion = actual;
+        this.Editor = editor;
     }
 
     /// <summary>
@@ -813,12 +817,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void VerCandidaturasDeEstaEmpresa()
     {
-        if (this.Edicion is null || string.IsNullOrWhiteSpace(this.Edicion.Empresa))
+        if (this.Editor is null || string.IsNullOrWhiteSpace(this.Editor.Empresa))
         {
             return;
         }
 
-        this.TextoBusqueda = this.Edicion.Empresa;
+        this.TextoBusqueda = this.Editor.Empresa;
     }
 
     /// <summary>Borra el texto de búsqueda para volver a mostrar la lista completa.</summary>
@@ -828,12 +832,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Guardar()
     {
-        if (this.Edicion is not Solicitud solicitud || !this.Validar(solicitud))
+        if (this.Edicion is not Solicitud solicitud)
         {
             return;
         }
 
         this.Editor?.AplicarA(solicitud);
+
+        if (!this.Validar(solicitud))
+        {
+            return;
+        }
 
         bool esNueva = this.PrepararNueva(solicitud);
 

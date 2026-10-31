@@ -627,7 +627,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Style="{StaticResource Campo}" Text="{Binding Edicion.Empresa}" Margin="9,0,0,0" />
+                                <TextBox Grid.Column="0" Style="{StaticResource Campo}" Text="{Binding Editor.Empresa}" Margin="9,0,0,0" />
                                 <Button Grid.Column="1" Content="{DynamicResource Detalle.VerTodas}" Margin="6,0,9,0"
                                         Style="{StaticResource BotonSecundario}"
                                         ToolTip="{DynamicResource Detalle.VerTodasToolTip}"
@@ -635,7 +635,7 @@
                             </Grid>
 
                             <TextBlock Text="{DynamicResource Detalle.Puesto}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-                            <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.Puesto}" Margin="9,0,10,0" />
+                            <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.Puesto}" Margin="9,0,10,0" />
                         </StackPanel>
 
                         <!-- Pestañas: Oferta / Seguimiento / Adjuntos e historial -->

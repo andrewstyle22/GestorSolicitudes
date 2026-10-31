@@ -46,8 +46,8 @@ public class ViewModelTests
 
         vm.RellenarObligatorios("ACME", "Dev");
 
-        Assert.Equal("ACME", vm.Edicion!.Empresa);
-        Assert.Equal("Dev", vm.Edicion.Puesto);
+        Assert.Equal("ACME", vm.Editor!.Empresa);
+        Assert.Equal("Dev", vm.Editor.Puesto);
     }
 
     [Fact]
@@ -439,7 +439,7 @@ public class ViewModelTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
+        vm.Editor!.Empresa = "ACME";
 
         vm.VerCandidaturasDeEstaEmpresaCommand.Execute(null);
 
@@ -504,7 +504,7 @@ public class ViewModelTests
         db.SaveChanges();
         vm.Recargar();
         vm.Edicion = solicitud;
-        vm.Edicion.Empresa = "SinGuardar";
+        vm.Editor!.Empresa = "SinGuardar";
 
         vm.CancelarCommand.Execute(null);
 

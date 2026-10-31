@@ -14,7 +14,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME"; // falta el puesto
+        vm.Editor!.Empresa = "ACME"; // falta el puesto
 
         vm.GuardarCommand.Execute(null);
 
