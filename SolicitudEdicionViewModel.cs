@@ -1,17 +1,20 @@
 namespace GestorSolicitudes.ViewModels;
 
+using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GestorSolicitudes.Models;
 
 /// <summary>
 /// Búfer de edición de una solicitud: la interfaz escribe aquí y el modelo solo se toca al guardar.
 /// </summary>
-public sealed partial class SolicitudEdicionViewModel : ObservableObject
+public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 {
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarObligatorio))]
     private string empresa = string.Empty;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarObligatorio))]
     private string puesto = string.Empty;
 
     [ObservableProperty]
@@ -87,6 +90,16 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
 
     public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
 
+    /// <summary>Mensaje de campo obligatorio, el mismo que ya usaba el aviso al guardar.</summary>
+    public static ValidationResult? ValidarObligatorio(string? valor) =>
+        string.IsNullOrWhiteSpace(valor)
+            ? new ValidationResult(Localizacion.Texto("Mensaje.FaltanDatos"))
+            : ValidationResult.Success;
+
+    partial void OnEmpresaChanged(string value) => this.ValidateProperty(value, nameof(this.Empresa));
+
+    partial void OnPuestoChanged(string value) => this.ValidateProperty(value, nameof(this.Puesto));
+
     public void CargarDesde(Solicitud solicitud)
     {
         this.Empresa = solicitud.Empresa;
@@ -114,6 +127,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         this.ContactoEmail = solicitud.ContactoEmail;
         this.ContactoTelefono = solicitud.ContactoTelefono;
         this.Notas = solicitud.Notas;
+        this.ValidateAllProperties();
     }
 
     public void AplicarIdentificacion(Solicitud solicitud)

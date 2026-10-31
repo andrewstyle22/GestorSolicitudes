@@ -1,10 +1,35 @@
 namespace GestorSolicitudes.Tests;
 
+using System.ComponentModel.DataAnnotations;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
 public class SolicitudEdicionTests
 {
+    [Fact]
+    public void Validacion_SinEmpresaOPuesto_MarcaLosDosCamposConElMensajeDeFaltanDatos()
+    {
+        var editor = new SolicitudEdicionViewModel();
+
+        Assert.True(editor.HasErrors);
+        Assert.Equal(
+            Localizacion.Texto("Mensaje.FaltanDatos"),
+            Assert.Single(editor.GetErrors(nameof(editor.Empresa)).Cast<ValidationResult>()).ErrorMessage);
+        Assert.Equal(
+            Localizacion.Texto("Mensaje.FaltanDatos"),
+            Assert.Single(editor.GetErrors(nameof(editor.Puesto)).Cast<ValidationResult>()).ErrorMessage);
+    }
+
+    [Fact]
+    public void Validacion_AlRellenarEmpresaYPuesto_DejaDeHaberErrores()
+    {
+        var editor = new SolicitudEdicionViewModel { Empresa = "ACME", Puesto = "Dev" };
+
+        Assert.False(editor.HasErrors);
+        Assert.Empty(editor.GetErrors(nameof(editor.Empresa)));
+        Assert.Empty(editor.GetErrors(nameof(editor.Puesto)));
+    }
+
     [Fact]
     public void CargarDesde_CopiaIdentificacion()
     {
