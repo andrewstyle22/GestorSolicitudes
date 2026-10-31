@@ -6,45 +6,12 @@ using GestorSolicitudes.Models;
 public class ReglasSolicitudTests
 {
     [Fact]
-    public void TieneDatosObligatorios_VerdeCuandoEmpresaYPuestoLlenos()
-    {
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
-
-        Assert.True(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
-    public void TieneDatosObligatorios_RojoCuandoEmpresaVacia()
-    {
-        var solicitud = new Solicitud { Empresa = string.Empty, Puesto = "Dev" };
-
-        Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
-    public void TieneDatosObligatorios_RojoCuandoPuestoVacio()
-    {
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = string.Empty };
-
-        Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
-    public void TieneDatosObligatorios_RojoCuandoAmbosVacios()
-    {
-        var solicitud = new Solicitud { Empresa = string.Empty, Puesto = string.Empty };
-
-        Assert.False(ReglasSolicitud.TieneDatosObligatorios(solicitud));
-    }
-
-    [Fact]
     public void ProponerSeguimiento_DaFechaCuandoEstaAbiertaYSinFecha()
     {
-        var solicitud = new Solicitud
-        {
-            Estado = EstadoSolicitud.Enviada,
-            FechaSolicitud = new DateTime(2026, 1, 10),
-        };
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .Construir();
 
         var resultado = ReglasSolicitud.ProponerSeguimiento(solicitud);
 
@@ -54,11 +21,10 @@ public class ReglasSolicitudTests
     [Fact]
     public void ProponerSeguimiento_NuloCuandoNoEstaAbierta()
     {
-        var solicitud = new Solicitud
-        {
-            Estado = EstadoSolicitud.OfertaAceptada,  // hace que EstaAbierta sea false
-            FechaSolicitud = new DateTime(2026, 1, 10),
-        };
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.OfertaAceptada) // hace que EstaAbierta sea false
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .Construir();
 
         Assert.Null(ReglasSolicitud.ProponerSeguimiento(solicitud));
     }
@@ -66,12 +32,11 @@ public class ReglasSolicitudTests
     [Fact]
     public void ProponerSeguimiento_NuloCuandoYaTieneFecha()
     {
-        var solicitud = new Solicitud
-        {
-            Estado = EstadoSolicitud.Enviada,
-            FechaSolicitud = new DateTime(2026, 1, 10),
-            ProximoSeguimiento = new DateTime(2026, 1, 20),
-        };
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .ConProximoSeguimiento(new DateTime(2026, 1, 20))
+            .Construir();
 
         Assert.Null(ReglasSolicitud.ProponerSeguimiento(solicitud));
     }
@@ -79,7 +44,7 @@ public class ReglasSolicitudTests
     [Fact]
     public void AnadirHitoInicial_AñadeEventoCuandoVacio()
     {
-        var solicitud = new Solicitud { FechaSolicitud = new DateTime(2026, 3, 1) };
+        var solicitud = new SolicitudBuilder().ConFechaSolicitud(new DateTime(2026, 3, 1)).Construir();
 
         ReglasSolicitud.AnadirHitoInicial(solicitud);
 
@@ -91,11 +56,10 @@ public class ReglasSolicitudTests
     [Fact]
     public void AnadirHitoInicial_NoDuplicaCuandoYaTieneEventos()
     {
-        var solicitud = new Solicitud
-        {
-            FechaSolicitud = new DateTime(2026, 3, 1),
-            Eventos = { new Evento { Fecha = new DateTime(2026, 3, 1), Tipo = TipoEvento.SolicitudEnviada } },
-        };
+        var solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(new DateTime(2026, 3, 1))
+            .ConEventos(new Evento { Fecha = new DateTime(2026, 3, 1), Tipo = TipoEvento.SolicitudEnviada })
+            .Construir();
 
         ReglasSolicitud.AnadirHitoInicial(solicitud);
 

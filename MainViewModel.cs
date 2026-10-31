@@ -309,6 +309,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     public ObservableCollection<Evento> EventosEdicion { get; } = [];
 
+    /// <summary>Búfer de edición del panel de detalle; se recrea al abrir cada solicitud.</summary>
+    [ObservableProperty]
+    private SolicitudEdicionViewModel? editor;
+
     // Los adjuntos se derivan de la edición: al repintar el panel se recalculan.
     partial void OnEdicionChanged(Solicitud? value)
     {
@@ -322,6 +326,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
         }
 
+        this.Editor = value is null ? null : new SolicitudEdicionViewModel(value);
         this.OnPropertyChanged(nameof(this.AdjuntoCv));
         this.OnPropertyChanged(nameof(this.AdjuntoCarta));
     }
@@ -734,9 +739,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void RefrescarPanelDetalle()
     {
+        // El editor guarda lo escrito y aún no guardado: al repintar el panel se conserva,
+        // que reasignar la entidad lo recrearía desde cero y perdería esos cambios.
+        SolicitudEdicionViewModel? editor = this.Editor;
         Solicitud? actual = this.Edicion;
         this.Edicion = null;
         this.Edicion = actual;
+        this.Editor = editor;
     }
 
     /// <summary>
@@ -808,12 +817,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void VerCandidaturasDeEstaEmpresa()
     {
-        if (this.Edicion is null || string.IsNullOrWhiteSpace(this.Edicion.Empresa))
+        if (this.Editor is null || string.IsNullOrWhiteSpace(this.Editor.Empresa))
         {
             return;
         }
 
-        this.TextoBusqueda = this.Edicion.Empresa;
+        this.TextoBusqueda = this.Editor.Empresa;
     }
 
     /// <summary>Borra el texto de búsqueda para volver a mostrar la lista completa.</summary>
@@ -823,10 +832,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Guardar()
     {
-        if (this.Edicion is not Solicitud solicitud || !this.Validar(solicitud))
+        if (this.Edicion is not Solicitud solicitud)
         {
             return;
         }
+
+        if (!this.Validar())
+        {
+            return;
+        }
+
+        this.Editor?.AplicarA(solicitud);
 
         bool esNueva = this.PrepararNueva(solicitud);
 
@@ -845,9 +861,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
-    private bool Validar(Solicitud solicitud)
+    private bool Validar()
     {
-        if (ReglasSolicitud.TieneDatosObligatorios(solicitud))
+        if (this.Editor?.HasErrors == false)
         {
             return true;
         }
@@ -994,7 +1010,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AbrirEnlace()
     {
-        string? url = this.Edicion?.EnlaceOferta;
+        string? url = this.Editor?.EnlaceOferta;
         if (string.IsNullOrWhiteSpace(url))
         {
             return;

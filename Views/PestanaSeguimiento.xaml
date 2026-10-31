@@ -10,15 +10,15 @@
                       ItemsSource="{Binding Estados}"
                       DisplayMemberPath="Descripcion"
                       SelectedValuePath="Valor"
-                      SelectedValue="{Binding Edicion.Estado}" Margin="9,0,9,0" />
+                      SelectedValue="{Binding Editor.Estado}" Margin="9,0,9,0" />
 
-            <StackPanel Visibility="{Binding Edicion.Estado, Converter={StaticResource EstadoEsRechazadaAVisibilidad}}">
+            <StackPanel Visibility="{Binding Editor.Estado, Converter={StaticResource EstadoEsRechazadaAVisibilidad}}">
                 <TextBlock Text="{DynamicResource Seguimiento.MotivoRechazo}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
                 <ComboBox Style="{StaticResource CampoCombo}"
                           ItemsSource="{Binding MotivosRechazo}"
                           DisplayMemberPath="Descripcion"
                           SelectedValuePath="Valor"
-                          SelectedValue="{Binding Edicion.MotivoRechazo}" Margin="9,0,9,0" />
+                          SelectedValue="{Binding Editor.MotivoRechazo}" Margin="9,0,9,0" />
             </StackPanel>
 
             <Grid>
@@ -30,12 +30,12 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Seguimiento.FechaSolicitud}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
                     <DatePicker Style="{StaticResource CampoFecha}"
-                                SelectedDate="{Binding Edicion.FechaSolicitud}" Margin="9,0,0,0" />
+                                SelectedDate="{Binding Editor.FechaSolicitud}" Margin="9,0,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="{DynamicResource Seguimiento.PrimeraContestacion}" Style="{StaticResource Etiqueta}" Margin="0,10,9,3" />
                     <DatePicker Style="{StaticResource CampoFecha}"
-                                SelectedDate="{Binding Edicion.FechaPrimeraRespuesta}" Margin="0,0,9,0" />
+                                SelectedDate="{Binding Editor.FechaPrimeraRespuesta}" Margin="0,0,9,0" />
                 </StackPanel>
             </Grid>
 
@@ -48,23 +48,23 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Seguimiento.DiaEntrevista}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
                     <DatePicker Style="{StaticResource CampoFecha}"
-                                SelectedDate="{Binding Edicion.FechaEntrevista}" Margin="9,0,0,0" />
+                                SelectedDate="{Binding Editor.FechaEntrevista}" Margin="9,0,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="{DynamicResource Seguimiento.ProximoSeguimiento}" Style="{StaticResource Etiqueta}" Margin="0,10,8,3" />
                     <DatePicker Style="{StaticResource CampoFecha}"
-                                SelectedDate="{Binding Edicion.ProximoSeguimiento}"
+                                SelectedDate="{Binding Editor.ProximoSeguimiento}"
                                 ToolTip="{DynamicResource Seguimiento.ProximoSeguimientoToolTip}" Margin="0,0,9,0" />
                 </StackPanel>
             </Grid>
 
             <TextBlock Text="{DynamicResource Seguimiento.FechaCierre}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
             <DatePicker Style="{StaticResource CampoFecha}"
-                        SelectedDate="{Binding Edicion.FechaCierre}" Margin="9,0,9,0" />
+                        SelectedDate="{Binding Editor.FechaCierre}" Margin="9,0,9,0" />
 
             <TextBlock Text="{DynamicResource Seguimiento.RespuestaEmpresa}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
             <TextBox Style="{StaticResource CampoMultilinea}"
-                     Text="{Binding Edicion.RespuestaEmpresa}" Margin="9,0,9,0" />
+                     Text="{Binding Editor.RespuestaEmpresa}" Margin="9,0,9,0" />
 
             <TextBlock Text="{DynamicResource Seguimiento.Contacto}" Style="{StaticResource TituloSeccion}" Margin="9,18,9,2" />
 
@@ -78,20 +78,20 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Campo.Nombre}" Style="{StaticResource Etiqueta}" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.ContactoNombre}" />
+                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.ContactoNombre}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="{DynamicResource Campo.Email}" Style="{StaticResource Etiqueta}" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.ContactoEmail}" />
+                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.ContactoEmail}" />
                 </StackPanel>
                 <StackPanel Grid.Column="4">
                     <TextBlock Text="{DynamicResource Campo.Telefono}" Style="{StaticResource Etiqueta}" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Edicion.ContactoTelefono}" />
+                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.ContactoTelefono}" />
                 </StackPanel>
             </Grid>
 
             <TextBlock Text="{DynamicResource Campo.Notas}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-            <TextBox Style="{StaticResource CampoMultilinea}" Text="{Binding Edicion.Notas}" Margin="9,0,9,0" />
+            <TextBox Style="{StaticResource CampoMultilinea}" Text="{Binding Editor.Notas}" Margin="9,0,9,0" />
 
         </StackPanel>
     </ScrollViewer>

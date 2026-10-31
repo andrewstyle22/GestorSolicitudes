@@ -1,7 +1,6 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,12 +14,28 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME"; // falta el puesto
+        vm.Editor!.Empresa = "ACME"; // falta el puesto
 
         vm.GuardarCommand.Execute(null);
 
         Assert.Single(dialogo.Avisos);
         Assert.NotNull(vm.Edicion);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void Guardar_LaValidacionLeeElEditor_NoLaEntidad()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Edicion!.Empresa = "ACME"; // la entidad no es la fuente de la validación
+        vm.Edicion.Puesto = "Dev";
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
         Assert.Empty(db.Solicitudes);
     }
 
@@ -31,8 +46,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
         db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes"); // que SaveChanges falle dentro del try
 
         vm.GuardarCommand.Execute(null);
@@ -135,7 +149,11 @@ public class ViewModelDialogosTests
         string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf") };
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf"))
+            .Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -155,7 +173,7 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso { RespuestaConfirmar = false };
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -174,7 +192,7 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -191,7 +209,7 @@ public class ViewModelDialogosTests
     public void ExportarCsv_ConDestinoEscribeEInforma()
     {
         using var db = TestDb.NuevoContexto();
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
         var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
         using var vm = new MainViewModel(db, dialogo: dialogo);
@@ -239,7 +257,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = "  https://ejemplo.com/oferta  ";
+        vm.Editor!.EnlaceOferta = "  https://ejemplo.com/oferta  ";
 
         vm.AbrirEnlaceCommand.Execute(null);
 
@@ -266,7 +284,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso { AbrirEnlaceLanza = true };
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = "https://ejemplo.com";
+        vm.Editor!.EnlaceOferta = "https://ejemplo.com";
 
         vm.AbrirEnlaceCommand.Execute(null);
 
@@ -282,7 +300,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = enlace;
+        vm.Editor!.EnlaceOferta = enlace;
 
         vm.AbrirEnlaceCommand.Execute(null);
 

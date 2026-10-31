@@ -15,12 +15,11 @@ public class AppDbContextTests
         string ruta;
         using (var db = TestDb.NuevoContexto(out ruta))
         {
-            var solicitud = new Solicitud
-            {
-                Empresa = "ACME",
-                Puesto = "Dev",
-                Estado = EstadoSolicitud.OfertaAceptada,
-            };
+            var solicitud = new SolicitudBuilder()
+                .ConEmpresa("ACME")
+                .ConPuesto("Dev")
+                .ConEstado(EstadoSolicitud.OfertaAceptada)
+                .Construir();
             solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Oferta, Descripcion = "¡Sí!" });
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
@@ -43,7 +42,7 @@ public class AppDbContextTests
         string ruta;
         using (var db = TestDb.NuevoContexto(out ruta))
         {
-            var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+            var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
             solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
