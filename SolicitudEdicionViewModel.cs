@@ -168,5 +168,6 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
     public void AplicarA(Solicitud solicitud)
     {
         this.AplicarOferta(solicitud);
+        this.AplicarEconomico(solicitud);
     }
 }

@@ -64,7 +64,7 @@
             <TextBlock Text="{DynamicResource Oferta.Interes}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
             <ComboBox Style="{StaticResource CampoCombo}" HorizontalAlignment="Left" MinWidth="120"
                       ItemsSource="{Binding NivelesInteres}"
-                      SelectedItem="{Binding Edicion.Interes}" Width="101" Margin="9,0,0,0" />
+                      SelectedItem="{Binding Editor.Interes}" Width="101" Margin="9,0,0,0" />
 
             <TextBlock Text="{DynamicResource Oferta.Tecnologias}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
             <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.Tecnologias}"
@@ -81,17 +81,17 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Oferta.SalarioMin}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
                     <TextBox Style="{StaticResource Campo}"
-                             Text="{Binding Edicion.SalarioMin, TargetNullValue=''}" />
+                             Text="{Binding Editor.SalarioMin, TargetNullValue=''}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="{DynamicResource Oferta.SalarioMax}" Style="{StaticResource Etiqueta}" />
                     <TextBox Style="{StaticResource Campo}"
-                             Text="{Binding Edicion.SalarioMax, TargetNullValue=''}" />
+                             Text="{Binding Editor.SalarioMax, TargetNullValue=''}" />
                 </StackPanel>
                 <StackPanel Grid.Column="4" Margin="9,0,9,0">
                     <TextBlock Text="{DynamicResource Oferta.Pretension}" Style="{StaticResource Etiqueta}" Margin="0,10,9,3" />
                     <TextBox Style="{StaticResource Campo}"
-                             Text="{Binding Edicion.PretensionSalarial, TargetNullValue=''}" />
+                             Text="{Binding Editor.PretensionSalarial, TargetNullValue=''}" />
                 </StackPanel>
             </Grid>
 

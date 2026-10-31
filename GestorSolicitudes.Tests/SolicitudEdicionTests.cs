@@ -214,14 +214,15 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void AplicarA_SinGruposMigrados_NoTocaElModelo()
+    public void AplicarA_SoloAplicaLosGruposMigrados()
     {
         Solicitud solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        var editor = new SolicitudEdicionViewModel { Empresa = "Otra", Puesto = "Otro" };
+        var editor = new SolicitudEdicionViewModel { Empresa = "Otra", Puesto = "Otro", Portal = "LinkedIn" };
 
         editor.AplicarA(solicitud);
 
         Assert.Equal("ACME", solicitud.Empresa);
         Assert.Equal("Dev", solicitud.Puesto);
+        Assert.Equal("LinkedIn", solicitud.Portal);
     }
 }
