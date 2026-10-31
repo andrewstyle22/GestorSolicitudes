@@ -58,7 +58,7 @@ public class ViewModelTests
 
         vm.NuevaCommand.Execute(null);
         vm.RellenarObligatorios("ACME", "Desarrollador");
-        vm.Edicion!.ContactoNombre = "Jefa";
+        vm.Editor!.ContactoNombre = "Jefa";
         vm.GuardarCommand.Execute(null);
 
         Assert.Equal(1, vm.TotalSolicitudes);
@@ -129,7 +129,7 @@ public class ViewModelTests
 
         vm.NuevaCommand.Execute(null);
         vm.RellenarObligatorios("ACME", "Desarrollador");
-        vm.Edicion!.ContactoNombre = "Jefa";
+        vm.Editor!.ContactoNombre = "Jefa";
         vm.Editor!.FechaSolicitud = DateTime.Today.AddDays(-20);
         vm.Editor.ProximoSeguimiento = DateTime.Today.AddDays(-5);
         vm.GuardarCommand.Execute(null);

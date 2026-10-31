@@ -179,5 +179,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableObject
         this.AplicarEconomico(solicitud);
         this.AplicarEstado(solicitud);
         this.AplicarFechas(solicitud);
+        this.AplicarRespuesta(solicitud);
+        this.AplicarContacto(solicitud);
     }
 }

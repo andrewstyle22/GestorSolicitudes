@@ -250,6 +250,7 @@ public class SolicitudEdicionTests
             Estado = EstadoSolicitud.OfertaRecibida,
             FechaSolicitud = fecha,
             RespuestaEmpresa = "Oferta enviada",
+            ContactoNombre = "Ana",
         };
 
         editor.AplicarA(solicitud);
@@ -259,6 +260,7 @@ public class SolicitudEdicionTests
         Assert.Equal("LinkedIn", solicitud.Portal);
         Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
         Assert.Equal(fecha, solicitud.FechaSolicitud);
-        Assert.NotEqual("Oferta enviada", solicitud.RespuestaEmpresa);
+        Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
+        Assert.Equal("Ana", solicitud.ContactoNombre);
     }
 }
