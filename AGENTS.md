@@ -20,9 +20,9 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 ## Convenciones que rompen el default de .NET
 
 - **Los diálogos van por `IDialogoService`** (`ViewModels`), que implementa `DialogoService` (`Views`). El ViewModel nunca llama a `MessageBox`, `OpenFileDialog`, `SaveFileDialog` ni `Process.Start`: se le inyecta el servicio (en los tests, un falso). Un test de fuentes lo vigila.
-- **Entidades POCO sin `INotifyPropertyChanged`**: tras guardar se recarga la lista entera y el panel se repinta con `Edicion = null; Edicion = actual;`. No lo "arregles" sin consultar.
+- **Entidades POCO sin `INotifyPropertyChanged`**: el panel de detalle edita un búfer (`Editor`, `SolicitudEdicionViewModel`) y la entidad solo se escribe al pulsar Guardar (`Editor.AplicarA`). La UI no bindea contra la entidad: no expongas `Solicitud` para editar.
 - **Un solo `AppDbContext` durante toda la sesión** (explota el change tracking de EF).
-- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Hay que registrar la columna en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`) o la app revienta con bases ya creadas por versiones antiguas. Los enums se guardan como entero.
+- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`), añadirla al editor (`CargarDesde` y su `Aplicar…`), y darle test y traducción si se ve. Los enums se guardan como entero.
 - **XAML nuevo**: el csproj declara las páginas a mano (`EnableDefaultPageItems=false`): hay que añadir el `<Page>` al csproj o no se compila a BAML y la app falla buscando el recurso.
 
 ## UI y localización

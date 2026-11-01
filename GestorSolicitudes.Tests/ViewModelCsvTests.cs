@@ -1,7 +1,6 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
 public class ViewModelCsvTests
@@ -11,7 +10,7 @@ public class ViewModelCsvTests
     public void EscribirCsv_EnRutaValidaGuardaElContenido()
     {
         using var db = TestDb.NuevoContexto();
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
         using var vm = new MainViewModel(db);
         string ruta = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv");
@@ -41,9 +40,9 @@ public class ViewModelCsvTests
     {
         using var db = TestDb.NuevoContexto();
         var fecha = new DateTime(2024, 5, 1);
-        db.Solicitudes.Add(new Solicitud { Empresa = "Antigua", Puesto = "Dev", FechaSolicitud = fecha });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Antigua").ConPuesto("Dev").ConFechaSolicitud(fecha).Construir());
         db.SaveChanges();
-        db.Solicitudes.Add(new Solicitud { Empresa = "Nueva", Puesto = "Dev", FechaSolicitud = fecha });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Nueva").ConPuesto("Dev").ConFechaSolicitud(fecha).Construir());
         db.SaveChanges();
         using var vm = new MainViewModel(db);
 
@@ -60,8 +59,8 @@ public class ViewModelCsvTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
 
         vm.ExportarCsvCommand.Execute(null);

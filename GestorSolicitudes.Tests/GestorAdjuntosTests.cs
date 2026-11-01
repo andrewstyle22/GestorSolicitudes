@@ -2,7 +2,6 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Helpers;
-using GestorSolicitudes.Models;
 
 public class GestorAdjuntosTests
 {
@@ -25,9 +24,8 @@ public class GestorAdjuntosTests
         var gestor = new GestorAdjuntos(carpeta);
         string anterior = gestor.Copiar(Origen("cv.pdf"), "cv");
         string nueva = gestor.Copiar(Origen("cv-nuevo.pdf"), "cv");
-        var solicitud = new Solicitud { RutaCv = nueva };
 
-        gestor.DescartarSustituidas(solicitud, (anterior, null));
+        gestor.DescartarSustituidas((nueva, null), (anterior, null));
 
         Assert.False(File.Exists(anterior));
         Assert.True(File.Exists(nueva));
@@ -40,9 +38,8 @@ public class GestorAdjuntosTests
         var gestor = new GestorAdjuntos(carpeta);
         string conservada = gestor.Copiar(Origen("cv.pdf"), "cv");
         string sobrante = gestor.Copiar(Origen("carta.pdf"), "carta");
-        var solicitud = new Solicitud { RutaCv = conservada };
 
-        gestor.DescartarSustituidas(solicitud, (null, null));
+        gestor.DescartarSustituidas((conservada, null), (null, null));
 
         Assert.True(File.Exists(conservada));
         Assert.False(File.Exists(sobrante));
@@ -56,9 +53,8 @@ public class GestorAdjuntosTests
         // La guardada es de una sesión anterior: no la recuerda este gestor.
         string guardada = AdjuntosHelper.Copiar(Origen("cv.pdf"), "cv", carpeta);
         string elegida = gestor.Copiar(Origen("cv-nuevo.pdf"), "cv");
-        var solicitud = new Solicitud { RutaCv = elegida };
 
-        gestor.DescartarNoGuardadas(solicitud, (guardada, null));
+        gestor.DescartarNoGuardadas((elegida, null), (guardada, null));
 
         Assert.False(File.Exists(elegida));
         Assert.True(File.Exists(guardada));

@@ -14,7 +14,7 @@ public class ViewModelEmbudoTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        db.Solicitudes.Add(new Solicitud { Empresa = "A", Puesto = "P" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("A").ConPuesto("P").Construir());
         db.SaveChanges();
 
         vm.ConfigurarGraficaCommand.Execute(null);
@@ -216,8 +216,7 @@ public class ViewModelEmbudoTests
         vm.VerGrafica = true;
 
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
         vm.GuardarCommand.Execute(null);
 
         Assert.Equal(12, vm.PeriodosEmbudo.Count);
@@ -231,12 +230,11 @@ public class ViewModelEmbudoTests
         vm.VerGrafica = true;
         vm.GranularidadGrafica = GranularidadEmbudo.Semana;
 
-        db.Solicitudes.Add(new Solicitud
-        {
-            Empresa = "A",
-            Puesto = "P",
-            FechaSolicitud = DateTime.Today.AddDays(-10),
-        });
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("A")
+            .ConPuesto("P")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
+            .Construir());
         db.SaveChanges();
 
         for (int i = 0; i < 20; i++)

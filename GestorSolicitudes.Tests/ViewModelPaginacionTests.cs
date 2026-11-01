@@ -1,7 +1,6 @@
 namespace GestorSolicitudes.Tests;
 
 using GestorSolicitudes.Data;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
 public class ViewModelPaginacionTests
@@ -17,12 +16,11 @@ public class ViewModelPaginacionTests
         var db = TestDb.NuevoContexto();
         for (int i = 1; i <= 25; i++)
         {
-            db.Solicitudes.Add(new Solicitud
-            {
-                Empresa = $"E{i:00}",
-                Puesto = "P",
-                FechaSolicitud = DateTime.Today.AddDays(-i),
-            });
+            db.Solicitudes.Add(new SolicitudBuilder()
+                .ConEmpresa($"E{i:00}")
+                .ConPuesto("P")
+                .ConFechaSolicitud(DateTime.Today.AddDays(-i))
+                .Construir());
         }
 
         db.SaveChanges();

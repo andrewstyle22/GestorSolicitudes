@@ -1,7 +1,6 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
-using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,13 +14,32 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME"; // falta el puesto
+        vm.Editor!.Empresa = "ACME"; // falta el puesto
 
         vm.GuardarCommand.Execute(null);
 
         Assert.Single(dialogo.Avisos);
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
         Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void Guardar_LaValidacionLeeElEditor_NoLaEntidad()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Puesto = string.Empty; // la entidad conserva el puesto guardado
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Equal("Dev", db.Solicitudes.Single().Puesto);
     }
 
     [Fact]
@@ -31,14 +49,13 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME";
-        vm.Edicion.Puesto = "Dev";
+        vm.RellenarObligatorios("ACME", "Dev");
         db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes"); // que SaveChanges falle dentro del try
 
         vm.GuardarCommand.Execute(null);
 
         Assert.Single(dialogo.Errores);
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
     }
 
     [Fact]
@@ -54,10 +71,10 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.NotNull(vm.Edicion!.RutaCv);
-        Assert.StartsWith(carpeta, vm.Edicion.RutaCv!);
-        Assert.True(File.Exists(vm.Edicion.RutaCv));
-        Assert.Equal("mi-cv.pdf", vm.Edicion.NombreOriginalCv);
+        Assert.NotNull(vm.Editor!.RutaCv);
+        Assert.StartsWith(carpeta, vm.Editor.RutaCv!);
+        Assert.True(File.Exists(vm.Editor.RutaCv));
+        Assert.Equal("mi-cv.pdf", vm.Editor.NombreOriginalCv);
     }
 
     [Fact]
@@ -73,8 +90,8 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCartaCommand.Execute(null);
 
-        Assert.NotNull(vm.Edicion!.RutaCarta);
-        Assert.Equal("carta.docx", vm.Edicion.NombreOriginalCarta);
+        Assert.NotNull(vm.Editor!.RutaCarta);
+        Assert.Equal("carta.docx", vm.Editor.NombreOriginalCarta);
     }
 
     [Fact]
@@ -87,7 +104,7 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.Null(vm.Edicion!.RutaCv);
+        Assert.Null(vm.Editor!.RutaCv);
     }
 
     [Fact]
@@ -106,7 +123,7 @@ public class ViewModelDialogosTests
         Assert.Contains(
             Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
             Assert.Single(dialogo.Errores));
-        Assert.Null(vm.Edicion!.RutaCv);
+        Assert.Null(vm.Editor!.RutaCv);
     }
 
     [Fact]
@@ -125,7 +142,7 @@ public class ViewModelDialogosTests
         Assert.Contains(
             Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
             Assert.Single(dialogo.Errores));
-        Assert.Null(vm.Edicion!.RutaCarta);
+        Assert.Null(vm.Editor!.RutaCarta);
     }
 
     [Fact]
@@ -135,17 +152,21 @@ public class ViewModelDialogosTests
         string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev", RutaCv = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf") };
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf"))
+            .Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string rutaCv = solicitud.RutaCv!;
 
         vm.EliminarCommand.Execute(null);
 
         Assert.Empty(db.Solicitudes);
-        Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
         Assert.False(File.Exists(rutaCv));
     }
 
@@ -155,17 +176,17 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso { RespuestaConfirmar = false };
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
 
         vm.EliminarCommand.Execute(null);
 
         Assert.Single(dialogo.Confirmaciones);
         Assert.Equal(1, db.Solicitudes.Count());
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
     }
 
     [Fact]
@@ -174,24 +195,24 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso { RespuestaConfirmar = true };
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        var solicitud = new Solicitud { Empresa = "ACME", Puesto = "Dev" };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
 
         vm.EliminarCommand.Execute(null);
 
         Assert.Single(dialogo.Errores);
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
     }
 
     [Fact]
     public void ExportarCsv_ConDestinoEscribeEInforma()
     {
         using var db = TestDb.NuevoContexto();
-        db.Solicitudes.Add(new Solicitud { Empresa = "ACME", Puesto = "Dev" });
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
         var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
         using var vm = new MainViewModel(db, dialogo: dialogo);
@@ -239,7 +260,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = "  https://ejemplo.com/oferta  ";
+        vm.Editor!.EnlaceOferta = "  https://ejemplo.com/oferta  ";
 
         vm.AbrirEnlaceCommand.Execute(null);
 
@@ -266,7 +287,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso { AbrirEnlaceLanza = true };
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = "https://ejemplo.com";
+        vm.Editor!.EnlaceOferta = "https://ejemplo.com";
 
         vm.AbrirEnlaceCommand.Execute(null);
 
@@ -282,7 +303,7 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.EnlaceOferta = enlace;
+        vm.Editor!.EnlaceOferta = enlace;
 
         vm.AbrirEnlaceCommand.Execute(null);
 

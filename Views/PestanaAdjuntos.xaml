@@ -15,13 +15,13 @@
                 <StackPanel>
                     <views:FilaAdjunto Margin="0,2,0,8"
                                        Etiqueta="{DynamicResource Adjuntos.Curriculum}"
-                                       Adjunto="{Binding AdjuntoCv}"
+                                       Adjunto="{Binding Editor.AdjuntoCv}"
                                        ComandoAdjuntar="{Binding AdjuntarCvCommand}"
                                        ComandoQuitar="{Binding QuitarCvCommand}"
                                        ComandoAbrir="{Binding AbrirAdjuntoCommand}" />
 
                     <views:FilaAdjunto Etiqueta="{DynamicResource Adjuntos.Carta}"
-                                       Adjunto="{Binding AdjuntoCarta}"
+                                       Adjunto="{Binding Editor.AdjuntoCarta}"
                                        ComandoAdjuntar="{Binding AdjuntarCartaCommand}"
                                        ComandoQuitar="{Binding QuitarCartaCommand}"
                                        ComandoAbrir="{Binding AbrirAdjuntoCommand}" />

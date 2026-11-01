@@ -1,7 +1,5 @@
 namespace GestorSolicitudes.Helpers;
 
-using GestorSolicitudes.Models;
-
 /// <summary>
 /// Ciclo de vida de los adjuntos de una edición: copia los ficheros elegidos, recuerda esas
 /// copias y borra las que la base ya no apunta. No conoce EF ni la UI; el ViewModel le pasa
@@ -29,35 +27,35 @@ public sealed class GestorAdjuntos
     /// Tras guardar: borra los adjuntos que la base ya no apunta y las copias intermedias
     /// que no se han conservado.
     /// </summary>
-    public void DescartarSustituidas(Solicitud solicitud, (string? Cv, string? Carta) anteriores)
+    public void DescartarSustituidas((string? Cv, string? Carta) actuales, (string? Cv, string? Carta) anteriores)
     {
-        if (anteriores.Cv != solicitud.RutaCv)
+        if (anteriores.Cv != actuales.Cv)
         {
             this.Eliminar(anteriores.Cv);
         }
 
-        if (anteriores.Carta != solicitud.RutaCarta)
+        if (anteriores.Carta != actuales.Carta)
         {
             this.Eliminar(anteriores.Carta);
         }
 
-        this.DescartarCopias(solicitud.RutaCv, solicitud.RutaCarta);
+        this.DescartarCopias(actuales.Cv, actuales.Carta);
     }
 
     /// <summary>
     /// Al descartar la edición: borra los adjuntos elegidos sin guardar y las copias
     /// intermedias; los que ya estaban guardados se quedan.
     /// </summary>
-    public void DescartarNoGuardadas(Solicitud solicitud, (string? Cv, string? Carta) guardadas)
+    public void DescartarNoGuardadas((string? Cv, string? Carta) actuales, (string? Cv, string? Carta) guardadas)
     {
-        if (solicitud.RutaCv != guardadas.Cv)
+        if (actuales.Cv != guardadas.Cv)
         {
-            this.Eliminar(solicitud.RutaCv);
+            this.Eliminar(actuales.Cv);
         }
 
-        if (solicitud.RutaCarta != guardadas.Carta)
+        if (actuales.Carta != guardadas.Carta)
         {
-            this.Eliminar(solicitud.RutaCarta);
+            this.Eliminar(actuales.Carta);
         }
 
         this.DescartarCopias();

@@ -179,7 +179,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Recargar();
-        this.RefrescarPanelDetalle();
     }
 
     [ObservableProperty]
@@ -295,23 +294,32 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (value is not null)
         {
             this.db.Entry(value).Collection(s => s.Eventos).Load();
-            this.Edicion = value;
+            this.Abrir(value);
         }
     }
 
-    /// <summary>Entidad mostrada en el panel de detalle.</summary>
-    [ObservableProperty]
-    private Solicitud? edicion;
+    /// <summary>Hay una solicitud abierta en el panel de detalle.</summary>
+    public bool TieneEdicion => this.solicitudAbierta is not null;
 
     /// <summary>
-    /// Copia observable del historial de <see cref="Edicion"/>: el POCO guarda una lista y la
+    /// Copia observable del historial de la solicitud abierta: el POCO guarda una lista y la
     /// vista necesita avisos al añadir o quitar. Los eventos son los mismos objetos.
     /// </summary>
     public ObservableCollection<Evento> EventosEdicion { get; } = [];
 
-    // Los adjuntos se derivan de la edición: al repintar el panel se recalculan.
-    partial void OnEdicionChanged(Solicitud? value)
+    /// <summary>Búfer de edición del panel de detalle; se recrea al abrir cada solicitud.</summary>
+    [ObservableProperty]
+    private SolicitudEdicionViewModel? editor;
+
+    /// <summary>
+    /// La entidad solo se toca al guardar: mientras tanto, la edición vive en <see cref="Editor"/>.
+    /// </summary>
+    private Solicitud? solicitudAbierta;
+
+    // El editor se recrea con cada solicitud abierta.
+    private void Abrir(Solicitud? value)
     {
+        this.solicitudAbierta = value;
         this.EventosEdicion.Clear();
 
         if (value is not null)
@@ -322,8 +330,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
         }
 
-        this.OnPropertyChanged(nameof(this.AdjuntoCv));
-        this.OnPropertyChanged(nameof(this.AdjuntoCarta));
+        this.Editor = value is null ? null : new SolicitudEdicionViewModel(value);
+        this.OnPropertyChanged(nameof(this.TieneEdicion));
     }
 
     // ---------------------------------------------------------------- Estadísticas
@@ -613,37 +621,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     // ---------------------------------------------------------------- Adjuntos
 
     /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian la etiqueta del fichero y las propiedades.</summary>
-    private sealed record DescriptorAdjunto(string Etiqueta, Action<Solicitud, string?, string?> Asignar);
+    private sealed record DescriptorAdjunto(string Etiqueta, Action<SolicitudEdicionViewModel, string?, string?> Asignar);
 
     private static readonly DescriptorAdjunto DescriptorCv = new(
         "cv",
-        (solicitud, ruta, nombre) =>
+        (editor, ruta, nombre) =>
         {
-            solicitud.RutaCv = ruta;
-            solicitud.NombreOriginalCv = nombre;
+            editor.RutaCv = ruta;
+            editor.NombreOriginalCv = nombre;
         });
 
     private static readonly DescriptorAdjunto DescriptorCarta = new(
         "carta",
-        (solicitud, ruta, nombre) =>
+        (editor, ruta, nombre) =>
         {
-            solicitud.RutaCarta = ruta;
-            solicitud.NombreOriginalCarta = nombre;
+            editor.RutaCarta = ruta;
+            editor.NombreOriginalCarta = nombre;
         });
-
-    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
-    public Adjunto? AdjuntoCv => this.Edicion is null
-        ? null
-        : new Adjunto(
-            this.Edicion.RutaCv,
-            this.Edicion.NombreCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
-
-    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
-    public Adjunto? AdjuntoCarta => this.Edicion is null
-        ? null
-        : new Adjunto(
-            this.Edicion.RutaCarta,
-            this.Edicion.NombreCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     [RelayCommand]
     private void AdjuntarCv() => this.AdjuntarAdjunto(DescriptorCv, Localizacion.Texto("Dialogo.SeleccionaCv"));
@@ -653,7 +647,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void AdjuntarAdjunto(DescriptorAdjunto adjunto, string titulo)
     {
-        Solicitud? editar = this.Edicion;
+        SolicitudEdicionViewModel? editar = this.Editor;
         if (editar is null)
         {
             return;
@@ -675,12 +669,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAdjuntar"), ex.Message),
                 Localizacion.Texto(Traducciones.ClaveError));
-            return;
         }
-
-        // Las entidades son POCOs sin INotifyPropertyChanged: se reasigna Edicion
-        // al mismo objeto para que el panel de detalle repinte el nombre del adjunto.
-        this.RefrescarPanelDetalle();
     }
 
     [RelayCommand]
@@ -695,13 +684,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void QuitarAdjunto(DescriptorAdjunto adjunto)
     {
-        if (this.Edicion is null)
+        if (this.Editor is null)
         {
             return;
         }
 
-        adjunto.Asignar(this.Edicion, null, null);
-        this.RefrescarPanelDetalle();
+        adjunto.Asignar(this.Editor, null, null);
     }
 
     /// <summary>
@@ -732,13 +720,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void RefrescarPanelDetalle()
-    {
-        Solicitud? actual = this.Edicion;
-        this.Edicion = null;
-        this.Edicion = actual;
-    }
-
     /// <summary>
     /// Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.
     /// Exige que <paramref name="solicitud"/> esté en seguimiento por el contexto: si estuviera
@@ -755,11 +736,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void Nueva()
     {
         this.SolicitudSeleccionada = null;
-        this.Edicion = new Solicitud
+        this.Abrir(new Solicitud
         {
             FechaSolicitud = DateTime.Today,
             Estado = EstadoSolicitud.Enviada,
-        };
+        });
     }
 
     /// <summary>
@@ -771,12 +752,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Duplicar()
     {
-        if (this.Edicion is null || this.Edicion.Id == 0)
+        if (this.solicitudAbierta is null || this.solicitudAbierta.Id == 0)
         {
             return;
         }
 
-        Solicitud origen = this.Edicion;
+        Solicitud origen = this.solicitudAbierta;
         var copia = new Solicitud
         {
             Empresa = origen.Empresa,
@@ -797,7 +778,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         };
 
         this.SolicitudSeleccionada = null;
-        this.Edicion = copia;
+        this.Abrir(copia);
     }
 
     /// <summary>
@@ -808,12 +789,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void VerCandidaturasDeEstaEmpresa()
     {
-        if (this.Edicion is null || string.IsNullOrWhiteSpace(this.Edicion.Empresa))
+        if (this.Editor is null || string.IsNullOrWhiteSpace(this.Editor.Empresa))
         {
             return;
         }
 
-        this.TextoBusqueda = this.Edicion.Empresa;
+        this.TextoBusqueda = this.Editor.Empresa;
     }
 
     /// <summary>Borra el texto de búsqueda para volver a mostrar la lista completa.</summary>
@@ -823,10 +804,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Guardar()
     {
-        if (this.Edicion is not Solicitud solicitud || !this.Validar(solicitud))
+        if (this.solicitudAbierta is not Solicitud solicitud)
         {
             return;
         }
+
+        if (!this.Validar())
+        {
+            return;
+        }
+
+        this.Editor?.AplicarA(solicitud);
 
         bool esNueva = this.PrepararNueva(solicitud);
 
@@ -840,14 +828,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.adjuntos.DescartarSustituidas(solicitud, (cvAnterior, cartaAnterior));
+        this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
     }
 
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
-    private bool Validar(Solicitud solicitud)
+    private bool Validar()
     {
-        if (ReglasSolicitud.TieneDatosObligatorios(solicitud))
+        if (this.Editor?.HasErrors == false)
         {
             return true;
         }
@@ -906,13 +894,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Recargar();
         this.RecargarEmbudoSiVisible();
         this.SolicitudSeleccionada = null;
-        this.Edicion = null;
+        this.Abrir(null);
     }
 
     [RelayCommand]
     private void Cancelar()
     {
-        if (this.Edicion is not Solicitud solicitud)
+        if (this.solicitudAbierta is not Solicitud solicitud)
         {
             return;
         }
@@ -922,13 +910,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ? (null, null)
             : this.RutasGuardadas(solicitud);
 
-        this.adjuntos.DescartarNoGuardadas(solicitud, (cvGuardado, cartaGuardada));
+        this.adjuntos.DescartarNoGuardadas(
+            (this.Editor!.RutaCv, this.Editor.RutaCarta),
+            (cvGuardado, cartaGuardada));
 
         // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
         this.db.ChangeTracker.Clear();
 
-        this.Edicion = null;
+        this.Abrir(null);
         this.SolicitudSeleccionada = null;
         this.Recargar();
     }
@@ -936,13 +926,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Eliminar()
     {
-        if (this.Edicion is null || this.Edicion.Id == 0)
+        if (this.solicitudAbierta is null || this.solicitudAbierta.Id == 0)
         {
             return;
         }
 
         bool confirmado = this.dialogo.Confirmar(
-            string.Format(Localizacion.Texto("Mensaje.ConfirmarEliminar"), this.Edicion.Empresa, this.Edicion.Puesto),
+            string.Format(Localizacion.Texto("Mensaje.ConfirmarEliminar"), this.solicitudAbierta.Empresa, this.solicitudAbierta.Puesto),
             Localizacion.Texto("Titulo.Confirmar"));
 
         if (!confirmado)
@@ -951,9 +941,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
-        (string? cv, string? carta) = this.RutasGuardadas(this.Edicion);
+        (string? cv, string? carta) = this.RutasGuardadas(this.solicitudAbierta);
 
-        if (!this.TryEliminarSolicitud(this.Edicion, out Exception? error))
+        if (!this.TryEliminarSolicitud(this.solicitudAbierta, out Exception? error))
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error!.Message),
@@ -965,7 +955,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.adjuntos.Eliminar(carta);
         this.adjuntos.DescartarCopias();
 
-        this.Edicion = null;
+        this.Abrir(null);
         this.SolicitudSeleccionada = null;
         this.Recargar();
         this.RecargarEmbudoSiVisible();
@@ -994,7 +984,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AbrirEnlace()
     {
-        string? url = this.Edicion?.EnlaceOferta;
+        string? url = this.Editor?.EnlaceOferta;
         if (string.IsNullOrWhiteSpace(url))
         {
             return;
@@ -1023,7 +1013,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AnadirEvento()
     {
-        if (this.Edicion is not Solicitud solicitud)
+        if (this.solicitudAbierta is not Solicitud solicitud)
         {
             return;
         }
@@ -1042,12 +1032,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void EliminarEvento(Evento? evento)
     {
-        if (this.Edicion is null || evento is null)
+        if (this.solicitudAbierta is null || evento is null)
         {
             return;
         }
 
-        this.Edicion.Eventos.Remove(evento);
+        this.solicitudAbierta.Eventos.Remove(evento);
         this.EventosEdicion.Remove(evento);
         if (evento.Id != 0)
         {

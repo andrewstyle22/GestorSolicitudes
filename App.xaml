@@ -7,7 +7,6 @@
 
         <!-- ============ Convertidores ============ -->
         <conv:EnumDescripcionConverter x:Key="EnumDescripcion" />
-        <conv:NuloAVisibilidadConverter x:Key="NuloAVisibilidad" />
         <conv:EstadoAColorConverter x:Key="EstadoAColor" />
         <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
