@@ -131,7 +131,7 @@ public class PestanasTests
             db,
             rutaColumnas: Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt"),
             carpetaAdjuntos: TestDb.NuevaCarpeta());
-        vm.Edicion = new SolicitudBuilder()
+        vm.SolicitudSeleccionada = new SolicitudBuilder()
             .ConEmpresa("ACME")
             .ConPuesto("Programador")
             .ConEnlaceOferta("https://ejemplo.test/oferta")

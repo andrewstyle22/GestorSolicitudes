@@ -294,16 +294,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (value is not null)
         {
             this.db.Entry(value).Collection(s => s.Eventos).Load();
-            this.Edicion = value;
+            this.Abrir(value);
         }
     }
 
-    /// <summary>Entidad mostrada en el panel de detalle.</summary>
-    [ObservableProperty]
-    private Solicitud? edicion;
+    /// <summary>Hay una solicitud abierta en el panel de detalle.</summary>
+    public bool TieneEdicion => this.solicitudAbierta is not null;
 
     /// <summary>
-    /// Copia observable del historial de <see cref="Edicion"/>: el POCO guarda una lista y la
+    /// Copia observable del historial de la solicitud abierta: el POCO guarda una lista y la
     /// vista necesita avisos al añadir o quitar. Los eventos son los mismos objetos.
     /// </summary>
     public ObservableCollection<Evento> EventosEdicion { get; } = [];
@@ -312,9 +311,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private SolicitudEdicionViewModel? editor;
 
+    /// <summary>
+    /// La entidad solo se toca al guardar: mientras tanto, la edición vive en <see cref="Editor"/>.
+    /// </summary>
+    private Solicitud? solicitudAbierta;
+
     // El editor se recrea con cada solicitud abierta.
-    partial void OnEdicionChanged(Solicitud? value)
+    private void Abrir(Solicitud? value)
     {
+        this.solicitudAbierta = value;
         this.EventosEdicion.Clear();
 
         if (value is not null)
@@ -326,6 +331,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Editor = value is null ? null : new SolicitudEdicionViewModel(value);
+        this.OnPropertyChanged(nameof(this.TieneEdicion));
     }
 
     // ---------------------------------------------------------------- Estadísticas
@@ -730,11 +736,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void Nueva()
     {
         this.SolicitudSeleccionada = null;
-        this.Edicion = new Solicitud
+        this.Abrir(new Solicitud
         {
             FechaSolicitud = DateTime.Today,
             Estado = EstadoSolicitud.Enviada,
-        };
+        });
     }
 
     /// <summary>
@@ -746,12 +752,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Duplicar()
     {
-        if (this.Edicion is null || this.Edicion.Id == 0)
+        if (this.solicitudAbierta is null || this.solicitudAbierta.Id == 0)
         {
             return;
         }
 
-        Solicitud origen = this.Edicion;
+        Solicitud origen = this.solicitudAbierta;
         var copia = new Solicitud
         {
             Empresa = origen.Empresa,
@@ -772,7 +778,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         };
 
         this.SolicitudSeleccionada = null;
-        this.Edicion = copia;
+        this.Abrir(copia);
     }
 
     /// <summary>
@@ -798,7 +804,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Guardar()
     {
-        if (this.Edicion is not Solicitud solicitud)
+        if (this.solicitudAbierta is not Solicitud solicitud)
         {
             return;
         }
@@ -888,13 +894,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Recargar();
         this.RecargarEmbudoSiVisible();
         this.SolicitudSeleccionada = null;
-        this.Edicion = null;
+        this.Abrir(null);
     }
 
     [RelayCommand]
     private void Cancelar()
     {
-        if (this.Edicion is not Solicitud solicitud)
+        if (this.solicitudAbierta is not Solicitud solicitud)
         {
             return;
         }
@@ -912,7 +918,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.
         this.db.ChangeTracker.Clear();
 
-        this.Edicion = null;
+        this.Abrir(null);
         this.SolicitudSeleccionada = null;
         this.Recargar();
     }
@@ -920,13 +926,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Eliminar()
     {
-        if (this.Edicion is null || this.Edicion.Id == 0)
+        if (this.solicitudAbierta is null || this.solicitudAbierta.Id == 0)
         {
             return;
         }
 
         bool confirmado = this.dialogo.Confirmar(
-            string.Format(Localizacion.Texto("Mensaje.ConfirmarEliminar"), this.Edicion.Empresa, this.Edicion.Puesto),
+            string.Format(Localizacion.Texto("Mensaje.ConfirmarEliminar"), this.solicitudAbierta.Empresa, this.solicitudAbierta.Puesto),
             Localizacion.Texto("Titulo.Confirmar"));
 
         if (!confirmado)
@@ -935,9 +941,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
-        (string? cv, string? carta) = this.RutasGuardadas(this.Edicion);
+        (string? cv, string? carta) = this.RutasGuardadas(this.solicitudAbierta);
 
-        if (!this.TryEliminarSolicitud(this.Edicion, out Exception? error))
+        if (!this.TryEliminarSolicitud(this.solicitudAbierta, out Exception? error))
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoEliminar"), error!.Message),
@@ -949,7 +955,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.adjuntos.Eliminar(carta);
         this.adjuntos.DescartarCopias();
 
-        this.Edicion = null;
+        this.Abrir(null);
         this.SolicitudSeleccionada = null;
         this.Recargar();
         this.RecargarEmbudoSiVisible();
@@ -1007,7 +1013,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AnadirEvento()
     {
-        if (this.Edicion is not Solicitud solicitud)
+        if (this.solicitudAbierta is not Solicitud solicitud)
         {
             return;
         }
@@ -1026,12 +1032,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void EliminarEvento(Evento? evento)
     {
-        if (this.Edicion is null || evento is null)
+        if (this.solicitudAbierta is null || evento is null)
         {
             return;
         }
 
-        this.Edicion.Eventos.Remove(evento);
+        this.solicitudAbierta.Eventos.Remove(evento);
         this.EventosEdicion.Remove(evento);
         if (evento.Id != 0)
         {

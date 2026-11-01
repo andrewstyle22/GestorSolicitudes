@@ -18,23 +18,25 @@ public class ViewModelAdjuntosTests
 
         vm.AnadirEventoCommand.Execute(null);
 
-        Evento nota = Assert.Single(vm.Edicion!.Eventos);
-        Assert.Single(vm.EventosEdicion);
-        Assert.Same(nota, vm.EventosEdicion[0]);
+        Evento nota = Assert.Single(vm.EventosEdicion);
         Assert.Equal(TipoEvento.Nota, nota.Tipo);
         Assert.Equal(DateTime.Today, nota.Fecha);
     }
 
     [Fact]
-    public void EdicionNula_VaciaElHistorialDeLaVista()
+    public void Cancelar_VaciaElHistorialDeLaVista()
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
         solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
-        vm.Edicion = solicitud;
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        Assert.Single(vm.EventosEdicion);
 
-        vm.Edicion = null;
+        vm.CancelarCommand.Execute(null);
 
         Assert.Empty(vm.EventosEdicion);
     }
@@ -61,7 +63,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
 
         // La vista recibe una copia observable con los mismos eventos que el POCO.
         Assert.Equal(solicitud.Eventos, vm.EventosEdicion);
@@ -84,7 +86,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string rutaCv = solicitud.RutaCv!;
 
         vm.QuitarCvCommand.Execute(null);
@@ -108,7 +110,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string rutaCv = solicitud.RutaCv!;
 
         vm.QuitarCvCommand.Execute(null);
@@ -149,7 +151,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string rutaCarta = solicitud.RutaCarta!;
 
         vm.QuitarCartaCommand.Execute(null);
@@ -172,7 +174,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string viejo = solicitud.RutaCv!;
         string nuevo = TestDb.CrearAdjuntoEn(carpeta, "cv-nuevo.pdf");
         vm.Editor!.RutaCv = nuevo;
@@ -194,7 +196,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string viejo = solicitud.RutaCv!;
         string nuevo = TestDb.CrearAdjuntoEn(carpeta, "cv-nuevo.pdf");
         vm.Editor!.RutaCv = nuevo;
@@ -217,7 +219,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string rutaCv = solicitud.RutaCv!;
 
         vm.QuitarCvCommand.Execute(null);
@@ -239,7 +241,7 @@ public class ViewModelAdjuntosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
 
         string origenNuevo = Path.Combine(TestDb.NuevaCarpeta(), "cv-nuevo.pdf");
         File.WriteAllText(origenNuevo, "nuevo");
@@ -304,7 +306,7 @@ public class ViewModelAdjuntosTests
 
         Assert.False(File.Exists(intermedio));
         Assert.False(File.Exists(final));
-        Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
     }
 
     [Fact]
@@ -315,7 +317,7 @@ public class ViewModelAdjuntosTests
 
         vm.QuitarCvCommand.Execute(null);
 
-        Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
     }
 
     [Fact]

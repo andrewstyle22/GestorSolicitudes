@@ -601,17 +601,17 @@
 
             <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch"
                           Background="Transparent"
-                          Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}" />
+                          Visibility="{Binding TieneEdicion, Converter={StaticResource BooleanoAVisibilidad}}" />
 
             <!-- Detalle -->
             <Border Grid.Column="2" Background="{StaticResource Panel}"
                     BorderBrush="{StaticResource Borde}" BorderThickness="1" CornerRadius="8"
                     Width="440" MinWidth="380"
-                    Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}">
+                    Visibility="{Binding TieneEdicion, Converter={StaticResource BooleanoAVisibilidad}}">
                 <Grid>
 
                     <!-- Formulario -->
-                    <Grid Visibility="{Binding Edicion, Converter={StaticResource NuloAVisibilidad}}">
+                    <Grid Visibility="{Binding TieneEdicion, Converter={StaticResource BooleanoAVisibilidad}}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />

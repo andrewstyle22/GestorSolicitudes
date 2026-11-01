@@ -19,7 +19,7 @@ public class ViewModelDialogosTests
         vm.GuardarCommand.Execute(null);
 
         Assert.Single(dialogo.Avisos);
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
         Assert.Empty(db.Solicitudes);
     }
 
@@ -29,14 +29,17 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
-        vm.NuevaCommand.Execute(null);
-        vm.Edicion!.Empresa = "ACME"; // la entidad no es la fuente de la validación
-        vm.Edicion.Puesto = "Dev";
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Puesto = string.Empty; // la entidad conserva el puesto guardado
 
         vm.GuardarCommand.Execute(null);
 
         Assert.Single(dialogo.Avisos);
-        Assert.Empty(db.Solicitudes);
+        Assert.Equal("Dev", db.Solicitudes.Single().Puesto);
     }
 
     [Fact]
@@ -52,7 +55,7 @@ public class ViewModelDialogosTests
         vm.GuardarCommand.Execute(null);
 
         Assert.Single(dialogo.Errores);
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
     }
 
     [Fact]
@@ -157,13 +160,13 @@ public class ViewModelDialogosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         string rutaCv = solicitud.RutaCv!;
 
         vm.EliminarCommand.Execute(null);
 
         Assert.Empty(db.Solicitudes);
-        Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
         Assert.False(File.Exists(rutaCv));
     }
 
@@ -177,13 +180,13 @@ public class ViewModelDialogosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
 
         vm.EliminarCommand.Execute(null);
 
         Assert.Single(dialogo.Confirmaciones);
         Assert.Equal(1, db.Solicitudes.Count());
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
     }
 
     [Fact]
@@ -196,13 +199,13 @@ public class ViewModelDialogosTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
 
         vm.EliminarCommand.Execute(null);
 
         Assert.Single(dialogo.Errores);
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
     }
 
     [Fact]

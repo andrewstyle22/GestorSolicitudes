@@ -31,10 +31,24 @@ public class ViewModelTests
 
         vm.NuevaCommand.Execute(null);
 
-        Assert.NotNull(vm.Edicion);
-        Assert.Equal(0, vm.Edicion!.Id);
-        Assert.Equal(DateTime.Today, vm.Edicion.FechaSolicitud);
-        Assert.Equal(EstadoSolicitud.Enviada, vm.Edicion.Estado);
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(vm.Solicitudes);
+        Assert.Equal(DateTime.Today, vm.Editor!.FechaSolicitud);
+        Assert.Equal(EstadoSolicitud.Enviada, vm.Editor.Estado);
+    }
+
+    [Fact]
+    public void TieneEdicion_SigueAlPanelDeDetalle()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        Assert.False(vm.TieneEdicion);
+
+        vm.NuevaCommand.Execute(null);
+        Assert.True(vm.TieneEdicion);
+
+        vm.CancelarCommand.Execute(null);
+        Assert.False(vm.TieneEdicion);
     }
 
     [Fact]
@@ -68,7 +82,6 @@ public class ViewModelTests
         Assert.Equal("Jefa", guardada.ContactoNombre);
         // Si el proceso sigue abierto, se propone el seguimiento a +7 días.
         Assert.Equal(DateTime.Today.AddDays(7), guardada.ProximoSeguimiento);
-        Assert.Null(vm.Edicion);
         Assert.Null(vm.Editor);
         Assert.Null(vm.SolicitudSeleccionada);
     }
@@ -137,18 +150,18 @@ public class ViewModelTests
         vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
         vm.DuplicarCommand.Execute(null);
 
-        Assert.NotNull(vm.Edicion);
-        Assert.Equal(0, vm.Edicion!.Id); // es un borrador nuevo
-        Assert.Equal("ACME", vm.Edicion.Empresa);
-        Assert.Equal("Desarrollador", vm.Edicion.Puesto);
-        Assert.Equal(EstadoSolicitud.Enviada, vm.Edicion.Estado);
-        Assert.Equal(DateTime.Today, vm.Edicion.FechaSolicitud);
-        Assert.Null(vm.Edicion.ContactoNombre); // el contacto no se copia
-        Assert.Contains("Duplicada", vm.Edicion.Notas!);
+        Assert.NotNull(vm.Editor);
+        Assert.Null(vm.SolicitudSeleccionada); // es un borrador nuevo
+        Assert.Equal("ACME", vm.Editor!.Empresa);
+        Assert.Equal("Desarrollador", vm.Editor.Puesto);
+        Assert.Equal(EstadoSolicitud.Enviada, vm.Editor.Estado);
+        Assert.Equal(DateTime.Today, vm.Editor.FechaSolicitud);
+        Assert.Null(vm.Editor.ContactoNombre); // el contacto no se copia
+        Assert.Contains("Duplicada", vm.Editor.Notas!);
         // La fecha va en el formato corto del idioma activo, no fija en dd/MM/yyyy.
         Assert.Contains(
             DateTime.Today.AddDays(-20).ToString("d", Localizacion.CulturaActual),
-            vm.Edicion.Notas!);
+            vm.Editor.Notas!);
     }
 
     [Fact]
@@ -158,10 +171,10 @@ public class ViewModelTests
         using var vm = new MainViewModel(db);
 
         vm.NuevaCommand.Execute(null);
-        Assert.NotNull(vm.Edicion);
+        Assert.NotNull(vm.Editor);
         vm.CancelarCommand.Execute(null);
 
-        Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
         Assert.Empty(vm.Solicitudes);
     }
 
@@ -176,10 +189,8 @@ public class ViewModelTests
 
         vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
 
-        Assert.NotNull(vm.Edicion);
-        Assert.Equal("ACME", vm.Edicion!.Empresa);
         Assert.NotNull(vm.Editor);
-        Assert.Equal("ACME", vm.Editor.Empresa);
+        Assert.Equal("ACME", vm.Editor!.Empresa);
     }
 
     [Fact]
@@ -480,7 +491,7 @@ public class ViewModelTests
 
         vm.DuplicarCommand.Execute(null);
 
-        Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
     }
 
     [Fact]
@@ -491,7 +502,7 @@ public class ViewModelTests
 
         vm.CancelarCommand.Execute(null);
 
-        Assert.Null(vm.Edicion);
+        Assert.Null(vm.Editor);
     }
 
     [Fact]
@@ -503,13 +514,12 @@ public class ViewModelTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
-        vm.Edicion = solicitud;
+        vm.SolicitudSeleccionada = solicitud;
         vm.Editor!.Empresa = "SinGuardar";
 
         vm.CancelarCommand.Execute(null);
 
         Assert.Equal(EntityState.Detached, db.Entry(solicitud).State);
-        Assert.Null(vm.Edicion);
         Assert.Null(vm.Editor);
         Assert.Null(vm.SolicitudSeleccionada);
         Assert.Equal("ACME", Assert.Single(vm.Solicitudes).Empresa);
