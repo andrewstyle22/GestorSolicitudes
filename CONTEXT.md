@@ -24,6 +24,8 @@ Commit 2.2 (`refactor: EventosEdicion vive en el editor`). Mover `ObservableColl
 - Pasar `sonarcloud-gate`.
 - XAML nuevo: `<Page>` en el csproj; texto nuevo: clave en es/en/de.
 - Mensaje en español; un commit, una idea revertible.
+- Pasar sonarcloud-gate ANTES de hacer commit, no después del push.
+- No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
 - 2.8: EF puede no materializar la colección por campo; test de ida y vuelta con `Include` (guardar, nuevo contexto, leer).
