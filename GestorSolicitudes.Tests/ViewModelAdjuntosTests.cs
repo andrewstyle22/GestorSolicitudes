@@ -99,6 +99,47 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
+    public void QuitarCv_YCancelar_ConservaElFicheroYLaRutaGuardada()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf")).Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.Edicion = solicitud;
+        string rutaCv = solicitud.RutaCv!;
+
+        vm.QuitarCvCommand.Execute(null);
+        vm.CancelarCommand.Execute(null);
+
+        Assert.True(File.Exists(rutaCv));
+        Assert.Equal(rutaCv, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
+    public void AdjuntarCv_YGuardar_PersisteLaRutaEnLaEntidad()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "mi-cv.pdf");
+        File.WriteAllText(origen, "cv");
+        var dialogo = new DialogoFalso { FicheroElegido = origen };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("ACME", "Dev");
+
+        vm.AdjuntarCvCommand.Execute(null);
+        string rutaCv = vm.Editor!.RutaCv!;
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Equal(rutaCv, db.Solicitudes.Single().RutaCv);
+        Assert.Equal("mi-cv.pdf", db.Solicitudes.Single().NombreOriginalCv);
+        Assert.True(File.Exists(rutaCv));
+    }
+
+    [Fact]
     public void QuitarCarta_NoBorraElFicheroHastaGuardar()
     {
         using var db = TestDb.NuevoContexto();
