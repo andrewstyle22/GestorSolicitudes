@@ -5,12 +5,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección de la eta
 ## Etapas
 - ✅ Etapa 0: red de seguridad; tests con `SolicitudBuilder` y `RellenarObligatorios`.
 - ✅ Etapa 1: editor con búfer conectado al `MainViewModel`; la UI ya no ve la entidad.
-- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10).
+- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1 hecho.
 - ⬜ Etapa 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ⬜ Etapa 4: cierre; test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 2.1 (`feat: EventoViewModel`). Crear `EventoViewModel` en `ViewModels` con `Fecha`, `Tipo` y `Descripcion` con `INotifyPropertyChanged`, más `CargarDesde` y `AplicarA`, con tests.
+Commit 2.2 (`refactor: EventosEdicion vive en el editor`). Mover `ObservableCollection<EventoViewModel>` a `SolicitudEdicionViewModel`, cargarla en `CargarDesde`, y dejar que `PestanaAdjuntos` siga leyendo los mismos nombres (ahora desde `Editor.EventosEdicion`).
 
 ## Decisiones vigentes
 - Búfer: copia al abrir y vuelca al modelo solo al Guardar; Cancelar descarta.
