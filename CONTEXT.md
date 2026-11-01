@@ -21,13 +21,14 @@ Commit 2.2 (`refactor: EventosEdicion vive en el editor`). Mover `ObservableColl
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores).
 - `dotnet format GestorSolicitudes.slnx` y `--verify-no-changes`.
-- Pasar `sonarcloud-gate`.
+- Antes de commitear: verificación local de `sonarcloud-gate` (test, format, barrido). El veredicto del gate llega tras el push, en el PR.
 - XAML nuevo: `<Page>` en el csproj; texto nuevo: clave en es/en/de.
 - Mensaje en español; un commit, una idea revertible.
-- Pasar sonarcloud-gate ANTES de hacer commit, no después del push.
+- Cada paso del plan lleva su propio commit, con el mensaje que indica el plan. No fusiones pasos ni los des por cubiertos por otro sin preguntarme.
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
+- 2.5: escribir antes los tests de AplicarEventos y comprobar que fallan con el código viejo: (a) quitar A y añadir N, (b) insertar N antes de A, (c) borrado real en base de datos con contexto real. Regla de diseño: todo evento con Id == 0 se crea siempre como nuevo; nunca se empareja por posición con eventos existentes.
 - 2.8: EF puede no materializar la colección por campo; test de ida y vuelta con `Include` (guardar, nuevo contexto, leer).
 - 3.14–3.17: el mismo test prueba los `set` privados.
 - 3.7: decidir `CambiarEstado` (motivo solo con rechazo, `FechaCierre` al cerrar, reapertura) y anotarlo en `02-DOCS/decisiones/`.
