@@ -89,7 +89,7 @@ public class ViewModelAdjuntosTests
 
         vm.QuitarCvCommand.Execute(null);
 
-        Assert.Null(solicitud.RutaCv);
+        Assert.Null(vm.Editor!.RutaCv);
         // El fichero sigue en disco: la base todavía lo apunta hasta que se guarde.
         Assert.True(File.Exists(rutaCv));
 
@@ -113,7 +113,7 @@ public class ViewModelAdjuntosTests
 
         vm.QuitarCartaCommand.Execute(null);
 
-        Assert.Null(solicitud.RutaCarta);
+        Assert.Null(vm.Editor!.RutaCarta);
         Assert.True(File.Exists(rutaCarta));
 
         vm.GuardarCommand.Execute(null);
@@ -134,7 +134,7 @@ public class ViewModelAdjuntosTests
         vm.Edicion = solicitud;
         string viejo = solicitud.RutaCv!;
         string nuevo = TestDb.CrearAdjuntoEn(carpeta, "cv-nuevo.pdf");
-        solicitud.RutaCv = nuevo;
+        vm.Editor!.RutaCv = nuevo;
 
         vm.GuardarCommand.Execute(null);
 
@@ -156,7 +156,7 @@ public class ViewModelAdjuntosTests
         vm.Edicion = solicitud;
         string viejo = solicitud.RutaCv!;
         string nuevo = TestDb.CrearAdjuntoEn(carpeta, "cv-nuevo.pdf");
-        solicitud.RutaCv = nuevo;
+        vm.Editor!.RutaCv = nuevo;
 
         vm.CancelarCommand.Execute(null);
 
@@ -204,7 +204,7 @@ public class ViewModelAdjuntosTests
         File.WriteAllText(origenNuevo, "nuevo");
         dialogo.FicheroElegido = origenNuevo;
         vm.AdjuntarCvCommand.Execute(null);
-        string rutaNueva = solicitud.RutaCv!;
+        string rutaNueva = vm.Editor!.RutaCv!;
 
         vm.EliminarCommand.Execute(null);
 
@@ -228,10 +228,10 @@ public class ViewModelAdjuntosTests
         vm.RellenarObligatorios("ACME", "Dev");
 
         vm.AdjuntarCvCommand.Execute(null);
-        string intermedio = vm.Edicion!.RutaCv!;
+        string intermedio = vm.Editor!.RutaCv!;
         dialogo.FicheroElegido = segundo;
         vm.AdjuntarCvCommand.Execute(null);
-        string final = vm.Edicion!.RutaCv!;
+        string final = vm.Editor!.RutaCv!;
 
         vm.GuardarCommand.Execute(null);
 
@@ -254,10 +254,10 @@ public class ViewModelAdjuntosTests
         vm.RellenarObligatorios("ACME", "Dev");
 
         vm.AdjuntarCvCommand.Execute(null);
-        string intermedio = vm.Edicion!.RutaCv!;
+        string intermedio = vm.Editor!.RutaCv!;
         dialogo.FicheroElegido = segundo;
         vm.AdjuntarCvCommand.Execute(null);
-        string final = vm.Edicion!.RutaCv!;
+        string final = vm.Editor!.RutaCv!;
 
         vm.CancelarCommand.Execute(null);
 
@@ -284,9 +284,8 @@ public class ViewModelAdjuntosTests
         using var vm = new MainViewModel(db);
         vm.NuevaCommand.Execute(null);
 
-        Adjunto? cv = vm.AdjuntoCv;
+        Adjunto cv = vm.Editor!.AdjuntoCv;
 
-        Assert.NotNull(cv);
         Assert.Null(cv.Ruta);
         Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), cv.Nombre);
     }
@@ -297,12 +296,12 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         vm.NuevaCommand.Execute(null);
-        vm.Edicion!.RutaCarta = @"C:\adjuntos\a1b2.pdf";
-        vm.Edicion.NombreOriginalCarta = "carta.pdf";
+        vm.Editor!.RutaCarta = @"C:\adjuntos\a1b2.pdf";
+        vm.Editor.NombreOriginalCarta = "carta.pdf";
 
-        Adjunto? carta = vm.AdjuntoCarta;
+        Adjunto carta = vm.Editor.AdjuntoCarta;
 
-        Assert.Equal(@"C:\adjuntos\a1b2.pdf", carta!.Ruta);
+        Assert.Equal(@"C:\adjuntos\a1b2.pdf", carta.Ruta);
         Assert.Equal("carta.pdf", carta.Nombre);
     }
 

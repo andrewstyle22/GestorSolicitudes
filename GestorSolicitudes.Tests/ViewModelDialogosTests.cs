@@ -68,10 +68,10 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.NotNull(vm.Edicion!.RutaCv);
-        Assert.StartsWith(carpeta, vm.Edicion.RutaCv!);
-        Assert.True(File.Exists(vm.Edicion.RutaCv));
-        Assert.Equal("mi-cv.pdf", vm.Edicion.NombreOriginalCv);
+        Assert.NotNull(vm.Editor!.RutaCv);
+        Assert.StartsWith(carpeta, vm.Editor.RutaCv!);
+        Assert.True(File.Exists(vm.Editor.RutaCv));
+        Assert.Equal("mi-cv.pdf", vm.Editor.NombreOriginalCv);
     }
 
     [Fact]
@@ -87,8 +87,8 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCartaCommand.Execute(null);
 
-        Assert.NotNull(vm.Edicion!.RutaCarta);
-        Assert.Equal("carta.docx", vm.Edicion.NombreOriginalCarta);
+        Assert.NotNull(vm.Editor!.RutaCarta);
+        Assert.Equal("carta.docx", vm.Editor.NombreOriginalCarta);
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.Null(vm.Edicion!.RutaCv);
+        Assert.Null(vm.Editor!.RutaCv);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class ViewModelDialogosTests
         Assert.Contains(
             Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
             Assert.Single(dialogo.Errores));
-        Assert.Null(vm.Edicion!.RutaCv);
+        Assert.Null(vm.Editor!.RutaCv);
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public class ViewModelDialogosTests
         Assert.Contains(
             Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
             Assert.Single(dialogo.Errores));
-        Assert.Null(vm.Edicion!.RutaCarta);
+        Assert.Null(vm.Editor!.RutaCarta);
     }
 
     [Fact]

@@ -103,19 +103,15 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
     private string? nombreOriginalCarta;
 
-    /// <summary>CV de la edición: nulo si no hay fichero, como en el panel.</summary>
-    public Adjunto? AdjuntoCv => this.RutaCv is null
-        ? null
-        : new Adjunto(
-            this.RutaCv,
-            this.NombreOriginalCv ?? Path.GetFileName(this.RutaCv) ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
+    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    public Adjunto AdjuntoCv => new(
+        this.RutaCv,
+        this.NombreOriginalCv ?? Path.GetFileName(this.RutaCv) ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
 
-    /// <summary>Carta de la edición: nula si no hay fichero, como en el panel.</summary>
-    public Adjunto? AdjuntoCarta => this.RutaCarta is null
-        ? null
-        : new Adjunto(
-            this.RutaCarta,
-            this.NombreOriginalCarta ?? Path.GetFileName(this.RutaCarta) ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
+    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    public Adjunto AdjuntoCarta => new(
+        this.RutaCarta,
+        this.NombreOriginalCarta ?? Path.GetFileName(this.RutaCarta) ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
 
@@ -218,6 +214,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         solicitud.Notas = this.Notas;
     }
 
+    public void AplicarAdjuntos(Solicitud solicitud)
+    {
+        solicitud.RutaCv = this.RutaCv;
+        solicitud.NombreOriginalCv = this.NombreOriginalCv;
+        solicitud.RutaCarta = this.RutaCarta;
+        solicitud.NombreOriginalCarta = this.NombreOriginalCarta;
+    }
+
     /// <summary>
     /// Vuelca al modelo solo los grupos cuya pestaña ya escribe en el editor. Mientras la UI
     /// siga bindeada a la entidad, ese grupo no se toca para no pisar lo editado.
@@ -231,5 +235,6 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.AplicarRespuesta(solicitud);
         this.AplicarContacto(solicitud);
         this.AplicarIdentificacion(solicitud);
+        this.AplicarAdjuntos(solicitud);
     }
 }

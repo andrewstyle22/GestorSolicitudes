@@ -179,7 +179,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Recargar();
-        this.RefrescarPanelDetalle();
     }
 
     [ObservableProperty]
@@ -313,7 +312,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private SolicitudEdicionViewModel? editor;
 
-    // Los adjuntos se derivan de la edición: al repintar el panel se recalculan.
+    // El editor se recrea con cada solicitud abierta.
     partial void OnEdicionChanged(Solicitud? value)
     {
         this.EventosEdicion.Clear();
@@ -327,8 +326,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.Editor = value is null ? null : new SolicitudEdicionViewModel(value);
-        this.OnPropertyChanged(nameof(this.AdjuntoCv));
-        this.OnPropertyChanged(nameof(this.AdjuntoCarta));
     }
 
     // ---------------------------------------------------------------- Estadísticas
@@ -618,37 +615,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     // ---------------------------------------------------------------- Adjuntos
 
     /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian la etiqueta del fichero y las propiedades.</summary>
-    private sealed record DescriptorAdjunto(string Etiqueta, Action<Solicitud, string?, string?> Asignar);
+    private sealed record DescriptorAdjunto(string Etiqueta, Action<SolicitudEdicionViewModel, string?, string?> Asignar);
 
     private static readonly DescriptorAdjunto DescriptorCv = new(
         "cv",
-        (solicitud, ruta, nombre) =>
+        (editor, ruta, nombre) =>
         {
-            solicitud.RutaCv = ruta;
-            solicitud.NombreOriginalCv = nombre;
+            editor.RutaCv = ruta;
+            editor.NombreOriginalCv = nombre;
         });
 
     private static readonly DescriptorAdjunto DescriptorCarta = new(
         "carta",
-        (solicitud, ruta, nombre) =>
+        (editor, ruta, nombre) =>
         {
-            solicitud.RutaCarta = ruta;
-            solicitud.NombreOriginalCarta = nombre;
+            editor.RutaCarta = ruta;
+            editor.NombreOriginalCarta = nombre;
         });
-
-    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
-    public Adjunto? AdjuntoCv => this.Edicion is null
-        ? null
-        : new Adjunto(
-            this.Edicion.RutaCv,
-            this.Edicion.NombreCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
-
-    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
-    public Adjunto? AdjuntoCarta => this.Edicion is null
-        ? null
-        : new Adjunto(
-            this.Edicion.RutaCarta,
-            this.Edicion.NombreCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     [RelayCommand]
     private void AdjuntarCv() => this.AdjuntarAdjunto(DescriptorCv, Localizacion.Texto("Dialogo.SeleccionaCv"));
@@ -658,7 +641,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void AdjuntarAdjunto(DescriptorAdjunto adjunto, string titulo)
     {
-        Solicitud? editar = this.Edicion;
+        SolicitudEdicionViewModel? editar = this.Editor;
         if (editar is null)
         {
             return;
@@ -680,12 +663,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAdjuntar"), ex.Message),
                 Localizacion.Texto(Traducciones.ClaveError));
-            return;
         }
-
-        // Las entidades son POCOs sin INotifyPropertyChanged: se reasigna Edicion
-        // al mismo objeto para que el panel de detalle repinte el nombre del adjunto.
-        this.RefrescarPanelDetalle();
     }
 
     [RelayCommand]
@@ -700,13 +678,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void QuitarAdjunto(DescriptorAdjunto adjunto)
     {
-        if (this.Edicion is null)
+        if (this.Editor is null)
         {
             return;
         }
 
-        adjunto.Asignar(this.Edicion, null, null);
-        this.RefrescarPanelDetalle();
+        adjunto.Asignar(this.Editor, null, null);
     }
 
     /// <summary>
@@ -735,17 +712,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
                 Localizacion.Texto(Traducciones.ClaveError));
         }
-    }
-
-    private void RefrescarPanelDetalle()
-    {
-        // El editor guarda lo escrito y aún no guardado: al repintar el panel se conserva,
-        // que reasignar la entidad lo recrearía desde cero y perdería esos cambios.
-        SolicitudEdicionViewModel? editor = this.Editor;
-        Solicitud? actual = this.Edicion;
-        this.Edicion = null;
-        this.Edicion = actual;
-        this.Editor = editor;
     }
 
     /// <summary>
@@ -856,7 +822,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.adjuntos.DescartarSustituidas(solicitud, (cvAnterior, cartaAnterior));
+        this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
     }
 
@@ -938,7 +904,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ? (null, null)
             : this.RutasGuardadas(solicitud);
 
-        this.adjuntos.DescartarNoGuardadas(solicitud, (cvGuardado, cartaGuardada));
+        this.adjuntos.DescartarNoGuardadas(
+            (this.Editor!.RutaCv, this.Editor.RutaCarta),
+            (cvGuardado, cartaGuardada));
 
         // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
         // se pierden y la siguiente consulta vuelve a traer los datos de disco.

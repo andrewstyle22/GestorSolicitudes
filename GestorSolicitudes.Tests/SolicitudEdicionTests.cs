@@ -281,12 +281,12 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void AdjuntoCv_SinRuta_EsNulo()
+    public void AdjuntoCv_SinRuta_MuestraElTextoDeSinAdjuntar()
     {
         var editor = new SolicitudEdicionViewModel();
 
-        Assert.Null(editor.AdjuntoCv);
-        Assert.Null(editor.AdjuntoCarta);
+        Assert.Null(editor.AdjuntoCv.Ruta);
+        Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), editor.AdjuntoCv.Nombre);
     }
 
     [Fact]
@@ -313,6 +313,26 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void AplicarAdjuntos_VuelcaRutasYNombres()
+    {
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            RutaCv = @"C:\adjuntos\abc.pdf",
+            NombreOriginalCv = "mi-cv.pdf",
+            RutaCarta = @"C:\adjuntos\def.pdf",
+            NombreOriginalCarta = "mi-carta.pdf",
+        };
+
+        editor.AplicarAdjuntos(solicitud);
+
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
+        Assert.Equal(@"C:\adjuntos\def.pdf", solicitud.RutaCarta);
+        Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
+    }
+
+    [Fact]
     public void AplicarA_VuelcaTodosLosGruposDelEditor()
     {
         DateTime fecha = new(2026, 2, 1);
@@ -326,6 +346,7 @@ public class SolicitudEdicionTests
             FechaSolicitud = fecha,
             RespuestaEmpresa = "Oferta enviada",
             ContactoNombre = "Ana",
+            RutaCv = @"C:\adjuntos\abc.pdf",
         };
 
         editor.AplicarA(solicitud);
@@ -337,5 +358,6 @@ public class SolicitudEdicionTests
         Assert.Equal(fecha, solicitud.FechaSolicitud);
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
         Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
     }
 }
