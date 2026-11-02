@@ -5,19 +5,19 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección de la eta
 ## Etapas
 - ✅ Etapa 0: red de seguridad; tests con `SolicitudBuilder` y `RellenarObligatorios`.
 - ✅ Etapa 1: editor con búfer conectado al `MainViewModel`; la UI ya no ve la entidad.
-- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.8 hechos.
+- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.9 hechos.
 - ⬜ Etapa 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ⬜ Etapa 4: cierre; test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 2.9 (`refactor: Eventos expone IReadOnlyList`): retirar el `set` y el `List` público de `Solicitud.Eventos`; `AgregarEvento`/`QuitarEvento` siguen siendo la única vía. EF ya usa acceso por campo (2.8).
+Commit 2.10 (`refactor: Solicitud.RegistrarEnvio sustituye a AnadirHitoInicial`): llevar al modelo la regla del primer hito y quitarla de `ReglasSolicitud`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir y vuelca al modelo solo al Guardar; Cancelar descarta.
 - `EventoViewModel.Original` enlaza cada copia con su entidad; los eventos nuevos quedan con `Original` a `null` hasta Guardar.
 - Sincronía del historial: `SolicitudEdicionViewModel.AplicarEventos` crea, actualiza y quita del modelo; `MainViewModel.Guardar` marca los de `EventosEliminados` con `db.Eventos.Remove` (el búfer no conoce la base).
 - `Evento` se crea con `Evento(fecha, tipo, descripcion)` y muta por `Actualizar`; EF usa el constructor privado. `EventoViewModel.AplicarA` delega en `Actualizar`.
-- `Solicitud.Eventos` es una propiedad autoimplementada; se añade y se quita por `AgregarEvento`/`QuitarEvento`, no con `Eventos.Add`. El `List` público y el `set` se retiran en 2.9.
+- `Solicitud.Eventos` expone `IReadOnlyList<Evento>` sobre un campo privado; se añade y se quita solo por `AgregarEvento`/`QuitarEvento`. EF lo materializa por el campo de respaldo (test de ida y vuelta con `Include`).
 - Coexistencia: `MainViewModel` mantiene `Edicion` (privada) y `Editor` mientras migra pestaña a pestaña; cada grupo de `AplicarA` se activa con su XAML.
 - Meta final: la UI solo conoce `Editor`; el modelo expone constructor, métodos por intención y `set` privados.
 - POCO sin `INotifyPropertyChanged` filtra `PropertyDescriptor`; el editor lo evita.
