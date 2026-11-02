@@ -5,15 +5,16 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección de la eta
 ## Etapas
 - ✅ Etapa 0: red de seguridad; tests con `SolicitudBuilder` y `RellenarObligatorios`.
 - ✅ Etapa 1: editor con búfer conectado al `MainViewModel`; la UI ya no ve la entidad.
-- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1 hecho.
+- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.2 hechos.
 - ⬜ Etapa 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ⬜ Etapa 4: cierre; test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 2.2 (`refactor: EventosEdicion vive en el editor`). Mover `ObservableCollection<EventoViewModel>` a `SolicitudEdicionViewModel`, cargarla en `CargarDesde`, y dejar que `PestanaAdjuntos` siga leyendo los mismos nombres (ahora desde `Editor.EventosEdicion`).
+Commit 2.3 (`refactor: AnadirEvento opera sobre el editor`). Crear un `EventoViewModel` vacío y añadirlo a `Editor.EventosEdicion` sin tocar `solicitud.Eventos`: el alta real llega en 2.5, con `Original` a `null` para los eventos nuevos.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir y vuelca al modelo solo al Guardar; Cancelar descarta.
+- `EventoViewModel.Original` enlaza cada copia con su entidad; los eventos nuevos quedan con `Original` a `null` hasta Guardar.
 - Coexistencia: `MainViewModel` mantiene `Edicion` (privada) y `Editor` mientras migra pestaña a pestaña; cada grupo de `AplicarA` se activa con su XAML.
 - Meta final: la UI solo conoce `Editor`; el modelo expone constructor, métodos por intención y `set` privados.
 - POCO sin `INotifyPropertyChanged` filtra `PropertyDescriptor`; el editor lo evita.

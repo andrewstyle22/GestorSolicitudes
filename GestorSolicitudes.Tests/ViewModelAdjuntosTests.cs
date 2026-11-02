@@ -18,13 +18,13 @@ public class ViewModelAdjuntosTests
 
         vm.AnadirEventoCommand.Execute(null);
 
-        Evento nota = Assert.Single(vm.EventosEdicion);
+        EventoViewModel nota = Assert.Single(vm.Editor!.EventosEdicion);
         Assert.Equal(TipoEvento.Nota, nota.Tipo);
         Assert.Equal(DateTime.Today, nota.Fecha);
     }
 
     [Fact]
-    public void Cancelar_VaciaElHistorialDeLaVista()
+    public void Cancelar_DescartaElHistorialDeLaVista()
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
@@ -34,11 +34,11 @@ public class ViewModelAdjuntosTests
         db.SaveChanges();
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
-        Assert.Single(vm.EventosEdicion);
+        Assert.Single(vm.Editor!.EventosEdicion);
 
         vm.CancelarCommand.Execute(null);
 
-        Assert.Empty(vm.EventosEdicion);
+        Assert.Null(vm.Editor);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        vm.EliminarEventoCommand.Execute(new Evento());
+        vm.EliminarEventoCommand.Execute(new EventoViewModel());
 
         Assert.Empty(vm.Solicitudes);
     }
@@ -65,14 +65,15 @@ public class ViewModelAdjuntosTests
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
 
-        // La vista recibe una copia observable con los mismos eventos que el POCO.
-        Assert.Equal(solicitud.Eventos, vm.EventosEdicion);
-
+        // La vista recibe una copia editable de cada evento, no la entidad del POCO.
         Evento persistido = solicitud.Eventos.First(e => e.Id != 0);
-        vm.EliminarEventoCommand.Execute(persistido);
+        EventoViewModel copia = vm.Editor!.EventosEdicion.Single(e => e.Tipo == persistido.Tipo);
+        Assert.Equal(persistido.Fecha, copia.Fecha);
+
+        vm.EliminarEventoCommand.Execute(copia);
 
         Assert.DoesNotContain(persistido, solicitud.Eventos);
-        Assert.DoesNotContain(persistido, vm.EventosEdicion);
+        Assert.DoesNotContain(copia, vm.Editor.EventosEdicion);
         Assert.Equal(EntityState.Deleted, db.Entry(persistido).State);
     }
 

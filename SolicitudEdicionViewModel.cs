@@ -1,5 +1,6 @@
 namespace GestorSolicitudes.ViewModels;
 
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -113,6 +114,9 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.RutaCarta,
         this.NombreOriginalCarta ?? Path.GetFileName(this.RutaCarta) ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
+    /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
+    public ObservableCollection<EventoViewModel> EventosEdicion { get; } = [];
+
     public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
 
     public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
@@ -158,7 +162,20 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.NombreOriginalCv = solicitud.NombreOriginalCv;
         this.RutaCarta = solicitud.RutaCarta;
         this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
+        this.CargarEventos(solicitud);
         this.ValidateAllProperties();
+    }
+
+    private void CargarEventos(Solicitud solicitud)
+    {
+        this.EventosEdicion.Clear();
+
+        foreach (Evento evento in solicitud.Eventos)
+        {
+            var edicion = new EventoViewModel();
+            edicion.CargarDesde(evento);
+            this.EventosEdicion.Add(edicion);
+        }
     }
 
     public void AplicarIdentificacion(Solicitud solicitud)

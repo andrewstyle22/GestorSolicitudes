@@ -43,6 +43,26 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void CargarDesde_CopiaElHistorialComoEventosEditables()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        solicitud.Eventos.Add(new Evento
+        {
+            Fecha = new DateTime(2026, 3, 5),
+            Tipo = TipoEvento.Entrevista,
+            Descripcion = "Entrevista con RR. HH.",
+        });
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CargarDesde(solicitud);
+
+        EventoViewModel copia = Assert.Single(editor.EventosEdicion);
+        Assert.Equal(new DateTime(2026, 3, 5), copia.Fecha);
+        Assert.Equal(TipoEvento.Entrevista, copia.Tipo);
+        Assert.Equal("Entrevista con RR. HH.", copia.Descripcion);
+    }
+
+    [Fact]
     public void AplicarIdentificacion_VuelcaEmpresaYPuesto()
     {
         Solicitud solicitud = new SolicitudBuilder().Construir();

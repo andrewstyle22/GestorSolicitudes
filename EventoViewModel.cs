@@ -17,8 +17,12 @@ public sealed partial class EventoViewModel : ObservableObject
     [ObservableProperty]
     private string descripcion = string.Empty;
 
+    /// <summary>Entidad que hay detrás del búfer; el guardado escribe en ella.</summary>
+    internal Evento? Original { get; private set; }
+
     public void CargarDesde(Evento evento)
     {
+        this.Original = evento;
         this.Fecha = evento.Fecha;
         this.Tipo = evento.Tipo;
         this.Descripcion = evento.Descripcion;

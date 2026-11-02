@@ -171,6 +171,11 @@ public class PestanasTests
             f => ReferenceEquals(f.ComandoAdjuntar, vm.AdjuntarCvCommand)
                 && ReferenceEquals(f.ComandoAbrir, vm.AbrirAdjuntoCommand));
 
+        // El historial se edita en el búfer, no en las entidades del POCO.
+        Assert.Contains(
+            Descendientes<ItemsControl>(detalleAdjuntos),
+            i => BindingOperations.GetBinding(i, ItemsControl.ItemsSourceProperty)?.Path.Path == "Editor.EventosEdicion");
+
         var metricas = new CabeceraMetricas { DataContext = vm };
         Dibujar(metricas);
         Assert.Equal(12, Descendientes<TextBlock>(metricas).Count());
