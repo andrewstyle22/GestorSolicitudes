@@ -33,6 +33,7 @@ Sonar no corre en local, pero estos patrones se encuentran con `grep`/`Select-St
 - `'"([^"]{3,})"'` contado por fichero: si un literal sale 3+ veces, S1192.
 - `Assert\.(Equal|Contains)\(new` y `new\[\]` dentro de llamadas: arrays constantes.
 - `\btodo\b` (sin distinguir mayúsculas) en comentarios: falsos TODO en español.
+- `\.(First|Last|ElementAt)\(\)` en colecciones indexables (`List`, array, `IReadOnlyList`): S6602.
 
 La cobertura local por diff solo se mide al cerrar etapa o antes de abrir un PR. La medición local sobrestima 5-20 puntos y no sustituye al check del PR. (cómo medirla: ver «Medir la cobertura» en referencia.md)
 

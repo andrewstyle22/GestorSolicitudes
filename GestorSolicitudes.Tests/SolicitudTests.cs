@@ -198,7 +198,7 @@ public class SolicitudTests
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
 
-        Evento evento = solicitud.Eventos.First();
+        Evento evento = solicitud.Eventos[0];
         Assert.True(evento.Id > 0);
         Assert.Equal(solicitud.Id, evento.SolicitudId);
         Assert.Same(solicitud, evento.Solicitud);

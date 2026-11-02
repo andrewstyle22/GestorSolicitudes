@@ -147,6 +147,13 @@ y su arreglo para no repetirlo:
   desaparecieron las ~50 líneas duplicadas. Antes de extraer, busca el cuerpo que ya
   existe (`Select-String -Pattern 'Csv\.Empresa|TextoHelper\.Escapar'`) y no copies el
   bloque.
+- **S6602 (`Do not use Enumerable methods on indexable collections. Instead use the
+  collection direct`)**: sobre una colección indexable (`List<T>`, array, `IList<T>`,
+  `IReadOnlyList<T>`) no uses `First()`/`Last()`/`ElementAt()` si el índice basta.
+  Ya pasó en `GestorSolicitudes.Tests/SolicitudTests.cs` con
+  `solicitud.Eventos.First()`, porque desde 2.9 `Eventos` es `IReadOnlyList<Evento>`:
+  pasa a `solicitud.Eventos[0]`, y para el último, `lista[^1]` o `lista[lista.Count - 1]`.
+  Regla general: los métodos LINQ sin predicado delatan que la colección ya es indexable.
 
 ## Errores que ya hemos puesto
 
