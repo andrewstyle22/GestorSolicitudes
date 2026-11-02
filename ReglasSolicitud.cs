@@ -16,21 +16,4 @@ public static class ReglasSolicitud
         solicitud.EstaAbierta && solicitud.ProximoSeguimiento is null
             ? solicitud.FechaSolicitud.AddDays(7)
             : null;
-
-    /// <summary>
-    /// Añade el hito inicial (SolicitudEnviada) al historial de eventos si la solicitud
-    /// todavía no tiene eventos cargados. Se llama al crear una nueva solicitud.
-    /// </summary>
-    public static void AnadirHitoInicial(Solicitud solicitud)
-    {
-        if (solicitud.Eventos.Count == 0)
-        {
-            solicitud.Eventos.Add(new Evento
-            {
-                Fecha = solicitud.FechaSolicitud,
-                Tipo = TipoEvento.SolicitudEnviada,
-                Descripcion = Traducciones.Texto("Evento.CandidaturaEnviada"),
-            });
-        }
-    }
 }

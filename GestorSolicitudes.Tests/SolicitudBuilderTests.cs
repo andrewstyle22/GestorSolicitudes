@@ -22,7 +22,7 @@ public class SolicitudBuilderTests
     public void Con_AsignaCadaDatoYAcumulaEventos()
     {
         DateTime fecha = new(2026, 1, 10);
-        var evento = new Evento { Fecha = fecha, Tipo = TipoEvento.Nota };
+        var evento = new Evento(fecha, TipoEvento.Nota, string.Empty);
 
         Solicitud solicitud = new SolicitudBuilder()
             .ConEmpresa("ACME")

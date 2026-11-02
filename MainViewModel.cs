@@ -301,12 +301,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Hay una solicitud abierta en el panel de detalle.</summary>
     public bool TieneEdicion => this.solicitudAbierta is not null;
 
-    /// <summary>
-    /// Copia observable del historial de la solicitud abierta: el POCO guarda una lista y la
-    /// vista necesita avisos al añadir o quitar. Los eventos son los mismos objetos.
-    /// </summary>
-    public ObservableCollection<Evento> EventosEdicion { get; } = [];
-
     /// <summary>Búfer de edición del panel de detalle; se recrea al abrir cada solicitud.</summary>
     [ObservableProperty]
     private SolicitudEdicionViewModel? editor;
@@ -320,16 +314,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void Abrir(Solicitud? value)
     {
         this.solicitudAbierta = value;
-        this.EventosEdicion.Clear();
-
-        if (value is not null)
-        {
-            foreach (Evento evento in value.Eventos)
-            {
-                this.EventosEdicion.Add(evento);
-            }
-        }
-
         this.Editor = value is null ? null : new SolicitudEdicionViewModel(value);
         this.OnPropertyChanged(nameof(this.TieneEdicion));
     }
@@ -814,7 +798,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.Editor?.AplicarA(solicitud);
+        if (this.Editor is SolicitudEdicionViewModel edicion)
+        {
+            edicion.AplicarA(solicitud);
+
+            // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
+            foreach (Evento eliminado in edicion.EventosEliminados)
+            {
+                this.db.Eventos.Remove(eliminado);
+            }
+        }
 
         bool esNueva = this.PrepararNueva(solicitud);
 
@@ -866,8 +859,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         this.db.Solicitudes.Add(solicitud);
 
-        // Primer hito del historial, para que la línea temporal no empiece vacía.
-        ReglasSolicitud.AnadirHitoInicial(solicitud);
+        solicitud.RegistrarEnvio(Traducciones.Texto("Evento.CandidaturaEnviada"));
         return true;
     }
 
@@ -1013,36 +1005,27 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AnadirEvento()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud)
+        if (this.Editor is not SolicitudEdicionViewModel edicion)
         {
             return;
         }
 
-        var evento = new Evento
+        edicion.EventosEdicion.Add(new EventoViewModel
         {
             Fecha = DateTime.Today,
             Tipo = TipoEvento.Nota,
-            Descripcion = string.Empty,
-        };
-
-        solicitud.Eventos.Add(evento);
-        this.EventosEdicion.Add(evento);
+        });
     }
 
     [RelayCommand]
-    private void EliminarEvento(Evento? evento)
+    private void EliminarEvento(EventoViewModel? evento)
     {
-        if (this.solicitudAbierta is null || evento is null)
+        if (this.Editor is not SolicitudEdicionViewModel edicion || evento is null)
         {
             return;
         }
 
-        this.solicitudAbierta.Eventos.Remove(evento);
-        this.EventosEdicion.Remove(evento);
-        if (evento.Id != 0)
-        {
-            this.db.Eventos.Remove(evento);
-        }
+        edicion.EliminarEvento(evento);
     }
 
     [RelayCommand]

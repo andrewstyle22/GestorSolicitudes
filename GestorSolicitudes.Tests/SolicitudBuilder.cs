@@ -67,7 +67,13 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConProximoSeguimiento(DateTime? fecha) => this.Asignar(s => s.ProximoSeguimiento = fecha);
 
-    public SolicitudBuilder ConEventos(params Evento[] eventos) => this.Asignar(s => s.Eventos.AddRange(eventos));
+    public SolicitudBuilder ConEventos(params Evento[] eventos) => this.Asignar(s =>
+    {
+        foreach (Evento evento in eventos)
+        {
+            s.AgregarEvento(evento);
+        }
+    });
 
     public Solicitud Construir() => this.solicitud;
 

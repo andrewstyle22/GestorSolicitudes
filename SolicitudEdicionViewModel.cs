@@ -1,5 +1,6 @@
 namespace GestorSolicitudes.ViewModels;
 
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -113,6 +114,12 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.RutaCarta,
         this.NombreOriginalCarta ?? Path.GetFileName(this.RutaCarta) ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
+    /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
+    public ObservableCollection<EventoViewModel> EventosEdicion { get; } = [];
+
+    /// <summary>Eventos guardados que se han quitado del búfer: el guardado los borra del modelo.</summary>
+    public List<Evento> EventosEliminados { get; } = [];
+
     public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
 
     public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
@@ -158,7 +165,31 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.NombreOriginalCv = solicitud.NombreOriginalCv;
         this.RutaCarta = solicitud.RutaCarta;
         this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
+        this.CargarEventos(solicitud);
         this.ValidateAllProperties();
+    }
+
+    private void CargarEventos(Solicitud solicitud)
+    {
+        this.EventosEdicion.Clear();
+        this.EventosEliminados.Clear();
+
+        foreach (Evento evento in solicitud.Eventos)
+        {
+            var edicion = new EventoViewModel();
+            edicion.CargarDesde(evento);
+            this.EventosEdicion.Add(edicion);
+        }
+    }
+
+    public void EliminarEvento(EventoViewModel evento)
+    {
+        this.EventosEdicion.Remove(evento);
+
+        if (evento.Original is Evento original && original.Id != 0)
+        {
+            this.EventosEliminados.Add(original);
+        }
     }
 
     public void AplicarIdentificacion(Solicitud solicitud)
@@ -223,6 +254,29 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     }
 
     /// <summary>
+    /// Vuelca el historial: los eventos con <see cref="EventoViewModel.Original"/> nulo se crean,
+    /// los existentes se actualizan y los borrados salen del modelo.
+    /// </summary>
+    public void AplicarEventos(Solicitud solicitud)
+    {
+        foreach (EventoViewModel edicion in this.EventosEdicion)
+        {
+            if (edicion.Original is Evento original)
+            {
+                edicion.AplicarA(original);
+                continue;
+            }
+
+            solicitud.AgregarEvento(new Evento(edicion.Fecha, edicion.Tipo, edicion.Descripcion));
+        }
+
+        foreach (Evento eliminado in this.EventosEliminados)
+        {
+            solicitud.QuitarEvento(eliminado);
+        }
+    }
+
+    /// <summary>
     /// Vuelca al modelo solo los grupos cuya pestaña ya escribe en el editor. Mientras la UI
     /// siga bindeada a la entidad, ese grupo no se toca para no pisar lo editado.
     /// </summary>
@@ -236,5 +290,6 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.AplicarContacto(solicitud);
         this.AplicarIdentificacion(solicitud);
         this.AplicarAdjuntos(solicitud);
+        this.AplicarEventos(solicitud);
     }
 }

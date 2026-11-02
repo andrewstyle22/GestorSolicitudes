@@ -21,7 +21,7 @@ public class EmbudoHelperTests
     public void EnviadaEnRango_ReconoceElHitoDeEnvioDentroDelMes()
     {
         var conHito = new SolicitudBuilder()
-            .ConEventos(new Evento { Fecha = new DateTime(2026, 2, 10), Tipo = TipoEvento.SolicitudEnviada })
+            .ConEventos(new Evento(new DateTime(2026, 2, 10), TipoEvento.SolicitudEnviada, string.Empty))
             .Construir();
 
         Assert.True(EmbudoHelper.EnviadaEnRango(conHito, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));
@@ -44,7 +44,7 @@ public class EmbudoHelperTests
 
         var hitoFuera = new SolicitudBuilder()
             .ConFechaSolicitud(new DateTime(2026, 1, 15))
-            .ConEventos(new Evento { Fecha = new DateTime(2026, 1, 20), Tipo = TipoEvento.SolicitudEnviada })
+            .ConEventos(new Evento(new DateTime(2026, 1, 20), TipoEvento.SolicitudEnviada, string.Empty))
             .Construir();
 
         Assert.False(EmbudoHelper.EnviadaEnRango(hitoFuera, new DateTime(2026, 2, 1), new DateTime(2026, 3, 1)));

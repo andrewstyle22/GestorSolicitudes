@@ -100,8 +100,28 @@ public class Solicitud
     [MaxLength(260)]
     public string? NombreOriginalCarta { get; set; }
 
-    /// <summary>Gets or sets historial cronológico: cada llamada, prueba o entrevista.</summary>
-    public List<Evento> Eventos { get; set; } = [];
+    private readonly List<Evento> eventos = [];
+
+    /// <summary>Gets historial cronológico: cada llamada, prueba o entrevista.</summary>
+    public IReadOnlyList<Evento> Eventos => this.eventos;
+
+    /// <summary>Añade un hito al historial.</summary>
+    public void AgregarEvento(Evento evento) => this.eventos.Add(evento);
+
+    /// <summary>Quita un hito del historial.</summary>
+    public void QuitarEvento(Evento evento) => this.eventos.Remove(evento);
+
+    /// <summary>
+    /// Registra el hito de envío de la solicitud, solo si el historial está vacío,
+    /// para que la línea temporal no empiece en blanco.
+    /// </summary>
+    public void RegistrarEnvio(string descripcion)
+    {
+        if (this.eventos.Count == 0)
+        {
+            this.AgregarEvento(new Evento(this.FechaSolicitud, TipoEvento.SolicitudEnviada, descripcion));
+        }
+    }
 
     // --- Calculadas (no se guardan en base de datos) ---
     [NotMapped]

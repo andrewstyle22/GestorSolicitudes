@@ -194,13 +194,84 @@ public class SolicitudTests
         using var db = TestDb.NuevoContexto();
 
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        solicitud.AgregarEvento(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
 
-        Evento evento = solicitud.Eventos.First();
+        Evento evento = solicitud.Eventos[0];
         Assert.True(evento.Id > 0);
         Assert.Equal(solicitud.Id, evento.SolicitudId);
         Assert.Same(solicitud, evento.Solicitud);
+    }
+
+    [Fact]
+    public void Evento_ConstructorAsignaFechaTipoYDescripcion()
+    {
+        const string descripcion = "Entrevista";
+        var evento = new Evento(new DateTime(2026, 3, 5), TipoEvento.Entrevista, descripcion);
+
+        Assert.Equal(new DateTime(2026, 3, 5), evento.Fecha);
+        Assert.Equal(TipoEvento.Entrevista, evento.Tipo);
+        Assert.Equal(descripcion, evento.Descripcion);
+    }
+
+    [Fact]
+    public void Evento_ActualizarCambiaFechaTipoYDescripcion()
+    {
+        const string descripcion = "Oferta";
+        var evento = new Evento(new DateTime(2026, 3, 5), TipoEvento.Entrevista, "Entrevista");
+
+        evento.Actualizar(new DateTime(2026, 4, 1), TipoEvento.Oferta, descripcion);
+
+        Assert.Equal(new DateTime(2026, 4, 1), evento.Fecha);
+        Assert.Equal(TipoEvento.Oferta, evento.Tipo);
+        Assert.Equal(descripcion, evento.Descripcion);
+    }
+
+    [Fact]
+    public void AgregarEvento_LoAnadeAlHistorial()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var evento = new Evento(new DateTime(2026, 3, 5), TipoEvento.Llamada, "Llamada de screening");
+
+        solicitud.AgregarEvento(evento);
+
+        Assert.Same(evento, Assert.Single(solicitud.Eventos));
+    }
+
+    [Fact]
+    public void QuitarEvento_LoSacaDelHistorial()
+    {
+        var evento = new Evento(new DateTime(2026, 3, 6), TipoEvento.PruebaTecnica, "Prueba técnica");
+        var solicitud = new SolicitudBuilder().ConEventos(evento).Construir();
+
+        solicitud.QuitarEvento(evento);
+
+        Assert.Empty(solicitud.Eventos);
+    }
+
+    [Fact]
+    public void RegistrarEnvio_AnadeElHitoCuandoElHistorialEstaVacio()
+    {
+        var solicitud = new SolicitudBuilder().ConFechaSolicitud(new DateTime(2026, 3, 1)).Construir();
+
+        solicitud.RegistrarEnvio("Candidatura enviada");
+
+        Evento evento = Assert.Single(solicitud.Eventos);
+        Assert.Equal(TipoEvento.SolicitudEnviada, evento.Tipo);
+        Assert.Equal(new DateTime(2026, 3, 1), evento.Fecha);
+        Assert.Equal("Candidatura enviada", evento.Descripcion);
+    }
+
+    [Fact]
+    public void RegistrarEnvio_NoDuplicaCuandoYaTieneEventos()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEventos(new Evento(new DateTime(2026, 3, 1), TipoEvento.SolicitudEnviada, string.Empty))
+            .Construir();
+
+        solicitud.RegistrarEnvio("Candidatura enviada");
+
+        Assert.Single(solicitud.Eventos);
     }
 }

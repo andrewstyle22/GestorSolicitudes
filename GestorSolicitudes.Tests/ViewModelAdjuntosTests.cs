@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
+using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -9,36 +10,41 @@ public class ViewModelAdjuntosTests
 {
     // ---------------- Comandos del panel de detalle ----------------
     [Fact]
-    public void AnadirEvento_AnadeUnaNotaConLaFechaDeHoy()
-    {
-        using var db = TestDb.NuevoContexto();
-        using var vm = new MainViewModel(db);
-        vm.NuevaCommand.Execute(null);
-        vm.RellenarObligatorios("ACME", "Dev");
-
-        vm.AnadirEventoCommand.Execute(null);
-
-        Evento nota = Assert.Single(vm.EventosEdicion);
-        Assert.Equal(TipoEvento.Nota, nota.Tipo);
-        Assert.Equal(DateTime.Today, nota.Fecha);
-    }
-
-    [Fact]
-    public void Cancelar_VaciaElHistorialDeLaVista()
+    public void AnadirEvento_AnadeUnaNotaAlEditorSinTocarLaEntidad()
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
-        Assert.Single(vm.EventosEdicion);
+
+        vm.AnadirEventoCommand.Execute(null);
+
+        EventoViewModel nota = Assert.Single(vm.Editor!.EventosEdicion);
+        Assert.Equal(TipoEvento.Nota, nota.Tipo);
+        Assert.Equal(DateTime.Today, nota.Fecha);
+        Assert.Empty(solicitud.Eventos);
+        Assert.Equal(EntityState.Unchanged, db.Entry(solicitud).State);
+    }
+
+    [Fact]
+    public void Cancelar_DescartaElHistorialDeLaVista()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        solicitud.AgregarEvento(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        Assert.Single(vm.Editor!.EventosEdicion);
 
         vm.CancelarCommand.Execute(null);
 
-        Assert.Empty(vm.EventosEdicion);
+        Assert.Null(vm.Editor);
     }
 
     [Fact]
@@ -47,33 +53,143 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
 
-        vm.EliminarEventoCommand.Execute(new Evento());
+        vm.EliminarEventoCommand.Execute(new EventoViewModel());
 
         Assert.Empty(vm.Solicitudes);
     }
 
     [Fact]
-    public void EliminarEvento_QuitaDeLaListaYMarcaElPersistidoComoBorrado()
+    public void EliminarEvento_QuitaDeLaListaYRecuerdaElPersistidoParaBorrar()
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today.AddDays(-1), Tipo = TipoEvento.SolicitudEnviada });
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        solicitud.AgregarEvento(new Evento(DateTime.Today.AddDays(-1), TipoEvento.SolicitudEnviada, string.Empty));
+        solicitud.AgregarEvento(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
 
-        // La vista recibe una copia observable con los mismos eventos que el POCO.
-        Assert.Equal(solicitud.Eventos, vm.EventosEdicion);
-
+        // La vista recibe una copia editable de cada evento, no la entidad del POCO.
         Evento persistido = solicitud.Eventos.First(e => e.Id != 0);
-        vm.EliminarEventoCommand.Execute(persistido);
+        EventoViewModel copia = vm.Editor!.EventosEdicion.Single(e => e.Tipo == persistido.Tipo);
+        Assert.Equal(persistido.Fecha, copia.Fecha);
 
-        Assert.DoesNotContain(persistido, solicitud.Eventos);
-        Assert.DoesNotContain(persistido, vm.EventosEdicion);
-        Assert.Equal(EntityState.Deleted, db.Entry(persistido).State);
+        vm.EliminarEventoCommand.Execute(copia);
+
+        Assert.DoesNotContain(copia, vm.Editor.EventosEdicion);
+        Assert.Contains(persistido, vm.Editor.EventosEliminados);
+        Assert.Contains(persistido, solicitud.Eventos);
+        Assert.Equal(EntityState.Unchanged, db.Entry(persistido).State);
+    }
+
+    [Fact]
+    public void EliminarEvento_SinGuardarTodavia_NoRecuerdaNadaParaLaBase()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.AnadirEventoCommand.Execute(null);
+        EventoViewModel nota = Assert.Single(vm.Editor!.EventosEdicion);
+
+        vm.EliminarEventoCommand.Execute(nota);
+
+        Assert.Empty(vm.Editor.EventosEdicion);
+        Assert.Empty(vm.Editor.EventosEliminados);
+    }
+
+    [Fact]
+    public void Guardar_ConUnEventoQuitadoYOtroAnadido_DejaSoloElNuevoEnLaBase()
+    {
+        using var db = TestDb.NuevoContexto(out string ruta);
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        solicitud.AgregarEvento(new Evento(
+            new DateTime(2026, 1, 10),
+            TipoEvento.SolicitudEnviada,
+            "A"));
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        vm.EliminarEventoCommand.Execute(vm.Editor!.EventosEdicion.Single(e => e.Descripcion == "A"));
+        vm.AnadirEventoCommand.Execute(null);
+        EventoViewModel nueva = Assert.Single(vm.Editor.EventosEdicion);
+        nueva.Tipo = TipoEvento.Oferta;
+        nueva.Descripcion = "N";
+
+        vm.GuardarCommand.Execute(null);
+
+        using var otro = new AppDbContext(ruta);
+        Evento guardado = Assert.Single(otro.Solicitudes.Include(s => s.Eventos).Single().Eventos);
+        Assert.Equal("N", guardado.Descripcion);
+        Assert.Equal(TipoEvento.Oferta, guardado.Tipo);
+    }
+
+    [Fact]
+    public void Guardar_ConUnEventoModificado_ActualizaLaEntidadGuardada()
+    {
+        using var db = TestDb.NuevoContexto(out string ruta);
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        solicitud.AgregarEvento(new Evento(
+            new DateTime(2026, 1, 10),
+            TipoEvento.SolicitudEnviada,
+            "A"));
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        EventoViewModel edicion = Assert.Single(vm.Editor!.EventosEdicion);
+        edicion.Descripcion = "A editada";
+
+        vm.GuardarCommand.Execute(null);
+
+        using var otro = new AppDbContext(ruta);
+        Assert.Equal("A editada", Assert.Single(otro.Eventos).Descripcion);
+    }
+
+    [Fact]
+    public void Guardar_ConUnEventoNuevoInsertadoAntesDelExistente_NoPisaElExistente()
+    {
+        using var db = TestDb.NuevoContexto(out string ruta);
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        solicitud.AgregarEvento(new Evento(
+            new DateTime(2026, 1, 10),
+            TipoEvento.SolicitudEnviada,
+            "A"));
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        // Un evento nuevo (sin Original) nunca se empareja por posición con uno existente.
+        vm.Editor!.EventosEdicion.Insert(0, new EventoViewModel
+        {
+            Fecha = new DateTime(2026, 2, 1),
+            Tipo = TipoEvento.Llamada,
+            Descripcion = "N",
+        });
+
+        vm.GuardarCommand.Execute(null);
+
+        using var otro = new AppDbContext(ruta);
+        Solicitud recargada = otro.Solicitudes.Include(s => s.Eventos).Single();
+        Assert.Equal(2, recargada.Eventos.Count);
+        Evento existente = recargada.Eventos.Single(e => e.Descripcion == "A");
+        Assert.Equal(new DateTime(2026, 1, 10), existente.Fecha);
+        Assert.Equal(TipoEvento.SolicitudEnviada, existente.Tipo);
+        Assert.Contains(
+            recargada.Eventos,
+            e => e.Descripcion == "N" && e.Tipo == TipoEvento.Llamada && e.Id != existente.Id);
     }
 
     [Fact]
