@@ -997,23 +997,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AnadirEvento()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud)
+        if (this.Editor is not SolicitudEdicionViewModel editor)
         {
             return;
         }
 
-        var evento = new Evento
+        editor.EventosEdicion.Add(new EventoViewModel
         {
             Fecha = DateTime.Today,
             Tipo = TipoEvento.Nota,
-            Descripcion = string.Empty,
-        };
-
-        solicitud.Eventos.Add(evento);
-
-        var edicion = new EventoViewModel();
-        edicion.CargarDesde(evento);
-        this.Editor!.EventosEdicion.Add(edicion);
+        });
     }
 
     [RelayCommand]

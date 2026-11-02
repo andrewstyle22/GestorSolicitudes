@@ -9,18 +9,23 @@ public class ViewModelAdjuntosTests
 {
     // ---------------- Comandos del panel de detalle ----------------
     [Fact]
-    public void AnadirEvento_AnadeUnaNotaConLaFechaDeHoy()
+    public void AnadirEvento_AnadeUnaNotaAlEditorSinTocarLaEntidad()
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
-        vm.NuevaCommand.Execute(null);
-        vm.RellenarObligatorios("ACME", "Dev");
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
 
         vm.AnadirEventoCommand.Execute(null);
 
         EventoViewModel nota = Assert.Single(vm.Editor!.EventosEdicion);
         Assert.Equal(TipoEvento.Nota, nota.Tipo);
         Assert.Equal(DateTime.Today, nota.Fecha);
+        Assert.Empty(solicitud.Eventos);
+        Assert.Equal(EntityState.Unchanged, db.Entry(solicitud).State);
     }
 
     [Fact]
