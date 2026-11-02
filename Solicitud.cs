@@ -100,20 +100,14 @@ public class Solicitud
     [MaxLength(260)]
     public string? NombreOriginalCarta { get; set; }
 
-    private List<Evento> eventos = [];
-
     /// <summary>Gets or sets historial cronológico: cada llamada, prueba o entrevista.</summary>
-    public List<Evento> Eventos
-    {
-        get => this.eventos;
-        set => this.eventos = value;
-    }
+    public List<Evento> Eventos { get; set; } = [];
 
     /// <summary>Añade un hito al historial.</summary>
-    public void AgregarEvento(Evento evento) => this.eventos.Add(evento);
+    public void AgregarEvento(Evento evento) => this.Eventos.Add(evento);
 
     /// <summary>Quita un hito del historial.</summary>
-    public void QuitarEvento(Evento evento) => this.eventos.Remove(evento);
+    public void QuitarEvento(Evento evento) => this.Eventos.Remove(evento);
 
     // --- Calculadas (no se guardan en base de datos) ---
     [NotMapped]

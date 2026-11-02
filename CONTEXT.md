@@ -17,7 +17,7 @@ Commit 2.8 (`refactor: configurar EF con acceso por campo para Eventos`). `UsePr
 - `EventoViewModel.Original` enlaza cada copia con su entidad; los eventos nuevos quedan con `Original` a `null` hasta Guardar.
 - Sincronía del historial: `SolicitudEdicionViewModel.AplicarEventos` crea, actualiza y quita del modelo; `MainViewModel.Guardar` marca los de `EventosEliminados` con `db.Eventos.Remove` (el búfer no conoce la base).
 - `Evento` se crea con `Evento(fecha, tipo, descripcion)` y muta por `Actualizar`; EF usa el constructor privado. `EventoViewModel.AplicarA` delega en `Actualizar`.
-- `Solicitud` guarda el historial en el campo privado `eventos`: se añade y se quita por `AgregarEvento`/`QuitarEvento`, no con `Eventos.Add`.
+- `Solicitud.Eventos` es una propiedad autoimplementada; se añade y se quita por `AgregarEvento`/`QuitarEvento`, no con `Eventos.Add`. El `List` público y el `set` se retiran en 2.9.
 - Coexistencia: `MainViewModel` mantiene `Edicion` (privada) y `Editor` mientras migra pestaña a pestaña; cada grupo de `AplicarA` se activa con su XAML.
 - Meta final: la UI solo conoce `Editor`; el modelo expone constructor, métodos por intención y `set` privados.
 - POCO sin `INotifyPropertyChanged` filtra `PropertyDescriptor`; el editor lo evita.
