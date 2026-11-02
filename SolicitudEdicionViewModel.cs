@@ -254,6 +254,31 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     }
 
     /// <summary>
+    /// Vuelca el historial: los eventos con <see cref="EventoViewModel.Original"/> nulo se crean,
+    /// los existentes se actualizan y los borrados salen del modelo.
+    /// </summary>
+    public void AplicarEventos(Solicitud solicitud)
+    {
+        foreach (EventoViewModel edicion in this.EventosEdicion)
+        {
+            if (edicion.Original is Evento original)
+            {
+                edicion.AplicarA(original);
+                continue;
+            }
+
+            var nuevo = new Evento();
+            edicion.AplicarA(nuevo);
+            solicitud.Eventos.Add(nuevo);
+        }
+
+        foreach (Evento eliminado in this.EventosEliminados)
+        {
+            solicitud.Eventos.Remove(eliminado);
+        }
+    }
+
+    /// <summary>
     /// Vuelca al modelo solo los grupos cuya pestaña ya escribe en el editor. Mientras la UI
     /// siga bindeada a la entidad, ese grupo no se toca para no pisar lo editado.
     /// </summary>
@@ -267,5 +292,6 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.AplicarContacto(solicitud);
         this.AplicarIdentificacion(solicitud);
         this.AplicarAdjuntos(solicitud);
+        this.AplicarEventos(solicitud);
     }
 }

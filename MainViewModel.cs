@@ -798,7 +798,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.Editor?.AplicarA(solicitud);
+        if (this.Editor is SolicitudEdicionViewModel edicion)
+        {
+            edicion.AplicarA(solicitud);
+
+            // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
+            foreach (Evento eliminado in edicion.EventosEliminados)
+            {
+                this.db.Eventos.Remove(eliminado);
+            }
+        }
 
         bool esNueva = this.PrepararNueva(solicitud);
 

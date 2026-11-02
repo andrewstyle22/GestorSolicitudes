@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
+using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -100,6 +101,101 @@ public class ViewModelAdjuntosTests
 
         Assert.Empty(vm.Editor.EventosEdicion);
         Assert.Empty(vm.Editor.EventosEliminados);
+    }
+
+    [Fact]
+    public void Guardar_ConUnEventoQuitadoYOtroAnadido_DejaSoloElNuevoEnLaBase()
+    {
+        using var db = TestDb.NuevoContexto(out string ruta);
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        solicitud.Eventos.Add(new Evento
+        {
+            Fecha = new DateTime(2026, 1, 10),
+            Tipo = TipoEvento.SolicitudEnviada,
+            Descripcion = "A",
+        });
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        vm.EliminarEventoCommand.Execute(vm.Editor!.EventosEdicion.Single(e => e.Descripcion == "A"));
+        vm.AnadirEventoCommand.Execute(null);
+        EventoViewModel nueva = Assert.Single(vm.Editor.EventosEdicion);
+        nueva.Tipo = TipoEvento.Oferta;
+        nueva.Descripcion = "N";
+
+        vm.GuardarCommand.Execute(null);
+
+        using var otro = new AppDbContext(ruta);
+        Evento guardado = Assert.Single(otro.Solicitudes.Include(s => s.Eventos).Single().Eventos);
+        Assert.Equal("N", guardado.Descripcion);
+        Assert.Equal(TipoEvento.Oferta, guardado.Tipo);
+    }
+
+    [Fact]
+    public void Guardar_ConUnEventoModificado_ActualizaLaEntidadGuardada()
+    {
+        using var db = TestDb.NuevoContexto(out string ruta);
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        solicitud.Eventos.Add(new Evento
+        {
+            Fecha = new DateTime(2026, 1, 10),
+            Tipo = TipoEvento.SolicitudEnviada,
+            Descripcion = "A",
+        });
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        EventoViewModel edicion = Assert.Single(vm.Editor!.EventosEdicion);
+        edicion.Descripcion = "A editada";
+
+        vm.GuardarCommand.Execute(null);
+
+        using var otro = new AppDbContext(ruta);
+        Assert.Equal("A editada", Assert.Single(otro.Eventos).Descripcion);
+    }
+
+    [Fact]
+    public void Guardar_ConUnEventoNuevoInsertadoAntesDelExistente_NoPisaElExistente()
+    {
+        using var db = TestDb.NuevoContexto(out string ruta);
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        solicitud.Eventos.Add(new Evento
+        {
+            Fecha = new DateTime(2026, 1, 10),
+            Tipo = TipoEvento.SolicitudEnviada,
+            Descripcion = "A",
+        });
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        // Un evento nuevo (sin Original) nunca se empareja por posición con uno existente.
+        vm.Editor!.EventosEdicion.Insert(0, new EventoViewModel
+        {
+            Fecha = new DateTime(2026, 2, 1),
+            Tipo = TipoEvento.Llamada,
+            Descripcion = "N",
+        });
+
+        vm.GuardarCommand.Execute(null);
+
+        using var otro = new AppDbContext(ruta);
+        Solicitud recargada = otro.Solicitudes.Include(s => s.Eventos).Single();
+        Assert.Equal(2, recargada.Eventos.Count);
+        Evento existente = recargada.Eventos.Single(e => e.Descripcion == "A");
+        Assert.Equal(new DateTime(2026, 1, 10), existente.Fecha);
+        Assert.Equal(TipoEvento.SolicitudEnviada, existente.Tipo);
+        Assert.Contains(
+            recargada.Eventos,
+            e => e.Descripcion == "N" && e.Tipo == TipoEvento.Llamada && e.Id != existente.Id);
     }
 
     [Fact]

@@ -5,16 +5,17 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección de la eta
 ## Etapas
 - ✅ Etapa 0: red de seguridad; tests con `SolicitudBuilder` y `RellenarObligatorios`.
 - ✅ Etapa 1: editor con búfer conectado al `MainViewModel`; la UI ya no ve la entidad.
-- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.4 hechos.
+- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.5 hechos.
 - ⬜ Etapa 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ⬜ Etapa 4: cierre; test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 2.5 (`refactor: Guardar sincroniza los eventos`). Escribir antes los tests del punto de control (quitar A y añadir N, insertar N antes de A, borrado real contra la base). Después, `SolicitudEdicionViewModel.AplicarA` o un método de sincronización crea los eventos con `Original` nulo, vuelca los existentes y borra los de `EventosEliminados` con `db.Eventos.Remove`.
+Commit 2.6 (`refactor: Evento con constructor y set privados`). Añadir `Evento(fecha, tipo, descripcion)`, el método `Actualizar` y un constructor privado para EF; actualizar `AplicarEventos` y los tests que hacen `new Evento { ... }`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir y vuelca al modelo solo al Guardar; Cancelar descarta.
 - `EventoViewModel.Original` enlaza cada copia con su entidad; los eventos nuevos quedan con `Original` a `null` hasta Guardar.
+- Sincronía del historial: `SolicitudEdicionViewModel.AplicarEventos` crea, actualiza y quita del modelo; `MainViewModel.Guardar` marca los de `EventosEliminados` con `db.Eventos.Remove` (el búfer no conoce la base).
 - Coexistencia: `MainViewModel` mantiene `Edicion` (privada) y `Editor` mientras migra pestaña a pestaña; cada grupo de `AplicarA` se activa con su XAML.
 - Meta final: la UI solo conoce `Editor`; el modelo expone constructor, métodos por intención y `set` privados.
 - POCO sin `INotifyPropertyChanged` filtra `PropertyDescriptor`; el editor lo evita.
