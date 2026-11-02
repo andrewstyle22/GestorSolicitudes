@@ -44,6 +44,9 @@ helpers (enum → texto, CSV, adjuntos, columnas visibles), la localización (co
 entre los tres idiomas), el `AppDbContext` contra una base SQLite temporal,
 la verificación de columnas del arranque y la lógica del ViewModel (filtros, métricas, estadísticas,
 embudo, paginación, adjuntos, diálogos y CSV).
+Los tests construyen las candidaturas con `SolicitudBuilder` y el helper `RellenarObligatorios`, y
+cubren el búfer de edición (`SolicitudEdicionViewModel`) y la ida y vuelta del historial con
+`Include` al guardar.
 También corre **ArchUnitNET**: reglas de arquitectura que vigilan que las capas solo dependan
 "hacia abajo" (lo típico: los ViewModels no tocan las Vistas, las Vistas solo se usan desde el
 arranque). Un using de más a una capa prohibida, o un `MessageBox` colado en un ViewModel, se cae
@@ -176,11 +179,13 @@ TextoHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqued
 CsvExportador.cs → exportación CSV pura (cabecera + filas)
 EmbudoHelper.cs, EmbudoPeriodo.cs → lógica del embudo (máximo, periodos, rangos, conteos)
 EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
-ReglasSolicitud.cs → reglas de negocio puras (datos obligatorios, seguimiento, hito inicial)
+ReglasSolicitud.cs → lo que queda fuera del modelo: la fecha de seguimiento propuesta al guardar
 Enlaces.cs → validación de los enlaces que se abren (solo http y https)
 
 ColumnaItem.cs, ColumnasViewModel.cs → columna ocultable y su preferencia guardada (namespace ViewModels)
 IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
+SolicitudEdicionViewModel.cs → búfer de la solicitud abierta: copia al abrir, valida y vuelca con AplicarA
+EventoViewModel.cs → hito editable del búfer (fecha, tipo y descripción)
 MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, historial, duplicar, exportación y columnas
                  (sin WPF: habla con IDialogoService)
 
@@ -202,18 +207,21 @@ GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQL
 ## Decisiones que conviene conocer antes de tocarlo
 
 **Un solo `DbContext` durante toda la sesión.** Es una app monousuario, así que se aprovecha el
-change tracking de EF: el formulario edita la entidad que ya está en seguimiento y *Guardar* es un
-`SaveChanges()` limpio. *Cancelar* desengancha todo el `ChangeTracker` y recarga de disco. Si algún
-día esto se convierte en multiusuario o multiventana, el patrón correcto pasa a ser un contexto por
-operación con `IDbContextFactory`.
+change tracking de EF: el panel de detalle edita un búfer y *Guardar* lo vuelca sobre la entidad que
+ya está en seguimiento, con un `SaveChanges()` limpio. *Cancelar* descarta el búfer, desengancha
+todo el `ChangeTracker` y recarga de disco. Si algún día esto se convierte en multiusuario o
+multiventana, el patrón correcto pasa a ser un contexto por operación con `IDbContextFactory`.
 
-**Las entidades son POCOs sin `INotifyPropertyChanged`.** Por eso la lista se recarga entera
-después de cada guardado, y el panel de detalle se "repinta" reasignando `Edicion = null; Edicion =
-actual;` tras adjuntar un fichero o cambiar el interés, en vez de refrescar solo ese campo. Con unos
-cientos de registros ni se nota; si algún día crece, el cambio natural es meter `ObservableObject`
-en `Solicitud`. El historial es la excepción controlada: `Solicitud.Eventos` es una `List<Evento>` y
-`MainViewModel.EventosEdicion` es la `ObservableCollection` que enlaza la vista, rellenada al cambiar
-`Edicion` con los mismos objetos.
+**La edición va por un búfer, no por la entidad.** `SolicitudEdicionViewModel` (`Editor`) copia los
+datos al abrir, valida mientras se escribe y los vuelca de una vez con `AplicarA`; la UI no bindea
+contra `Solicitud`. Las filas de la tabla sí son POCOs sin `INotifyPropertyChanged`, por eso la lista
+se recarga entera después de cada guardado. El historial sigue el mismo camino: los hitos pendientes
+viven como `EventoViewModel` en `SolicitudEdicionViewModel.EventosEdicion` (emparejados por
+`Original`, nunca por posición ni por `Id`) y *Guardar* inserta, actualiza y borra contra la base.
+`Solicitud.Eventos` es un `IReadOnlyList<Evento>` sobre campo privado (`AgregarEvento` /
+`QuitarEvento`); `Evento` nace por constructor, se muta con `Actualizar` y EF lo lee por campo
+(`UsePropertyAccessMode(Field)`). Queda pendiente, y es opcional, cerrar del todo `Solicitud` con
+constructor, métodos de negocio y `set` privados: el detalle vive en `02-DOCS/plan-refactor-edicion.md`.
 
 **`EnsureCreated()` en lugar de migraciones.** Va bien para empezar, pero no versiona el esquema:
 si añades una propiedad nueva al modelo, la tabla existente no se actualiza sola. Cuando quieras
