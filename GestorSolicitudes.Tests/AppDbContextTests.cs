@@ -20,7 +20,7 @@ public class AppDbContextTests
                 .ConPuesto("Dev")
                 .ConEstado(EstadoSolicitud.OfertaAceptada)
                 .Construir();
-            solicitud.Eventos.Add(new Evento(DateTime.Today, TipoEvento.Oferta, "¡Sí!"));
+            solicitud.AgregarEvento(new Evento(DateTime.Today, TipoEvento.Oferta, "¡Sí!"));
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
             id = solicitud.Id;
@@ -43,7 +43,7 @@ public class AppDbContextTests
         using (var db = TestDb.NuevoContexto(out ruta))
         {
             var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-            solicitud.Eventos.Add(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
+            solicitud.AgregarEvento(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
             id = solicitud.Id;

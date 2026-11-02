@@ -194,7 +194,7 @@ public class SolicitudTests
         using var db = TestDb.NuevoContexto();
 
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
+        solicitud.AgregarEvento(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
 
@@ -226,5 +226,27 @@ public class SolicitudTests
         Assert.Equal(new DateTime(2026, 4, 1), evento.Fecha);
         Assert.Equal(TipoEvento.Oferta, evento.Tipo);
         Assert.Equal(descripcion, evento.Descripcion);
+    }
+
+    [Fact]
+    public void AgregarEvento_LoAnadeAlHistorial()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var evento = new Evento(new DateTime(2026, 3, 5), TipoEvento.Llamada, "Llamada de screening");
+
+        solicitud.AgregarEvento(evento);
+
+        Assert.Same(evento, Assert.Single(solicitud.Eventos));
+    }
+
+    [Fact]
+    public void QuitarEvento_LoSacaDelHistorial()
+    {
+        var evento = new Evento(new DateTime(2026, 3, 6), TipoEvento.PruebaTecnica, "Prueba técnica");
+        var solicitud = new SolicitudBuilder().ConEventos(evento).Construir();
+
+        solicitud.QuitarEvento(evento);
+
+        Assert.Empty(solicitud.Eventos);
     }
 }

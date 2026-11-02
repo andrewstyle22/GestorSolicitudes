@@ -298,7 +298,7 @@ public class ViewModelTests
     {
         using var db = TestDb.NuevoContexto();
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
+        solicitud.AgregarEvento(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         using var vm = new MainViewModel(db);

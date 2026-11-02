@@ -46,7 +46,7 @@ public class SolicitudEdicionTests
     public void CargarDesde_CopiaElHistorialComoEventosEditables()
     {
         var solicitud = new SolicitudBuilder().Construir();
-        solicitud.Eventos.Add(new Evento(
+        solicitud.AgregarEvento(new Evento(
             new DateTime(2026, 3, 5),
             TipoEvento.Entrevista,
             "Entrevista con RR. HH."));

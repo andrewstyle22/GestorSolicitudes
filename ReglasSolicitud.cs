@@ -25,7 +25,7 @@ public static class ReglasSolicitud
     {
         if (solicitud.Eventos.Count == 0)
         {
-            solicitud.Eventos.Add(new Evento(
+            solicitud.AgregarEvento(new Evento(
                 solicitud.FechaSolicitud,
                 TipoEvento.SolicitudEnviada,
                 Traducciones.Texto("Evento.CandidaturaEnviada")));
