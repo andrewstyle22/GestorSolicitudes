@@ -1012,21 +1012,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void EliminarEvento(EventoViewModel? evento)
     {
-        if (this.solicitudAbierta is not Solicitud solicitud || evento is null)
+        if (this.Editor is not SolicitudEdicionViewModel edicion || evento is null)
         {
             return;
         }
 
-        this.Editor!.EventosEdicion.Remove(evento);
-
-        if (evento.Original is Evento original)
-        {
-            solicitud.Eventos.Remove(original);
-            if (original.Id != 0)
-            {
-                this.db.Eventos.Remove(original);
-            }
-        }
+        edicion.EliminarEvento(evento);
     }
 
     [RelayCommand]

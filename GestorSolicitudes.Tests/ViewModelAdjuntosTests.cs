@@ -58,7 +58,7 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
-    public void EliminarEvento_QuitaDeLaListaYMarcaElPersistidoComoBorrado()
+    public void EliminarEvento_QuitaDeLaListaYRecuerdaElPersistidoParaBorrar()
     {
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
@@ -77,9 +77,29 @@ public class ViewModelAdjuntosTests
 
         vm.EliminarEventoCommand.Execute(copia);
 
-        Assert.DoesNotContain(persistido, solicitud.Eventos);
         Assert.DoesNotContain(copia, vm.Editor.EventosEdicion);
-        Assert.Equal(EntityState.Deleted, db.Entry(persistido).State);
+        Assert.Contains(persistido, vm.Editor.EventosEliminados);
+        Assert.Contains(persistido, solicitud.Eventos);
+        Assert.Equal(EntityState.Unchanged, db.Entry(persistido).State);
+    }
+
+    [Fact]
+    public void EliminarEvento_SinGuardarTodavia_NoRecuerdaNadaParaLaBase()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.AnadirEventoCommand.Execute(null);
+        EventoViewModel nota = Assert.Single(vm.Editor!.EventosEdicion);
+
+        vm.EliminarEventoCommand.Execute(nota);
+
+        Assert.Empty(vm.Editor.EventosEdicion);
+        Assert.Empty(vm.Editor.EventosEliminados);
     }
 
     [Fact]

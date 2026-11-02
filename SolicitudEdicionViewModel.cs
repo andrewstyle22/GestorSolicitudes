@@ -117,6 +117,9 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
     public ObservableCollection<EventoViewModel> EventosEdicion { get; } = [];
 
+    /// <summary>Eventos guardados que se han quitado del búfer: el guardado los borra del modelo.</summary>
+    public List<Evento> EventosEliminados { get; } = [];
+
     public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
 
     public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
@@ -169,12 +172,23 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private void CargarEventos(Solicitud solicitud)
     {
         this.EventosEdicion.Clear();
+        this.EventosEliminados.Clear();
 
         foreach (Evento evento in solicitud.Eventos)
         {
             var edicion = new EventoViewModel();
             edicion.CargarDesde(evento);
             this.EventosEdicion.Add(edicion);
+        }
+    }
+
+    public void EliminarEvento(EventoViewModel evento)
+    {
+        this.EventosEdicion.Remove(evento);
+
+        if (evento.Original is Evento original && original.Id != 0)
+        {
+            this.EventosEliminados.Add(original);
         }
     }
 

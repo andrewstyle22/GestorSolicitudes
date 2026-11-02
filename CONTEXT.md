@@ -5,12 +5,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección de la eta
 ## Etapas
 - ✅ Etapa 0: red de seguridad; tests con `SolicitudBuilder` y `RellenarObligatorios`.
 - ✅ Etapa 1: editor con búfer conectado al `MainViewModel`; la UI ya no ve la entidad.
-- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.3 hechos.
+- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.4 hechos.
 - ⬜ Etapa 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ⬜ Etapa 4: cierre; test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 2.4 (`refactor: EliminarEvento opera sobre el editor`). Quitar el evento de `Editor.EventosEdicion` y recordar los que ya tienen `Id != 0` para borrarlos al Guardar (2.5); el comando deja de tocar `db.Eventos`.
+Commit 2.5 (`refactor: Guardar sincroniza los eventos`). Escribir antes los tests del punto de control (quitar A y añadir N, insertar N antes de A, borrado real contra la base). Después, `SolicitudEdicionViewModel.AplicarA` o un método de sincronización crea los eventos con `Original` nulo, vuelca los existentes y borra los de `EventosEliminados` con `db.Eventos.Remove`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir y vuelca al modelo solo al Guardar; Cancelar descarta.
