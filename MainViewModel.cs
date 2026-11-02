@@ -997,12 +997,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AnadirEvento()
     {
-        if (this.Editor is not SolicitudEdicionViewModel editor)
+        if (this.Editor is not SolicitudEdicionViewModel edicion)
         {
             return;
         }
 
-        editor.EventosEdicion.Add(new EventoViewModel
+        edicion.EventosEdicion.Add(new EventoViewModel
         {
             Fecha = DateTime.Today,
             Tipo = TipoEvento.Nota,
