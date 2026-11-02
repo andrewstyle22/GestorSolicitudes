@@ -40,29 +40,4 @@ public class ReglasSolicitudTests
 
         Assert.Null(ReglasSolicitud.ProponerSeguimiento(solicitud));
     }
-
-    [Fact]
-    public void AnadirHitoInicial_AñadeEventoCuandoVacio()
-    {
-        var solicitud = new SolicitudBuilder().ConFechaSolicitud(new DateTime(2026, 3, 1)).Construir();
-
-        ReglasSolicitud.AnadirHitoInicial(solicitud);
-
-        Assert.Single(solicitud.Eventos);
-        Assert.Equal(TipoEvento.SolicitudEnviada, solicitud.Eventos[0].Tipo);
-        Assert.Equal(new DateTime(2026, 3, 1), solicitud.Eventos[0].Fecha);
-    }
-
-    [Fact]
-    public void AnadirHitoInicial_NoDuplicaCuandoYaTieneEventos()
-    {
-        var solicitud = new SolicitudBuilder()
-            .ConFechaSolicitud(new DateTime(2026, 3, 1))
-            .ConEventos(new Evento(new DateTime(2026, 3, 1), TipoEvento.SolicitudEnviada, string.Empty))
-            .Construir();
-
-        ReglasSolicitud.AnadirHitoInicial(solicitud);
-
-        Assert.Single(solicitud.Eventos);
-    }
 }

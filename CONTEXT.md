@@ -5,12 +5,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección de la eta
 ## Etapas
 - ✅ Etapa 0: red de seguridad; tests con `SolicitudBuilder` y `RellenarObligatorios`.
 - ✅ Etapa 1: editor con búfer conectado al `MainViewModel`; la UI ya no ve la entidad.
-- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.9 hechos.
+- ✅ Etapa 2: historial de eventos en el editor y encapsulado en el modelo (2.1–2.10).
 - ⬜ Etapa 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ⬜ Etapa 4: cierre; test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 2.10 (`refactor: Solicitud.RegistrarEnvio sustituye a AnadirHitoInicial`): llevar al modelo la regla del primer hito y quitarla de `ReglasSolicitud`.
+Commit 3.1 (`feat: constructor Solicitud(empresa, puesto)`): añadirlo conservando el constructor sin parámetros público.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir y vuelca al modelo solo al Guardar; Cancelar descarta.

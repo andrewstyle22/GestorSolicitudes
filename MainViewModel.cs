@@ -859,8 +859,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         this.db.Solicitudes.Add(solicitud);
 
-        // Primer hito del historial, para que la línea temporal no empiece vacía.
-        ReglasSolicitud.AnadirHitoInicial(solicitud);
+        solicitud.RegistrarEnvio(Traducciones.Texto("Evento.CandidaturaEnviada"));
         return true;
     }
 

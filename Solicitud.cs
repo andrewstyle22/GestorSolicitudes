@@ -111,6 +111,18 @@ public class Solicitud
     /// <summary>Quita un hito del historial.</summary>
     public void QuitarEvento(Evento evento) => this.eventos.Remove(evento);
 
+    /// <summary>
+    /// Registra el hito de envío de la solicitud, solo si el historial está vacío,
+    /// para que la línea temporal no empiece en blanco.
+    /// </summary>
+    public void RegistrarEnvio(string descripcion)
+    {
+        if (this.eventos.Count == 0)
+        {
+            this.AgregarEvento(new Evento(this.FechaSolicitud, TipoEvento.SolicitudEnviada, descripcion));
+        }
+    }
+
     // --- Calculadas (no se guardan en base de datos) ---
     [NotMapped]
     public int DiasDesdeSolicitud => (int)(DateTime.Today - this.FechaSolicitud.Date).TotalDays;

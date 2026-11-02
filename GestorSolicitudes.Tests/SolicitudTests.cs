@@ -249,4 +249,29 @@ public class SolicitudTests
 
         Assert.Empty(solicitud.Eventos);
     }
+
+    [Fact]
+    public void RegistrarEnvio_AnadeElHitoCuandoElHistorialEstaVacio()
+    {
+        var solicitud = new SolicitudBuilder().ConFechaSolicitud(new DateTime(2026, 3, 1)).Construir();
+
+        solicitud.RegistrarEnvio("Candidatura enviada");
+
+        Evento evento = Assert.Single(solicitud.Eventos);
+        Assert.Equal(TipoEvento.SolicitudEnviada, evento.Tipo);
+        Assert.Equal(new DateTime(2026, 3, 1), evento.Fecha);
+        Assert.Equal("Candidatura enviada", evento.Descripcion);
+    }
+
+    [Fact]
+    public void RegistrarEnvio_NoDuplicaCuandoYaTieneEventos()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEventos(new Evento(new DateTime(2026, 3, 1), TipoEvento.SolicitudEnviada, string.Empty))
+            .Construir();
+
+        solicitud.RegistrarEnvio("Candidatura enviada");
+
+        Assert.Single(solicitud.Eventos);
+    }
 }
