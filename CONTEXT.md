@@ -5,12 +5,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección de la eta
 ## Etapas
 - ✅ Etapa 0: red de seguridad; tests con `SolicitudBuilder` y `RellenarObligatorios`.
 - ✅ Etapa 1: editor con búfer conectado al `MainViewModel`; la UI ya no ve la entidad.
-- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.7 hechos.
+- 🔄 Etapa 2 (en curso): historial de eventos en el editor y encapsulado en el modelo (2.1–2.10); 2.1–2.8 hechos.
 - ⬜ Etapa 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ⬜ Etapa 4: cierre; test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 2.8 (`refactor: configurar EF con acceso por campo para Eventos`). `UsePropertyAccessMode` en `AppDbContext`; antes de seguir, test de ida y vuelta con `Include` (guardar, nuevo contexto, leer).
+Commit 2.9 (`refactor: Eventos expone IReadOnlyList`): retirar el `set` y el `List` público de `Solicitud.Eventos`; `AgregarEvento`/`QuitarEvento` siguen siendo la única vía. EF ya usa acceso por campo (2.8).
 
 ## Decisiones vigentes
 - Búfer: copia al abrir y vuelca al modelo solo al Guardar; Cancelar descarta.
@@ -33,7 +33,6 @@ Commit 2.8 (`refactor: configurar EF con acceso por campo para Eventos`). `UsePr
 
 ## Puntos de control pendientes
 - 2.5: escribir antes los tests de AplicarEventos y comprobar que fallan con el código viejo: (a) quitar A y añadir N, (b) insertar N antes de A, (c) borrado real en base de datos con contexto real. Regla de diseño: todo evento con Id == 0 se crea siempre como nuevo; nunca se empareja por posición con eventos existentes.
-- 2.8: EF puede no materializar la colección por campo; test de ida y vuelta con `Include` (guardar, nuevo contexto, leer).
 - 3.14–3.17: el mismo test prueba los `set` privados.
 - 3.7: decidir `CambiarEstado` (motivo solo con rechazo, `FechaCierre` al cerrar, reapertura) y anotarlo en `02-DOCS/decisiones/`.
 - `TreatWarningsAsErrors` rompe commits intermedios: no dejar miembros sin usar.

@@ -33,6 +33,40 @@ public class AppDbContextTests
         Assert.Equal(EstadoSolicitud.OfertaAceptada, recuperada.Estado);
         Evento evento = Assert.Single(recuperada.Eventos);
         Assert.Equal(TipoEvento.Oferta, evento.Tipo);
+        Assert.Equal(DateTime.Today, evento.Fecha);
+        Assert.Equal("¡Sí!", evento.Descripcion);
+    }
+
+    [Fact]
+    public void ActualizarEvento_SeGuardaYRecuperaCompleto()
+    {
+        // El acceso por campo debe servir también para leer, mutar y volver a guardar.
+        int id;
+        string ruta;
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder()
+                .ConEmpresa("ACME")
+                .ConPuesto("Dev")
+                .ConEventos(new Evento(DateTime.Today, TipoEvento.Nota, "Antes"))
+                .Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+        }
+
+        using (var db = new AppDbContext(ruta))
+        {
+            Evento evento = db.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id).Eventos[0];
+            evento.Actualizar(new DateTime(2026, 5, 1), TipoEvento.Oferta, "Después");
+            db.SaveChanges();
+        }
+
+        using var db2 = new AppDbContext(ruta);
+        Evento recuperado = db2.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id).Eventos[0];
+        Assert.Equal(new DateTime(2026, 5, 1), recuperado.Fecha);
+        Assert.Equal(TipoEvento.Oferta, recuperado.Tipo);
+        Assert.Equal("Después", recuperado.Descripcion);
     }
 
     [Fact]

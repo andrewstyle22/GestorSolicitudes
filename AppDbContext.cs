@@ -61,6 +61,10 @@ public class AppDbContext : DbContext
                    .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // Evento se muta por Actualizar, no por setter público: EF lee y escribe sus
+        // propiedades por el campo de respaldo, no por la propiedad.
+        modelBuilder.Entity<Evento>().UsePropertyAccessMode(PropertyAccessMode.Field);
+
         base.OnModelCreating(modelBuilder);
     }
 }
