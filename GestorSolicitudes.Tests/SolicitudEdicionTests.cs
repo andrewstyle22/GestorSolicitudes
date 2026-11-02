@@ -46,12 +46,10 @@ public class SolicitudEdicionTests
     public void CargarDesde_CopiaElHistorialComoEventosEditables()
     {
         var solicitud = new SolicitudBuilder().Construir();
-        solicitud.Eventos.Add(new Evento
-        {
-            Fecha = new DateTime(2026, 3, 5),
-            Tipo = TipoEvento.Entrevista,
-            Descripcion = "Entrevista con RR. HH.",
-        });
+        solicitud.Eventos.Add(new Evento(
+            new DateTime(2026, 3, 5),
+            TipoEvento.Entrevista,
+            "Entrevista con RR. HH."));
         var editor = new SolicitudEdicionViewModel();
 
         editor.CargarDesde(solicitud);

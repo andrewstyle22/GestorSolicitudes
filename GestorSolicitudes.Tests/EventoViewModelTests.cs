@@ -9,12 +9,7 @@ public class EventoViewModelTests
     public void CargarDesde_CopiaFechaTipoYDescripcion()
     {
         DateTime fecha = new(2026, 3, 5);
-        var evento = new Evento
-        {
-            Fecha = fecha,
-            Tipo = TipoEvento.Entrevista,
-            Descripcion = "Entrevista con RR. HH.",
-        };
+        var evento = new Evento(fecha, TipoEvento.Entrevista, "Entrevista con RR. HH.");
         var editor = new EventoViewModel();
 
         editor.CargarDesde(evento);
@@ -28,7 +23,7 @@ public class EventoViewModelTests
     public void AplicarA_VuelcaFechaTipoYDescripcion()
     {
         DateTime fecha = new(2026, 3, 5);
-        var evento = new Evento();
+        var evento = new Evento(new DateTime(2026, 1, 1), TipoEvento.Nota, string.Empty);
         var editor = new EventoViewModel
         {
             Fecha = fecha,

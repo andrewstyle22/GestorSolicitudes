@@ -30,8 +30,6 @@ public sealed partial class EventoViewModel : ObservableObject
 
     public void AplicarA(Evento evento)
     {
-        evento.Fecha = this.Fecha;
-        evento.Tipo = this.Tipo;
-        evento.Descripcion = this.Descripcion;
+        evento.Actualizar(this.Fecha, this.Tipo, this.Descripcion);
     }
 }

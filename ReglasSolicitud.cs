@@ -25,12 +25,10 @@ public static class ReglasSolicitud
     {
         if (solicitud.Eventos.Count == 0)
         {
-            solicitud.Eventos.Add(new Evento
-            {
-                Fecha = solicitud.FechaSolicitud,
-                Tipo = TipoEvento.SolicitudEnviada,
-                Descripcion = Traducciones.Texto("Evento.CandidaturaEnviada"),
-            });
+            solicitud.Eventos.Add(new Evento(
+                solicitud.FechaSolicitud,
+                TipoEvento.SolicitudEnviada,
+                Traducciones.Texto("Evento.CandidaturaEnviada")));
         }
     }
 }

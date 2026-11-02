@@ -35,7 +35,7 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        solicitud.Eventos.Add(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -64,8 +64,8 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto();
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today.AddDays(-1), Tipo = TipoEvento.SolicitudEnviada });
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        solicitud.Eventos.Add(new Evento(DateTime.Today.AddDays(-1), TipoEvento.SolicitudEnviada, string.Empty));
+        solicitud.Eventos.Add(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -109,12 +109,10 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto(out string ruta);
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento
-        {
-            Fecha = new DateTime(2026, 1, 10),
-            Tipo = TipoEvento.SolicitudEnviada,
-            Descripcion = "A",
-        });
+        solicitud.Eventos.Add(new Evento(
+            new DateTime(2026, 1, 10),
+            TipoEvento.SolicitudEnviada,
+            "A"));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -140,12 +138,10 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto(out string ruta);
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento
-        {
-            Fecha = new DateTime(2026, 1, 10),
-            Tipo = TipoEvento.SolicitudEnviada,
-            Descripcion = "A",
-        });
+        solicitud.Eventos.Add(new Evento(
+            new DateTime(2026, 1, 10),
+            TipoEvento.SolicitudEnviada,
+            "A"));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();
@@ -166,12 +162,10 @@ public class ViewModelAdjuntosTests
         using var db = TestDb.NuevoContexto(out string ruta);
         using var vm = new MainViewModel(db);
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento
-        {
-            Fecha = new DateTime(2026, 1, 10),
-            Tipo = TipoEvento.SolicitudEnviada,
-            Descripcion = "A",
-        });
+        solicitud.Eventos.Add(new Evento(
+            new DateTime(2026, 1, 10),
+            TipoEvento.SolicitudEnviada,
+            "A"));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
         vm.Recargar();

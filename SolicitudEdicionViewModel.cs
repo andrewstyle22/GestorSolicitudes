@@ -267,9 +267,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
                 continue;
             }
 
-            var nuevo = new Evento();
-            edicion.AplicarA(nuevo);
-            solicitud.Eventos.Add(nuevo);
+            solicitud.Eventos.Add(new Evento(edicion.Fecha, edicion.Tipo, edicion.Descripcion));
         }
 
         foreach (Evento eliminado in this.EventosEliminados)

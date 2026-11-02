@@ -58,7 +58,7 @@ public class ReglasSolicitudTests
     {
         var solicitud = new SolicitudBuilder()
             .ConFechaSolicitud(new DateTime(2026, 3, 1))
-            .ConEventos(new Evento { Fecha = new DateTime(2026, 3, 1), Tipo = TipoEvento.SolicitudEnviada })
+            .ConEventos(new Evento(new DateTime(2026, 3, 1), TipoEvento.SolicitudEnviada, string.Empty))
             .Construir();
 
         ReglasSolicitud.AnadirHitoInicial(solicitud);

@@ -194,7 +194,7 @@ public class SolicitudTests
         using var db = TestDb.NuevoContexto();
 
         var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
-        solicitud.Eventos.Add(new Evento { Fecha = DateTime.Today, Tipo = TipoEvento.Nota });
+        solicitud.Eventos.Add(new Evento(DateTime.Today, TipoEvento.Nota, string.Empty));
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
 
@@ -202,5 +202,29 @@ public class SolicitudTests
         Assert.True(evento.Id > 0);
         Assert.Equal(solicitud.Id, evento.SolicitudId);
         Assert.Same(solicitud, evento.Solicitud);
+    }
+
+    [Fact]
+    public void Evento_ConstructorAsignaFechaTipoYDescripcion()
+    {
+        const string descripcion = "Entrevista";
+        var evento = new Evento(new DateTime(2026, 3, 5), TipoEvento.Entrevista, descripcion);
+
+        Assert.Equal(new DateTime(2026, 3, 5), evento.Fecha);
+        Assert.Equal(TipoEvento.Entrevista, evento.Tipo);
+        Assert.Equal(descripcion, evento.Descripcion);
+    }
+
+    [Fact]
+    public void Evento_ActualizarCambiaFechaTipoYDescripcion()
+    {
+        const string descripcion = "Oferta";
+        var evento = new Evento(new DateTime(2026, 3, 5), TipoEvento.Entrevista, "Entrevista");
+
+        evento.Actualizar(new DateTime(2026, 4, 1), TipoEvento.Oferta, descripcion);
+
+        Assert.Equal(new DateTime(2026, 4, 1), evento.Fecha);
+        Assert.Equal(TipoEvento.Oferta, evento.Tipo);
+        Assert.Equal(descripcion, evento.Descripcion);
     }
 }
