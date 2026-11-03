@@ -10,7 +10,7 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ⬜ 4: test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 3.6 (`feat: Solicitud.ActualizarCondiciones`): reglas `SalarioMin <= SalarioMax` e `Interes` entre 1 y 5.
+Commit 3.7 (`feat: Solicitud.CambiarEstado`): decidir antes el motivo solo con rechazo, `FechaCierre` al cerrar y qué pasa al reabrir.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

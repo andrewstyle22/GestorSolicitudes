@@ -118,6 +118,28 @@ public class Solicitud
 
     public int? PretensionSalarial { get; set; }
 
+    /// <summary>
+    /// Actualiza la parte económica y el interés: el salario mínimo no puede superar
+    /// al máximo y el interés debe estar entre 1 y 5.
+    /// </summary>
+    public void ActualizarCondiciones(int? salarioMin, int? salarioMax, int? pretensionSalarial, int interes)
+    {
+        if (salarioMin > salarioMax)
+        {
+            throw new ArgumentException("El salario mínimo no puede superar al máximo.");
+        }
+
+        if (interes is < 1 or > 5)
+        {
+            throw new ArgumentException("El interés debe estar entre 1 y 5.");
+        }
+
+        this.SalarioMin = salarioMin;
+        this.SalarioMax = salarioMax;
+        this.PretensionSalarial = pretensionSalarial;
+        this.Interes = interes;
+    }
+
     // --- Fechas clave ---
     public DateTime FechaSolicitud { get; set; } = DateTime.Today;
 

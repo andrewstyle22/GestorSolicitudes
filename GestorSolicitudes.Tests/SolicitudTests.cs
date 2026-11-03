@@ -166,6 +166,64 @@ public class SolicitudTests
         Assert.Throws<ArgumentException>(() => new SolicitudBuilder().Construir().ActualizarOferta(datos));
 
     [Fact]
+    public void ActualizarCondiciones_AsignaTodosLosCampos()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarCondiciones(30000, 45000, 40000, 4);
+
+        Assert.Equal(30000, solicitud.SalarioMin);
+        Assert.Equal(45000, solicitud.SalarioMax);
+        Assert.Equal(40000, solicitud.PretensionSalarial);
+        Assert.Equal(4, solicitud.Interes);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(30000, null)]
+    [InlineData(null, 45000)]
+    [InlineData(30000, 30000)]
+    public void ActualizarCondiciones_RangoValido_Asigna(int? salarioMin, int? salarioMax)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarCondiciones(salarioMin, salarioMax, null, 3);
+
+        Assert.Equal(salarioMin, solicitud.SalarioMin);
+        Assert.Equal(salarioMax, solicitud.SalarioMax);
+    }
+
+    [Fact]
+    public void ActualizarCondiciones_SalarioMinMayorQueMax_Lanza()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarCondiciones(45000, 30000, null, 3));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(6)]
+    public void ActualizarCondiciones_InteresFueraDeRango_Lanza(int interes)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarCondiciones(null, null, null, interes));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(5)]
+    public void ActualizarCondiciones_InteresEnLosLimites_Asigna(int interes)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarCondiciones(null, null, null, interes);
+
+        Assert.Equal(interes, solicitud.Interes);
+    }
+
+    [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
     {
         Assert.Null(new SolicitudBuilder().Construir().MotivoRechazo);
