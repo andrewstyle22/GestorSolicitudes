@@ -9,6 +9,8 @@ using System.IO;
 /// </summary>
 public class Solicitud
 {
+    private const int LongitudMaximaIdentificacion = 150;
+
     private Solicitud()
     {
     }
@@ -22,10 +24,10 @@ public class Solicitud
     public int Id { get; set; }
 
     // --- Identificación de la oferta ---
-    [MaxLength(150)]
+    [MaxLength(LongitudMaximaIdentificacion)]
     public string Empresa { get; set; } = string.Empty;
 
-    [MaxLength(150)]
+    [MaxLength(LongitudMaximaIdentificacion)]
     public string Puesto { get; set; } = string.Empty;
 
     /// <summary>Gets or sets enlace directo a la oferta (LinkedIn, InfoJobs, web corporativa...).</summary>
@@ -51,6 +53,31 @@ public class Solicitud
     /// <summary>Gets or sets requisitos, obligaciones y responsabilidades del puesto, tal como los publicó la empresa.</summary>
     [MaxLength(4000)]
     public string? Requisitos { get; set; }
+
+    /// <summary>
+    /// Actualiza la empresa y el puesto: recorta espacios y exige que no queden vacíos
+    /// ni superen la longitud que admite la base de datos.
+    /// </summary>
+    public void ActualizarIdentificacion(string empresa, string puesto)
+    {
+        string empresaRecortada = (empresa ?? string.Empty).Trim();
+        string puestoRecortado = (puesto ?? string.Empty).Trim();
+
+        if (empresaRecortada.Length == 0 || puestoRecortado.Length == 0)
+        {
+            throw new ArgumentException("La empresa y el puesto son obligatorios.");
+        }
+
+        if (empresaRecortada.Length > LongitudMaximaIdentificacion
+            || puestoRecortado.Length > LongitudMaximaIdentificacion)
+        {
+            throw new ArgumentException(
+                $"La empresa y el puesto no pueden superar los {LongitudMaximaIdentificacion} caracteres.");
+        }
+
+        this.Empresa = empresaRecortada;
+        this.Puesto = puestoRecortado;
+    }
 
     // --- Económico (euros brutos anuales) ---
     public int? SalarioMin { get; set; }

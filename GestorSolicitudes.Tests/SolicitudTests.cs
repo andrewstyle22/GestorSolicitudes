@@ -63,6 +63,39 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void ActualizarIdentificacion_RecortaEspacios()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarIdentificacion("  ACME  ", "  Dev  ");
+
+        Assert.Equal("ACME", solicitud.Empresa);
+        Assert.Equal("Dev", solicitud.Puesto);
+    }
+
+    [Theory]
+    [InlineData("", "Dev")]
+    [InlineData("ACME", "")]
+    [InlineData("   ", "   ")]
+    public void ActualizarIdentificacion_SinEmpresaOPuesto_Lanza(string empresa, string puesto)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarIdentificacion(empresa, puesto));
+    }
+
+    [Theory]
+    [InlineData(151, 1)]
+    [InlineData(1, 151)]
+    public void ActualizarIdentificacion_DemasiadoLargo_Lanza(int longitudEmpresa, int longitudPuesto)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarIdentificacion(
+            new string('a', longitudEmpresa), new string('b', longitudPuesto)));
+    }
+
+    [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
     {
         Assert.Null(new SolicitudBuilder().Construir().MotivoRechazo);
