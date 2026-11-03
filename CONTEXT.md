@@ -6,11 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce y la 3.8 se divide en 3.8a y 3.8b).
+- ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 3.7 (`feat: Solicitud.CambiarEstado`): decidir antes el motivo solo con rechazo, `FechaCierre` al cerrar y qué pasa al reabrir.
+Commit 3.7 (`feat: Solicitud.CambiarEstado`), en su versión reducida: `CambiarEstado(estado, motivo, fechaCierre)` solo asigna y conserva el comportamiento actual, con tests de caracterización. No añadir reglas de transición ni `Reabrir`: eso es la Etapa R.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -20,6 +21,9 @@ Commit 3.7 (`feat: Solicitud.CambiarEstado`): decidir antes el motivo solo con r
 - `Evento` se muta por `Actualizar`; EF accede a sus propiedades por campo (`UsePropertyAccessMode(Field)` en `AppDbContext`).
 - `Solicitud.Eventos` es `IReadOnlyList` sobre campo privado (solo `AgregarEvento`/`QuitarEvento`); ida y vuelta con `Include` probada en `Guardar_SolicitudConEventos_SeRecuperaCompleta`.
 - Las listas enlazadas a entidades POCO (`MainViewModel.Solicitudes` en `MainWindow`) filtran `PropertyDescriptor` al no implementar `INotifyPropertyChanged`; en la edición lo evita el editor.
+
+- `CambiarEstado` (3.7) no valida transiciones ni motivo. Las reglas, `Reabrir` y el estado `EnPausa` van en la Etapa R (R.3 y R.4), cuando termine la Etapa 3.
+- `FechaSolicitud` la escribe `ActualizarFechas` (3.8a); `FechaPrimeraRespuesta` y `RespuestaEmpresa`, `RegistrarRespuesta` (3.8b).
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -31,5 +35,5 @@ Commit 3.7 (`feat: Solicitud.CambiarEstado`): decidir antes el motivo solo con r
 
 ## Puntos de control pendientes
 - 3.14–3.17: ampliar el test de ida y vuelta (`AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto`) para probar los `set` privados.
-- 3.7: decidir `CambiarEstado` (motivo solo con rechazo, `FechaCierre` al cerrar, reapertura) y anotarlo en `02-DOCS/decisiones/`.
+- Antes de R.3: resolver las decisiones pendientes de `02-DOCS/decisiones/estados-y-reapertura.md` (¿entra `EnPausa`?, ¿motivo obligatorio?, ¿`DiasProceso` cuenta el tiempo cerrada?, ¿se conserva el CV anterior?, ¿insignia por consulta o columna?).
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.

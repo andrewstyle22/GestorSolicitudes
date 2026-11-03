@@ -148,6 +148,8 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 
 ## Etapa 3. Cerrar el modelo (la más cara; opcional)
 
+> **Revisión:** el commit 3.7 se reduce a un método que solo asigna (sin reglas nuevas) y el commit 3.8 se divide en 3.8a y 3.8b. Las reglas de estado y la reapertura pasan a la **Etapa R**, entre la 3 y la 4. Así `Estado`, `MotivoRechazo` y `FechaCierre` pueden cerrarse en 3.16 sin esperar a las decisiones de negocio. Además, `FechaSolicitud` y `RespuestaEmpresa` no tenían método propietario: ahora lo tienen (3.8a y 3.8b).
+
 ### 3A. Constructor
 
 | # | Commit | Qué cambia | Tam. |
@@ -163,8 +165,9 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 | 3.4 | `feat: Solicitud.ActualizarIdentificacion` | Empresa y puesto obligatorios; recorte de espacios y `MaxLength`. | S |
 | 3.5 | `feat: Solicitud.ActualizarOferta` | Recibe un `record DatosOferta` (evita un método de 8+ parámetros). | M |
 | 3.6 | `feat: Solicitud.ActualizarCondiciones` | `SalarioMin <= SalarioMax`, `Interes` entre 1 y 5. | S |
-| 3.7 | `feat: Solicitud.CambiarEstado` | **Decidir antes**: motivo solo con rechazo; `FechaCierre` al cerrar; qué pasa al reabrir. | M |
-| 3.8 | `feat: Solicitud.ActualizarFechas` | Primera respuesta, entrevista, seguimiento; absorbe `ProponerSeguimiento`. | M |
+| 3.7 | `feat: Solicitud.CambiarEstado` | Versión reducida: `CambiarEstado(estado, motivo, fechaCierre)` **solo asigna** `Estado`, `MotivoRechazo` y `FechaCierre`, conservando el comportamiento actual. Sin transiciones ni validación de motivo; esas reglas van en R.4. Tests de caracterización del comportamiento vigente. | S |
+| 3.8a | `feat: Solicitud.ActualizarFechas` | `FechaSolicitud`, entrevista y seguimiento; absorbe `ProponerSeguimiento`. | M |
+| 3.8b | `feat: Solicitud.RegistrarRespuesta` | `FechaPrimeraRespuesta` y `RespuestaEmpresa` van siempre juntas. | S |
 | 3.9 | `feat: Solicitud.ActualizarContacto y ActualizarNotas` | Sin reglas fuertes; valida longitudes. | S |
 | 3.10 | `feat: AsignarCv, AsignarCarta, QuitarCv, QuitarCarta` | Ruta y nombre original van siempre juntos. | S |
 
@@ -173,7 +176,7 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
 | 3.11 | `refactor: AplicarA usa los métodos (identificación, oferta, condiciones)` | | S |
-| 3.12 | `refactor: AplicarA usa los métodos (estado y fechas)` | | S |
+| 3.12 | `refactor: AplicarA usa los métodos (estado y fechas)` | Usa `CambiarEstado` (3.7), `ActualizarFechas` (3.8a) y `RegistrarRespuesta` (3.8b). | S |
 | 3.13 | `refactor: AplicarA usa los métodos (contacto y adjuntos)` | | S |
 
 ### 3D. Cerrar los setters (guiado por el compilador; cada commit con test de ida y vuelta en `AppDbContextTests`)
@@ -181,11 +184,54 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 | # | Commit | Propiedades | Tam. |
 |---|--------|-------------|------|
 | 3.14 | `refactor: set privado en identificación y oferta` | `Empresa`, `Puesto`, `EnlaceOferta`, `Portal`, `Origen`, `Ubicacion`, `Modalidad`, `Tecnologias`, `Requisitos` | M |
-| 3.15 | `refactor: set privado en económico y fechas` | `Salario*`, `PretensionSalarial`, `Interes`, todas las fechas | M |
-| 3.16 | `refactor: set privado en estado, seguimiento y contacto` | `Estado`, `MotivoRechazo`, `RespuestaEmpresa`, contacto, `Notas` | M |
+| 3.15 | `refactor: set privado en económico y fechas` | `Salario*`, `PretensionSalarial`, `Interes` y todas las fechas (`FechaSolicitud` por 3.8a, primera respuesta por 3.8b, `FechaCierre` por 3.7) | M |
+| 3.16 | `refactor: set privado en estado, seguimiento y contacto` | `Estado` y `MotivoRechazo` (por 3.7), `RespuestaEmpresa` (por 3.8b), contacto, `Notas` | M |
 | 3.17 | `refactor: set privado en adjuntos e Id` | `RutaCv`, `RutaCarta`, `NombreOriginal*`, `Id` | S |
 
 El `SolicitudBuilder` pasa a construir mediante los métodos de la Etapa 3B.
+
+---
+
+## Etapa R. Estados y reapertura (entre la Etapa 3 y la 4)
+
+Detalle, tabla de transiciones y decisiones pendientes: `02-DOCS/decisiones/estados-y-reapertura.md`. No se empieza hasta cerrar la Etapa 3 (3.17). Tras 3.17 los `set` son privados, así que `Reabrir` puede escribir `FechaCierre`, `MotivoRechazo` y `ProximoSeguimiento` desde dentro de `Solicitud`.
+
+Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
+
+### R-A. Modelo
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| R.1 | `feat: TipoEvento.Reapertura` | Valor 9, traducciones es/en/de, test de paridad. | S |
+| R.2 | `feat: EstadoSolicitud.EnPausa` | Valor 12, grupo abierto, colores, traducciones, revisar embudo y estadísticas. **Solo si se decide que entra.** | M |
+| R.3 | `feat: Solicitud.Reabrir(nuevoEstado, nota)` | Efectos y precondiciones con tests; añade el hito `Reapertura`. | M |
+| R.4 | `feat: CambiarEstado aplica la tabla de transiciones` | Sustituye al método reducido de 3.7: motivo al descartar, `FechaCierre` al cerrar, cerrado → abierto solo por `Reabrir`. | M |
+
+### R-B. Interfaz
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| R.5 | `feat: el editor detecta cerrado → abierto` | Expone que hay una reapertura pendiente. | S |
+| R.6 | `feat: confirmación al reabrir` | Diálogo con los datos del cierre y nota opcional; Guardar llama a `Reabrir`. | M |
+| R.7 | `feat: consulta de candidaturas reabiertas` | Ids con hito de reapertura al recargar la lista; tests. | S |
+| R.8 | `feat: insignia ↻ en la tabla` | Propiedad en la fila, XAML y traducciones. | M |
+| R.9 | `feat: franja informativa en Seguimiento` | Visible solo si hay reapertura. | M |
+
+### R-C. Opcionales
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| R.10 | `feat: filtro Reabiertas` | | M |
+| R.11 | `feat: contador de reaperturas` | | S |
+| R.12 | `feat: SolicitudAnteriorId` | Columna nullable, `EsquemaDb`, prueba de migración. | M |
+| R.13 | `feat: Duplicar enlaza con la candidatura anterior` | | S |
+| R.14 | `feat: aviso al guardar una candidatura repetida` | | M |
+
+### Cierre de la etapa
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| R.15 | `docs: registrar la decisión de estados y reapertura` | Actualizar `02-DOCS/decisiones/` y `AGENTS.md` con las transiciones. | S |
 
 ---
 
@@ -193,7 +239,7 @@ El `SolicitudBuilder` pasa a construir mediante los métodos de la Etapa 3B.
 
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
-| 4.1 | `test: Models no expone setters públicos` | Test por reflexión en `ArquitecturaTests` (o en un test de modelo). | S |
+| 4.1 | `test: Models no expone setters públicos` | Test por reflexión en `ArquitecturaTests` (o en un test de modelo). Sin excepciones: tras 3.17 todo es privado. | S |
 | 4.2 | `refactor: limpiar ReglasSolicitud` | Eliminar lo que haya pasado al modelo. | S |
 | 4.3 | `docs: actualizar AGENTS.md` | Quitar "no lo arregles sin consultar"; describir el editor; el procedimiento de "añadir una propiedad" pasa a ser: modelo, editor, `EsquemaDb`, test y traducción. | S |
 | 4.4 | `docs: actualizar README` | Sección de decisiones y lecciones aprendidas. | S |
@@ -206,6 +252,7 @@ El `SolicitudBuilder` pasa a construir mediante los métodos de la Etapa 3B.
 
 - **Etapas 0 + 1 + 2** resuelven el problema real de edición (cancelar, validación, repintado, `PropertyDescriptor`) y dejan el historial protegido.
 - **La Etapa 3** aporta encapsulación completa del modelo. Es la más costosa; hazla si quieres que el repositorio demuestre arquitectura limpia de principio a fin.
+- **La Etapa R** (estados y reapertura) añade comportamiento nuevo, no refactor. Puede hacerse más adelante, pero siempre después de la Etapa 3.
 - Si te detienes tras la Etapa 2, actualiza igualmente `AGENTS.md` (4.3) para que cualquier agente sepa que la edición ya va por el editor.
 
 ## 5. Riesgos y puntos de control
@@ -216,4 +263,5 @@ El `SolicitudBuilder` pasa a construir mediante los métodos de la Etapa 3B.
 | Los adjuntos dejan ficheros huérfanos en `%APPDATA%` | 1.17-1.19 | Tests de adjuntar/cancelar/guardar/reemplazar con carpeta temporal (`TestDb.NuevaCarpeta()`). |
 | `AplicarA` pisa datos de una pestaña aún no migrada | 1.6-1.12 | Solo se activan los grupos cuyo XAML ya apunta al editor. |
 | `TreatWarningsAsErrors` rompe commits intermedios | Siempre | Compilar con `dotnet build` antes de cada commit; no dejar miembros sin usar. |
-| Las reglas de `CambiarEstado` (3.7) no están definidas | 3.7 | Decidirlas y anotarlas en `02-DOCS/decisiones/` antes de implementar. |
+| Las reglas de estado y reapertura no están decididas | R.3, R.4 | 3.7 solo asigna; las decisiones pendientes se resuelven antes de R.3 y se anotan en `02-DOCS/decisiones/estados-y-reapertura.md`. |
+| `CambiarEstado` queda sin reglas hasta la Etapa R | 3.7 a R.4 | Es temporal y conserva el comportamiento actual; los tests de caracterización de 3.7 lo fijan. |
