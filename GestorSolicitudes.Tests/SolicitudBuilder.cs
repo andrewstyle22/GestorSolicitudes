@@ -8,7 +8,7 @@ using GestorSolicitudes.Models;
 /// </summary>
 internal sealed class SolicitudBuilder
 {
-    private readonly Solicitud solicitud = new();
+    private readonly Solicitud solicitud = new(string.Empty, string.Empty);
 
     public SolicitudBuilder ConEmpresa(string empresa) => this.Asignar(s => s.Empresa = empresa);
 

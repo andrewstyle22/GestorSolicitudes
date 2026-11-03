@@ -720,11 +720,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void Nueva()
     {
         this.SolicitudSeleccionada = null;
-        this.Abrir(new Solicitud
-        {
-            FechaSolicitud = DateTime.Today,
-            Estado = EstadoSolicitud.Enviada,
-        });
+        this.Abrir(new Solicitud(string.Empty, string.Empty));
     }
 
     /// <summary>
@@ -742,10 +738,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         Solicitud origen = this.solicitudAbierta;
-        var copia = new Solicitud
+        var copia = new Solicitud(origen.Empresa, origen.Puesto)
         {
-            Empresa = origen.Empresa,
-            Puesto = origen.Puesto,
             Portal = origen.Portal,
             Ubicacion = origen.Ubicacion,
             Modalidad = origen.Modalidad,
