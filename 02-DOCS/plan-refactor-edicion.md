@@ -45,6 +45,7 @@ Antes de cada commit, en este orden:
 3. Pasar la skill `sonarcloud-gate` (S2930, S6444, S6966, S1117, S1192, S3267...).
 4. Si hay XAML nuevo: `<Page>` declarado en el csproj. Si hay texto de UI nuevo: clave en es/en/de en `Traducciones.cs`.
 5. Mensaje de commit en español. Un commit = una idea reversible con `git revert`.
+6. El push lo hace el autor tras cada commit, para que SonarCloud analice la rama remota. El agente no hace push.
 
 Tamaño estimado: **S** (<50 líneas), **M** (50-200), **L** (>200, vigilar y dividir si crece).
 
@@ -149,6 +150,8 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 ## Etapa 3. Cerrar el modelo (la más cara; opcional)
 
 > **Revisión:** el commit 3.7 se reduce a un método que solo asigna (sin reglas nuevas) y el commit 3.8 se divide en 3.8a y 3.8b. Las reglas de estado y la reapertura pasan a la **Etapa R**, entre la 3 y la 4. Así `Estado`, `MotivoRechazo` y `FechaCierre` pueden cerrarse en 3.16 sin esperar a las decisiones de negocio. Además, `FechaSolicitud` y `RespuestaEmpresa` no tenían método propietario: ahora lo tienen (3.8a y 3.8b).
+>
+> **Revisión 2:** se añaden 3.10b, 3.10c y 3.13b, se precisan 3.8a, 3.8b y las longitudes máximas, y se incorpora una auditoría de escrituras directas antes de 3.14.
 
 ### 3A. Constructor
 
@@ -166,18 +169,23 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 | 3.5 | `feat: Solicitud.ActualizarOferta` | Recibe un `record DatosOferta` (evita un método de 8+ parámetros). | M |
 | 3.6 | `feat: Solicitud.ActualizarCondiciones` | `SalarioMin <= SalarioMax`, `Interes` entre 1 y 5. | S |
 | 3.7 | `feat: Solicitud.CambiarEstado` | Versión reducida: `CambiarEstado(estado, motivo, fechaCierre)` **solo asigna** `Estado`, `MotivoRechazo` y `FechaCierre`, conservando el comportamiento actual. Sin transiciones ni validación de motivo; esas reglas van en R.4. Tests de caracterización del comportamiento vigente. | S |
-| 3.8a | `feat: Solicitud.ActualizarFechas` | `FechaSolicitud`, entrevista y seguimiento; absorbe `ProponerSeguimiento`. | M |
-| 3.8b | `feat: Solicitud.RegistrarRespuesta` | `FechaPrimeraRespuesta` y `RespuestaEmpresa` van siempre juntas. | S |
-| 3.9 | `feat: Solicitud.ActualizarContacto y ActualizarNotas` | Sin reglas fuertes; valida longitudes. | S |
-| 3.10 | `feat: AsignarCv, AsignarCarta, QuitarCv, QuitarCarta` | Ruta y nombre original van siempre juntos. | S |
+| 3.8a | `feat: Solicitud.ActualizarFechas` | `FechaSolicitud`, entrevista y seguimiento. Absorbe `ProponerSeguimiento` como método de instancia, con las mismas condiciones que la regla actual. `ProximoSeguimiento` tiene dos orígenes: lo edita el usuario en el búfer y lo propone la app al preparar una solicitud nueva; ambos pasan por el modelo. Tests: una solicitud nueva abierta recibe seguimiento propuesto y uno ya informado no se pisa. | M |
+| 3.8b | `feat: Solicitud.RegistrarRespuesta` | `RegistrarRespuesta(fecha?, texto?)`: ambos valores opcionales e **independientes**, como hoy (puede haber texto sin fecha y fecha sin texto). `RespuestaEmpresa` no tiene límite hoy, así que no se añade validación salvo que se decida lo contrario (ver "Longitudes máximas"). El editor llama una sola vez con los dos valores (ver 3.12). | S |
+| 3.9 | `feat: Solicitud.ActualizarContacto y ActualizarNotas` | Sin reglas de negocio fuertes; valida las longitudes de `ContactoNombre` (120), `ContactoEmail` (150) y `ContactoTelefono` (40). `Notas` no tiene límite hoy (ver "Longitudes máximas"). | S |
+| 3.10 | `feat: AsignarCv, AsignarCarta, QuitarCv, QuitarCarta` | Ruta y nombre original van siempre juntos. Valida las longitudes de `RutaCv` y `RutaCarta` (500) y de `NombreOriginalCv` y `NombreOriginalCarta` (260). | S |
+| 3.10b | `refactor: Duplicar y PrepararNueva sin asignaciones directas` | `Solicitud.CrearCopia()` para Duplicar. `PrepararNueva` usa el constructor y los métodos de 3.4 a 3.8a, sin asignar campos sueltos. Cubre los inicializadores que sobreviven al constructor. | M |
+| 3.10c | `test: el editor no modifica la entidad hasta Guardar` | Abrir una solicitud, cambiar varios campos del editor y comprobar que la entidad conserva sus valores; cancelar y comprobar entidad y base de datos. Protege 3.11 a 3.13. | S |
+
+**Longitudes máximas.** Hoy hay constantes privadas (`LongitudMaximaX`) para identificación, enlace, portal, ubicación, tecnologías y requisitos. El resto de campos usa números literales en `[MaxLength]`: `ContactoNombre` 120, `ContactoEmail` 150, `ContactoTelefono` 40, `RutaCv` y `RutaCarta` 500, `NombreOriginalCv` y `NombreOriginalCarta` 260. `RespuestaEmpresa` y `Notas` no tienen límite. Seguir el patrón existente: una constante por campo, compartida por `[MaxLength]` y por la validación del método. Si el editor necesita reutilizarlas para `INotifyDataErrorInfo`, pasan a `public const`. ☐ Decidir si `RespuestaEmpresa` y `Notas` siguen siendo texto libre (recomendado: sí, porque añadir un límite cambiaría el comportamiento actual).
 
 ### 3C. El editor llama a los métodos
 
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
-| 3.11 | `refactor: AplicarA usa los métodos (identificación, oferta, condiciones)` | | S |
-| 3.12 | `refactor: AplicarA usa los métodos (estado y fechas)` | Usa `CambiarEstado` (3.7), `ActualizarFechas` (3.8a) y `RegistrarRespuesta` (3.8b). | S |
-| 3.13 | `refactor: AplicarA usa los métodos (contacto y adjuntos)` | | S |
+| 3.11 | `refactor: AplicarA usa los métodos (identificación, oferta, condiciones)` | Sustituye las asignaciones de `AplicarIdentificacion`, `AplicarOferta` y `AplicarEconomico`. Estos métodos lanzan `ArgumentException` si un texto supera su límite, así que comprobar que el editor valida las longitudes (o que los `TextBox` tienen `MaxLength`) antes de llamar, para que Guardar no falle con una excepción. | S |
+| 3.12 | `refactor: AplicarA usa los métodos (estado y fechas)` | Sustituye `AplicarEstado`, `AplicarFechas` y `AplicarRespuesta`. Usa `CambiarEstado` (3.7), `ActualizarFechas` (3.8a) y `RegistrarRespuesta` (3.8b). Como `FechaPrimeraRespuesta` y `RespuestaEmpresa` hoy se aplican en grupos distintos, se reorganizan para llamar una sola vez a `solicitud.RegistrarRespuesta(editor.FechaPrimeraRespuesta, editor.RespuestaEmpresa)`. | M |
+| 3.13 | `refactor: AplicarA usa los métodos (contacto y adjuntos)` | Sustituye `AplicarContacto` y `AplicarAdjuntos`. | S |
+| 3.13b | `test: un fallo de SaveChanges conserva adjuntos y editor` | Con un interceptor de EF que lance en `SaveChanges`: no se borra el adjunto anterior, el editor sigue abierto, las copias temporales siguen en disco y se puede reintentar el guardado. Si el test destapa un fallo en `Guardar`, se corrige antes en un commit `fix:` propio. | M |
 
 ### 3D. Cerrar los setters (guiado por el compilador; cada commit con test de ida y vuelta en `AppDbContextTests`)
 
@@ -186,15 +194,24 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 | 3.14 | `refactor: set privado en identificación y oferta` | `Empresa`, `Puesto`, `EnlaceOferta`, `Portal`, `Origen`, `Ubicacion`, `Modalidad`, `Tecnologias`, `Requisitos` | M |
 | 3.15 | `refactor: set privado en económico y fechas` | `Salario*`, `PretensionSalarial`, `Interes` y todas las fechas (`FechaSolicitud` por 3.8a, primera respuesta por 3.8b, `FechaCierre` por 3.7) | M |
 | 3.16 | `refactor: set privado en estado, seguimiento y contacto` | `Estado` y `MotivoRechazo` (por 3.7), `RespuestaEmpresa` (por 3.8b), contacto, `Notas` | M |
-| 3.17 | `refactor: set privado en adjuntos e Id` | `RutaCv`, `RutaCarta`, `NombreOriginal*`, `Id` | S |
+| 3.17 | `refactor: set privado en adjuntos e Id` | `RutaCv`, `RutaCarta`, `NombreOriginal*`, `Id`. El test de ida y vuelta comprueba que la base asigna el `Id` al guardar; revisar los tests que lo fijen a mano. | S |
 
 El `SolicitudBuilder` pasa a construir mediante los métodos de la Etapa 3B.
+
+**Control previo a 3.14: auditoría de escrituras directas.** El compilador detecta toda asignación a un `set` privado, pero no las escrituras por reflexión ni las de EF. Antes de empezar, buscar y anotar el resultado (ajustar la lista a los nombres reales de las propiedades):
+
+```
+rg -n "\.(Empresa|Puesto|EnlaceOferta|Portal|Origen|Ubicacion|Modalidad|Tecnologias|Requisitos|SalarioMin|SalarioMax|PretensionSalarial|Interes|FechaSolicitud|FechaPrimeraRespuesta|FechaEntrevista|ProximoSeguimiento|FechaCierre|Estado|MotivoRechazo|RespuestaEmpresa|ContactoNombre|ContactoEmail|ContactoTelefono|Notas|RutaCv|RutaCarta|NombreOriginalCv|NombreOriginalCarta|Id)\s*=[^=]" --glob "*.cs"
+rg -n "SetValues|CurrentValue|GetProperty\(" --glob "*.cs"
+```
+
+Debe cubrir producción, tests, `SolicitudBuilder`, inicializadores de objetos, `Duplicar`, `PrepararNueva` y los datos de prueba de `AppDbContext`. Tras 3.13 solo deberían quedar asignaciones dentro de `Solicitud` y del builder.
 
 ---
 
 ## Etapa R. Estados y reapertura (entre la Etapa 3 y la 4)
 
-Detalle, tabla de transiciones y decisiones pendientes: `02-DOCS/decisiones/estados-y-reapertura.md`. No se empieza hasta cerrar la Etapa 3 (3.17). Tras 3.17 los `set` son privados, así que `Reabrir` puede escribir `FechaCierre`, `MotivoRechazo` y `ProximoSeguimiento` desde dentro de `Solicitud`.
+Detalle, tabla de transiciones y decisiones pendientes: `02-DOCS/decisiones/estados-y-reapertura.md`. No se empieza hasta cerrar la Etapa 3 (3.17). R.4 no necesita una auditoría aparte: tras 3.16 ningún camino puede escribir `Estado` sin pasar por el modelo, y lo garantiza el compilador. Tras 3.17 los `set` son privados, así que `Reabrir` puede escribir `FechaCierre`, `MotivoRechazo` y `ProximoSeguimiento` desde dentro de `Solicitud`.
 
 Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
 
@@ -205,7 +222,7 @@ Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
 | R.1 | `feat: TipoEvento.Reapertura` | Valor 9, traducciones es/en/de, test de paridad. | S |
 | R.2 | `feat: EstadoSolicitud.EnPausa` | Valor 12, grupo abierto, colores, traducciones, revisar embudo y estadísticas. **Solo si se decide que entra.** | M |
 | R.3 | `feat: Solicitud.Reabrir(nuevoEstado, nota)` | Efectos y precondiciones con tests; añade el hito `Reapertura`. | M |
-| R.4 | `feat: CambiarEstado aplica la tabla de transiciones` | Sustituye al método reducido de 3.7: motivo al descartar, `FechaCierre` al cerrar, cerrado → abierto solo por `Reabrir`. | M |
+| R.4 | `feat: CambiarEstado aplica la tabla de transiciones` | Sustituye al método reducido de 3.7: motivo al descartar, `FechaCierre` al cerrar, cerrado → abierto solo por `Reabrir`. Hay que reescribir `CambiarEstado_SinMotivoNiFecha_LosDejaNulos`, que hoy documenta justo ese paso de cerrado a abierto. | M |
 
 ### R-B. Interfaz
 
@@ -264,4 +281,8 @@ Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
 | `AplicarA` pisa datos de una pestaña aún no migrada | 1.6-1.12 | Solo se activan los grupos cuyo XAML ya apunta al editor. |
 | `TreatWarningsAsErrors` rompe commits intermedios | Siempre | Compilar con `dotnet build` antes de cada commit; no dejar miembros sin usar. |
 | Las reglas de estado y reapertura no están decididas | R.3, R.4 | 3.7 solo asigna; las decisiones pendientes se resuelven antes de R.3 y se anotan en `02-DOCS/decisiones/estados-y-reapertura.md`. |
+| Escrituras que el compilador no ve (reflexión, `SetValues`) | 3.14 | Auditoría con `rg` antes de empezar. |
+| Un fallo de `SaveChanges` pierde el adjunto anterior o cierra el editor | 3.13b | Test con interceptor de EF; corrección en un `fix:` previo si falla. |
+| Un test fija el `Id` a mano y deja de compilar | 3.17 | Revisarlo en la auditoría y usar la base para asignarlo. |
+| Las longitudes de `[MaxLength]` y las del modelo divergen | 3.9, 3.10 | Una constante por campo compartida por el atributo y la validación. |
 | `CambiarEstado` queda sin reglas hasta la Etapa R | 3.7 a R.4 | Es temporal y conserva el comportamiento actual; los tests de caracterización de 3.7 lo fijan. |
