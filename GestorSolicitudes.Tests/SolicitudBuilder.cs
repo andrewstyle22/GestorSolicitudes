@@ -60,6 +60,9 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConNombreOriginalCv(string? nombre) => this.Asignar(s => s.NombreOriginalCv = nombre);
 
+    public SolicitudBuilder ConNombreOriginalCarta(string? nombre) =>
+        this.Asignar(s => s.NombreOriginalCarta = nombre);
+
     public SolicitudBuilder ConFechaPrimeraRespuesta(DateTime? fecha) =>
         this.Asignar(s => s.FechaPrimeraRespuesta = fecha);
 

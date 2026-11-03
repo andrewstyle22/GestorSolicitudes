@@ -74,10 +74,11 @@ public class SolicitudTests
     }
 
     [Theory]
+    [InlineData(null, null)]
     [InlineData("", "Dev")]
     [InlineData("ACME", "")]
     [InlineData("   ", "   ")]
-    public void ActualizarIdentificacion_SinEmpresaOPuesto_Lanza(string empresa, string puesto)
+    public void ActualizarIdentificacion_SinEmpresaOPuesto_Lanza(string? empresa, string? puesto)
     {
         var solicitud = new SolicitudBuilder().Construir();
 
@@ -238,6 +239,37 @@ public class SolicitudTests
     public void NombreCv_SinRutaEsNull()
     {
         Assert.Null(new SolicitudBuilder().Construir().NombreCv);
+    }
+
+    [Fact]
+    public void NombreCarta_UsaNombreOriginalSiExiste()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConNombreOriginalCarta("mi-carta-final.pdf")
+            .ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf")
+            .Construir();
+        Assert.Equal("mi-carta-final.pdf", solicitud.NombreCarta);
+    }
+
+    [Fact]
+    public void NombreCarta_SinNombreOriginalUsaNombreDelFichero()
+    {
+        var solicitud = new SolicitudBuilder().ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf").Construir();
+        Assert.Equal("a1b2.pdf", solicitud.NombreCarta);
+    }
+
+    [Fact]
+    public void NombreCarta_SinRutaEsNull()
+    {
+        Assert.Null(new SolicitudBuilder().Construir().NombreCarta);
+    }
+
+    [Fact]
+    public void ToString_DevuelveEmpresaYPuesto()
+    {
+        var solicitud = new Solicitud("ACME", "Dev");
+
+        Assert.Equal("ACME — Dev", solicitud.ToString());
     }
 
     [Fact]

@@ -58,7 +58,7 @@ public class Solicitud
     /// Actualiza la empresa y el puesto: recorta espacios y exige que no queden vacíos
     /// ni superen la longitud que admite la base de datos.
     /// </summary>
-    public void ActualizarIdentificacion(string empresa, string puesto)
+    public void ActualizarIdentificacion(string? empresa, string? puesto)
     {
         string empresaRecortada = (empresa ?? string.Empty).Trim();
         string puestoRecortado = (puesto ?? string.Empty).Trim();
