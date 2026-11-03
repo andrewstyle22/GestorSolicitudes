@@ -11,7 +11,7 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ⬜ 4: test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 3.7 (`feat: Solicitud.CambiarEstado`), en su versión reducida: `CambiarEstado(estado, motivo, fechaCierre)` solo asigna y conserva el comportamiento actual, con tests de caracterización. No añadir reglas de transición ni `Reabrir`: eso es la Etapa R.
+Commit 3.8a (`feat: Solicitud.ActualizarFechas`): `FechaSolicitud`, entrevista y seguimiento; absorbe `ProponerSeguimiento`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

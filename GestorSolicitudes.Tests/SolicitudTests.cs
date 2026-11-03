@@ -224,6 +224,35 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void CambiarEstado_AsignaEstadoMotivoYFechaCierre()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var fecha = new DateTime(2026, 2, 3);
+
+        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.Salario, fecha);
+
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.Equal(MotivoRechazo.Salario, solicitud.MotivoRechazo);
+        Assert.Equal(fecha, solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void CambiarEstado_SinMotivoNiFecha_LosDejaNulos()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(new DateTime(2026, 2, 3))
+            .Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Enviada, null, null);
+
+        Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
+        Assert.Null(solicitud.MotivoRechazo);
+        Assert.Null(solicitud.FechaCierre);
+    }
+
+    [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
     {
         Assert.Null(new SolicitudBuilder().Construir().MotivoRechazo);

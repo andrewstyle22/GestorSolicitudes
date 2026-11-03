@@ -158,6 +158,17 @@ public class Solicitud
     /// <summary>Gets or sets por qué se cerró en falso, cuando <see cref="Estado"/> es un rechazo.</summary>
     public MotivoRechazo? MotivoRechazo { get; set; }
 
+    /// <summary>
+    /// Cambia el estado de la solicitud junto con su motivo de rechazo y su fecha de cierre.
+    /// Todavía no valida transiciones: eso llega con las reglas de estado.
+    /// </summary>
+    public void CambiarEstado(EstadoSolicitud estado, MotivoRechazo? motivo, DateTime? fechaCierre)
+    {
+        this.Estado = estado;
+        this.MotivoRechazo = motivo;
+        this.FechaCierre = fechaCierre;
+    }
+
     /// <summary>Gets or sets texto literal o resumen de lo que contestó la empresa.</summary>
     public string? RespuestaEmpresa { get; set; }
 
