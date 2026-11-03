@@ -120,7 +120,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Eventos guardados que se han quitado del búfer: el guardado los borra del modelo.</summary>
     public List<Evento> EventosEliminados { get; } = [];
 
-    public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
+    public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud(string.Empty, string.Empty));
 
     public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
 

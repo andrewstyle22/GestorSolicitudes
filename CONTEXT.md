@@ -10,7 +10,7 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ⬜ 4: test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 3.3 (`refactor: constructor sin parámetros privado (solo EF)`): queda `SolicitudEdicionViewModel()` (constructor sin parámetros para el diseñador) y lo que marque el compilador.
+Commit 3.4 (`feat: Solicitud.ActualizarIdentificacion`): empresa y puesto obligatorios, recorte de espacios y `MaxLength`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

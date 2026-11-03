@@ -25,12 +25,12 @@ public class EstadisticasSolicitudTests
         var baseFecha = new DateTime(2026, 1, 10);
         var solicitudes = new List<Solicitud>
         {
-            new() { Estado = EstadoSolicitud.Enviada, FechaSolicitud = baseFecha },
-            new() { Estado = EstadoSolicitud.EntrevistaTecnica, FechaSolicitud = baseFecha },
-            new() { Estado = EstadoSolicitud.PruebaTecnica, FechaSolicitud = baseFecha },
-            new() { Estado = EstadoSolicitud.OfertaRecibida, FechaSolicitud = baseFecha },
-            new() { Estado = EstadoSolicitud.OfertaAceptada, FechaSolicitud = baseFecha },
-            new() { Estado = EstadoSolicitud.Rechazada, FechaSolicitud = baseFecha },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Enviada, FechaSolicitud = baseFecha },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.EntrevistaTecnica, FechaSolicitud = baseFecha },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.PruebaTecnica, FechaSolicitud = baseFecha },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.OfertaRecibida, FechaSolicitud = baseFecha },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.OfertaAceptada, FechaSolicitud = baseFecha },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Rechazada, FechaSolicitud = baseFecha },
         };
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
@@ -46,9 +46,9 @@ public class EstadisticasSolicitudTests
     {
         var solicitudes = new List<Solicitud>
         {
-            new() { Estado = EstadoSolicitud.Enviada, ProximoSeguimiento = DateTime.Today.AddDays(-1) },
-            new() { Estado = EstadoSolicitud.Enviada, ProximoSeguimiento = DateTime.Today.AddDays(3) },
-            new() { Estado = EstadoSolicitud.Rechazada, ProximoSeguimiento = DateTime.Today.AddDays(-1) },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Enviada, ProximoSeguimiento = DateTime.Today.AddDays(-1) },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Enviada, ProximoSeguimiento = DateTime.Today.AddDays(3) },
+            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Rechazada, ProximoSeguimiento = DateTime.Today.AddDays(-1) },
         };
 
         Assert.Equal(1, EstadisticasSolicitud.Calcular(solicitudes).SeguimientosPendientes);
@@ -60,9 +60,9 @@ public class EstadisticasSolicitudTests
         var baseFecha = new DateTime(2026, 1, 10);
         var solicitudes = new List<Solicitud>
         {
-            new() { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(2) },
-            new() { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(4) },
-            new() { FechaSolicitud = baseFecha },
+            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(2) },
+            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(4) },
+            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha },
         };
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
@@ -79,8 +79,8 @@ public class EstadisticasSolicitudTests
         var baseFecha = new DateTime(2026, 1, 10);
         var solicitudes = new List<Solicitud>
         {
-            new() { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(2) },
-            new() { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(5) },
+            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(2) },
+            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(5) },
         };
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);

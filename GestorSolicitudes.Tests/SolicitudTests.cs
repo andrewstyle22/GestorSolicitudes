@@ -53,9 +53,9 @@ public class SolicitudTests
     }
 
     [Fact]
-    public void Solicitud_ConstructorSinParametrosDejaValoresPorDefecto()
+    public void Solicitud_ConstructorAsignaValoresPorDefecto()
     {
-        var solicitud = new Solicitud();
+        var solicitud = new Solicitud(string.Empty, string.Empty);
 
         Assert.Equal(string.Empty, solicitud.Empresa);
         Assert.Equal(string.Empty, solicitud.Puesto);

@@ -9,7 +9,7 @@ using System.IO;
 /// </summary>
 public class Solicitud
 {
-    public Solicitud()
+    private Solicitud()
     {
     }
 
