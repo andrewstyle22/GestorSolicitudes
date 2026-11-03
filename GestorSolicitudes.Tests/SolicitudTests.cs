@@ -97,6 +97,70 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void ActualizarOferta_AsignaTodosLosCampos()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var datos = new DatosOferta(
+            "https://ejemplo.test/oferta",
+            "LinkedIn",
+            Origen.Referido,
+            "Madrid",
+            Modalidad.Remoto,
+            "C#, WPF",
+            "Experiencia con EF Core");
+
+        solicitud.ActualizarOferta(datos);
+
+        Assert.Equal(datos.EnlaceOferta, solicitud.EnlaceOferta);
+        Assert.Equal(datos.Portal, solicitud.Portal);
+        Assert.Equal(datos.Origen, solicitud.Origen);
+        Assert.Equal(datos.Ubicacion, solicitud.Ubicacion);
+        Assert.Equal(datos.Modalidad, solicitud.Modalidad);
+        Assert.Equal(datos.Tecnologias, solicitud.Tecnologias);
+        Assert.Equal(datos.Requisitos, solicitud.Requisitos);
+    }
+
+    [Fact]
+    public void ActualizarOferta_RecortaEspacios()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var datos = new DatosOferta(
+            "  https://ejemplo.test/oferta  ",
+            "  LinkedIn  ",
+            Origen.AplicacionDirecta,
+            "  Madrid  ",
+            Modalidad.SinIndicar,
+            "  C#  ",
+            "  Requisitos  ");
+
+        solicitud.ActualizarOferta(datos);
+
+        Assert.Equal("https://ejemplo.test/oferta", solicitud.EnlaceOferta);
+        Assert.Equal("LinkedIn", solicitud.Portal);
+        Assert.Equal("Madrid", solicitud.Ubicacion);
+        Assert.Equal("C#", solicitud.Tecnologias);
+        Assert.Equal("Requisitos", solicitud.Requisitos);
+    }
+
+    [Theory]
+    [MemberData(nameof(OfertasDemasiadoLargas))]
+    public void ActualizarOferta_DemasiadoLargo_Lanza(DatosOferta datos)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarOferta(datos));
+    }
+
+    public static TheoryData<DatosOferta> OfertasDemasiadoLargas => new()
+    {
+        new DatosOferta(new string('a', 501), null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null),
+        new DatosOferta(null, new string('b', 81), Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null),
+        new DatosOferta(null, null, Origen.AplicacionDirecta, new string('c', 121), Modalidad.SinIndicar, null, null),
+        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, new string('d', 301), null),
+        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, new string('e', 4001)),
+    };
+
+    [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
     {
         Assert.Null(new SolicitudBuilder().Construir().MotivoRechazo);

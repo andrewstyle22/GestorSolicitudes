@@ -10,6 +10,11 @@ using System.IO;
 public class Solicitud
 {
     private const int LongitudMaximaIdentificacion = 150;
+    private const int LongitudMaximaEnlace = 500;
+    private const int LongitudMaximaPortal = 80;
+    private const int LongitudMaximaUbicacion = 120;
+    private const int LongitudMaximaTecnologias = 300;
+    private const int LongitudMaximaRequisitos = 4000;
 
     private Solicitud()
     {
@@ -31,28 +36,55 @@ public class Solicitud
     public string Puesto { get; set; } = string.Empty;
 
     /// <summary>Gets or sets enlace directo a la oferta (LinkedIn, InfoJobs, web corporativa...).</summary>
-    [MaxLength(500)]
+    [MaxLength(LongitudMaximaEnlace)]
     public string? EnlaceOferta { get; set; }
 
     /// <summary>Gets or sets dónde se encontró la oferta: LinkedIn, InfoJobs, Tecnoempleo, referido, etc.</summary>
-    [MaxLength(80)]
+    [MaxLength(LongitudMaximaPortal)]
     public string? Portal { get; set; }
 
     /// <summary>Gets or sets cómo se originó el contacto (distinto de dónde estaba publicada la oferta).</summary>
     public Origen Origen { get; set; } = Origen.AplicacionDirecta;
 
-    [MaxLength(120)]
+    [MaxLength(LongitudMaximaUbicacion)]
     public string? Ubicacion { get; set; }
 
     public Modalidad Modalidad { get; set; } = Modalidad.SinIndicar;
 
     /// <summary>Gets or sets stack pedido en la oferta, separado por comas.</summary>
-    [MaxLength(300)]
+    [MaxLength(LongitudMaximaTecnologias)]
     public string? Tecnologias { get; set; }
 
     /// <summary>Gets or sets requisitos, obligaciones y responsabilidades del puesto, tal como los publicó la empresa.</summary>
-    [MaxLength(4000)]
+    [MaxLength(LongitudMaximaRequisitos)]
     public string? Requisitos { get; set; }
+
+    /// <summary>
+    /// Actualiza los datos de la oferta: recorta espacios y exige que los textos
+    /// no superen la longitud que admite la base de datos.
+    /// </summary>
+    public void ActualizarOferta(DatosOferta datos)
+    {
+        this.EnlaceOferta = Recortar(datos.EnlaceOferta, LongitudMaximaEnlace, "El enlace de la oferta");
+        this.Portal = Recortar(datos.Portal, LongitudMaximaPortal, "El portal");
+        this.Origen = datos.Origen;
+        this.Ubicacion = Recortar(datos.Ubicacion, LongitudMaximaUbicacion, "La ubicación");
+        this.Modalidad = datos.Modalidad;
+        this.Tecnologias = Recortar(datos.Tecnologias, LongitudMaximaTecnologias, "Las tecnologías");
+        this.Requisitos = Recortar(datos.Requisitos, LongitudMaximaRequisitos, "Los requisitos");
+    }
+
+    private static string? Recortar(string? valor, int maximo, string campo)
+    {
+        string? recortado = valor?.Trim();
+
+        if (recortado?.Length > maximo)
+        {
+            throw new ArgumentException($"{campo} no puede superar los {maximo} caracteres.");
+        }
+
+        return recortado;
+    }
 
     /// <summary>
     /// Actualiza la empresa y el puesto: recorta espacios y exige que no queden vacíos
