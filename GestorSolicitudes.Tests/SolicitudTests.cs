@@ -142,23 +142,28 @@ public class SolicitudTests
         Assert.Equal("Requisitos", solicitud.Requisitos);
     }
 
-    [Theory]
-    [MemberData(nameof(OfertasDemasiadoLargas))]
-    public void ActualizarOferta_DemasiadoLargo_Lanza(DatosOferta datos)
-    {
-        var solicitud = new SolicitudBuilder().Construir();
+    [Fact]
+    public void ActualizarOferta_EnlaceDemasiadoLargo_Lanza() => AssertRechazaOferta(
+        new DatosOferta(new string('a', 501), null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null));
 
-        Assert.Throws<ArgumentException>(() => solicitud.ActualizarOferta(datos));
-    }
+    [Fact]
+    public void ActualizarOferta_PortalDemasiadoLargo_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, new string('b', 81), Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null));
 
-    public static TheoryData<DatosOferta> OfertasDemasiadoLargas => new()
-    {
-        new DatosOferta(new string('a', 501), null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null),
-        new DatosOferta(null, new string('b', 81), Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null),
-        new DatosOferta(null, null, Origen.AplicacionDirecta, new string('c', 121), Modalidad.SinIndicar, null, null),
-        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, new string('d', 301), null),
-        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, new string('e', 4001)),
-    };
+    [Fact]
+    public void ActualizarOferta_UbicacionDemasiadoLarga_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, null, Origen.AplicacionDirecta, new string('c', 121), Modalidad.SinIndicar, null, null));
+
+    [Fact]
+    public void ActualizarOferta_TecnologiasDemasiadoLargas_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, new string('d', 301), null));
+
+    [Fact]
+    public void ActualizarOferta_RequisitosDemasiadoLargos_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, new string('e', 4001)));
+
+    private static void AssertRechazaOferta(DatosOferta datos) =>
+        Assert.Throws<ArgumentException>(() => new SolicitudBuilder().Construir().ActualizarOferta(datos));
 
     [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
