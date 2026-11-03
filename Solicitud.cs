@@ -9,6 +9,16 @@ using System.IO;
 /// </summary>
 public class Solicitud
 {
+    public Solicitud()
+    {
+    }
+
+    public Solicitud(string empresa, string puesto)
+    {
+        this.Empresa = empresa;
+        this.Puesto = puesto;
+    }
+
     public int Id { get; set; }
 
     // --- Identificación de la oferta ---

@@ -10,7 +10,7 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ⬜ 4: test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 3.1 (`feat: constructor Solicitud(empresa, puesto)`): añadirlo conservando el constructor sin parámetros público.
+Commit 3.2 (`refactor: Nueva, Duplicar y el builder usan el constructor nuevo`): `MainViewModel` (2 sitios) y `SolicitudBuilder`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

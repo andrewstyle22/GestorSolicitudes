@@ -44,6 +44,25 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void Solicitud_ConstructorAsignaEmpresaYPuesto()
+    {
+        var solicitud = new Solicitud("ACME", "Dev");
+
+        Assert.Equal("ACME", solicitud.Empresa);
+        Assert.Equal("Dev", solicitud.Puesto);
+    }
+
+    [Fact]
+    public void Solicitud_ConstructorSinParametrosDejaValoresPorDefecto()
+    {
+        var solicitud = new Solicitud();
+
+        Assert.Equal(string.Empty, solicitud.Empresa);
+        Assert.Equal(string.Empty, solicitud.Puesto);
+        Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
+    }
+
+    [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
     {
         Assert.Null(new SolicitudBuilder().Construir().MotivoRechazo);
