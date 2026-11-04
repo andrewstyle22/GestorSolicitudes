@@ -841,10 +841,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
         // escribir, proponemos +7 dias desde el envio.
-        if (ReglasSolicitud.ProponerSeguimiento(solicitud) is DateTime propuesta)
-        {
-            solicitud.ProximoSeguimiento = propuesta;
-        }
+        solicitud.ProponerSeguimiento();
 
         if (solicitud.Id != 0)
         {

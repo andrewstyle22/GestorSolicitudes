@@ -152,6 +152,28 @@ public class Solicitud
     /// <summary>Gets or sets fecha en la que toca volver a escribir si no hay noticias.</summary>
     public DateTime? ProximoSeguimiento { get; set; }
 
+    /// <summary>
+    /// Actualiza las fechas que se editan a mano: envío, entrevista y próximo seguimiento.
+    /// </summary>
+    public void ActualizarFechas(DateTime fechaSolicitud, DateTime? fechaEntrevista, DateTime? proximoSeguimiento)
+    {
+        this.FechaSolicitud = fechaSolicitud;
+        this.FechaEntrevista = fechaEntrevista;
+        this.ProximoSeguimiento = proximoSeguimiento;
+    }
+
+    /// <summary>
+    /// Propone un seguimiento a siete días del envío, solo si el proceso sigue abierto
+    /// y todavía no hay una fecha fijada.
+    /// </summary>
+    public void ProponerSeguimiento()
+    {
+        if (this.EstaAbierta && this.ProximoSeguimiento is null)
+        {
+            this.ProximoSeguimiento = this.FechaSolicitud.AddDays(7);
+        }
+    }
+
     // --- Seguimiento ---
     public EstadoSolicitud Estado { get; set; } = EstadoSolicitud.Enviada;
 

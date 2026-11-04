@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.7.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.8a.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
-- ⬜ 4: test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
+- ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Commit 3.8a (feat: Solicitud.ActualizarFechas): FechaSolicitud, entrevista y seguimiento; absorbe ProponerSeguimiento como método de instancia y PrepararNueva lo usa. Después, 3.8b.
+Commit 3.8b (feat: Solicitud.RegistrarRespuesta): `FechaPrimeraRespuesta` y `RespuestaEmpresa`, ambos opcionales e independientes. Después, 3.9.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -23,7 +23,7 @@ Commit 3.8a (feat: Solicitud.ActualizarFechas): FechaSolicitud, entrevista y seg
 - Las listas enlazadas a entidades POCO (`MainViewModel.Solicitudes` en `MainWindow`) filtran `PropertyDescriptor` al no implementar `INotifyPropertyChanged`; en la edición lo evita el editor.
 - `CambiarEstado` (3.7) no valida transiciones ni motivo. Las reglas, `Reabrir` y el estado `EnPausa` van en la Etapa R (R.3 y R.4), cuando termine la Etapa 3. El test `CambiarEstado_SinMotivoNiFecha_LosDejaNulos` documenta el paso cerrado → abierto y se reescribe en R.4.
 - `FechaSolicitud` la escribe `ActualizarFechas` (3.8a); `FechaPrimeraRespuesta` y `RespuestaEmpresa`, `RegistrarRespuesta` (3.8b), con ambos valores opcionales e independientes.
-- `ProponerSeguimiento` pasa a método de instancia de `Solicitud` (3.8a) y `PrepararNueva` lo usa; `Duplicar` y `PrepararNueva` dejan de asignar campos sueltos en 3.10b.
+- `ProponerSeguimiento` es método de instancia de `Solicitud` (3.8a) y asigna él mismo la fecha; `PrepararNueva` lo llama. `ReglasSolicitud` desaparece (era su única regla). `Duplicar` y `PrepararNueva` dejan de asignar campos sueltos en 3.10b.
 - Longitudes máximas: una constante `LongitudMaximaX` por campo en el modelo, compartida por `[MaxLength]` y la validación de los métodos; `public const` si el editor las reutiliza. `RespuestaEmpresa` y `Notas` no tienen límite hoy: no añadir validación en 3.8b ni 3.9 sin decidirlo.
 
 ## Reglas de cada commit

@@ -253,6 +253,60 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void ActualizarFechas_AsignaEnvioEntrevistaYSeguimiento()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var envio = new DateTime(2026, 2, 1);
+
+        solicitud.ActualizarFechas(envio, envio.AddDays(2), envio.AddDays(7));
+
+        Assert.Equal(envio, solicitud.FechaSolicitud);
+        Assert.Equal(envio.AddDays(2), solicitud.FechaEntrevista);
+        Assert.Equal(envio.AddDays(7), solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ProponerSeguimiento_AbiertaSinFecha_ProponeSieteDiasDespues()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .Construir();
+
+        solicitud.ProponerSeguimiento();
+
+        Assert.Equal(new DateTime(2026, 1, 17), solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ProponerSeguimiento_NoPisaUnaFechaYaInformada()
+    {
+        var seguimiento = new DateTime(2026, 1, 20);
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .ConProximoSeguimiento(seguimiento)
+            .Construir();
+
+        solicitud.ProponerSeguimiento();
+
+        Assert.Equal(seguimiento, solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ProponerSeguimiento_Cerrada_NoAsigna()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.OfertaAceptada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .Construir();
+
+        solicitud.ProponerSeguimiento();
+
+        Assert.Null(solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
     {
         Assert.Null(new SolicitudBuilder().Construir().MotivoRechazo);
