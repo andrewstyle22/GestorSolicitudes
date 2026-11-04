@@ -514,6 +514,76 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void AsignarCv_AsignaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.AsignarCv(@"C:\adjuntos\a1b2.pdf", "mi-cv.pdf");
+
+        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
+    }
+
+    [Fact]
+    public void AsignarCv_RutaDemasiadoLarga_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCv(new string('a', 501), null));
+
+    [Fact]
+    public void AsignarCv_NombreDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCv(null, new string('b', 261)));
+
+    [Fact]
+    public void QuitarCv_LimpiaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConRutaCv(@"C:\adjuntos\a1b2.pdf")
+            .ConNombreOriginalCv("mi-cv.pdf")
+            .Construir();
+
+        solicitud.QuitarCv();
+
+        Assert.Null(solicitud.RutaCv);
+        Assert.Null(solicitud.NombreOriginalCv);
+    }
+
+    [Fact]
+    public void AsignarCarta_AsignaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.AsignarCarta(@"C:\adjuntos\a1b2.pdf", "mi-carta.pdf");
+
+        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCarta);
+        Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
+    }
+
+    [Fact]
+    public void AsignarCarta_RutaDemasiadoLarga_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCarta(new string('a', 501), null));
+
+    [Fact]
+    public void AsignarCarta_NombreDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCarta(null, new string('b', 261)));
+
+    [Fact]
+    public void QuitarCarta_LimpiaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConRutaCarta(@"C:\adjuntos\a1b2.pdf")
+            .ConNombreOriginalCarta("mi-carta.pdf")
+            .Construir();
+
+        solicitud.QuitarCarta();
+
+        Assert.Null(solicitud.RutaCarta);
+        Assert.Null(solicitud.NombreOriginalCarta);
+    }
+
+    [Fact]
     public void NombreCv_UsaNombreOriginalSiExiste()
     {
         var solicitud = new SolicitudBuilder()

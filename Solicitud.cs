@@ -18,6 +18,8 @@ public class Solicitud
     private const int LongitudMaximaContactoNombre = 120;
     private const int LongitudMaximaContactoEmail = 150;
     private const int LongitudMaximaContactoTelefono = 40;
+    private const int LongitudMaximaRutaAdjunto = 500;
+    private const int LongitudMaximaNombreOriginalAdjunto = 260;
 
     private Solicitud()
     {
@@ -237,19 +239,53 @@ public class Solicitud
     public void ActualizarNotas(string? notas) => this.Notas = notas?.Trim();
 
     // --- Adjuntos (copias en %APPDATA%\GestorSolicitudes\adjuntos) ---
-    [MaxLength(500)]
+    [MaxLength(LongitudMaximaRutaAdjunto)]
     public string? RutaCv { get; set; }
 
-    [MaxLength(500)]
+    [MaxLength(LongitudMaximaRutaAdjunto)]
     public string? RutaCarta { get; set; }
 
     /// <summary>Gets or sets nombre "bonito" del CV tal como lo eligió el usuario (el fichero en disco es un GUID).</summary>
-    [MaxLength(260)]
+    [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
     public string? NombreOriginalCv { get; set; }
 
     /// <summary>Gets or sets nombre "bonito" de la carta tal como la eligió el usuario.</summary>
-    [MaxLength(260)]
+    [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
     public string? NombreOriginalCarta { get; set; }
+
+    /// <summary>
+    /// Asigna el CV: la ruta y el nombre original que vio el usuario van juntos,
+    /// y ninguno puede superar la longitud que admite la base de datos.
+    /// </summary>
+    public void AsignarCv(string? ruta, string? nombreOriginal)
+    {
+        this.RutaCv = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta del CV");
+        this.NombreOriginalCv = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original del CV");
+    }
+
+    /// <summary>Quita el CV: borra a la vez su ruta y su nombre original.</summary>
+    public void QuitarCv()
+    {
+        this.RutaCv = null;
+        this.NombreOriginalCv = null;
+    }
+
+    /// <summary>
+    /// Asigna la carta: la ruta y el nombre original que vio el usuario van juntos,
+    /// y ninguno puede superar la longitud que admite la base de datos.
+    /// </summary>
+    public void AsignarCarta(string? ruta, string? nombreOriginal)
+    {
+        this.RutaCarta = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta de la carta");
+        this.NombreOriginalCarta = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original de la carta");
+    }
+
+    /// <summary>Quita la carta: borra a la vez su ruta y su nombre original.</summary>
+    public void QuitarCarta()
+    {
+        this.RutaCarta = null;
+        this.NombreOriginalCarta = null;
+    }
 
     private readonly List<Evento> eventos = [];
 

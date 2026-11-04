@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.9.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.10.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Commit 3.10 (feat: AsignarCv, AsignarCarta, QuitarCv, QuitarCarta): ruta y nombre original van siempre juntos; longitudes de `RutaCv` y `RutaCarta` (500) y de `NombreOriginalCv` y `NombreOriginalCarta` (260).
+Commit 3.10b (`refactor: Duplicar y PrepararNueva sin asignaciones directas`): `Solicitud.CrearCopia()` para `Duplicar`; `PrepararNueva` usa el constructor y los métodos de 3.4 a 3.8a, sin asignar campos sueltos. Cubre los inicializadores que sobreviven al constructor.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -25,6 +25,7 @@ Commit 3.10 (feat: AsignarCv, AsignarCarta, QuitarCv, QuitarCarta): ruta y nombr
 - `FechaSolicitud` la escribe `ActualizarFechas` (3.8a); `FechaPrimeraRespuesta` y `RespuestaEmpresa`, `RegistrarRespuesta` (3.8b), con ambos valores opcionales e independientes.
 - `ProponerSeguimiento` es método de instancia de `Solicitud` (3.8a) y asigna él mismo la fecha; `PrepararNueva` lo llama. `ReglasSolicitud` desaparece (era su única regla). `Duplicar` y `PrepararNueva` dejan de asignar campos sueltos en 3.10b.
 - Longitudes máximas: una constante `LongitudMaximaX` por campo en el modelo, compartida por `[MaxLength]` y la validación de los métodos; `public const` si el editor las reutiliza. `RespuestaEmpresa` y `Notas` no tienen límite hoy: no añadir validación en 3.8b ni 3.9 sin decidirlo.
+- Adjuntos: `AsignarCv`/`AsignarCarta` escriben ruta y nombre original juntos (500 y 260); `QuitarCv`/`QuitarCarta` borran ambos. El editor sigue asignando los cuatro campos a mano hasta 3.13.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
