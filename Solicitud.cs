@@ -15,6 +15,9 @@ public class Solicitud
     private const int LongitudMaximaUbicacion = 120;
     private const int LongitudMaximaTecnologias = 300;
     private const int LongitudMaximaRequisitos = 4000;
+    private const int LongitudMaximaContactoNombre = 120;
+    private const int LongitudMaximaContactoEmail = 150;
+    private const int LongitudMaximaContactoTelefono = 40;
 
     private Solicitud()
     {
@@ -204,20 +207,34 @@ public class Solicitud
         this.RespuestaEmpresa = respuestaEmpresa;
     }
 
-    [MaxLength(120)]
+    [MaxLength(LongitudMaximaContactoNombre)]
     public string? ContactoNombre { get; set; }
 
-    [MaxLength(150)]
+    [MaxLength(LongitudMaximaContactoEmail)]
     public string? ContactoEmail { get; set; }
 
     /// <summary>Gets or sets teléfono de la persona de contacto (recruiter, hiring manager...).</summary>
-    [MaxLength(40)]
+    [MaxLength(LongitudMaximaContactoTelefono)]
     public string? ContactoTelefono { get; set; }
+
+    /// <summary>
+    /// Actualiza la persona de contacto: recorta espacios y exige que los textos
+    /// no superen la longitud que admite la base de datos.
+    /// </summary>
+    public void ActualizarContacto(string? nombre, string? email, string? telefono)
+    {
+        this.ContactoNombre = Recortar(nombre, LongitudMaximaContactoNombre, "El nombre del contacto");
+        this.ContactoEmail = Recortar(email, LongitudMaximaContactoEmail, "El correo del contacto");
+        this.ContactoTelefono = Recortar(telefono, LongitudMaximaContactoTelefono, "El teléfono del contacto");
+    }
 
     /// <summary>Gets or sets interés propio en la oferta, de 1 a 5.</summary>
     public int Interes { get; set; } = 3;
 
     public string? Notas { get; set; }
+
+    /// <summary>Actualiza las notas: recorta espacios y no impone límite de longitud.</summary>
+    public void ActualizarNotas(string? notas) => this.Notas = notas?.Trim();
 
     // --- Adjuntos (copias en %APPDATA%\GestorSolicitudes\adjuntos) ---
     [MaxLength(500)]

@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.8b.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.9.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Commit 3.9 (feat: Solicitud.ActualizarContacto y ActualizarNotas): `ContactoNombre` (120), `ContactoEmail` (150) y `ContactoTelefono` (40), con una constante por campo compartida por `[MaxLength]` y la validación; `Notas` sigue sin límite.
+Commit 3.10 (feat: AsignarCv, AsignarCarta, QuitarCv, QuitarCarta): ruta y nombre original van siempre juntos; longitudes de `RutaCv` y `RutaCarta` (500) y de `NombreOriginalCv` y `NombreOriginalCarta` (260).
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

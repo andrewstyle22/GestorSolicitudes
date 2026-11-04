@@ -288,6 +288,56 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void ActualizarContacto_AsignaTodosLosCampos()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarContacto("Ana", "ana@ejemplo.test", "600123456");
+
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitud.ContactoEmail);
+        Assert.Equal("600123456", solicitud.ContactoTelefono);
+    }
+
+    [Fact]
+    public void ActualizarContacto_RecortaEspacios()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarContacto("  Ana  ", "  ana@ejemplo.test  ", "  600123456  ");
+
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitud.ContactoEmail);
+        Assert.Equal("600123456", solicitud.ContactoTelefono);
+    }
+
+    [Fact]
+    public void ActualizarContacto_NombreDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().ActualizarContacto(new string('a', 121), null, null));
+
+    [Fact]
+    public void ActualizarContacto_EmailDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().ActualizarContacto(null, new string('b', 151), null));
+
+    [Fact]
+    public void ActualizarContacto_TelefonoDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().ActualizarContacto(null, null, new string('c', 41)));
+
+    [Fact]
+    public void ActualizarNotas_AsignaSinLimiteDeLongitud()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        string notas = new('n', 5000);
+
+        solicitud.ActualizarNotas($"  {notas}  ");
+
+        Assert.Equal(notas, solicitud.Notas);
+    }
+
+    [Fact]
     public void ActualizarFechas_AsignaEnvioEntrevistaYSeguimiento()
     {
         var solicitud = new SolicitudBuilder().Construir();
