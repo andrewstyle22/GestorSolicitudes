@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
+using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,41 @@ public class ViewModelDialogosTests
 
         Assert.Single(dialogo.Avisos);
         Assert.Equal("Dev", db.Solicitudes.Single().Puesto);
+    }
+
+    [Fact]
+    public void Guardar_ConTextoDemasiadoLargo_AvisaYNoGuarda()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("ACME", "Dev");
+        vm.Editor!.Portal = new string('x', Solicitud.LongitudMaximaPortal + 1);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void Guardar_ConSalarioMinimoMayorQueElMaximo_AvisaYNoGuarda()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("ACME", "Dev");
+        vm.Editor!.SalarioMin = 45000;
+        vm.Editor.SalarioMax = 30000;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(db.Solicitudes);
     }
 
     [Fact]

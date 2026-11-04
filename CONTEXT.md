@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.10c.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.11.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Commit 3.11 (`refactor: AplicarA usa los métodos (identificación, oferta, condiciones)`): sustituir las asignaciones de `AplicarIdentificacion`, `AplicarOferta` y `AplicarEconomico` por `ActualizarIdentificacion`, `ActualizarOferta` y `ActualizarCondiciones`. Antes, comprobar que el editor valida las longitudes o que los `TextBox` tienen `MaxLength` (punto de control 3.11).
+Commit 3.12 (`refactor: AplicarA usa los métodos (estado y fechas)`): sustituir `AplicarEstado`, `AplicarFechas` y `AplicarRespuesta` por `CambiarEstado`, `ActualizarFechas` y `RegistrarRespuesta`; como `FechaPrimeraRespuesta` y `RespuestaEmpresa` se aplican en grupos distintos, reorganizarlos para llamar una sola vez a `RegistrarRespuesta`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -25,6 +25,7 @@ Commit 3.11 (`refactor: AplicarA usa los métodos (identificación, oferta, cond
 - `FechaSolicitud` la escribe `ActualizarFechas` (3.8a); `FechaPrimeraRespuesta` y `RespuestaEmpresa`, `RegistrarRespuesta` (3.8b), con ambos valores opcionales e independientes.
 - `ProponerSeguimiento` es método de instancia de `Solicitud` (3.8a) y asigna él mismo la fecha; `PrepararNueva` lo llama. `ReglasSolicitud` desaparece (era su única regla). `Duplicar` copia con `Solicitud.CrearCopia()` (solo lo que describe la oferta; la nota localizada la pone el ViewModel) y `PrepararNueva` no asigna campos sueltos.
 - Longitudes máximas: una constante `LongitudMaximaX` por campo en el modelo, compartida por `[MaxLength]` y la validación de los métodos; `public const` si el editor las reutiliza. `RespuestaEmpresa` y `Notas` no tienen límite hoy: no añadir validación en 3.8b ni 3.9 sin decidirlo.
+- El editor repite esas longitudes con `[MaxLength]` y `MainViewModel.Validar` llama a `Editor.Validar()` (`ValidateAllProperties`) antes de `AplicarA`, para que los métodos del modelo no lancen `ArgumentException`. La pareja salario mínimo/máximo se valida en el editor (`ValidarRangoSalarial`).
 - Adjuntos: `AsignarCv`/`AsignarCarta` escriben ruta y nombre original juntos (500 y 260); `QuitarCv`/`QuitarCarta` borran ambos. El editor sigue asignando los cuatro campos a mano hasta 3.13.
 
 ## Reglas de cada commit

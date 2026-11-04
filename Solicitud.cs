@@ -9,15 +9,15 @@ using System.IO;
 /// </summary>
 public class Solicitud
 {
-    private const int LongitudMaximaIdentificacion = 150;
-    private const int LongitudMaximaEnlace = 500;
-    private const int LongitudMaximaPortal = 80;
-    private const int LongitudMaximaUbicacion = 120;
-    private const int LongitudMaximaTecnologias = 300;
-    private const int LongitudMaximaRequisitos = 4000;
-    private const int LongitudMaximaContactoNombre = 120;
-    private const int LongitudMaximaContactoEmail = 150;
-    private const int LongitudMaximaContactoTelefono = 40;
+    public const int LongitudMaximaIdentificacion = 150;
+    public const int LongitudMaximaEnlace = 500;
+    public const int LongitudMaximaPortal = 80;
+    public const int LongitudMaximaUbicacion = 120;
+    public const int LongitudMaximaTecnologias = 300;
+    public const int LongitudMaximaRequisitos = 4000;
+    public const int LongitudMaximaContactoNombre = 120;
+    public const int LongitudMaximaContactoEmail = 150;
+    public const int LongitudMaximaContactoTelefono = 40;
     private const int LongitudMaximaRutaAdjunto = 500;
     private const int LongitudMaximaNombreOriginalAdjunto = 260;
 

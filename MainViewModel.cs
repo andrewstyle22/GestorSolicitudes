@@ -810,6 +810,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
     private bool Validar()
     {
+        this.Editor?.Validar();
+
         if (this.Editor?.HasErrors == false)
         {
             return true;

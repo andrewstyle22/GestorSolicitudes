@@ -31,6 +31,41 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void Validacion_TextoQueSuperaElMaximo_MarcaElCampo()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            Portal = new string('x', Solicitud.LongitudMaximaPortal + 1),
+        };
+
+        editor.Validar();
+
+        Assert.True(editor.HasErrors);
+        Assert.NotEmpty(editor.GetErrors(nameof(editor.Portal)));
+    }
+
+    [Fact]
+    public void Validacion_SalarioMinimoMayorQueElMaximo_MarcaElCampo()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            SalarioMin = 45000,
+            SalarioMax = 30000,
+        };
+
+        editor.Validar();
+
+        Assert.True(editor.HasErrors);
+        Assert.Equal(
+            Localizacion.Texto("Mensaje.SalarioMinimoMayor"),
+            Assert.Single(editor.GetErrors(nameof(editor.SalarioMax)).Cast<ValidationResult>()).ErrorMessage);
+    }
+
+    [Fact]
     public void CargarDesde_CopiaIdentificacion()
     {
         Solicitud solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
@@ -64,7 +99,7 @@ public class SolicitudEdicionTests
     public void AplicarIdentificacion_VuelcaEmpresaYPuesto()
     {
         Solicitud solicitud = new SolicitudBuilder().Construir();
-        var editor = new SolicitudEdicionViewModel { Empresa = "ACME", Puesto = "Dev" };
+        var editor = new SolicitudEdicionViewModel { Empresa = "  ACME  ", Puesto = "  Dev  " };
 
         editor.AplicarIdentificacion(solicitud);
 
@@ -103,13 +138,13 @@ public class SolicitudEdicionTests
         Solicitud solicitud = new SolicitudBuilder().Construir();
         var editor = new SolicitudEdicionViewModel
         {
-            EnlaceOferta = "https://ejemplo.test/oferta",
-            Portal = "LinkedIn",
+            EnlaceOferta = "  https://ejemplo.test/oferta  ",
+            Portal = "  LinkedIn  ",
             Origen = Origen.Referido,
-            Ubicacion = "Madrid",
+            Ubicacion = "  Madrid  ",
             Modalidad = Modalidad.Remoto,
-            Tecnologias = "C#, .NET",
-            Requisitos = "3 años de experiencia",
+            Tecnologias = "  C#, .NET  ",
+            Requisitos = "  3 años de experiencia  ",
         };
 
         editor.AplicarOferta(solicitud);
