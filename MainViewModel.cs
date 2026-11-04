@@ -738,22 +738,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         Solicitud origen = this.solicitudAbierta;
-        var copia = new Solicitud(origen.Empresa, origen.Puesto)
-        {
-            Portal = origen.Portal,
-            Ubicacion = origen.Ubicacion,
-            Modalidad = origen.Modalidad,
-            Tecnologias = origen.Tecnologias,
-            SalarioMin = origen.SalarioMin,
-            SalarioMax = origen.SalarioMax,
-            PretensionSalarial = origen.PretensionSalarial,
-            Interes = origen.Interes,
-            FechaSolicitud = DateTime.Today,
-            Estado = EstadoSolicitud.Enviada,
-            Notas = string.Format(
-                Localizacion.Texto("Duplicar.Nota"),
-                origen.Id, origen.Empresa, origen.FechaSolicitud.ToString("d", Localizacion.CulturaActual)),
-        };
+        Solicitud copia = origen.CrearCopia();
+        copia.ActualizarNotas(string.Format(
+            Localizacion.Texto("Duplicar.Nota"),
+            origen.Id, origen.Empresa, origen.FechaSolicitud.ToString("d", Localizacion.CulturaActual)));
 
         this.SolicitudSeleccionada = null;
         this.Abrir(copia);

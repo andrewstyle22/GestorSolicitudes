@@ -31,6 +31,28 @@ public class Solicitud
         this.Puesto = puesto;
     }
 
+    /// <summary>
+    /// Crea una candidatura nueva a partir de esta: copia lo que describe la oferta
+    /// (portal, ubicación, modalidad, tecnologías, salario e interés) y deja en blanco
+    /// el proceso, el enlace, los requisitos y los adjuntos.
+    /// </summary>
+    public Solicitud CrearCopia()
+    {
+        var copia = new Solicitud(this.Empresa, this.Puesto);
+
+        copia.ActualizarOferta(new DatosOferta(
+            EnlaceOferta: null,
+            Portal: this.Portal,
+            Origen: Origen.AplicacionDirecta,
+            Ubicacion: this.Ubicacion,
+            Modalidad: this.Modalidad,
+            Tecnologias: this.Tecnologias,
+            Requisitos: null));
+        copia.ActualizarCondiciones(this.SalarioMin, this.SalarioMax, this.PretensionSalarial, this.Interes);
+
+        return copia;
+    }
+
     public int Id { get; set; }
 
     // --- Identificación de la oferta ---

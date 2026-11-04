@@ -63,6 +63,51 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void CrearCopia_CopiaLaOfertaYDejaElProcesoEnBlanco()
+    {
+        var origen = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConPortal("LinkedIn")
+            .ConUbicacion("Madrid")
+            .ConModalidad(Modalidad.Hibrido)
+            .ConTecnologias("C#")
+            .ConSalarioMin(30000)
+            .ConSalarioMax(45000)
+            .ConPretensionSalarial(40000)
+            .ConInteres(5)
+            .ConEnlaceOferta("https://ejemplo.test")
+            .ConRequisitos("Requisitos")
+            .ConContactoNombre("Jefa")
+            .ConNotas("Notas")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-20))
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+
+        Solicitud copia = origen.CrearCopia();
+
+        Assert.Equal("ACME", copia.Empresa);
+        Assert.Equal("Dev", copia.Puesto);
+        Assert.Equal("LinkedIn", copia.Portal);
+        Assert.Equal("Madrid", copia.Ubicacion);
+        Assert.Equal(Modalidad.Hibrido, copia.Modalidad);
+        Assert.Equal("C#", copia.Tecnologias);
+        Assert.Equal(30000, copia.SalarioMin);
+        Assert.Equal(45000, copia.SalarioMax);
+        Assert.Equal(40000, copia.PretensionSalarial);
+        Assert.Equal(5, copia.Interes);
+        Assert.Equal(DateTime.Today, copia.FechaSolicitud);
+        Assert.Equal(EstadoSolicitud.Enviada, copia.Estado);
+        Assert.Null(copia.EnlaceOferta);
+        Assert.Null(copia.Requisitos);
+        Assert.Null(copia.ContactoNombre);
+        Assert.Null(copia.Notas);
+        Assert.Null(copia.RutaCv);
+        Assert.Empty(copia.Eventos);
+        Assert.NotSame(origen, copia);
+    }
+
+    [Fact]
     public void ActualizarIdentificacion_RecortaEspacios()
     {
         var solicitud = new SolicitudBuilder().Construir();
