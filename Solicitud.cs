@@ -139,11 +139,11 @@ public class Solicitud
     }
 
     // --- Económico (euros brutos anuales) ---
-    public int? SalarioMin { get; set; }
+    public int? SalarioMin { get; private set; }
 
-    public int? SalarioMax { get; set; }
+    public int? SalarioMax { get; private set; }
 
-    public int? PretensionSalarial { get; set; }
+    public int? PretensionSalarial { get; private set; }
 
     /// <summary>
     /// Actualiza la parte económica y el interés: el salario mínimo no puede superar
@@ -168,16 +168,16 @@ public class Solicitud
     }
 
     // --- Fechas clave ---
-    public DateTime FechaSolicitud { get; set; } = DateTime.Today;
+    public DateTime FechaSolicitud { get; private set; } = DateTime.Today;
 
-    public DateTime? FechaPrimeraRespuesta { get; set; }
+    public DateTime? FechaPrimeraRespuesta { get; private set; }
 
-    public DateTime? FechaEntrevista { get; set; }
+    public DateTime? FechaEntrevista { get; private set; }
 
-    public DateTime? FechaCierre { get; set; }
+    public DateTime? FechaCierre { get; private set; }
 
     /// <summary>Gets or sets fecha en la que toca volver a escribir si no hay noticias.</summary>
-    public DateTime? ProximoSeguimiento { get; set; }
+    public DateTime? ProximoSeguimiento { get; private set; }
 
     /// <summary>
     /// Actualiza las fechas que se editan a mano: envío, entrevista y próximo seguimiento.
@@ -253,7 +253,7 @@ public class Solicitud
     }
 
     /// <summary>Gets or sets interés propio en la oferta, de 1 a 5.</summary>
-    public int Interes { get; set; } = 3;
+    public int Interes { get; private set; } = 3;
 
     public string? Notas { get; set; }
 

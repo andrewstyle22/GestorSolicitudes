@@ -25,12 +25,12 @@ public class EstadisticasSolicitudTests
         var baseFecha = new DateTime(2026, 1, 10);
         var solicitudes = new List<Solicitud>
         {
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Enviada, FechaSolicitud = baseFecha },
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.EntrevistaTecnica, FechaSolicitud = baseFecha },
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.PruebaTecnica, FechaSolicitud = baseFecha },
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.OfertaRecibida, FechaSolicitud = baseFecha },
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.OfertaAceptada, FechaSolicitud = baseFecha },
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Rechazada, FechaSolicitud = baseFecha },
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConEstado(EstadoSolicitud.Enviada).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConEstado(EstadoSolicitud.EntrevistaTecnica).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConEstado(EstadoSolicitud.PruebaTecnica).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConEstado(EstadoSolicitud.OfertaRecibida).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConEstado(EstadoSolicitud.OfertaAceptada).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConEstado(EstadoSolicitud.Rechazada).Construir(),
         };
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
@@ -46,9 +46,9 @@ public class EstadisticasSolicitudTests
     {
         var solicitudes = new List<Solicitud>
         {
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Enviada, ProximoSeguimiento = DateTime.Today.AddDays(-1) },
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Enviada, ProximoSeguimiento = DateTime.Today.AddDays(3) },
-            new(string.Empty, string.Empty) { Estado = EstadoSolicitud.Rechazada, ProximoSeguimiento = DateTime.Today.AddDays(-1) },
+            new SolicitudBuilder().ConEstado(EstadoSolicitud.Enviada).ConProximoSeguimiento(DateTime.Today.AddDays(-1)).Construir(),
+            new SolicitudBuilder().ConEstado(EstadoSolicitud.Enviada).ConProximoSeguimiento(DateTime.Today.AddDays(3)).Construir(),
+            new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).ConProximoSeguimiento(DateTime.Today.AddDays(-1)).Construir(),
         };
 
         Assert.Equal(1, EstadisticasSolicitud.Calcular(solicitudes).SeguimientosPendientes);
@@ -60,9 +60,9 @@ public class EstadisticasSolicitudTests
         var baseFecha = new DateTime(2026, 1, 10);
         var solicitudes = new List<Solicitud>
         {
-            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(2) },
-            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(4) },
-            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha },
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConFechaPrimeraRespuesta(baseFecha.AddDays(2)).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConFechaPrimeraRespuesta(baseFecha.AddDays(4)).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).Construir(),
         };
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);
@@ -79,8 +79,8 @@ public class EstadisticasSolicitudTests
         var baseFecha = new DateTime(2026, 1, 10);
         var solicitudes = new List<Solicitud>
         {
-            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(2) },
-            new(string.Empty, string.Empty) { FechaSolicitud = baseFecha, FechaPrimeraRespuesta = baseFecha.AddDays(5) },
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConFechaPrimeraRespuesta(baseFecha.AddDays(2)).Construir(),
+            new SolicitudBuilder().ConFechaSolicitud(baseFecha).ConFechaPrimeraRespuesta(baseFecha.AddDays(5)).Construir(),
         };
 
         ResumenEstadisticas resumen = EstadisticasSolicitud.Calcular(solicitudes);

@@ -55,6 +55,15 @@ public class AppDbContextTests
                 .ConModalidad(Modalidad.Remoto)
                 .ConTecnologias("C#, .NET")
                 .ConRequisitos("Experiencia con EF Core")
+                .ConSalarioMin(30000)
+                .ConSalarioMax(45000)
+                .ConPretensionSalarial(40000)
+                .ConInteres(5)
+                .ConFechaSolicitud(new DateTime(2026, 4, 10))
+                .ConFechaPrimeraRespuesta(new DateTime(2026, 4, 12))
+                .ConFechaEntrevista(new DateTime(2026, 4, 16))
+                .ConFechaCierre(new DateTime(2026, 5, 1))
+                .ConProximoSeguimiento(new DateTime(2026, 4, 20))
                 .ConEventos(new Evento(DateTime.Today, TipoEvento.Nota, "Antes"))
                 .Construir();
             db.Solicitudes.Add(solicitud);
@@ -80,6 +89,15 @@ public class AppDbContextTests
         Assert.Equal(Modalidad.Remoto, solicitudRecuperada.Modalidad);
         Assert.Equal("C#, .NET", solicitudRecuperada.Tecnologias);
         Assert.Equal("Experiencia con EF Core", solicitudRecuperada.Requisitos);
+        Assert.Equal(30000, solicitudRecuperada.SalarioMin);
+        Assert.Equal(45000, solicitudRecuperada.SalarioMax);
+        Assert.Equal(40000, solicitudRecuperada.PretensionSalarial);
+        Assert.Equal(5, solicitudRecuperada.Interes);
+        Assert.Equal(new DateTime(2026, 4, 10), solicitudRecuperada.FechaSolicitud);
+        Assert.Equal(new DateTime(2026, 4, 12), solicitudRecuperada.FechaPrimeraRespuesta);
+        Assert.Equal(new DateTime(2026, 4, 16), solicitudRecuperada.FechaEntrevista);
+        Assert.Equal(new DateTime(2026, 5, 1), solicitudRecuperada.FechaCierre);
+        Assert.Equal(new DateTime(2026, 4, 20), solicitudRecuperada.ProximoSeguimiento);
 
         Evento recuperado = solicitudRecuperada.Eventos[0];
         Assert.Equal(new DateTime(2026, 5, 1), recuperado.Fecha);

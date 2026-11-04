@@ -27,7 +27,8 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConEstado(EstadoSolicitud estado) => this.Asignar(s => s.Estado = estado);
 
-    public SolicitudBuilder ConFechaSolicitud(DateTime fecha) => this.Asignar(s => s.FechaSolicitud = fecha);
+    public SolicitudBuilder ConFechaSolicitud(DateTime fecha) => this.Asignar(s =>
+        s.ActualizarFechas(fecha, s.FechaEntrevista, s.ProximoSeguimiento));
 
     public SolicitudBuilder ConPortal(string? portal)
     {
@@ -59,17 +60,22 @@ internal sealed class SolicitudBuilder
         return this;
     }
 
-    public SolicitudBuilder ConSalarioMin(int? salario) => this.Asignar(s => s.SalarioMin = salario);
+    public SolicitudBuilder ConSalarioMin(int? salario) => this.Asignar(s =>
+        s.ActualizarCondiciones(salario, s.SalarioMax, s.PretensionSalarial, s.Interes));
 
-    public SolicitudBuilder ConSalarioMax(int? salario) => this.Asignar(s => s.SalarioMax = salario);
+    public SolicitudBuilder ConSalarioMax(int? salario) => this.Asignar(s =>
+        s.ActualizarCondiciones(s.SalarioMin, salario, s.PretensionSalarial, s.Interes));
 
-    public SolicitudBuilder ConPretensionSalarial(int? salario) => this.Asignar(s => s.PretensionSalarial = salario);
+    public SolicitudBuilder ConPretensionSalarial(int? salario) => this.Asignar(s =>
+        s.ActualizarCondiciones(s.SalarioMin, s.SalarioMax, salario, s.Interes));
 
-    public SolicitudBuilder ConInteres(int interes) => this.Asignar(s => s.Interes = interes);
+    public SolicitudBuilder ConInteres(int interes) => this.Asignar(s =>
+        s.ActualizarCondiciones(s.SalarioMin, s.SalarioMax, s.PretensionSalarial, interes));
 
     public SolicitudBuilder ConMotivoRechazo(MotivoRechazo? motivo) => this.Asignar(s => s.MotivoRechazo = motivo);
 
-    public SolicitudBuilder ConFechaEntrevista(DateTime? fecha) => this.Asignar(s => s.FechaEntrevista = fecha);
+    public SolicitudBuilder ConFechaEntrevista(DateTime? fecha) => this.Asignar(s =>
+        s.ActualizarFechas(s.FechaSolicitud, fecha, s.ProximoSeguimiento));
 
     public SolicitudBuilder ConRespuestaEmpresa(string? respuesta) => this.Asignar(s => s.RespuestaEmpresa = respuesta);
 
@@ -103,11 +109,13 @@ internal sealed class SolicitudBuilder
         this.Asignar(s => s.NombreOriginalCarta = nombre);
 
     public SolicitudBuilder ConFechaPrimeraRespuesta(DateTime? fecha) =>
-        this.Asignar(s => s.FechaPrimeraRespuesta = fecha);
+        this.Asignar(s => s.RegistrarRespuesta(fecha, s.RespuestaEmpresa));
 
-    public SolicitudBuilder ConFechaCierre(DateTime? fecha) => this.Asignar(s => s.FechaCierre = fecha);
+    public SolicitudBuilder ConFechaCierre(DateTime? fecha) => this.Asignar(s =>
+        s.CambiarEstado(s.Estado, s.MotivoRechazo, fecha));
 
-    public SolicitudBuilder ConProximoSeguimiento(DateTime? fecha) => this.Asignar(s => s.ProximoSeguimiento = fecha);
+    public SolicitudBuilder ConProximoSeguimiento(DateTime? fecha) => this.Asignar(s =>
+        s.ActualizarFechas(s.FechaSolicitud, s.FechaEntrevista, fecha));
 
     public SolicitudBuilder ConEventos(params Evento[] eventos) => this.Asignar(s =>
     {
@@ -121,18 +129,17 @@ internal sealed class SolicitudBuilder
     {
         var resultado = new Solicitud(this.empresa, this.puesto);
         resultado.ActualizarOferta(this.oferta);
-        resultado.SalarioMin = this.solicitud.SalarioMin;
-        resultado.SalarioMax = this.solicitud.SalarioMax;
-        resultado.PretensionSalarial = this.solicitud.PretensionSalarial;
-        resultado.Interes = this.solicitud.Interes;
-        resultado.FechaSolicitud = this.solicitud.FechaSolicitud;
-        resultado.FechaPrimeraRespuesta = this.solicitud.FechaPrimeraRespuesta;
-        resultado.FechaEntrevista = this.solicitud.FechaEntrevista;
-        resultado.FechaCierre = this.solicitud.FechaCierre;
-        resultado.ProximoSeguimiento = this.solicitud.ProximoSeguimiento;
-        resultado.Estado = this.solicitud.Estado;
-        resultado.MotivoRechazo = this.solicitud.MotivoRechazo;
-        resultado.RespuestaEmpresa = this.solicitud.RespuestaEmpresa;
+        resultado.ActualizarCondiciones(
+            this.solicitud.SalarioMin,
+            this.solicitud.SalarioMax,
+            this.solicitud.PretensionSalarial,
+            this.solicitud.Interes);
+        resultado.ActualizarFechas(
+            this.solicitud.FechaSolicitud,
+            this.solicitud.FechaEntrevista,
+            this.solicitud.ProximoSeguimiento);
+        resultado.RegistrarRespuesta(this.solicitud.FechaPrimeraRespuesta, this.solicitud.RespuestaEmpresa);
+        resultado.CambiarEstado(this.solicitud.Estado, this.solicitud.MotivoRechazo, this.solicitud.FechaCierre);
         resultado.ContactoNombre = this.solicitud.ContactoNombre;
         resultado.ContactoEmail = this.solicitud.ContactoEmail;
         resultado.ContactoTelefono = this.solicitud.ContactoTelefono;
