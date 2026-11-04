@@ -48,6 +48,13 @@ public class AppDbContextTests
             var solicitud = new SolicitudBuilder()
                 .ConEmpresa("ACME")
                 .ConPuesto("Dev")
+                .ConEnlaceOferta("https://ejemplo.test/oferta")
+                .ConPortal("LinkedIn")
+                .ConOrigen(Origen.Referido)
+                .ConUbicacion("Madrid")
+                .ConModalidad(Modalidad.Remoto)
+                .ConTecnologias("C#, .NET")
+                .ConRequisitos("Experiencia con EF Core")
                 .ConEventos(new Evento(DateTime.Today, TipoEvento.Nota, "Antes"))
                 .Construir();
             db.Solicitudes.Add(solicitud);
@@ -63,7 +70,18 @@ public class AppDbContextTests
         }
 
         using var db2 = new AppDbContext(ruta);
-        Evento recuperado = db2.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id).Eventos[0];
+        Solicitud solicitudRecuperada = db2.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id);
+        Assert.Equal("ACME", solicitudRecuperada.Empresa);
+        Assert.Equal("Dev", solicitudRecuperada.Puesto);
+        Assert.Equal("https://ejemplo.test/oferta", solicitudRecuperada.EnlaceOferta);
+        Assert.Equal("LinkedIn", solicitudRecuperada.Portal);
+        Assert.Equal(Origen.Referido, solicitudRecuperada.Origen);
+        Assert.Equal("Madrid", solicitudRecuperada.Ubicacion);
+        Assert.Equal(Modalidad.Remoto, solicitudRecuperada.Modalidad);
+        Assert.Equal("C#, .NET", solicitudRecuperada.Tecnologias);
+        Assert.Equal("Experiencia con EF Core", solicitudRecuperada.Requisitos);
+
+        Evento recuperado = solicitudRecuperada.Eventos[0];
         Assert.Equal(new DateTime(2026, 5, 1), recuperado.Fecha);
         Assert.Equal(TipoEvento.Oferta, recuperado.Tipo);
         Assert.Equal("Después", recuperado.Descripcion);

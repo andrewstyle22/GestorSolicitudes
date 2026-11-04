@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.13b.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.14.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Auditoría previa a 3.14: ejecutar las búsquedas de escrituras directas del plan (incluidas reflexión y `SetValues`), anotar el resultado y comprobar que solo quedan asignaciones en `Solicitud` y `SolicitudBuilder`. Después, abordar el commit 3.14 (`refactor: set privado en identificación y oferta`).
+Abordar el paso 3.15 (`refactor: set privado en económico y fechas`): cerrar `SalarioMin`, `SalarioMax`, `PretensionSalarial`, `Interes` y las fechas, actualizar el builder y ampliar la prueba de ida y vuelta de `AppDbContextTests`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -38,10 +38,10 @@ Auditoría previa a 3.14: ejecutar las búsquedas de escrituras directas del pla
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- Antes de 3.14: auditoría con `rg` de escrituras directas (producción, tests, builder, `Duplicar`, `PrepararNueva`), incluidas las de reflexión y `SetValues`. Comando en el plan.
+- Auditoría previa a 3.14 completada: las escrituras de entidades estaban en `Solicitud` y `SolicitudBuilder`; las demás coincidencias eran del editor y sus tests. No hubo resultados para `SetValues`, `CurrentValue` ni `GetProperty`. `Duplicar` y `PrepararNueva` usan constructor y métodos del modelo.
 - 3.13b: completado en `5a5bf81`; el test de fallo de `SaveChanges` conserva adjuntos, editor y permite reintentar.
 - 3.17: el test de ida y vuelta debe comprobar que la base asigna el `Id`.
 - Decidir si RespuestaEmpresa y Notas siguen siendo texto libre (hoy no tienen [MaxLength]).
-- 3.14–3.17: ampliar el test de ida y vuelta (`AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto`) para probar los `set` privados.
+- 3.15–3.17: seguir ampliando el test de ida y vuelta (`AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto`) para probar los `set` privados.
 - Antes de R.3: resolver las decisiones pendientes de `02-DOCS/decisiones/estados-y-reapertura.md` (¿entra `EnPausa`?, ¿motivo obligatorio?, ¿`DiasProceso` cuenta el tiempo cerrada?, ¿se conserva el CV anterior?, ¿insignia por consulta o columna?).
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.

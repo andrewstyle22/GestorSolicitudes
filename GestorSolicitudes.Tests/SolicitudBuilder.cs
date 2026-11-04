@@ -9,24 +9,55 @@ using GestorSolicitudes.Models;
 internal sealed class SolicitudBuilder
 {
     private readonly Solicitud solicitud = new(string.Empty, string.Empty);
+    private string empresa = string.Empty;
+    private string puesto = string.Empty;
+    private DatosOferta oferta = new(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null);
 
-    public SolicitudBuilder ConEmpresa(string empresa) => this.Asignar(s => s.Empresa = empresa);
+    public SolicitudBuilder ConEmpresa(string empresa)
+    {
+        this.empresa = empresa;
+        return this;
+    }
 
-    public SolicitudBuilder ConPuesto(string puesto) => this.Asignar(s => s.Puesto = puesto);
+    public SolicitudBuilder ConPuesto(string puesto)
+    {
+        this.puesto = puesto;
+        return this;
+    }
 
     public SolicitudBuilder ConEstado(EstadoSolicitud estado) => this.Asignar(s => s.Estado = estado);
 
     public SolicitudBuilder ConFechaSolicitud(DateTime fecha) => this.Asignar(s => s.FechaSolicitud = fecha);
 
-    public SolicitudBuilder ConPortal(string? portal) => this.Asignar(s => s.Portal = portal);
+    public SolicitudBuilder ConPortal(string? portal)
+    {
+        this.oferta = this.oferta with { Portal = portal };
+        return this;
+    }
 
-    public SolicitudBuilder ConOrigen(Origen origen) => this.Asignar(s => s.Origen = origen);
+    public SolicitudBuilder ConOrigen(Origen origen)
+    {
+        this.oferta = this.oferta with { Origen = origen };
+        return this;
+    }
 
-    public SolicitudBuilder ConUbicacion(string? ubicacion) => this.Asignar(s => s.Ubicacion = ubicacion);
+    public SolicitudBuilder ConUbicacion(string? ubicacion)
+    {
+        this.oferta = this.oferta with { Ubicacion = ubicacion };
+        return this;
+    }
 
-    public SolicitudBuilder ConModalidad(Modalidad modalidad) => this.Asignar(s => s.Modalidad = modalidad);
+    public SolicitudBuilder ConModalidad(Modalidad modalidad)
+    {
+        this.oferta = this.oferta with { Modalidad = modalidad };
+        return this;
+    }
 
-    public SolicitudBuilder ConRequisitos(string? requisitos) => this.Asignar(s => s.Requisitos = requisitos);
+    public SolicitudBuilder ConRequisitos(string? requisitos)
+    {
+        this.oferta = this.oferta with { Requisitos = requisitos };
+        return this;
+    }
 
     public SolicitudBuilder ConSalarioMin(int? salario) => this.Asignar(s => s.SalarioMin = salario);
 
@@ -48,9 +79,17 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConContactoTelefono(string? telefono) => this.Asignar(s => s.ContactoTelefono = telefono);
 
-    public SolicitudBuilder ConTecnologias(string? tecnologias) => this.Asignar(s => s.Tecnologias = tecnologias);
+    public SolicitudBuilder ConTecnologias(string? tecnologias)
+    {
+        this.oferta = this.oferta with { Tecnologias = tecnologias };
+        return this;
+    }
 
-    public SolicitudBuilder ConEnlaceOferta(string? enlace) => this.Asignar(s => s.EnlaceOferta = enlace);
+    public SolicitudBuilder ConEnlaceOferta(string? enlace)
+    {
+        this.oferta = this.oferta with { EnlaceOferta = enlace };
+        return this;
+    }
 
     public SolicitudBuilder ConNotas(string? notas) => this.Asignar(s => s.Notas = notas);
 
@@ -78,7 +117,38 @@ internal sealed class SolicitudBuilder
         }
     });
 
-    public Solicitud Construir() => this.solicitud;
+    public Solicitud Construir()
+    {
+        var resultado = new Solicitud(this.empresa, this.puesto);
+        resultado.ActualizarOferta(this.oferta);
+        resultado.SalarioMin = this.solicitud.SalarioMin;
+        resultado.SalarioMax = this.solicitud.SalarioMax;
+        resultado.PretensionSalarial = this.solicitud.PretensionSalarial;
+        resultado.Interes = this.solicitud.Interes;
+        resultado.FechaSolicitud = this.solicitud.FechaSolicitud;
+        resultado.FechaPrimeraRespuesta = this.solicitud.FechaPrimeraRespuesta;
+        resultado.FechaEntrevista = this.solicitud.FechaEntrevista;
+        resultado.FechaCierre = this.solicitud.FechaCierre;
+        resultado.ProximoSeguimiento = this.solicitud.ProximoSeguimiento;
+        resultado.Estado = this.solicitud.Estado;
+        resultado.MotivoRechazo = this.solicitud.MotivoRechazo;
+        resultado.RespuestaEmpresa = this.solicitud.RespuestaEmpresa;
+        resultado.ContactoNombre = this.solicitud.ContactoNombre;
+        resultado.ContactoEmail = this.solicitud.ContactoEmail;
+        resultado.ContactoTelefono = this.solicitud.ContactoTelefono;
+        resultado.Notas = this.solicitud.Notas;
+        resultado.RutaCv = this.solicitud.RutaCv;
+        resultado.RutaCarta = this.solicitud.RutaCarta;
+        resultado.NombreOriginalCv = this.solicitud.NombreOriginalCv;
+        resultado.NombreOriginalCarta = this.solicitud.NombreOriginalCarta;
+
+        foreach (Evento evento in this.solicitud.Eventos)
+        {
+            resultado.AgregarEvento(evento);
+        }
+
+        return resultado;
+    }
 
     private SolicitudBuilder Asignar(Action<Solicitud> asignacion)
     {

@@ -57,34 +57,34 @@ public class Solicitud
 
     // --- Identificación de la oferta ---
     [MaxLength(LongitudMaximaIdentificacion)]
-    public string Empresa { get; set; } = string.Empty;
+    public string Empresa { get; private set; } = string.Empty;
 
     [MaxLength(LongitudMaximaIdentificacion)]
-    public string Puesto { get; set; } = string.Empty;
+    public string Puesto { get; private set; } = string.Empty;
 
-    /// <summary>Gets or sets enlace directo a la oferta (LinkedIn, InfoJobs, web corporativa...).</summary>
+    /// <summary>Gets enlace directo a la oferta (LinkedIn, InfoJobs, web corporativa...).</summary>
     [MaxLength(LongitudMaximaEnlace)]
-    public string? EnlaceOferta { get; set; }
+    public string? EnlaceOferta { get; private set; }
 
-    /// <summary>Gets or sets dónde se encontró la oferta: LinkedIn, InfoJobs, Tecnoempleo, referido, etc.</summary>
+    /// <summary>Gets dónde se encontró la oferta: LinkedIn, InfoJobs, Tecnoempleo, referido, etc.</summary>
     [MaxLength(LongitudMaximaPortal)]
-    public string? Portal { get; set; }
+    public string? Portal { get; private set; }
 
-    /// <summary>Gets or sets cómo se originó el contacto (distinto de dónde estaba publicada la oferta).</summary>
-    public Origen Origen { get; set; } = Origen.AplicacionDirecta;
+    /// <summary>Gets cómo se originó el contacto (distinto de dónde estaba publicada la oferta).</summary>
+    public Origen Origen { get; private set; } = Origen.AplicacionDirecta;
 
     [MaxLength(LongitudMaximaUbicacion)]
-    public string? Ubicacion { get; set; }
+    public string? Ubicacion { get; private set; }
 
-    public Modalidad Modalidad { get; set; } = Modalidad.SinIndicar;
+    public Modalidad Modalidad { get; private set; } = Modalidad.SinIndicar;
 
-    /// <summary>Gets or sets stack pedido en la oferta, separado por comas.</summary>
+    /// <summary>Gets stack pedido en la oferta, separado por comas.</summary>
     [MaxLength(LongitudMaximaTecnologias)]
-    public string? Tecnologias { get; set; }
+    public string? Tecnologias { get; private set; }
 
-    /// <summary>Gets or sets requisitos, obligaciones y responsabilidades del puesto, tal como los publicó la empresa.</summary>
+    /// <summary>Gets requisitos, obligaciones y responsabilidades del puesto, tal como los publicó la empresa.</summary>
     [MaxLength(LongitudMaximaRequisitos)]
-    public string? Requisitos { get; set; }
+    public string? Requisitos { get; private set; }
 
     /// <summary>
     /// Actualiza los datos de la oferta: recorta espacios y exige que los textos
