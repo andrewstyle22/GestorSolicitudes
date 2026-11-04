@@ -194,6 +194,16 @@ public class Solicitud
     /// <summary>Gets or sets texto literal o resumen de lo que contestó la empresa.</summary>
     public string? RespuestaEmpresa { get; set; }
 
+    /// <summary>
+    /// Registra la primera respuesta de la empresa. Fecha y texto son opcionales
+    /// e independientes: puede haber respuesta escrita sin fecha y fecha sin texto.
+    /// </summary>
+    public void RegistrarRespuesta(DateTime? fechaPrimeraRespuesta, string? respuestaEmpresa)
+    {
+        this.FechaPrimeraRespuesta = fechaPrimeraRespuesta;
+        this.RespuestaEmpresa = respuestaEmpresa;
+    }
+
     [MaxLength(120)]
     public string? ContactoNombre { get; set; }
 

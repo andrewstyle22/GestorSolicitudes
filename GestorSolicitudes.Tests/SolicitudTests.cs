@@ -253,6 +253,41 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void RegistrarRespuesta_AsignaFechaYTexto()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var fecha = new DateTime(2026, 2, 3);
+
+        solicitud.RegistrarRespuesta(fecha, "Buscamos otro perfil");
+
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal("Buscamos otro perfil", solicitud.RespuestaEmpresa);
+    }
+
+    [Fact]
+    public void RegistrarRespuesta_SoloTexto_DejaLaFechaNula()
+    {
+        var solicitud = new SolicitudBuilder().ConFechaPrimeraRespuesta(DateTime.Today).Construir();
+
+        solicitud.RegistrarRespuesta(null, "Oferta enviada");
+
+        Assert.Null(solicitud.FechaPrimeraRespuesta);
+        Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
+    }
+
+    [Fact]
+    public void RegistrarRespuesta_SoloFecha_DejaElTextoNulo()
+    {
+        var solicitud = new SolicitudBuilder().ConRespuestaEmpresa("Antigua").Construir();
+        var fecha = new DateTime(2026, 2, 3);
+
+        solicitud.RegistrarRespuesta(fecha, null);
+
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
+        Assert.Null(solicitud.RespuestaEmpresa);
+    }
+
+    [Fact]
     public void ActualizarFechas_AsignaEnvioEntrevistaYSeguimiento()
     {
         var solicitud = new SolicitudBuilder().Construir();
