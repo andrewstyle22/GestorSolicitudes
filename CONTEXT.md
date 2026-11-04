@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.13.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.13b.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Commit 3.13b (`test: un fallo de SaveChanges conserva adjuntos y editor`): con un interceptor de EF que lance en `SaveChanges`, comprobar que no se borra el adjunto anterior, el editor sigue abierto, las copias temporales siguen en disco y se puede reintentar el guardado. Si destapa un fallo en `Guardar`, se corrige antes en un commit `fix:` propio.
+Auditoría previa a 3.14: ejecutar las búsquedas de escrituras directas del plan (incluidas reflexión y `SetValues`), anotar el resultado y comprobar que solo quedan asignaciones en `Solicitud` y `SolicitudBuilder`. Después, abordar el commit 3.14 (`refactor: set privado en identificación y oferta`).
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -39,7 +39,7 @@ Commit 3.13b (`test: un fallo de SaveChanges conserva adjuntos y editor`): con u
 
 ## Puntos de control pendientes
 - Antes de 3.14: auditoría con `rg` de escrituras directas (producción, tests, builder, `Duplicar`, `PrepararNueva`), incluidas las de reflexión y `SetValues`. Comando en el plan.
-- 3.13b: test de fallo de `SaveChanges` con interceptor de EF (si destapa un fallo, se corrige antes en un commit `fix:` propio).
+- 3.13b: completado en `5a5bf81`; el test de fallo de `SaveChanges` conserva adjuntos, editor y permite reintentar.
 - 3.17: el test de ida y vuelta debe comprobar que la base asigna el `Id`.
 - Decidir si RespuestaEmpresa y Notas siguen siendo texto libre (hoy no tienen [MaxLength]).
 - 3.14–3.17: ampliar el test de ida y vuelta (`AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto`) para probar los `set` privados.
