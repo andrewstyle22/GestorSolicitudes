@@ -224,29 +224,36 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void AplicarEstado_VuelcaEstadoYMotivo()
+    public void AplicarEstado_VuelcaEstadoMotivoYFechaCierre()
     {
+        DateTime cierre = new(2026, 2, 10);
         Solicitud solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.Rechazada)
             .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(new DateTime(2026, 1, 1))
             .Construir();
         var editor = new SolicitudEdicionViewModel
         {
             Estado = EstadoSolicitud.OfertaRecibida,
             MotivoRechazo = null,
+            FechaCierre = cierre,
         };
 
         editor.AplicarEstado(solicitud);
 
         Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
         Assert.Null(solicitud.MotivoRechazo);
+        Assert.Equal(cierre, solicitud.FechaCierre);
     }
 
     [Fact]
-    public void AplicarFechas_VuelcaLasCincoFechas()
+    public void AplicarFechas_VuelcaEnvioEntrevistaYSeguimiento()
     {
         DateTime fecha = new(2026, 2, 1);
-        Solicitud solicitud = new SolicitudBuilder().Construir();
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(fecha.AddDays(-1))
+            .ConFechaCierre(fecha.AddDays(-2))
+            .Construir();
         var editor = new SolicitudEdicionViewModel
         {
             FechaSolicitud = fecha,
@@ -259,20 +266,29 @@ public class SolicitudEdicionTests
         editor.AplicarFechas(solicitud);
 
         Assert.Equal(fecha, solicitud.FechaSolicitud);
-        Assert.Equal(fecha.AddDays(1), solicitud.FechaPrimeraRespuesta);
         Assert.Equal(fecha.AddDays(2), solicitud.FechaEntrevista);
         Assert.Equal(fecha.AddDays(3), solicitud.ProximoSeguimiento);
-        Assert.Equal(fecha.AddDays(4), solicitud.FechaCierre);
+        Assert.Equal(fecha.AddDays(-1), solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(fecha.AddDays(-2), solicitud.FechaCierre);
     }
 
     [Fact]
-    public void AplicarRespuesta_VuelcaLaRespuestaDeLaEmpresa()
+    public void AplicarRespuesta_VuelcaFechaYRespuestaDeLaEmpresa()
     {
-        Solicitud solicitud = new SolicitudBuilder().ConRespuestaEmpresa("Antigua").Construir();
-        var editor = new SolicitudEdicionViewModel { RespuestaEmpresa = "Oferta enviada" };
+        DateTime fecha = new(2026, 3, 1);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(fecha.AddDays(-1))
+            .ConRespuestaEmpresa("Antigua")
+            .Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            FechaPrimeraRespuesta = fecha,
+            RespuestaEmpresa = "Oferta enviada",
+        };
 
         editor.AplicarRespuesta(solicitud);
 
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
     }
 

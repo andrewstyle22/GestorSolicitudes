@@ -232,25 +232,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             this.PretensionSalarial,
             this.Interes);
 
-    public void AplicarEstado(Solicitud solicitud)
-    {
-        solicitud.Estado = this.Estado;
-        solicitud.MotivoRechazo = this.MotivoRechazo;
-    }
+    public void AplicarEstado(Solicitud solicitud) =>
+        solicitud.CambiarEstado(this.Estado, this.MotivoRechazo, this.FechaCierre);
 
-    public void AplicarFechas(Solicitud solicitud)
-    {
-        solicitud.FechaSolicitud = this.FechaSolicitud;
-        solicitud.FechaPrimeraRespuesta = this.FechaPrimeraRespuesta;
-        solicitud.FechaEntrevista = this.FechaEntrevista;
-        solicitud.ProximoSeguimiento = this.ProximoSeguimiento;
-        solicitud.FechaCierre = this.FechaCierre;
-    }
+    public void AplicarFechas(Solicitud solicitud) =>
+        solicitud.ActualizarFechas(this.FechaSolicitud, this.FechaEntrevista, this.ProximoSeguimiento);
 
-    public void AplicarRespuesta(Solicitud solicitud)
-    {
-        solicitud.RespuestaEmpresa = this.RespuestaEmpresa;
-    }
+    public void AplicarRespuesta(Solicitud solicitud) =>
+        solicitud.RegistrarRespuesta(this.FechaPrimeraRespuesta, this.RespuestaEmpresa);
 
     public void AplicarContacto(Solicitud solicitud)
     {
