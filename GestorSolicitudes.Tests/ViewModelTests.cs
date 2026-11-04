@@ -526,6 +526,57 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void Editor_NoTocaLaEntidadHastaGuardar_YCancelarConservaLaBase()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        DateTime fechaGuardada = new(2026, 1, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConPortal("LinkedIn")
+            .ConFechaSolicitud(fechaGuardada)
+            .ConContactoNombre("Ana")
+            .ConRutaCv(@"C:\adjuntos\abc.pdf")
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        vm.Editor!.Empresa = "Otra";
+        vm.Editor.Puesto = "Otro";
+        vm.Editor.Portal = "InfoJobs";
+        vm.Editor.FechaSolicitud = new DateTime(2026, 2, 1);
+        vm.Editor.ContactoNombre = "Luis";
+        vm.Editor.RutaCv = @"C:\adjuntos\def.pdf";
+
+        Assert.Equal("ACME", solicitud.Empresa);
+        Assert.Equal("Dev", solicitud.Puesto);
+        Assert.Equal("LinkedIn", solicitud.Portal);
+        Assert.Equal(fechaGuardada, solicitud.FechaSolicitud);
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+
+        vm.CancelarCommand.Execute(null);
+
+        Assert.Equal("ACME", solicitud.Empresa);
+        Assert.Equal("Dev", solicitud.Puesto);
+        Assert.Equal("LinkedIn", solicitud.Portal);
+        Assert.Equal(fechaGuardada, solicitud.FechaSolicitud);
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+
+        Solicitud guardada = db.Solicitudes.AsNoTracking().Single();
+        Assert.Equal("ACME", guardada.Empresa);
+        Assert.Equal("Dev", guardada.Puesto);
+        Assert.Equal("LinkedIn", guardada.Portal);
+        Assert.Equal(fechaGuardada, guardada.FechaSolicitud);
+        Assert.Equal("Ana", guardada.ContactoNombre);
+        Assert.Equal(@"C:\adjuntos\abc.pdf", guardada.RutaCv);
+    }
+
+    [Fact]
     public void TryEliminarSolicitud_BorraLaFilaYDevuelveTrue()
     {
         using var db = TestDb.NuevoContexto();
