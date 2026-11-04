@@ -243,18 +243,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     public void AplicarContacto(Solicitud solicitud)
     {
-        solicitud.ContactoNombre = this.ContactoNombre;
-        solicitud.ContactoEmail = this.ContactoEmail;
-        solicitud.ContactoTelefono = this.ContactoTelefono;
-        solicitud.Notas = this.Notas;
+        solicitud.ActualizarContacto(this.ContactoNombre, this.ContactoEmail, this.ContactoTelefono);
+        solicitud.ActualizarNotas(this.Notas);
     }
 
     public void AplicarAdjuntos(Solicitud solicitud)
     {
-        solicitud.RutaCv = this.RutaCv;
-        solicitud.NombreOriginalCv = this.NombreOriginalCv;
-        solicitud.RutaCarta = this.RutaCarta;
-        solicitud.NombreOriginalCarta = this.NombreOriginalCarta;
+        solicitud.AsignarCv(this.RutaCv, this.NombreOriginalCv);
+        solicitud.AsignarCarta(this.RutaCarta, this.NombreOriginalCarta);
     }
 
     /// <summary>

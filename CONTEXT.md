@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.12.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.13.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Commit 3.13 (`refactor: AplicarA usa los métodos (contacto y adjuntos)`): sustituir las asignaciones de `AplicarContacto` por `ActualizarContacto` y `ActualizarNotas`, y las de `AplicarAdjuntos` por `AsignarCv`/`AsignarCarta`; comprobar antes que el editor valida las longitudes o que los `TextBox` tienen `MaxLength`.
+Commit 3.13b (`test: un fallo de SaveChanges conserva adjuntos y editor`): con un interceptor de EF que lance en `SaveChanges`, comprobar que no se borra el adjunto anterior, el editor sigue abierto, las copias temporales siguen en disco y se puede reintentar el guardado. Si destapa un fallo en `Guardar`, se corrige antes en un commit `fix:` propio.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -27,7 +27,7 @@ Commit 3.13 (`refactor: AplicarA usa los métodos (contacto y adjuntos)`): susti
 - Longitudes máximas: una constante `LongitudMaximaX` por campo en el modelo, compartida por `[MaxLength]` y la validación de los métodos; `public const` si el editor las reutiliza. `RespuestaEmpresa` y `Notas` no tienen límite hoy: no añadir validación en 3.8b ni 3.9 sin decidirlo.
 - El editor repite esas longitudes con `[MaxLength]` y `MainViewModel.Validar` llama a `Editor.Validar()` (`ValidateAllProperties`) antes de `AplicarA`, para que los métodos del modelo no lancen `ArgumentException`. La pareja salario mínimo/máximo se valida en el editor (`ValidarRangoSalarial`).
 - El editor aplica estado, fechas y respuesta con una sola llamada a `CambiarEstado` (estado, motivo y fecha de cierre), `ActualizarFechas` y `RegistrarRespuesta` (fecha de primera respuesta y texto juntos); `AplicarFechas` ya no toca la primera respuesta ni el cierre.
-- Adjuntos: `AsignarCv`/`AsignarCarta` escriben ruta y nombre original juntos (500 y 260); `QuitarCv`/`QuitarCarta` borran ambos. El editor sigue asignando los cuatro campos a mano hasta 3.13.
+- Adjuntos: `AsignarCv`/`AsignarCarta` escriben ruta y nombre original juntos (500 y 260); `QuitarCv`/`QuitarCarta` borran ambos. `AplicarAdjuntos` los vuelca con esos métodos.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -38,7 +38,6 @@ Commit 3.13 (`refactor: AplicarA usa los métodos (contacto y adjuntos)`): susti
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- 3.11: comprobar que el editor valida las longitudes (o que los `TextBox` tienen `MaxLength`) antes de llamar a los métodos, porque estos lanzan `ArgumentException`.
 - Antes de 3.14: auditoría con `rg` de escrituras directas (producción, tests, builder, `Duplicar`, `PrepararNueva`), incluidas las de reflexión y `SetValues`. Comando en el plan.
 - 3.13b: test de fallo de `SaveChanges` con interceptor de EF (si destapa un fallo, se corrige antes en un commit `fix:` propio).
 - 3.17: el test de ida y vuelta debe comprobar que la base asigna el `Id`.

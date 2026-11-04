@@ -332,6 +332,26 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void AplicarContacto_RecortaEspacios()
+    {
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            ContactoNombre = "  Ana  ",
+            ContactoEmail = "  ana@ejemplo.test  ",
+            ContactoTelefono = "  600123456  ",
+            Notas = "  Hablar el lunes  ",
+        };
+
+        editor.AplicarContacto(solicitud);
+
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitud.ContactoEmail);
+        Assert.Equal("600123456", solicitud.ContactoTelefono);
+        Assert.Equal("Hablar el lunes", solicitud.Notas);
+    }
+
+    [Fact]
     public void CargarDesde_CopiaLosAdjuntos()
     {
         Solicitud solicitud = new SolicitudBuilder()
@@ -391,6 +411,26 @@ public class SolicitudEdicionTests
             NombreOriginalCv = "mi-cv.pdf",
             RutaCarta = @"C:\adjuntos\def.pdf",
             NombreOriginalCarta = "mi-carta.pdf",
+        };
+
+        editor.AplicarAdjuntos(solicitud);
+
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
+        Assert.Equal(@"C:\adjuntos\def.pdf", solicitud.RutaCarta);
+        Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
+    }
+
+    [Fact]
+    public void AplicarAdjuntos_RecortaEspacios()
+    {
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            RutaCv = @"  C:\adjuntos\abc.pdf  ",
+            NombreOriginalCv = "  mi-cv.pdf  ",
+            RutaCarta = @"  C:\adjuntos\def.pdf  ",
+            NombreOriginalCarta = "  mi-carta.pdf  ",
         };
 
         editor.AplicarAdjuntos(solicitud);
