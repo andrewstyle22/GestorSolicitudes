@@ -113,6 +113,19 @@ public class LocalizacionTests
     }
 
     [Fact]
+    public void MotivoRechazo_TodosSusValoresTienenTraduccionEnLosTresIdiomas()
+    {
+        foreach (Idioma idioma in Enum.GetValues<Idioma>())
+        {
+            IReadOnlyCollection<string> claves = Localizacion.Claves(idioma);
+            foreach (MotivoRechazo motivo in Enum.GetValues<MotivoRechazo>())
+            {
+                Assert.Contains(EnumHelper.Clave(motivo), claves);
+            }
+        }
+    }
+
+    [Fact]
     public void MetricaDias_EstaEnLosTresIdiomas()
     {
         Assert.Equal("días", Localizacion.Texto(Idioma.Castellano, "Metrica.Dias"));
