@@ -13,37 +13,45 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 {
     [ObservableProperty]
     [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarObligatorio))]
+    [MaxLength(Solicitud.LongitudMaximaIdentificacion)]
     private string empresa = string.Empty;
 
     [ObservableProperty]
     [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarObligatorio))]
+    [MaxLength(Solicitud.LongitudMaximaIdentificacion)]
     private string puesto = string.Empty;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaEnlace)]
     private string? enlaceOferta;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaPortal)]
     private string? portal;
 
     [ObservableProperty]
     private Origen origen = Origen.AplicacionDirecta;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaUbicacion)]
     private string? ubicacion;
 
     [ObservableProperty]
     private Modalidad modalidad = Modalidad.SinIndicar;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaTecnologias)]
     private string? tecnologias;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaRequisitos)]
     private string? requisitos;
 
     [ObservableProperty]
     private int? salarioMin;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarRangoSalarial))]
     private int? salarioMax;
 
     [ObservableProperty]
@@ -77,12 +85,15 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private string? respuestaEmpresa;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaContactoNombre)]
     private string? contactoNombre;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaContactoEmail)]
     private string? contactoEmail;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaContactoTelefono)]
     private string? contactoTelefono;
 
     [ObservableProperty]
@@ -120,7 +131,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Eventos guardados que se han quitado del búfer: el guardado los borra del modelo.</summary>
     public List<Evento> EventosEliminados { get; } = [];
 
-    public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud());
+    public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud(string.Empty, string.Empty));
 
     public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
 
@@ -130,9 +141,18 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             ? new ValidationResult(Localizacion.Texto("Mensaje.FaltanDatos"))
             : ValidationResult.Success;
 
+    /// <summary>El salario mínimo no puede superar al máximo, como exige la entidad.</summary>
+    public static ValidationResult? ValidarRangoSalarial(int? valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor && editor.SalarioMin > valor
+            ? new ValidationResult(Localizacion.Texto("Mensaje.SalarioMinimoMayor"))
+            : ValidationResult.Success;
+
     partial void OnEmpresaChanged(string value) => this.ValidateProperty(value, nameof(this.Empresa));
 
     partial void OnPuestoChanged(string value) => this.ValidateProperty(value, nameof(this.Puesto));
+
+    /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>
+    public void Validar() => this.ValidateAllProperties();
 
     public void CargarDesde(Solicitud solicitud)
     {
@@ -192,65 +212,45 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         }
     }
 
-    public void AplicarIdentificacion(Solicitud solicitud)
-    {
-        solicitud.Empresa = this.Empresa;
-        solicitud.Puesto = this.Puesto;
-    }
+    public void AplicarIdentificacion(Solicitud solicitud) =>
+        solicitud.ActualizarIdentificacion(this.Empresa, this.Puesto);
 
-    public void AplicarOferta(Solicitud solicitud)
-    {
-        solicitud.EnlaceOferta = this.EnlaceOferta;
-        solicitud.Portal = this.Portal;
-        solicitud.Origen = this.Origen;
-        solicitud.Ubicacion = this.Ubicacion;
-        solicitud.Modalidad = this.Modalidad;
-        solicitud.Tecnologias = this.Tecnologias;
-        solicitud.Requisitos = this.Requisitos;
-    }
+    public void AplicarOferta(Solicitud solicitud) =>
+        solicitud.ActualizarOferta(new DatosOferta(
+            this.EnlaceOferta,
+            this.Portal,
+            this.Origen,
+            this.Ubicacion,
+            this.Modalidad,
+            this.Tecnologias,
+            this.Requisitos));
 
-    public void AplicarEconomico(Solicitud solicitud)
-    {
-        solicitud.SalarioMin = this.SalarioMin;
-        solicitud.SalarioMax = this.SalarioMax;
-        solicitud.PretensionSalarial = this.PretensionSalarial;
-        solicitud.Interes = this.Interes;
-    }
+    public void AplicarEconomico(Solicitud solicitud) =>
+        solicitud.ActualizarCondiciones(
+            this.SalarioMin,
+            this.SalarioMax,
+            this.PretensionSalarial,
+            this.Interes);
 
-    public void AplicarEstado(Solicitud solicitud)
-    {
-        solicitud.Estado = this.Estado;
-        solicitud.MotivoRechazo = this.MotivoRechazo;
-    }
+    public void AplicarEstado(Solicitud solicitud) =>
+        solicitud.CambiarEstado(this.Estado, this.MotivoRechazo, this.FechaCierre);
 
-    public void AplicarFechas(Solicitud solicitud)
-    {
-        solicitud.FechaSolicitud = this.FechaSolicitud;
-        solicitud.FechaPrimeraRespuesta = this.FechaPrimeraRespuesta;
-        solicitud.FechaEntrevista = this.FechaEntrevista;
-        solicitud.ProximoSeguimiento = this.ProximoSeguimiento;
-        solicitud.FechaCierre = this.FechaCierre;
-    }
+    public void AplicarFechas(Solicitud solicitud) =>
+        solicitud.ActualizarFechas(this.FechaSolicitud, this.FechaEntrevista, this.ProximoSeguimiento);
 
-    public void AplicarRespuesta(Solicitud solicitud)
-    {
-        solicitud.RespuestaEmpresa = this.RespuestaEmpresa;
-    }
+    public void AplicarRespuesta(Solicitud solicitud) =>
+        solicitud.RegistrarRespuesta(this.FechaPrimeraRespuesta, this.RespuestaEmpresa);
 
     public void AplicarContacto(Solicitud solicitud)
     {
-        solicitud.ContactoNombre = this.ContactoNombre;
-        solicitud.ContactoEmail = this.ContactoEmail;
-        solicitud.ContactoTelefono = this.ContactoTelefono;
-        solicitud.Notas = this.Notas;
+        solicitud.ActualizarContacto(this.ContactoNombre, this.ContactoEmail, this.ContactoTelefono);
+        solicitud.ActualizarNotas(this.Notas);
     }
 
     public void AplicarAdjuntos(Solicitud solicitud)
     {
-        solicitud.RutaCv = this.RutaCv;
-        solicitud.NombreOriginalCv = this.NombreOriginalCv;
-        solicitud.RutaCarta = this.RutaCarta;
-        solicitud.NombreOriginalCarta = this.NombreOriginalCarta;
+        solicitud.AsignarCv(this.RutaCv, this.NombreOriginalCv);
+        solicitud.AsignarCarta(this.RutaCarta, this.NombreOriginalCarta);
     }
 
     /// <summary>

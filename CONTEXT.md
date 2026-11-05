@@ -1,25 +1,26 @@
 # Estado del proyecto
 
-Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso).
+Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 
 ## Etapas
-- ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
-- ✅ 1: editor con búfer; la UI ya no ve la entidad.
+- ✅ 0: red de seguridad.
+- ✅ 1: editor con búfer; la UI no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17).
-- ⬜ 4: test por reflexión, limpiar `ReglasSolicitud` y documentación (4.1–4.6).
+- ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
+- 🔄 R: estados y reapertura (R.1–R.15); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
+- ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Commit 3.1 (`feat: constructor Solicitud(empresa, puesto)`): añadirlo conservando el constructor sin parámetros público.
+R.1 (`feat: TipoEvento.Reapertura`).
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
-- El patrón de `Evento` (constructor público, privado para EF, métodos por intención) se replica en `Solicitud` durante la Etapa 3; `Solicitud.RegistrarEnvio` ya existe como primer método de negocio del modelo.
-- `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni por `Id`: un evento con `Original` nulo es siempre nuevo.
-- `MainViewModel.Guardar` borra con `db.Eventos.Remove` los `EventosEliminados`; el búfer no conoce la base.
-- `Evento` se muta por `Actualizar`; EF accede a sus propiedades por campo (`UsePropertyAccessMode(Field)` en `AppDbContext`).
-- `Solicitud.Eventos` es `IReadOnlyList` sobre campo privado (solo `AgregarEvento`/`QuitarEvento`); ida y vuelta con `Include` probada en `Guardar_SolicitudConEventos_SeRecuperaCompleta`.
-- Las listas enlazadas a entidades POCO (`MainViewModel.Solicitudes` en `MainWindow`) filtran `PropertyDescriptor` al no implementar `INotifyPropertyChanged`; en la edición lo evita el editor.
+- `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni `Id`: `Original` nulo es nuevo.
+- `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
+- EF accede por campo a `Evento` e `Id` de `Solicitud`; `Eventos` es `IReadOnlyList` sobre campo privado.
+- `CambiarEstado` no valida transiciones ni motivo: eso llega en R.3/R.4.
+- Longitudes: una constante por campo para `[MaxLength]` y la validación; `RespuestaEmpresa` y `Notas` sin límite hasta decidirlo.
+- El editor valida longitudes y rango salarial antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -30,6 +31,6 @@ Commit 3.1 (`feat: constructor Solicitud(empresa, puesto)`): añadirlo conservan
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- 3.14–3.17: ampliar el test de ida y vuelta (`AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto`) para probar los `set` privados.
-- 3.7: decidir `CambiarEstado` (motivo solo con rechazo, `FechaCierre` al cerrar, reapertura) y anotarlo en `02-DOCS/decisiones/`.
+- Antes de R.2: decidir si entra `EnPausa`.
+- Antes de R.3: decidir motivo obligatorio, `DiasProceso` con tiempo cerrada, CV anterior e insignia.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.

@@ -5,6 +5,7 @@ using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 public class ViewModelAdjuntosTests
 {
@@ -303,6 +304,46 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
+    public void Guardar_SiSaveChangesFalla_ConservaAdjuntosYEditorYPermiteReintentar()
+    {
+        string ruta = TestDb.NuevaRuta();
+        var interceptor = new FalloSaveChangesUnaVez();
+        using var db = new AppDbContextConFallo(ruta, interceptor);
+        db.Database.EnsureCreated();
+        string carpeta = TestDb.NuevaCarpeta();
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta);
+        string viejo = TestDb.CrearAdjuntoEn(carpeta, "cv.pdf");
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConRutaCv(viejo)
+            .ConNombreOriginalCv("cv.pdf")
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        string nuevo = TestDb.CrearAdjuntoEn(carpeta, "cv-nuevo.pdf");
+        vm.Editor!.RutaCv = nuevo;
+        vm.Editor.NombreOriginalCv = "cv-nuevo.pdf";
+        interceptor.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.True(File.Exists(viejo));
+        Assert.True(File.Exists(nuevo));
+        Assert.NotNull(vm.Editor);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.False(File.Exists(viejo));
+        Assert.True(File.Exists(nuevo));
+        Assert.Null(vm.Editor);
+        Assert.Equal(nuevo, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
     public void Cancelar_ConElCvSustituido_ConservaElAnteriorYBorraElNuevo()
     {
         using var db = TestDb.NuevoContexto();
@@ -501,5 +542,40 @@ public class ViewModelAdjuntosTests
         vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
 
         Assert.Single(dialogo.Avisos);
+    }
+
+    private sealed class FalloSaveChangesUnaVez : SaveChangesInterceptor
+    {
+        public bool Fallar { get; set; }
+
+        public override InterceptionResult<int> SavingChanges(
+            DbContextEventData eventData,
+            InterceptionResult<int> result)
+        {
+            if (this.Fallar)
+            {
+                this.Fallar = false;
+                throw new InvalidOperationException("Fallo de prueba en SaveChanges.");
+            }
+
+            return result;
+        }
+    }
+
+    private sealed class AppDbContextConFallo : AppDbContext
+    {
+        private readonly SaveChangesInterceptor interceptor;
+
+        public AppDbContextConFallo(string ruta, SaveChangesInterceptor interceptor)
+            : base(ruta)
+        {
+            this.interceptor = interceptor;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            optionsBuilder.AddInterceptors(this.interceptor);
+        }
     }
 }

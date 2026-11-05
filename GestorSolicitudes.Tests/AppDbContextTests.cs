@@ -24,11 +24,13 @@ public class AppDbContextTests
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
             id = solicitud.Id;
+            Assert.True(id > 0, "La base debe asignar el Id al guardar.");
         }
 
         using var db2 = new AppDbContext(ruta);
         Solicitud? recuperada = db2.Solicitudes.Include(s => s.Eventos).FirstOrDefault(s => s.Id == id);
         Assert.NotNull(recuperada);
+        Assert.Equal(id, recuperada!.Id);
         Assert.Equal("ACME", recuperada!.Empresa);
         Assert.Equal(EstadoSolicitud.OfertaAceptada, recuperada.Estado);
         Evento evento = Assert.Single(recuperada.Eventos);
@@ -48,6 +50,33 @@ public class AppDbContextTests
             var solicitud = new SolicitudBuilder()
                 .ConEmpresa("ACME")
                 .ConPuesto("Dev")
+                .ConEnlaceOferta("https://ejemplo.test/oferta")
+                .ConPortal("LinkedIn")
+                .ConOrigen(Origen.Referido)
+                .ConUbicacion("Madrid")
+                .ConModalidad(Modalidad.Remoto)
+                .ConTecnologias("C#, .NET")
+                .ConRequisitos("Experiencia con EF Core")
+                .ConSalarioMin(30000)
+                .ConSalarioMax(45000)
+                .ConPretensionSalarial(40000)
+                .ConInteres(5)
+                .ConFechaSolicitud(new DateTime(2026, 4, 10))
+                .ConFechaPrimeraRespuesta(new DateTime(2026, 4, 12))
+                .ConFechaEntrevista(new DateTime(2026, 4, 16))
+                .ConEstado(EstadoSolicitud.Rechazada)
+                .ConMotivoRechazo(MotivoRechazo.SeleccionaronOtroCandidato)
+                .ConFechaCierre(new DateTime(2026, 5, 1))
+                .ConProximoSeguimiento(new DateTime(2026, 4, 20))
+                .ConRespuestaEmpresa("Seguimos en contacto")
+                .ConContactoNombre("Ana")
+                .ConContactoEmail("ana@ejemplo.test")
+                .ConContactoTelefono("600123456")
+                .ConNotas("Hablar el lunes")
+                .ConRutaCv(@"C:\adjuntos\cv.pdf")
+                .ConNombreOriginalCv("mi-cv.pdf")
+                .ConRutaCarta(@"C:\adjuntos\carta.pdf")
+                .ConNombreOriginalCarta("mi-carta.pdf")
                 .ConEventos(new Evento(DateTime.Today, TipoEvento.Nota, "Antes"))
                 .Construir();
             db.Solicitudes.Add(solicitud);
@@ -63,7 +92,38 @@ public class AppDbContextTests
         }
 
         using var db2 = new AppDbContext(ruta);
-        Evento recuperado = db2.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id).Eventos[0];
+        Solicitud solicitudRecuperada = db2.Solicitudes.Include(s => s.Eventos).Single(s => s.Id == id);
+        Assert.Equal("ACME", solicitudRecuperada.Empresa);
+        Assert.Equal("Dev", solicitudRecuperada.Puesto);
+        Assert.Equal("https://ejemplo.test/oferta", solicitudRecuperada.EnlaceOferta);
+        Assert.Equal("LinkedIn", solicitudRecuperada.Portal);
+        Assert.Equal(Origen.Referido, solicitudRecuperada.Origen);
+        Assert.Equal("Madrid", solicitudRecuperada.Ubicacion);
+        Assert.Equal(Modalidad.Remoto, solicitudRecuperada.Modalidad);
+        Assert.Equal("C#, .NET", solicitudRecuperada.Tecnologias);
+        Assert.Equal("Experiencia con EF Core", solicitudRecuperada.Requisitos);
+        Assert.Equal(30000, solicitudRecuperada.SalarioMin);
+        Assert.Equal(45000, solicitudRecuperada.SalarioMax);
+        Assert.Equal(40000, solicitudRecuperada.PretensionSalarial);
+        Assert.Equal(5, solicitudRecuperada.Interes);
+        Assert.Equal(new DateTime(2026, 4, 10), solicitudRecuperada.FechaSolicitud);
+        Assert.Equal(new DateTime(2026, 4, 12), solicitudRecuperada.FechaPrimeraRespuesta);
+        Assert.Equal(new DateTime(2026, 4, 16), solicitudRecuperada.FechaEntrevista);
+        Assert.Equal(new DateTime(2026, 5, 1), solicitudRecuperada.FechaCierre);
+        Assert.Equal(new DateTime(2026, 4, 20), solicitudRecuperada.ProximoSeguimiento);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitudRecuperada.Estado);
+        Assert.Equal(MotivoRechazo.SeleccionaronOtroCandidato, solicitudRecuperada.MotivoRechazo);
+        Assert.Equal("Seguimos en contacto", solicitudRecuperada.RespuestaEmpresa);
+        Assert.Equal("Ana", solicitudRecuperada.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitudRecuperada.ContactoEmail);
+        Assert.Equal("600123456", solicitudRecuperada.ContactoTelefono);
+        Assert.Equal("Hablar el lunes", solicitudRecuperada.Notas);
+        Assert.Equal(@"C:\adjuntos\cv.pdf", solicitudRecuperada.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitudRecuperada.NombreOriginalCv);
+        Assert.Equal(@"C:\adjuntos\carta.pdf", solicitudRecuperada.RutaCarta);
+        Assert.Equal("mi-carta.pdf", solicitudRecuperada.NombreOriginalCarta);
+
+        Evento recuperado = solicitudRecuperada.Eventos[0];
         Assert.Equal(new DateTime(2026, 5, 1), recuperado.Fecha);
         Assert.Equal(TipoEvento.Oferta, recuperado.Tipo);
         Assert.Equal("Después", recuperado.Descripcion);

@@ -44,6 +44,399 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void Solicitud_ConstructorAsignaEmpresaYPuesto()
+    {
+        var solicitud = new Solicitud("ACME", "Dev");
+
+        Assert.Equal("ACME", solicitud.Empresa);
+        Assert.Equal("Dev", solicitud.Puesto);
+    }
+
+    [Fact]
+    public void Solicitud_ConstructorAsignaValoresPorDefecto()
+    {
+        var solicitud = new Solicitud(string.Empty, string.Empty);
+
+        Assert.Equal(string.Empty, solicitud.Empresa);
+        Assert.Equal(string.Empty, solicitud.Puesto);
+        Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
+    }
+
+    [Fact]
+    public void CrearCopia_CopiaLaOfertaYDejaElProcesoEnBlanco()
+    {
+        var origen = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConPortal("LinkedIn")
+            .ConUbicacion("Madrid")
+            .ConModalidad(Modalidad.Hibrido)
+            .ConTecnologias("C#")
+            .ConSalarioMin(30000)
+            .ConSalarioMax(45000)
+            .ConPretensionSalarial(40000)
+            .ConInteres(5)
+            .ConEnlaceOferta("https://ejemplo.test")
+            .ConRequisitos("Requisitos")
+            .ConContactoNombre("Jefa")
+            .ConNotas("Notas")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-20))
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+
+        Solicitud copia = origen.CrearCopia();
+
+        Assert.Equal("ACME", copia.Empresa);
+        Assert.Equal("Dev", copia.Puesto);
+        Assert.Equal("LinkedIn", copia.Portal);
+        Assert.Equal("Madrid", copia.Ubicacion);
+        Assert.Equal(Modalidad.Hibrido, copia.Modalidad);
+        Assert.Equal("C#", copia.Tecnologias);
+        Assert.Equal(30000, copia.SalarioMin);
+        Assert.Equal(45000, copia.SalarioMax);
+        Assert.Equal(40000, copia.PretensionSalarial);
+        Assert.Equal(5, copia.Interes);
+        Assert.Equal(DateTime.Today, copia.FechaSolicitud);
+        Assert.Equal(EstadoSolicitud.Enviada, copia.Estado);
+        Assert.Null(copia.EnlaceOferta);
+        Assert.Null(copia.Requisitos);
+        Assert.Null(copia.ContactoNombre);
+        Assert.Null(copia.Notas);
+        Assert.Null(copia.RutaCv);
+        Assert.Empty(copia.Eventos);
+        Assert.NotSame(origen, copia);
+    }
+
+    [Fact]
+    public void ActualizarIdentificacion_RecortaEspacios()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarIdentificacion("  ACME  ", "  Dev  ");
+
+        Assert.Equal("ACME", solicitud.Empresa);
+        Assert.Equal("Dev", solicitud.Puesto);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("", "Dev")]
+    [InlineData("ACME", "")]
+    [InlineData("   ", "   ")]
+    public void ActualizarIdentificacion_SinEmpresaOPuesto_Lanza(string? empresa, string? puesto)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarIdentificacion(empresa, puesto));
+    }
+
+    [Theory]
+    [InlineData(151, 1)]
+    [InlineData(1, 151)]
+    public void ActualizarIdentificacion_DemasiadoLargo_Lanza(int longitudEmpresa, int longitudPuesto)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarIdentificacion(
+            new string('a', longitudEmpresa), new string('b', longitudPuesto)));
+    }
+
+    [Fact]
+    public void ActualizarOferta_AsignaTodosLosCampos()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var datos = new DatosOferta(
+            "https://ejemplo.test/oferta",
+            "LinkedIn",
+            Origen.Referido,
+            "Madrid",
+            Modalidad.Remoto,
+            "C#, WPF",
+            "Experiencia con EF Core");
+
+        solicitud.ActualizarOferta(datos);
+
+        Assert.Equal(datos.EnlaceOferta, solicitud.EnlaceOferta);
+        Assert.Equal(datos.Portal, solicitud.Portal);
+        Assert.Equal(datos.Origen, solicitud.Origen);
+        Assert.Equal(datos.Ubicacion, solicitud.Ubicacion);
+        Assert.Equal(datos.Modalidad, solicitud.Modalidad);
+        Assert.Equal(datos.Tecnologias, solicitud.Tecnologias);
+        Assert.Equal(datos.Requisitos, solicitud.Requisitos);
+    }
+
+    [Fact]
+    public void ActualizarOferta_RecortaEspacios()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var datos = new DatosOferta(
+            "  https://ejemplo.test/oferta  ",
+            "  LinkedIn  ",
+            Origen.AplicacionDirecta,
+            "  Madrid  ",
+            Modalidad.SinIndicar,
+            "  C#  ",
+            "  Requisitos  ");
+
+        solicitud.ActualizarOferta(datos);
+
+        Assert.Equal("https://ejemplo.test/oferta", solicitud.EnlaceOferta);
+        Assert.Equal("LinkedIn", solicitud.Portal);
+        Assert.Equal("Madrid", solicitud.Ubicacion);
+        Assert.Equal("C#", solicitud.Tecnologias);
+        Assert.Equal("Requisitos", solicitud.Requisitos);
+    }
+
+    [Fact]
+    public void ActualizarOferta_EnlaceDemasiadoLargo_Lanza() => AssertRechazaOferta(
+        new DatosOferta(new string('a', 501), null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null));
+
+    [Fact]
+    public void ActualizarOferta_PortalDemasiadoLargo_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, new string('b', 81), Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, null));
+
+    [Fact]
+    public void ActualizarOferta_UbicacionDemasiadoLarga_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, null, Origen.AplicacionDirecta, new string('c', 121), Modalidad.SinIndicar, null, null));
+
+    [Fact]
+    public void ActualizarOferta_TecnologiasDemasiadoLargas_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, new string('d', 301), null));
+
+    [Fact]
+    public void ActualizarOferta_RequisitosDemasiadoLargos_Lanza() => AssertRechazaOferta(
+        new DatosOferta(null, null, Origen.AplicacionDirecta, null, Modalidad.SinIndicar, null, new string('e', 4001)));
+
+    private static void AssertRechazaOferta(DatosOferta datos) =>
+        Assert.Throws<ArgumentException>(() => new SolicitudBuilder().Construir().ActualizarOferta(datos));
+
+    [Fact]
+    public void ActualizarCondiciones_AsignaTodosLosCampos()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarCondiciones(30000, 45000, 40000, 4);
+
+        Assert.Equal(30000, solicitud.SalarioMin);
+        Assert.Equal(45000, solicitud.SalarioMax);
+        Assert.Equal(40000, solicitud.PretensionSalarial);
+        Assert.Equal(4, solicitud.Interes);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(30000, null)]
+    [InlineData(null, 45000)]
+    [InlineData(30000, 30000)]
+    public void ActualizarCondiciones_RangoValido_Asigna(int? salarioMin, int? salarioMax)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarCondiciones(salarioMin, salarioMax, null, 3);
+
+        Assert.Equal(salarioMin, solicitud.SalarioMin);
+        Assert.Equal(salarioMax, solicitud.SalarioMax);
+    }
+
+    [Fact]
+    public void ActualizarCondiciones_SalarioMinMayorQueMax_Lanza()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarCondiciones(45000, 30000, null, 3));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(6)]
+    public void ActualizarCondiciones_InteresFueraDeRango_Lanza(int interes)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarCondiciones(null, null, null, interes));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(5)]
+    public void ActualizarCondiciones_InteresEnLosLimites_Asigna(int interes)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarCondiciones(null, null, null, interes);
+
+        Assert.Equal(interes, solicitud.Interes);
+    }
+
+    [Fact]
+    public void CambiarEstado_AsignaEstadoMotivoYFechaCierre()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var fecha = new DateTime(2026, 2, 3);
+
+        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.Salario, fecha);
+
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.Equal(MotivoRechazo.Salario, solicitud.MotivoRechazo);
+        Assert.Equal(fecha, solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void CambiarEstado_SinMotivoNiFecha_LosDejaNulos()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(new DateTime(2026, 2, 3))
+            .Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Enviada, null, null);
+
+        Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
+        Assert.Null(solicitud.MotivoRechazo);
+        Assert.Null(solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void RegistrarRespuesta_AsignaFechaYTexto()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var fecha = new DateTime(2026, 2, 3);
+
+        solicitud.RegistrarRespuesta(fecha, "Buscamos otro perfil");
+
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal("Buscamos otro perfil", solicitud.RespuestaEmpresa);
+    }
+
+    [Fact]
+    public void RegistrarRespuesta_SoloTexto_DejaLaFechaNula()
+    {
+        var solicitud = new SolicitudBuilder().ConFechaPrimeraRespuesta(DateTime.Today).Construir();
+
+        solicitud.RegistrarRespuesta(null, "Oferta enviada");
+
+        Assert.Null(solicitud.FechaPrimeraRespuesta);
+        Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
+    }
+
+    [Fact]
+    public void RegistrarRespuesta_SoloFecha_DejaElTextoNulo()
+    {
+        var solicitud = new SolicitudBuilder().ConRespuestaEmpresa("Antigua").Construir();
+        var fecha = new DateTime(2026, 2, 3);
+
+        solicitud.RegistrarRespuesta(fecha, null);
+
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
+        Assert.Null(solicitud.RespuestaEmpresa);
+    }
+
+    [Fact]
+    public void ActualizarContacto_AsignaTodosLosCampos()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarContacto("Ana", "ana@ejemplo.test", "600123456");
+
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitud.ContactoEmail);
+        Assert.Equal("600123456", solicitud.ContactoTelefono);
+    }
+
+    [Fact]
+    public void ActualizarContacto_RecortaEspacios()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.ActualizarContacto("  Ana  ", "  ana@ejemplo.test  ", "  600123456  ");
+
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitud.ContactoEmail);
+        Assert.Equal("600123456", solicitud.ContactoTelefono);
+    }
+
+    [Fact]
+    public void ActualizarContacto_NombreDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().ActualizarContacto(new string('a', 121), null, null));
+
+    [Fact]
+    public void ActualizarContacto_EmailDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().ActualizarContacto(null, new string('b', 151), null));
+
+    [Fact]
+    public void ActualizarContacto_TelefonoDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().ActualizarContacto(null, null, new string('c', 41)));
+
+    [Fact]
+    public void ActualizarNotas_AsignaSinLimiteDeLongitud()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        string notas = new('n', 5000);
+
+        solicitud.ActualizarNotas($"  {notas}  ");
+
+        Assert.Equal(notas, solicitud.Notas);
+    }
+
+    [Fact]
+    public void ActualizarFechas_AsignaEnvioEntrevistaYSeguimiento()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var envio = new DateTime(2026, 2, 1);
+
+        solicitud.ActualizarFechas(envio, envio.AddDays(2), envio.AddDays(7));
+
+        Assert.Equal(envio, solicitud.FechaSolicitud);
+        Assert.Equal(envio.AddDays(2), solicitud.FechaEntrevista);
+        Assert.Equal(envio.AddDays(7), solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ProponerSeguimiento_AbiertaSinFecha_ProponeSieteDiasDespues()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .Construir();
+
+        solicitud.ProponerSeguimiento();
+
+        Assert.Equal(new DateTime(2026, 1, 17), solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ProponerSeguimiento_NoPisaUnaFechaYaInformada()
+    {
+        var seguimiento = new DateTime(2026, 1, 20);
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .ConProximoSeguimiento(seguimiento)
+            .Construir();
+
+        solicitud.ProponerSeguimiento();
+
+        Assert.Equal(seguimiento, solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ProponerSeguimiento_Cerrada_NoAsigna()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.OfertaAceptada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 10))
+            .Construir();
+
+        solicitud.ProponerSeguimiento();
+
+        Assert.Null(solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
     public void MotivoRechazo_PorDefectoEsNulo()
     {
         Assert.Null(new SolicitudBuilder().Construir().MotivoRechazo);
@@ -166,6 +559,76 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void AsignarCv_AsignaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.AsignarCv(@"C:\adjuntos\a1b2.pdf", "mi-cv.pdf");
+
+        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
+    }
+
+    [Fact]
+    public void AsignarCv_RutaDemasiadoLarga_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCv(new string('a', 501), null));
+
+    [Fact]
+    public void AsignarCv_NombreDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCv(null, new string('b', 261)));
+
+    [Fact]
+    public void QuitarCv_LimpiaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConRutaCv(@"C:\adjuntos\a1b2.pdf")
+            .ConNombreOriginalCv("mi-cv.pdf")
+            .Construir();
+
+        solicitud.QuitarCv();
+
+        Assert.Null(solicitud.RutaCv);
+        Assert.Null(solicitud.NombreOriginalCv);
+    }
+
+    [Fact]
+    public void AsignarCarta_AsignaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.AsignarCarta(@"C:\adjuntos\a1b2.pdf", "mi-carta.pdf");
+
+        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCarta);
+        Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
+    }
+
+    [Fact]
+    public void AsignarCarta_RutaDemasiadoLarga_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCarta(new string('a', 501), null));
+
+    [Fact]
+    public void AsignarCarta_NombreDemasiadoLargo_Lanza() =>
+        Assert.Throws<ArgumentException>(
+            () => new SolicitudBuilder().Construir().AsignarCarta(null, new string('b', 261)));
+
+    [Fact]
+    public void QuitarCarta_LimpiaRutaYNombreOriginal()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConRutaCarta(@"C:\adjuntos\a1b2.pdf")
+            .ConNombreOriginalCarta("mi-carta.pdf")
+            .Construir();
+
+        solicitud.QuitarCarta();
+
+        Assert.Null(solicitud.RutaCarta);
+        Assert.Null(solicitud.NombreOriginalCarta);
+    }
+
+    [Fact]
     public void NombreCv_UsaNombreOriginalSiExiste()
     {
         var solicitud = new SolicitudBuilder()
@@ -186,6 +649,37 @@ public class SolicitudTests
     public void NombreCv_SinRutaEsNull()
     {
         Assert.Null(new SolicitudBuilder().Construir().NombreCv);
+    }
+
+    [Fact]
+    public void NombreCarta_UsaNombreOriginalSiExiste()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConNombreOriginalCarta("mi-carta-final.pdf")
+            .ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf")
+            .Construir();
+        Assert.Equal("mi-carta-final.pdf", solicitud.NombreCarta);
+    }
+
+    [Fact]
+    public void NombreCarta_SinNombreOriginalUsaNombreDelFichero()
+    {
+        var solicitud = new SolicitudBuilder().ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf").Construir();
+        Assert.Equal("a1b2.pdf", solicitud.NombreCarta);
+    }
+
+    [Fact]
+    public void NombreCarta_SinRutaEsNull()
+    {
+        Assert.Null(new SolicitudBuilder().Construir().NombreCarta);
+    }
+
+    [Fact]
+    public void ToString_DevuelveEmpresaYPuesto()
+    {
+        var solicitud = new Solicitud("ACME", "Dev");
+
+        Assert.Equal("ACME — Dev", solicitud.ToString());
     }
 
     [Fact]

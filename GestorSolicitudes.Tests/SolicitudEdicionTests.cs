@@ -31,6 +31,41 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void Validacion_TextoQueSuperaElMaximo_MarcaElCampo()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            Portal = new string('x', Solicitud.LongitudMaximaPortal + 1),
+        };
+
+        editor.Validar();
+
+        Assert.True(editor.HasErrors);
+        Assert.NotEmpty(editor.GetErrors(nameof(editor.Portal)));
+    }
+
+    [Fact]
+    public void Validacion_SalarioMinimoMayorQueElMaximo_MarcaElCampo()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            SalarioMin = 45000,
+            SalarioMax = 30000,
+        };
+
+        editor.Validar();
+
+        Assert.True(editor.HasErrors);
+        Assert.Equal(
+            Localizacion.Texto("Mensaje.SalarioMinimoMayor"),
+            Assert.Single(editor.GetErrors(nameof(editor.SalarioMax)).Cast<ValidationResult>()).ErrorMessage);
+    }
+
+    [Fact]
     public void CargarDesde_CopiaIdentificacion()
     {
         Solicitud solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
@@ -64,7 +99,7 @@ public class SolicitudEdicionTests
     public void AplicarIdentificacion_VuelcaEmpresaYPuesto()
     {
         Solicitud solicitud = new SolicitudBuilder().Construir();
-        var editor = new SolicitudEdicionViewModel { Empresa = "ACME", Puesto = "Dev" };
+        var editor = new SolicitudEdicionViewModel { Empresa = "  ACME  ", Puesto = "  Dev  " };
 
         editor.AplicarIdentificacion(solicitud);
 
@@ -103,13 +138,13 @@ public class SolicitudEdicionTests
         Solicitud solicitud = new SolicitudBuilder().Construir();
         var editor = new SolicitudEdicionViewModel
         {
-            EnlaceOferta = "https://ejemplo.test/oferta",
-            Portal = "LinkedIn",
+            EnlaceOferta = "  https://ejemplo.test/oferta  ",
+            Portal = "  LinkedIn  ",
             Origen = Origen.Referido,
-            Ubicacion = "Madrid",
+            Ubicacion = "  Madrid  ",
             Modalidad = Modalidad.Remoto,
-            Tecnologias = "C#, .NET",
-            Requisitos = "3 años de experiencia",
+            Tecnologias = "  C#, .NET  ",
+            Requisitos = "  3 años de experiencia  ",
         };
 
         editor.AplicarOferta(solicitud);
@@ -189,29 +224,36 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void AplicarEstado_VuelcaEstadoYMotivo()
+    public void AplicarEstado_VuelcaEstadoMotivoYFechaCierre()
     {
+        DateTime cierre = new(2026, 2, 10);
         Solicitud solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.Rechazada)
             .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(new DateTime(2026, 1, 1))
             .Construir();
         var editor = new SolicitudEdicionViewModel
         {
             Estado = EstadoSolicitud.OfertaRecibida,
             MotivoRechazo = null,
+            FechaCierre = cierre,
         };
 
         editor.AplicarEstado(solicitud);
 
         Assert.Equal(EstadoSolicitud.OfertaRecibida, solicitud.Estado);
         Assert.Null(solicitud.MotivoRechazo);
+        Assert.Equal(cierre, solicitud.FechaCierre);
     }
 
     [Fact]
-    public void AplicarFechas_VuelcaLasCincoFechas()
+    public void AplicarFechas_VuelcaEnvioEntrevistaYSeguimiento()
     {
         DateTime fecha = new(2026, 2, 1);
-        Solicitud solicitud = new SolicitudBuilder().Construir();
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(fecha.AddDays(-1))
+            .ConFechaCierre(fecha.AddDays(-2))
+            .Construir();
         var editor = new SolicitudEdicionViewModel
         {
             FechaSolicitud = fecha,
@@ -224,20 +266,29 @@ public class SolicitudEdicionTests
         editor.AplicarFechas(solicitud);
 
         Assert.Equal(fecha, solicitud.FechaSolicitud);
-        Assert.Equal(fecha.AddDays(1), solicitud.FechaPrimeraRespuesta);
         Assert.Equal(fecha.AddDays(2), solicitud.FechaEntrevista);
         Assert.Equal(fecha.AddDays(3), solicitud.ProximoSeguimiento);
-        Assert.Equal(fecha.AddDays(4), solicitud.FechaCierre);
+        Assert.Equal(fecha.AddDays(-1), solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(fecha.AddDays(-2), solicitud.FechaCierre);
     }
 
     [Fact]
-    public void AplicarRespuesta_VuelcaLaRespuestaDeLaEmpresa()
+    public void AplicarRespuesta_VuelcaFechaYRespuestaDeLaEmpresa()
     {
-        Solicitud solicitud = new SolicitudBuilder().ConRespuestaEmpresa("Antigua").Construir();
-        var editor = new SolicitudEdicionViewModel { RespuestaEmpresa = "Oferta enviada" };
+        DateTime fecha = new(2026, 3, 1);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(fecha.AddDays(-1))
+            .ConRespuestaEmpresa("Antigua")
+            .Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            FechaPrimeraRespuesta = fecha,
+            RespuestaEmpresa = "Oferta enviada",
+        };
 
         editor.AplicarRespuesta(solicitud);
 
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
     }
 
@@ -270,6 +321,26 @@ public class SolicitudEdicionTests
             ContactoEmail = "ana@ejemplo.test",
             ContactoTelefono = "600123456",
             Notas = "Hablar el lunes",
+        };
+
+        editor.AplicarContacto(solicitud);
+
+        Assert.Equal("Ana", solicitud.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitud.ContactoEmail);
+        Assert.Equal("600123456", solicitud.ContactoTelefono);
+        Assert.Equal("Hablar el lunes", solicitud.Notas);
+    }
+
+    [Fact]
+    public void AplicarContacto_RecortaEspacios()
+    {
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            ContactoNombre = "  Ana  ",
+            ContactoEmail = "  ana@ejemplo.test  ",
+            ContactoTelefono = "  600123456  ",
+            Notas = "  Hablar el lunes  ",
         };
 
         editor.AplicarContacto(solicitud);
@@ -340,6 +411,26 @@ public class SolicitudEdicionTests
             NombreOriginalCv = "mi-cv.pdf",
             RutaCarta = @"C:\adjuntos\def.pdf",
             NombreOriginalCarta = "mi-carta.pdf",
+        };
+
+        editor.AplicarAdjuntos(solicitud);
+
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
+        Assert.Equal(@"C:\adjuntos\def.pdf", solicitud.RutaCarta);
+        Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
+    }
+
+    [Fact]
+    public void AplicarAdjuntos_RecortaEspacios()
+    {
+        Solicitud solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            RutaCv = @"  C:\adjuntos\abc.pdf  ",
+            NombreOriginalCv = "  mi-cv.pdf  ",
+            RutaCarta = @"  C:\adjuntos\def.pdf  ",
+            NombreOriginalCarta = "  mi-carta.pdf  ",
         };
 
         editor.AplicarAdjuntos(solicitud);

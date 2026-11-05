@@ -52,6 +52,8 @@ public class AppDbContext : DbContext
         {
             entidad.Property(s => s.Empresa).IsRequired();
             entidad.Property(s => s.Puesto).IsRequired();
+            // Id no tiene setter: EF lo escribe en el campo de respaldo al insertar.
+            entidad.Property(s => s.Id).UsePropertyAccessMode(PropertyAccessMode.Field);
             entidad.HasIndex(s => s.Empresa);
             entidad.HasIndex(s => s.FechaSolicitud);
 

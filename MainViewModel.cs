@@ -720,11 +720,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void Nueva()
     {
         this.SolicitudSeleccionada = null;
-        this.Abrir(new Solicitud
-        {
-            FechaSolicitud = DateTime.Today,
-            Estado = EstadoSolicitud.Enviada,
-        });
+        this.Abrir(new Solicitud(string.Empty, string.Empty));
     }
 
     /// <summary>
@@ -742,24 +738,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         Solicitud origen = this.solicitudAbierta;
-        var copia = new Solicitud
-        {
-            Empresa = origen.Empresa,
-            Puesto = origen.Puesto,
-            Portal = origen.Portal,
-            Ubicacion = origen.Ubicacion,
-            Modalidad = origen.Modalidad,
-            Tecnologias = origen.Tecnologias,
-            SalarioMin = origen.SalarioMin,
-            SalarioMax = origen.SalarioMax,
-            PretensionSalarial = origen.PretensionSalarial,
-            Interes = origen.Interes,
-            FechaSolicitud = DateTime.Today,
-            Estado = EstadoSolicitud.Enviada,
-            Notas = string.Format(
-                Localizacion.Texto("Duplicar.Nota"),
-                origen.Id, origen.Empresa, origen.FechaSolicitud.ToString("d", Localizacion.CulturaActual)),
-        };
+        Solicitud copia = origen.CrearCopia();
+        copia.ActualizarNotas(string.Format(
+            Localizacion.Texto("Duplicar.Nota"),
+            origen.Id, origen.Empresa, origen.FechaSolicitud.ToString("d", Localizacion.CulturaActual)));
 
         this.SolicitudSeleccionada = null;
         this.Abrir(copia);
@@ -828,6 +810,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
     private bool Validar()
     {
+        this.Editor?.Validar();
+
         if (this.Editor?.HasErrors == false)
         {
             return true;
@@ -847,10 +831,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         // Si el proceso sigue abierto y no se ha fijado cuando tocaria volver a
         // escribir, proponemos +7 dias desde el envio.
-        if (ReglasSolicitud.ProponerSeguimiento(solicitud) is DateTime propuesta)
-        {
-            solicitud.ProximoSeguimiento = propuesta;
-        }
+        solicitud.ProponerSeguimiento();
 
         if (solicitud.Id != 0)
         {
