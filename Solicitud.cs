@@ -169,6 +169,8 @@ public class Solicitud
     }
 
     // --- Fechas clave ---
+    private DateTime? fechaReapertura = null;
+
     public DateTime FechaSolicitud { get; private set; } = DateTime.Today;
 
     public DateTime? FechaPrimeraRespuesta { get; private set; }
@@ -177,7 +179,7 @@ public class Solicitud
 
     public DateTime? FechaCierre { get; private set; }
 
-    public DateTime? FechaReapertura { get; private set; }
+    public DateTime? FechaReapertura => this.fechaReapertura;
 
     /// <summary>Gets or sets fecha en la que toca volver a escribir si no hay noticias.</summary>
     public DateTime? ProximoSeguimiento { get; private set; }
