@@ -1,59 +1,109 @@
 # Estados, transiciones y reapertura de candidaturas
 
-Qué debe pasar cuando una candidatura cerrada vuelve a tener actividad: la empresa llama, pide el CV actualizado o vuelve a publicar el puesto. Este documento define los estados, las transiciones permitidas, la acción **Reabrir** y lo que el usuario ve en pantalla.
+Qué debe pasar cuando una candidatura se cierra y qué debe pasar cuando una cerrada vuelve a tener actividad (la empresa llama, pide el CV actualizado o vuelve a publicar el puesto). Define los estados, el motivo de cierre, las transiciones permitidas, la acción **Reabrir** y lo que el usuario ve en pantalla.
 
-Ubicación sugerida: `02-DOCS/decisiones/estados-y-reapertura.md`.
-
-Las decisiones que aún necesitan tu confirmación están marcadas con ☐.
+Ubicación: `02-DOCS/decisiones/estados-y-reapertura.md`. Todas las decisiones que estaban abiertas se han tomado (sección 2).
 
 ---
 
 ## 1. Punto de partida (verificado en el código)
 
-`EstadoSolicitud` tiene 12 valores (0 a 11). `EstadoSolicitudExtensiones.Cerrados` considera **cerrados solo cuatro**:
+- `EstadoSolicitud` tiene 12 valores (0 a 11). `EstadoSolicitudExtensiones.Cerrados` considera cerrados **solo cuatro**: Oferta aceptada (7), Oferta rechazada por mí (8), Descartado por la empresa (9) y Retirada por mí (10). "Sin respuesta" (11) cuenta como abierta: puede contestar mañana.
+- `MotivoRechazo` es hoy un enum de 6 valores (0 a 5) pensado para rechazos de la empresa. Solo se muestra con el estado "Descartado". Es `MotivoRechazo?` en el modelo.
+- `DiasProceso` solo se usa en la columna "Días" de la tabla. Las estadísticas usan `DiasHastaRespuesta`.
+- El embudo cuenta únicamente los hitos `Entrevista`, `Oferta` y `SolicitudEnviada`; un hito `Reapertura` no lo altera.
+- `Recargar` lee la tabla de `Solicitudes` una sola vez, sin `Include` de `Eventos`. Las filas de la tabla son la entidad.
+- `EsquemaDb.VerificarColumnasFaltantes` añade las columnas nuevas de forma idempotente al arrancar.
+- Los enums se guardan como entero y sus textos viven en `Traducciones.cs` con claves `Tipo.Valor` (es/en/de).
+- `CambiarEstado(estado, motivo, fechaCierre)` solo asigna (commit 3.7). Las reglas llegan en esta etapa.
+
+---
+
+## 2. Decisiones tomadas
+
+| # | Decisión | Resultado |
+|---|----------|-----------|
+| 1 | ¿"En pausa"? | **No** hasta que haya un caso real. Añadirlo después cuesta lo mismo. |
+| 2 | ¿"Oferta en negociación"? | **No**. "Oferta recibida" más las notas lo cubre. |
+| 3 | ¿Motivo obligatorio? | **Sí**, en los tres cierres negativos (Descartado, Retirada, Oferta rechazada por mí), con el valor `NoIndicado`. Los valores nuevos son propios del usuario y el desplegable se filtra por estado. Al cambiar a esos estados se preselecciona `NoIndicado`. |
+| 4 | ¿`DiasProceso` tras reabrir? | **Se reinicia al reabrir**; el total desde el envío va en un tooltip. La candidatura queda identificada con la columna `FechaReapertura`, insignia "↻" y color de fila. Solo se guarda la última reapertura, sin contador. |
+| 5 | ¿Se conserva el CV anterior? | **No ahora**. Se deja para otra refactorización (versionado de adjuntos). |
+| 6 | ¿Insignia por consulta o columna? | **Columna**, a raíz de la decisión 4. La consulta de ids con hito de reapertura ya no hace falta. |
+| 7 | ¿`RespuestaEmpresa` y `Notas` sin límite? | Aplazada; siguen sin límite. |
+
+---
+
+## 3. Estados
+
+No se añade ningún estado. "Reabierta" no es un estado (es una acción que deja un hito y una fecha) y tampoco lo son "En pausa" ni "Oferta en negociación" por ahora. Un proceso en pausa se representa con "En revisión" o "Sin respuesta", una fecha de seguimiento y una nota.
+
+Grupos, sin cambios:
 
 | Grupo | Estados |
 |-------|---------|
-| **Abiertos** | Enviada, En revisión, Prueba técnica, Entrevista RR. HH., Entrevista técnica, Entrevista final, Oferta recibida, **Sin respuesta** |
+| **Abiertos** | Enviada, En revisión, Prueba técnica, Entrevista RR. HH., Entrevista técnica, Entrevista final, Oferta recibida, Sin respuesta |
 | **Cerrados** | Oferta aceptada, Oferta rechazada por mí, Descartado por la empresa, Retirada por mí |
 
-Dos consecuencias importantes:
+---
 
-- **"Sin respuesta" cuenta como abierta.** `EstaAbierta` es verdadera, `DiasProceso` sigue contando hasta hoy y se le propone seguimiento. Es coherente: puede contestar mañana. Se queda así.
-- **`MotivoRechazo` ya incluye "Puesto cancelado o pausado".** El caso de la vacante cancelada ya tiene dónde registrarse (ver §2).
+## 4. Motivo de cierre
 
-`FechaCierre` es hoy un campo editable a mano; ninguna regla la rellena. `TipoEvento` ya tiene `Rechazo` y `Nota`, pero no `Reapertura`.
+### 4.1 Valores
+
+Se amplía el mismo enum, al final, sin tocar los valores existentes (se guarda como entero, así que no cambia el esquema):
+
+| Valor | Nombre | es | Uso |
+|-------|--------|----|-----|
+| 0 | `Salario` | Salario / pretensión | empresa y propio |
+| 1 | `ExperienciaInsuficiente` | Experiencia insuficiente | empresa |
+| 2 | `SeleccionaronOtroCandidato` | Seleccionaron a otro candidato | empresa |
+| 3 | `CulturalFit` | No encajaba con el equipo/cultura | empresa |
+| 4 | `PuestoCanceladoOPausado` | Puesto cancelado o pausado | empresa |
+| 5 | `Otro` | Otro motivo | ambos |
+| 6 | `NoIndicado` | No indicado | ambos |
+| 7 | `AceptoOtraOferta` | Acepté otra oferta | propio |
+| 8 | `ModalidadOUbicacion` | Modalidad o ubicación | propio |
+| 9 | `YaNoMeInteresa` | Ya no me interesa | propio |
+
+Cada valor nuevo lleva sus claves en es/en/de (`MotivoRechazo.NoIndicado`...). El nombre del enum y de la propiedad (`MotivoRechazo`) **no se cambia** en esta etapa; renombrarlo a `MotivoCierre` es un refactor aparte. La etiqueta visible `Seguimiento.MotivoRechazo` pasa a "Motivo del cierre" / "Reason for closing" / "Grund des Abschlusses".
+
+### 4.2 Motivos permitidos por estado
+
+La tabla vive en el modelo y la usan a la vez el desplegable y `CambiarEstado`, para que no puedan divergir.
+
+| Estado | Motivos permitidos |
+|--------|--------------------|
+| Descartado por la empresa | Salario, Experiencia insuficiente, Seleccionaron a otro candidato, Cultural fit, Puesto cancelado o pausado, Otro, No indicado |
+| Retirada por mí / Oferta rechazada por mí | Salario, Acepté otra oferta, Modalidad o ubicación, Ya no me interesa, Otro, No indicado |
+| Cualquier otro estado (incluida Oferta aceptada) | Ninguno (`null`) |
+
+### 4.3 Reglas
+
+- En los tres estados con motivo, el motivo es **obligatorio** y debe pertenecer a su lista. `CambiarEstado` lanza `ArgumentException` si no.
+- En cualquier otro estado, `CambiarEstado` deja el motivo en `null` (no lanza): así una fila con un motivo antiguo no impide guardar.
+- **Editor:** el desplegable muestra solo los motivos del estado, sin la entrada "Sin especificar". Al pasar a uno de los tres estados con el motivo vacío o no permitido, se preselecciona `NoIndicado`; al salir a otro estado, se limpia. Así Guardar nunca queda bloqueado por este motivo y el modelo sigue exigiéndolo.
+- El panel del motivo se muestra en los tres estados (hoy solo en "Descartado").
+
+### 4.4 Datos existentes
+
+Al arrancar, después de `VerificarColumnasFaltantes`, `EsquemaDb` normaliza las filas antiguas. Es idempotente: tras la primera vez no coincide ninguna fila, y la regla impide crear nuevas:
+
+```sql
+UPDATE Solicitudes SET MotivoRechazo = 6 WHERE Estado IN (8, 9, 10) AND MotivoRechazo IS NULL;
+UPDATE Solicitudes SET MotivoRechazo = 6 WHERE Estado IN (8, 10) AND MotivoRechazo IN (1, 2, 3, 4);
+```
+
+La segunda sentencia cubre filas de "Retirada" u "Oferta rechazada" que conservaron un motivo de empresa de cuando eran "Descartado". Debe estar antes de que `CambiarEstado` exija el motivo, para que esas filas se puedan guardar.
 
 ---
 
-## 2. Estados nuevos
-
-El criterio: un estado dice **dónde está el proceso ahora**. Lo que pasó, o por qué, va al historial o al motivo.
-
-| Propuesta | Decisión recomendada | Razón |
-|-----------|----------------------|-------|
-| **En pausa** (abierto) | ✅ Añadir | "Me avisan en un mes" hoy no tiene reflejo. Es un estado real del proceso. |
-| **Proceso cancelado** (cerrado) | ❌ No añadir | Ya existe `MotivoRechazo.PuestoCanceladoOPausado`. Si preocupa la tasa de rechazo inflada, las estadísticas pueden excluir ese motivo. |
-| **Oferta en negociación** (abierto) | ☐ Opcional | Solo si negocias con frecuencia; si no, "Oferta recibida" basta. |
-| **Pendiente de enviar** (borrador) | ❌ Más adelante | Obliga a que `FechaSolicitud` sea opcional y distorsiona los días desde el envío. |
-| **Reabierta** | ❌ Nunca | Es una acción que deja un hito, no un estado (ver §4). |
-
-☐ Decidir si "En pausa" entra en esta iteración.
-
-Si entra "En pausa":
-- Valor `12` al final del enum (el valor se guarda como entero; no reordenar los existentes).
-- Es **abierto**. Al pasar a este estado se pide una fecha de seguimiento, y la regla de seguimiento (`ProponerSeguimiento`) la proporciona si no hay una.
-- Además, renombrar el motivo a "Puesto cancelado" para que no solape con el estado nuevo (cambio aparte y opcional).
-
----
-
-## 3. Tabla de transiciones
+## 5. Tabla de transiciones
 
 Leyenda: ✅ libre · 🔁 solo con **Reabrir** · ⚠️ con reglas · ⛔ no permitido.
 
 | Desde ↓ / Hacia → | Abierto (cualquiera) | Descartado | Retirada | Oferta rechazada por mí | Oferta aceptada |
 |---|---|---|---|---|---|
-| **Abierto** | ✅ (avanzar o corregir) | ⚠️ A | ⚠️ B | ⚠️ B (solo desde Oferta recibida) | ⚠️ B (solo desde Oferta recibida) |
+| **Abierto** | ✅ (avanzar o corregir) | ⚠️ A | ⚠️ A | ⚠️ A (solo desde Oferta recibida) | ⚠️ B (solo desde Oferta recibida) |
 | **Descartado** | 🔁 | ✅ (cambiar motivo) | ⚠️ C | ⚠️ C | ⛔ |
 | **Retirada** | 🔁 | ⚠️ C | ✅ | ⚠️ C | ⛔ |
 | **Oferta rechazada por mí** | 🔁 | ⚠️ C | ⚠️ C | ✅ | 🔁 (confirmación reforzada) |
@@ -61,113 +111,86 @@ Leyenda: ✅ libre · 🔁 solo con **Reabrir** · ⚠️ con reglas · ⛔ no p
 
 Reglas:
 
-- **A. Hacia Descartado:** pide `MotivoRechazo`. ☐ Decidir si es obligatorio (recomendado: sí; "Otro motivo" es la salida). Añade el hito `Rechazo`.
-- **B. Hacia otro cerrado:** rellena `FechaCierre` con hoy si está vacía.
-- **C. Cerrado → cerrado:** es una corrección, no una reapertura. El estado cambia y se actualizan `FechaCierre` y el motivo. No hace falta confirmar.
+- **A. Hacia un cierre negativo:** motivo obligatorio y permitido (sección 4) y `FechaCierre` = hoy si está vacía. Para "Descartado" se añade además el hito `Rechazo`.
+- **B. Hacia Oferta aceptada:** `FechaCierre` = hoy si está vacía; sin motivo.
+- **C. Cerrado → cerrado:** es una corrección, no una reapertura. Si el motivo anterior no pertenece a la lista del nuevo estado, se preselecciona `NoIndicado`. No pide confirmación.
 - **"Sin respuesta" → otro estado** no es reapertura (ya estaba abierta). Si no hay `FechaPrimeraRespuesta`, se rellena con hoy y se añade un hito `Respuesta`.
-- **Cerrado → Abierto nunca va por el combo de estado.** Si el usuario lo intenta, la app lo redirige a la acción Reabrir.
-- **Oferta aceptada → cualquier otro:** confirmación reforzada ("Habías aceptado esta oferta. ¿Seguro?"), porque es el caso más raro.
+- **Cerrado → abierto nunca va por el combo de estado.** Si el usuario lo intenta, la app lo redirige a la acción Reabrir.
+- **Oferta aceptada → cualquier otro:** confirmación reforzada ("Habías aceptado esta oferta. ¿Seguro?").
 
 ---
 
-## 4. La acción Reabrir
+## 6. La acción Reabrir
 
-Es un método explícito del modelo (`Solicitud.Reabrir(nuevoEstado, nota)`), separado de `CambiarEstado`. Así `CambiarEstado` puede seguir rechazando saltos incoherentes.
+Método explícito del modelo, `Solicitud.Reabrir(nuevoEstado, nota)`, separado de `CambiarEstado` para que este pueda seguir rechazando saltos incoherentes.
 
 **Precondiciones**
 - La candidatura está cerrada.
-- `nuevoEstado` es un estado abierto distinto de "Sin respuesta" (se reabre a una fase real: "En revisión", "Entrevista técnica", etc.).
+- `nuevoEstado` es un estado abierto distinto de "Sin respuesta" (se reabre a una fase real).
 
 **Efectos**
 1. `Estado = nuevoEstado`.
 2. `FechaCierre = null` y `MotivoRechazo = null`.
-3. `FechaSolicitud` **no cambia**: es la fecha original del proceso.
-4. Si `FechaPrimeraRespuesta` está vacía, se rellena con hoy (es la primera vez que la empresa vuelve a contactar).
-5. `ProximoSeguimiento` se pone a `null` y la regla existente propone uno nuevo (+7 días).
-6. Se añade un hito `TipoEvento.Reapertura` con texto del estilo *"Reabierta. Antes: Descartado por la empresa (10/10, perfil no adecuado)"* más la nota opcional del usuario. **Este hito es la única copia del cierre anterior**, así que es obligatorio.
+3. **`FechaReapertura = hoy`.** Si ya había una, se sustituye: solo se guarda la última, no hay contador. Las anteriores quedan en los hitos del historial.
+4. `FechaSolicitud` **no cambia**.
+5. Si `FechaPrimeraRespuesta` está vacía, se rellena con hoy.
+6. `ProximoSeguimiento` se pone a `null` y la regla existente propone uno nuevo (+7 días).
+7. Se añade un hito `TipoEvento.Reapertura` con texto del estilo *"Reabierta. Antes: Descartado por la empresa (10/10, perfil no adecuado)"* más la nota opcional. Es la única copia del cierre anterior.
 
-**Consecuencias en métricas**
-- Una candidatura reabierta deja de contar como rechazada: manda el estado actual. El rechazo histórico solo vive en el hito.
-- `DiasProceso` seguirá contando desde `FechaSolicitud`, de modo que **incluye el tiempo que estuvo cerrada**. ☐ Decidir si se acepta o si se descuenta.
+**Modelo**
+- Propiedad `DateTime? FechaReapertura` con `set` privado, columna `TEXT NULL` añadida en `EsquemaDb`.
+- `[NotMapped] bool FueReabierta => FechaReapertura.HasValue`.
 
-**Adjuntos.** Hoy `DescartarSustituidas` borra el CV antiguo al sustituirlo. Si te piden el CV actualizado tras una reapertura, no debería perderse el que usaste al presentarte. ☐ Decidir si se conserva el anterior (por ejemplo asociándolo al hito) o se acepta la pérdida.
+**Días.** `DiasProceso` usa como referencia `FechaReapertura ?? FechaSolicitud`: abierta, `hoy − referencia`; cerrada, `(FechaCierre ?? hoy) − referencia`. Tras reabrir empieza en 0. `DiasDesdeSolicitud` (total desde el envío) no cambia y se enseña en el tooltip. `DiasHastaRespuesta` y las estadísticas no cambian.
+
+**Adjuntos.** No cambia nada: si adjuntas un CV nuevo tras reabrir, se sustituye el anterior, como hoy. El versionado de adjuntos queda fuera de alcance (otra refactorización).
 
 ---
 
-## 5. Misma candidatura o candidatura nueva
+## 7. Misma candidatura o candidatura nueva
 
 | Situación | Acción |
 |-----------|--------|
 | La empresa te llama o te pide el CV (el mismo proceso continúa) | **Reabrir** la misma candidatura |
-| Vuelven a publicar el puesto más adelante (proceso nuevo) | **Candidatura nueva**, creada con *Duplicar* y enlazada a la anterior (`SolicitudAnteriorId`) |
+| Vuelven a publicar el puesto más adelante (proceso nuevo) | **Candidatura nueva**, creada con *Duplicar* y enlazada a la anterior (`SolicitudAnteriorId`, opcional) |
 
-Al guardar una candidatura nueva con la misma empresa y puesto, la app avisa sin bloquear: *"Ya te presentaste el 10/10 a este puesto: Descartado por la empresa, motivo X"*. Se apoya en la búsqueda por empresa que ya existe. Esta parte requiere una columna nueva y es independiente de la reapertura, así que va en una fase aparte.
+Al guardar una candidatura nueva con la misma empresa y puesto, la app avisa sin bloquear: *"Ya te presentaste el 10/10 a este puesto: Descartado por la empresa, motivo X"*. Requiere una columna nueva y es independiente de la reapertura (commits opcionales).
 
 ---
 
-## 6. Qué ve el usuario
+## 8. Qué ve el usuario
 
 | # | Elemento | Cuándo aparece | Prioridad |
 |---|----------|----------------|-----------|
-| 1 | **Confirmación al reabrir** con el estado, la fecha y el motivo del cierre, el nuevo estado y una nota opcional | Al pasar de cerrado a abierto | Primera versión |
-| 2 | **Hito "Reabierta"** en la línea temporal del historial | Siempre que se reabre | Primera versión |
-| 3 | **Insignia "↻"** junto al estado en la tabla | Si la candidatura tiene algún hito de reapertura | Primera versión |
-| 4 | **Franja informativa** en la pestaña Seguimiento (*"↻ Reabierta el 03/11. Antes: Descartado el 10/10 · Motivo: perfil no adecuado"*) | Si hay reapertura | Después |
-| 5 | **Filtro "Reabiertas"** | Siempre disponible | Opcional |
-| 6 | **Contador "Reabierta (2)"** | Si se reabre más de una vez | Opcional |
+| 1 | **Confirmación al reabrir** con estado, fecha y motivo del cierre, nuevo estado y nota opcional | Al pasar de cerrado a abierto | Primera versión |
+| 2 | **Hito "Reabierta"** en el historial | Siempre que se reabre | Primera versión |
+| 3 | **Insignia "↻"** junto al estado en la tabla, con tooltip (fecha de la reapertura) | Si `FueReabierta` | Primera versión |
+| 4 | **Color de fila:** borde izquierdo magenta (`#DB2777`) mediante un `DataTrigger` sobre `FueReabierta` en el `RowStyle`. No pisa el fondo ámbar de seguimiento pendiente. Siempre junto a la insignia, nunca solo el color | Si `FueReabierta` | Primera versión |
+| 5 | **Columna "Días"** con el contador reiniciado y tooltip con el total desde el envío | Siempre | Primera versión |
+| 6 | **Franja informativa** en Seguimiento: *"↻ Reabierta el 03/11. Antes: Descartado el 10/10 · Motivo: …"* (se lee del último hito `Reapertura`, ya cargado al abrir el detalle) | Si hay reapertura | Después |
+| 7 | **Filtro "Reabiertas"** | Siempre disponible | Opcional |
 
-Notas técnicas:
-
-- **La insignia necesita una consulta.** Las filas de la tabla no traen el historial (`Eventos` se carga solo al abrir el detalle en `Seleccionar`). Opciones: una consulta que devuelva los ids con hito de reapertura al recargar la lista (sin tocar el esquema), o guardar la fecha de la última reapertura en una columna. Recomendada: la consulta.
-- **La franja sí tiene los datos**, porque se pinta con la candidatura ya abierta y su historial cargado.
-- Todo texto nuevo necesita clave en es/en/de en `Traducciones.cs` (el test de paridad lo exige).
-- Los cambios de estado de una candidatura **no** modifican el combo: sigue mostrando los estados reales.
+Todos los textos nuevos necesitan clave en es/en/de en `Traducciones.cs` (el test de paridad lo exige).
 
 ---
 
-## 7. Plan de commits
+## 9. Plan de commits
 
-Depende del refactor del editor: el hito se añade a través de `AgregarEvento` (commit 2.7) y la confirmación vive en el editor. Se implementa tras la Etapa 2 del plan, y la lógica de `Reabrir` y `CambiarEstado` se integra con el commit 3.7.
+Detalle completo en `02-DOCS/plan-refactor-edicion.md` (Etapa R, R.1 a R.22). Resumen del orden y por qué:
 
-Mismas reglas de siempre antes de cada commit: `dotnet test`, `dotnet format`, `sonarcloud-gate`, avisos como errores.
-
-### Bloque R-A. Modelo
-| # | Commit | Tam. |
-|---|--------|------|
-| R.1 | `feat: TipoEvento.Reapertura` (valor 9, traducciones es/en/de, test de paridad) | S |
-| R.2 | `feat: EstadoSolicitud.EnPausa` (valor 12, grupo abierto, colores, traducciones, revisar embudo y estadísticas). Solo si se decide en §2 | M |
-| R.3 | `feat: Solicitud.Reabrir(nuevoEstado, nota)` con tests de efectos y de precondiciones | M |
-| R.4 | `feat: CambiarEstado aplica la tabla de transiciones` (reglas A, B, C; cerrado→abierto se rechaza) | M |
-
-### Bloque R-B. Interfaz
-| # | Commit | Tam. |
-|---|--------|------|
-| R.5 | `feat: el editor detecta cerrado → abierto` (expone que hay una reapertura pendiente) | S |
-| R.6 | `feat: confirmación al reabrir` (diálogo con los datos del cierre y nota opcional; Guardar llama a `Reabrir`) | M |
-| R.7 | `feat: consulta de candidaturas reabiertas` (ids con hito de reapertura, tests) | S |
-| R.8 | `feat: insignia ↻ en la tabla` (propiedad en la fila + XAML + traducciones) | M |
-| R.9 | `feat: franja informativa en Seguimiento` | M |
-
-### Bloque R-C. Opcionales
-| # | Commit | Tam. |
-|---|--------|------|
-| R.10 | `feat: filtro Reabiertas` | M |
-| R.11 | `feat: contador de reaperturas` | S |
-| R.12 | `feat: SolicitudAnteriorId` (columna nullable, `EsquemaDb`, prueba de migración) | M |
-| R.13 | `feat: Duplicar enlaza con la candidatura anterior` | S |
-| R.14 | `feat: aviso al guardar una candidatura repetida` | M |
-
-### Cierre
-| # | Commit | Tam. |
-|---|--------|------|
-| R.15 | `docs: registrar la decisión en 02-DOCS/decisiones` y actualizar `AGENTS.md` (nueva transición de estados) | S |
+1. **R.1 a R.4:** hito `Reapertura`, valores nuevos del motivo, tabla de motivos permitidos y relleno de datos antiguos.
+2. **R.5 a R.7:** `FechaReapertura`, `DiasProceso` y `Reabrir` en el modelo.
+3. **R.8 a R.10:** el desplegable filtrado y la preselección van **antes** de que `CambiarEstado` exija el motivo (R.10), y el relleno de datos antiguos (R.4) también; si no, Guardar fallaría en filas existentes.
+4. **R.11 a R.13:** el editor detecta la reapertura y la confirma **antes** de que `CambiarEstado` prohíba cerrado → abierto (R.13); si no, reabrir desde la interfaz fallaría.
+5. **R.14 a R.17:** insignia, color de fila, tooltip de "Días" y franja.
+6. **R.18 a R.21:** opcionales. **R.22:** documentación.
 
 ---
 
-## 8. Decisiones pendientes
+## 10. Fuera de alcance
 
-☐ ¿Entra "En pausa"? ¿Y "Oferta en negociación"?
-☐ ¿`MotivoRechazo` obligatorio al descartar?
-☐ ¿`DiasProceso` incluye el tiempo cerrada?
-☐ ¿Se conserva el CV anterior al sustituirlo tras una reapertura?
-☐ ¿Insignia por consulta o por columna?
+- Versionado de adjuntos (CV anterior tras una reapertura): otra refactorización.
+- Renombrar `MotivoRechazo` a `MotivoCierre`.
+- Contador de reaperturas.
+- Estados "En pausa" y "Oferta en negociación": revisar si aparece un caso real.
+- Límite de longitud de `RespuestaEmpresa` y `Notas`.

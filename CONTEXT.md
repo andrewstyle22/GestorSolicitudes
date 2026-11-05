@@ -7,7 +7,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ✅ 1: editor con búfer; la UI no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
-- 🔄 R: estados y reapertura (R.1–R.15); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
+- 🔄 R: estados y reapertura (R.1–R.22); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
@@ -18,7 +18,11 @@ R.1 (`feat: TipoEvento.Reapertura`).
 - `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni `Id`: `Original` nulo es nuevo.
 - `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
 - EF accede por campo a `Evento` e `Id` de `Solicitud`; `Eventos` es `IReadOnlyList` sobre campo privado.
-- `CambiarEstado` no valida transiciones ni motivo: eso llega en R.3/R.4.
+- `CambiarEstado` no valida transiciones ni motivo: el motivo llega en R.10 y las transiciones en R.13.
+- Estados: no se añade ninguno (ni `EnPausa` ni negociación). Reabrir es una acción, no un estado.
+- Motivo de cierre: obligatorio en Descartado, Retirada y Oferta rechazada por mí. Se amplía el enum `MotivoRechazo` con `NoIndicado`, `AceptoOtraOferta`, `ModalidadOUbicacion` y `YaNoMeInteresa`. El desplegable se filtra por estado y el editor preselecciona `NoIndicado`. El nombre `MotivoRechazo` no se cambia.
+- Reapertura: columna `FechaReapertura` (solo la última, sin contador) y `FueReabierta` [NotMapped]. `DiasProceso` cuenta desde `FechaReapertura ?? FechaSolicitud`. Insignia ↻ y borde magenta `#DB2777` en la fila.
+- El versionado de CV tras una reapertura queda fuera de alcance (otra refactorización).
 - Longitudes: una constante por campo para `[MaxLength]` y la validación; `RespuestaEmpresa` y `Notas` sin límite hasta decidirlo.
 - El editor valida longitudes y rango salarial antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
 
@@ -31,6 +35,6 @@ R.1 (`feat: TipoEvento.Reapertura`).
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- Antes de R.2: decidir si entra `EnPausa`.
-- Antes de R.3: decidir motivo obligatorio, `DiasProceso` con tiempo cerrada, CV anterior e insignia.
+- Orden en la Etapa R: R.4, R.8 y R.9 antes de R.10; R.11 y R.12 antes de R.13. Si no, se rompen Guardar o la reapertura desde la interfaz.
+- Desde R.10, `SolicitudBuilder` debe poner `NoIndicado` por defecto en los tres estados con motivo.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.

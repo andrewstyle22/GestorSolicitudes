@@ -211,44 +211,63 @@ Debe cubrir producción, tests, `SolicitudBuilder`, inicializadores de objetos, 
 
 ## Etapa R. Estados y reapertura (entre la Etapa 3 y la 4)
 
-Detalle, tabla de transiciones y decisiones pendientes: `02-DOCS/decisiones/estados-y-reapertura.md`. No se empieza hasta cerrar la Etapa 3 (3.17). R.4 no necesita una auditoría aparte: tras 3.16 ningún camino puede escribir `Estado` sin pasar por el modelo, y lo garantiza el compilador. Tras 3.17 los `set` son privados, así que `Reabrir` puede escribir `FechaCierre`, `MotivoRechazo` y `ProximoSeguimiento` desde dentro de `Solicitud`.
+Detalle, tablas y decisiones tomadas: `02-DOCS/decisiones/estados-y-reapertura.md`. No se empieza hasta cerrar la Etapa 3 (3.17). La garantía de que ningún camino escribe `Estado` sin pasar por el modelo viene de 3.16. Tras 3.17 los `set` son privados, así que `Reabrir` puede escribir `FechaCierre`, `MotivoRechazo`, `ProximoSeguimiento` y `FechaReapertura` desde dentro de `Solicitud`.
 
-Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
+Decisiones que condicionan la etapa: no se añaden estados nuevos; el motivo de cierre es obligatorio en Descartado, Retirada y Oferta rechazada por mí, con `NoIndicado`, valores propios y desplegable filtrado por estado; `DiasProceso` se reinicia al reabrir; la reapertura se identifica con la columna `FechaReapertura` (solo la última, sin contador), insignia y color de fila. El versionado de CV queda fuera de alcance.
 
-### R-A. Modelo
+Mismas reglas de siempre: un commit por paso, con el mensaje indicado. **El orden importa:** varios commits van antes de otros para no romper la interfaz ni los datos existentes (ver las notas de cada bloque).
+
+### R-A. Hito y motivos
 
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
 | R.1 | `feat: TipoEvento.Reapertura` | Valor 9, traducciones es/en/de, test de paridad. | S |
-| R.2 | `feat: EstadoSolicitud.EnPausa` | Valor 12, grupo abierto, colores, traducciones, revisar embudo y estadísticas. **Solo si se decide que entra.** | M |
-| R.3 | `feat: Solicitud.Reabrir(nuevoEstado, nota)` | Efectos y precondiciones con tests; añade el hito `Reapertura`. | M |
-| R.4 | `feat: CambiarEstado aplica la tabla de transiciones` | Sustituye al método reducido de 3.7: motivo al descartar, `FechaCierre` al cerrar, cerrado → abierto solo por `Reabrir`. Hay que reescribir `CambiarEstado_SinMotivoNiFecha_LosDejaNulos`, que hoy documenta justo ese paso de cerrado a abierto. | M |
+| R.2 | `feat: nuevos valores de MotivoRechazo` | Al final del enum: `NoIndicado` (6), `AceptoOtraOferta` (7), `ModalidadOUbicacion` (8), `YaNoMeInteresa` (9). Claves es/en/de, test de paridad. Comprobar que el selector de columnas y el CSV no dependen de la lista cerrada. | S |
+| R.3 | `feat: motivos permitidos por estado` | Tabla en el modelo (`EstadoSolicitudExtensiones`): `AdmiteMotivo(estado)` y `MotivosPermitidos(estado)`. Tests por estado. | S |
+| R.4 | `feat: rellenar el motivo de cierre en bases existentes` | En `EsquemaDb`, tras `VerificarColumnasFaltantes`, los dos `UPDATE` de la sección 4.4 del documento de decisión. Idempotente. Tests con SQLite temporal. **Debe ir antes de R.10.** | M |
 
-### R-B. Interfaz
-
-| # | Commit | Qué cambia | Tam. |
-|---|--------|-----------|------|
-| R.5 | `feat: el editor detecta cerrado → abierto` | Expone que hay una reapertura pendiente. | S |
-| R.6 | `feat: confirmación al reabrir` | Diálogo con los datos del cierre y nota opcional; Guardar llama a `Reabrir`. | M |
-| R.7 | `feat: consulta de candidaturas reabiertas` | Ids con hito de reapertura al recargar la lista; tests. | S |
-| R.8 | `feat: insignia ↻ en la tabla` | Propiedad en la fila, XAML y traducciones. | M |
-| R.9 | `feat: franja informativa en Seguimiento` | Visible solo si hay reapertura. | M |
-
-### R-C. Opcionales
+### R-B. Reapertura en el modelo
 
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
-| R.10 | `feat: filtro Reabiertas` | | M |
-| R.11 | `feat: contador de reaperturas` | | S |
-| R.12 | `feat: SolicitudAnteriorId` | Columna nullable, `EsquemaDb`, prueba de migración. | M |
-| R.13 | `feat: Duplicar enlaza con la candidatura anterior` | | S |
-| R.14 | `feat: aviso al guardar una candidatura repetida` | | M |
+| R.5 | `feat: Solicitud.FechaReapertura` | `DateTime?` con `set` privado, `[NotMapped] FueReabierta`, columna `TEXT NULL` en `EsquemaDb` y test de ida y vuelta. Todavía nada la escribe. | M |
+| R.6 | `feat: DiasProceso cuenta desde la reapertura` | Referencia `FechaReapertura ?? FechaSolicitud`. Tests: abierta, cerrada y reabierta. | S |
+| R.7 | `feat: Solicitud.Reabrir(nuevoEstado, nota)` | Efectos y precondiciones de la sección 6 del documento (estado, limpia cierre y motivo, `FechaReapertura = hoy`, primera respuesta, seguimiento, hito). Tests. | M |
+
+### R-C. Motivo de cierre en la interfaz y en el modelo
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| R.8 | `feat: desplegable de motivo filtrado por estado` | El editor expone los motivos del estado, sin la entrada "Sin especificar". El panel se muestra en los tres estados (sustituye a `EstadoEsRechazadaAVisibilidad`). La etiqueta `Seguimiento.MotivoRechazo` pasa a "Motivo del cierre" en es/en/de. | M |
+| R.9 | `feat: el editor preselecciona NoIndicado` | Al pasar a uno de los tres estados con el motivo vacío o no permitido; lo limpia al salir. Tests. | S |
+| R.10 | `feat: CambiarEstado exige y valida el motivo` | Obligatorio y permitido en los tres estados; en el resto lo deja en `null`. `SolicitudBuilder` pone `NoIndicado` por defecto en esos estados. **Solo después de R.4, R.8 y R.9.** | M |
+
+### R-D. Reapertura en la interfaz
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| R.11 | `feat: el editor detecta cerrado → abierto` | Expone que hay una reapertura pendiente. | S |
+| R.12 | `feat: confirmación al reabrir` | Diálogo con estado, fecha y motivo del cierre, nuevo estado y nota opcional; Guardar llama a `Reabrir`. Confirmación reforzada desde Oferta aceptada. | M |
+| R.13 | `feat: CambiarEstado valida las transiciones` | Cerrado → abierto solo por `Reabrir`; `FechaCierre` = hoy al cerrar si está vacía; reglas A, B y C del documento. Reescribir `CambiarEstado_SinMotivoNiFecha_LosDejaNulos`. **Solo después de R.11 y R.12.** | M |
+| R.14 | `feat: insignia ↻ en la tabla` | Junto al estado, sobre `FueReabierta`; tooltip con la fecha. XAML y traducciones. | M |
+| R.15 | `feat: color de fila para reabiertas` | Borde izquierdo magenta `#DB2777` con `DataTrigger` sobre `FueReabierta` en el `RowStyle`; no pisa el ámbar de seguimiento pendiente. | S |
+| R.16 | `feat: tooltip de Días con el total desde el envío` | Total desde el envío y fecha de reapertura. | S |
+| R.17 | `feat: franja informativa en Seguimiento` | Visible solo si hay reapertura; lee el último hito `Reapertura`. | M |
+
+### R-E. Opcionales
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| R.18 | `feat: filtro Reabiertas` | Sobre `FueReabierta`. | M |
+| R.19 | `feat: SolicitudAnteriorId` | Columna nullable, `EsquemaDb`, prueba de migración. | M |
+| R.20 | `feat: Duplicar enlaza con la candidatura anterior` | | S |
+| R.21 | `feat: aviso al guardar una candidatura repetida` | | M |
 
 ### Cierre de la etapa
 
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
-| R.15 | `docs: registrar la decisión de estados y reapertura` | Actualizar `02-DOCS/decisiones/` y `AGENTS.md` con las transiciones. | S |
+| R.22 | `docs: registrar la decisión de estados y reapertura` | Actualizar `02-DOCS/decisiones/` y `AGENTS.md` con las transiciones, el motivo de cierre y `FechaReapertura`. | S |
 
 ---
 
@@ -280,9 +299,10 @@ Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
 | Los adjuntos dejan ficheros huérfanos en `%APPDATA%` | 1.17-1.19 | Tests de adjuntar/cancelar/guardar/reemplazar con carpeta temporal (`TestDb.NuevaCarpeta()`). |
 | `AplicarA` pisa datos de una pestaña aún no migrada | 1.6-1.12 | Solo se activan los grupos cuyo XAML ya apunta al editor. |
 | `TreatWarningsAsErrors` rompe commits intermedios | Siempre | Compilar con `dotnet build` antes de cada commit; no dejar miembros sin usar. |
-| Las reglas de estado y reapertura no están decididas | R.3, R.4 | 3.7 solo asigna; las decisiones pendientes se resuelven antes de R.3 y se anotan en `02-DOCS/decisiones/estados-y-reapertura.md`. |
+| Exigir el motivo de cierre antes de tener datos y editor listos | R.10 | R.4 (relleno de bases existentes), R.8 y R.9 (desplegable filtrado y preselección) van antes; si no, Guardar fallaría en filas existentes. |
+| Prohibir cerrado → abierto antes de que la interfaz use `Reabrir` | R.13 | R.11 y R.12 van antes de R.13; si no, reabrir desde la interfaz fallaría. |
 | Escrituras que el compilador no ve (reflexión, `SetValues`) | 3.14 | Auditoría con `rg` antes de empezar. |
 | Un fallo de `SaveChanges` pierde el adjunto anterior o cierra el editor | 3.13b | Test con interceptor de EF; corrección en un `fix:` previo si falla. |
 | Un test fija el `Id` a mano y deja de compilar | 3.17 | Revisarlo en la auditoría y usar la base para asignarlo. |
 | Las longitudes de `[MaxLength]` y las del modelo divergen | 3.9, 3.10 | Una constante por campo compartida por el atributo y la validación. |
-| `CambiarEstado` queda sin reglas hasta la Etapa R | 3.7 a R.4 | Es temporal y conserva el comportamiento actual; los tests de caracterización de 3.7 lo fijan. |
+| `CambiarEstado` queda sin reglas hasta la Etapa R | 3.7 a R.13 | Es temporal y conserva el comportamiento actual; los tests de caracterización de 3.7 lo fijan. |
