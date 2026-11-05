@@ -80,6 +80,8 @@ public enum TipoEvento
     Oferta = 7,
     [Description("Rechazo")]
     Rechazo = 8,
+    [Description("Reabierta")]
+    Reapertura = 9,
 }
 
 /// <summary>

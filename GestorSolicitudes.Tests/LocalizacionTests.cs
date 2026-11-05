@@ -94,6 +94,25 @@ public class LocalizacionTests
     }
 
     [Fact]
+    public void TipoEvento_TodosSusValoresTienenTraduccionEnLosTresIdiomas()
+    {
+        const string ClaveReapertura = "TipoEvento.Reapertura";
+
+        foreach (Idioma idioma in Enum.GetValues<Idioma>())
+        {
+            IReadOnlyCollection<string> claves = Localizacion.Claves(idioma);
+            foreach (TipoEvento tipo in Enum.GetValues<TipoEvento>())
+            {
+                Assert.Contains(EnumHelper.Clave(tipo), claves);
+            }
+        }
+
+        Assert.Equal("Reabierta", Localizacion.Texto(Idioma.Castellano, ClaveReapertura));
+        Assert.Equal("Reopened", Localizacion.Texto(Idioma.Ingles, ClaveReapertura));
+        Assert.Equal("Wiedereröffnet", Localizacion.Texto(Idioma.Aleman, ClaveReapertura));
+    }
+
+    [Fact]
     public void MetricaDias_EstaEnLosTresIdiomas()
     {
         Assert.Equal("días", Localizacion.Texto(Idioma.Castellano, "Metrica.Dias"));
