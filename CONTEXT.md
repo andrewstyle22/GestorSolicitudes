@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.5 (`feat: Solicitud.FechaReapertura`).
+R.6 (`feat: DiasProceso cuenta desde la reapertura`). R.5 quedó completado en el commit `fd5548f`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

@@ -177,6 +177,8 @@ public class Solicitud
 
     public DateTime? FechaCierre { get; private set; }
 
+    public DateTime? FechaReapertura { get; private set; }
+
     /// <summary>Gets or sets fecha en la que toca volver a escribir si no hay noticias.</summary>
     public DateTime? ProximoSeguimiento { get; private set; }
 
@@ -354,6 +356,9 @@ public class Solicitud
 
     [NotMapped]
     public bool EstaAbierta => !this.Estado.EstaCerrada();
+
+    [NotMapped]
+    public bool FueReabierta => this.FechaReapertura.HasValue;
 
     [NotMapped]
     public bool HuboRespuesta => this.FechaPrimeraRespuesta.HasValue;

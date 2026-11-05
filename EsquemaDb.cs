@@ -47,6 +47,7 @@ internal static class EsquemaDb
             ("MotivoRechazo", "INTEGER NULL"),
             ("Origen", "INTEGER NOT NULL DEFAULT 0"),
             ("ContactoTelefono", TextoNulo),
+            ("FechaReapertura", TextoNulo),
         };
 
         IEnumerable<(string Columna, string Definicion)> faltantes =
