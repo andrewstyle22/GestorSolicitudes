@@ -53,7 +53,7 @@ public class Solicitud
         return copia;
     }
 
-    public int Id { get; set; }
+    public int Id { get; private set; }
 
     // --- Identificación de la oferta ---
     [MaxLength(LongitudMaximaIdentificacion)]
@@ -262,18 +262,18 @@ public class Solicitud
 
     // --- Adjuntos (copias en %APPDATA%\GestorSolicitudes\adjuntos) ---
     [MaxLength(LongitudMaximaRutaAdjunto)]
-    public string? RutaCv { get; set; }
+    public string? RutaCv { get; private set; }
 
     [MaxLength(LongitudMaximaRutaAdjunto)]
-    public string? RutaCarta { get; set; }
+    public string? RutaCarta { get; private set; }
 
     /// <summary>Gets or sets nombre "bonito" del CV tal como lo eligió el usuario (el fichero en disco es un GUID).</summary>
     [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
-    public string? NombreOriginalCv { get; set; }
+    public string? NombreOriginalCv { get; private set; }
 
     /// <summary>Gets or sets nombre "bonito" de la carta tal como la eligió el usuario.</summary>
     [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
-    public string? NombreOriginalCarta { get; set; }
+    public string? NombreOriginalCarta { get; private set; }
 
     /// <summary>
     /// Asigna el CV: la ruta y el nombre original que vio el usuario van juntos,
