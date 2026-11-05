@@ -53,8 +53,12 @@ public class Solicitud
         return copia;
     }
 
+<<<<<<< HEAD
     // Sin setter: EF escribe el campo de respaldo al insertar (ver AppDbContext).
     public int Id { get; }
+=======
+    public int Id { get; private set; }
+>>>>>>> bac799da45046f55d645ed3354e4acec66ecb7e7
 
     // --- Identificación de la oferta ---
     [MaxLength(LongitudMaximaIdentificacion)]
