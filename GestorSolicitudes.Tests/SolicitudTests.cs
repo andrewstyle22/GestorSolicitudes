@@ -516,6 +516,68 @@ public class SolicitudTests
         Assert.Equal(esperado, estado.EstaCerrada());
     }
 
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, true)]
+    [InlineData(EstadoSolicitud.Retirada, true)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, true)]
+    [InlineData(EstadoSolicitud.Enviada, false)]
+    [InlineData(EstadoSolicitud.EnRevision, false)]
+    [InlineData(EstadoSolicitud.PruebaTecnica, false)]
+    [InlineData(EstadoSolicitud.EntrevistaRrhh, false)]
+    [InlineData(EstadoSolicitud.EntrevistaTecnica, false)]
+    [InlineData(EstadoSolicitud.EntrevistaFinal, false)]
+    [InlineData(EstadoSolicitud.OfertaRecibida, false)]
+    [InlineData(EstadoSolicitud.OfertaAceptada, false)]
+    [InlineData(EstadoSolicitud.SinRespuesta, false)]
+    public void AdmiteMotivo_SoloEnLosTresCierresNegativos(EstadoSolicitud estado, bool esperado)
+    {
+        Assert.Equal(esperado, estado.AdmiteMotivo());
+    }
+
+    [Fact]
+    public void MotivosPermitidos_DescartadoSonLosDeLaEmpresa()
+    {
+        Assert.Equal(
+            new[]
+            {
+                MotivoRechazo.Salario,
+                MotivoRechazo.ExperienciaInsuficiente,
+                MotivoRechazo.SeleccionaronOtroCandidato,
+                MotivoRechazo.CulturalFit,
+                MotivoRechazo.PuestoCanceladoOPausado,
+                MotivoRechazo.Otro,
+                MotivoRechazo.NoIndicado,
+            },
+            EstadoSolicitud.Rechazada.MotivosPermitidos());
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Retirada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    public void MotivosPermitidos_RetiradaYOfertaRechazadaSonLosPropios(EstadoSolicitud estado)
+    {
+        Assert.Equal(
+            new[]
+            {
+                MotivoRechazo.Salario,
+                MotivoRechazo.AceptoOtraOferta,
+                MotivoRechazo.ModalidadOUbicacion,
+                MotivoRechazo.YaNoMeInteresa,
+                MotivoRechazo.Otro,
+                MotivoRechazo.NoIndicado,
+            },
+            estado.MotivosPermitidos());
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Enviada)]
+    [InlineData(EstadoSolicitud.OfertaAceptada)]
+    [InlineData(EstadoSolicitud.SinRespuesta)]
+    public void MotivosPermitidos_SinMotivoDevuelveListaVacia(EstadoSolicitud estado)
+    {
+        Assert.Empty(estado.MotivosPermitidos());
+    }
+
     [Fact]
     public void HuboRespuesta_ConFechaEsTrue()
     {

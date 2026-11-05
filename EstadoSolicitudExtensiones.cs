@@ -6,6 +6,29 @@ namespace GestorSolicitudes.Models;
 /// </summary>
 public static class EstadoSolicitudExtensiones
 {
+    private static readonly MotivoRechazo[] MotivosEmpresa =
+    {
+        MotivoRechazo.Salario,
+        MotivoRechazo.ExperienciaInsuficiente,
+        MotivoRechazo.SeleccionaronOtroCandidato,
+        MotivoRechazo.CulturalFit,
+        MotivoRechazo.PuestoCanceladoOPausado,
+        MotivoRechazo.Otro,
+        MotivoRechazo.NoIndicado,
+    };
+
+    private static readonly MotivoRechazo[] MotivosPropios =
+    {
+        MotivoRechazo.Salario,
+        MotivoRechazo.AceptoOtraOferta,
+        MotivoRechazo.ModalidadOUbicacion,
+        MotivoRechazo.YaNoMeInteresa,
+        MotivoRechazo.Otro,
+        MotivoRechazo.NoIndicado,
+    };
+
+    private static readonly MotivoRechazo[] SinMotivos = Array.Empty<MotivoRechazo>();
+
     /// <summary>Gets los estados que dan el proceso por cerrado.</summary>
     public static IReadOnlyList<EstadoSolicitud> Cerrados { get; } = new[]
     {
@@ -30,4 +53,15 @@ public static class EstadoSolicitudExtensiones
         EstadoSolicitud.OfertaRecibida
         or EstadoSolicitud.OfertaAceptada
         or EstadoSolicitud.OfertaRechazada;
+
+    /// <summary>Indica si el estado exige motivo de cierre.</summary>
+    public static bool AdmiteMotivo(this EstadoSolicitud estado) => estado.MotivosPermitidos().Count > 0;
+
+    /// <summary>Gets los motivos válidos para el estado; vacío si no admite motivo.</summary>
+    public static IReadOnlyList<MotivoRechazo> MotivosPermitidos(this EstadoSolicitud estado) => estado switch
+    {
+        EstadoSolicitud.Rechazada => MotivosEmpresa,
+        EstadoSolicitud.Retirada or EstadoSolicitud.OfertaRechazada => MotivosPropios,
+        _ => SinMotivos,
+    };
 }
