@@ -105,14 +105,15 @@ internal sealed class SolicitudBuilder
 
     public SolicitudBuilder ConNotas(string? notas) => this.Asignar(s => s.ActualizarNotas(notas));
 
-    public SolicitudBuilder ConRutaCv(string? ruta) => this.Asignar(s => s.RutaCv = ruta);
+    public SolicitudBuilder ConRutaCv(string? ruta) => this.Asignar(s => s.AsignarCv(ruta, s.NombreOriginalCv));
 
-    public SolicitudBuilder ConRutaCarta(string? ruta) => this.Asignar(s => s.RutaCarta = ruta);
+    public SolicitudBuilder ConRutaCarta(string? ruta) => this.Asignar(s => s.AsignarCarta(ruta, s.NombreOriginalCarta));
 
-    public SolicitudBuilder ConNombreOriginalCv(string? nombre) => this.Asignar(s => s.NombreOriginalCv = nombre);
+    public SolicitudBuilder ConNombreOriginalCv(string? nombre) =>
+        this.Asignar(s => s.AsignarCv(s.RutaCv, nombre));
 
     public SolicitudBuilder ConNombreOriginalCarta(string? nombre) =>
-        this.Asignar(s => s.NombreOriginalCarta = nombre);
+        this.Asignar(s => s.AsignarCarta(s.RutaCarta, nombre));
 
     public SolicitudBuilder ConFechaPrimeraRespuesta(DateTime? fecha) =>
         this.Asignar(s => s.RegistrarRespuesta(fecha, s.RespuestaEmpresa));
@@ -151,10 +152,8 @@ internal sealed class SolicitudBuilder
             this.solicitud.ContactoEmail,
             this.solicitud.ContactoTelefono);
         resultado.ActualizarNotas(this.solicitud.Notas);
-        resultado.RutaCv = this.solicitud.RutaCv;
-        resultado.RutaCarta = this.solicitud.RutaCarta;
-        resultado.NombreOriginalCv = this.solicitud.NombreOriginalCv;
-        resultado.NombreOriginalCarta = this.solicitud.NombreOriginalCarta;
+        resultado.AsignarCv(this.solicitud.RutaCv, this.solicitud.NombreOriginalCv);
+        resultado.AsignarCarta(this.solicitud.RutaCarta, this.solicitud.NombreOriginalCarta);
 
         foreach (Evento evento in this.solicitud.Eventos)
         {

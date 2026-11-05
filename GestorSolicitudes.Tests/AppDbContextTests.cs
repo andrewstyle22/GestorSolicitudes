@@ -24,11 +24,13 @@ public class AppDbContextTests
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
             id = solicitud.Id;
+            Assert.True(id > 0, "La base debe asignar el Id al guardar.");
         }
 
         using var db2 = new AppDbContext(ruta);
         Solicitud? recuperada = db2.Solicitudes.Include(s => s.Eventos).FirstOrDefault(s => s.Id == id);
         Assert.NotNull(recuperada);
+        Assert.Equal(id, recuperada!.Id);
         Assert.Equal("ACME", recuperada!.Empresa);
         Assert.Equal(EstadoSolicitud.OfertaAceptada, recuperada.Estado);
         Evento evento = Assert.Single(recuperada.Eventos);
@@ -71,6 +73,10 @@ public class AppDbContextTests
                 .ConContactoEmail("ana@ejemplo.test")
                 .ConContactoTelefono("600123456")
                 .ConNotas("Hablar el lunes")
+                .ConRutaCv(@"C:\adjuntos\cv.pdf")
+                .ConNombreOriginalCv("mi-cv.pdf")
+                .ConRutaCarta(@"C:\adjuntos\carta.pdf")
+                .ConNombreOriginalCarta("mi-carta.pdf")
                 .ConEventos(new Evento(DateTime.Today, TipoEvento.Nota, "Antes"))
                 .Construir();
             db.Solicitudes.Add(solicitud);
@@ -112,6 +118,10 @@ public class AppDbContextTests
         Assert.Equal("ana@ejemplo.test", solicitudRecuperada.ContactoEmail);
         Assert.Equal("600123456", solicitudRecuperada.ContactoTelefono);
         Assert.Equal("Hablar el lunes", solicitudRecuperada.Notas);
+        Assert.Equal(@"C:\adjuntos\cv.pdf", solicitudRecuperada.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitudRecuperada.NombreOriginalCv);
+        Assert.Equal(@"C:\adjuntos\carta.pdf", solicitudRecuperada.RutaCarta);
+        Assert.Equal("mi-carta.pdf", solicitudRecuperada.NombreOriginalCarta);
 
         Evento recuperado = solicitudRecuperada.Eventos[0];
         Assert.Equal(new DateTime(2026, 5, 1), recuperado.Fecha);
