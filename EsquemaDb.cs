@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Data;
 
 using System.Diagnostics.CodeAnalysis;
+using GestorSolicitudes.Models;
 using Microsoft.Data.Sqlite;
 
 /// <summary>
@@ -57,5 +58,42 @@ internal static class EsquemaDb
             command.CommandText = $"ALTER TABLE Solicitudes ADD COLUMN \"{columna}\" {definicion};";
             command.ExecuteNonQuery();
         }
+    }
+
+    /// <summary>
+    /// Rellena el motivo de cierre de las filas antiguas: en los tres cierres negativos
+    /// el motivo pasa a ser obligatorio, y un motivo de empresa no vale para un cierre
+    /// propio. Es idempotente: después solo se escriben motivos válidos.
+    /// </summary>
+    internal static void NormalizarMotivosDeCierre(string ruta)
+    {
+        using var conexion = new SqliteConnection($"Data Source={ruta}");
+        conexion.Open();
+
+        using var command = conexion.CreateCommand();
+        command.CommandText = """
+            UPDATE Solicitudes SET MotivoRechazo = $noIndicado
+            WHERE Estado IN ($ofertaRechazada, $descartado, $retirada) AND MotivoRechazo IS NULL;
+            UPDATE Solicitudes SET MotivoRechazo = $noIndicado
+            WHERE Estado IN ($ofertaRechazada, $retirada)
+              AND MotivoRechazo IN ($experienciaInsuficiente, $seleccionaronOtro, $culturalFit, $puestoCancelado);
+            """;
+
+        foreach ((string nombre, int valor) in new[]
+        {
+            ("$noIndicado", (int)MotivoRechazo.NoIndicado),
+            ("$ofertaRechazada", (int)EstadoSolicitud.OfertaRechazada),
+            ("$descartado", (int)EstadoSolicitud.Rechazada),
+            ("$retirada", (int)EstadoSolicitud.Retirada),
+            ("$experienciaInsuficiente", (int)MotivoRechazo.ExperienciaInsuficiente),
+            ("$seleccionaronOtro", (int)MotivoRechazo.SeleccionaronOtroCandidato),
+            ("$culturalFit", (int)MotivoRechazo.CulturalFit),
+            ("$puestoCancelado", (int)MotivoRechazo.PuestoCanceladoOPausado),
+        })
+        {
+            command.Parameters.AddWithValue(nombre, valor);
+        }
+
+        command.ExecuteNonQuery();
     }
 }
