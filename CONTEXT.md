@@ -1,33 +1,26 @@
 # Estado del proyecto
 
-Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso).
+Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 
 ## Etapas
-- ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
-- ✅ 1: editor con búfer; la UI ya no ve la entidad.
+- ✅ 0: red de seguridad.
+- ✅ 1: editor con búfer; la UI no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- ✅ 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.17.
-- ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
-- ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
+- ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
+- 🔄 R: estados y reapertura (R.1–R.15); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
+- ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-Resolver las decisiones pendientes de `02-DOCS/decisiones/estados-y-reapertura.md` y empezar R.1 (`feat: TipoEvento.Reapertura`).
+R.1 (`feat: TipoEvento.Reapertura`).
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
-- El patrón de `Evento` (constructor público, privado para EF, métodos por intención) se replica en `Solicitud` durante la Etapa 3; `Solicitud.RegistrarEnvio` ya existe como primer método de negocio del modelo.
-- `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni por `Id`: un evento con `Original` nulo es siempre nuevo.
-- `MainViewModel.Guardar` borra con `db.Eventos.Remove` los `EventosEliminados`; el búfer no conoce la base.
-- `Evento` se muta por `Actualizar`; EF accede a sus propiedades por campo (`UsePropertyAccessMode(Field)` en `AppDbContext`).
-- `Solicitud.Eventos` es `IReadOnlyList` sobre campo privado (solo `AgregarEvento`/`QuitarEvento`); ida y vuelta con `Include` probada en `Guardar_SolicitudConEventos_SeRecuperaCompleta`.
-- Las listas enlazadas a entidades POCO (`MainViewModel.Solicitudes` en `MainWindow`) filtran `PropertyDescriptor` al no implementar `INotifyPropertyChanged`; en la edición lo evita el editor.
-- `CambiarEstado` (3.7) no valida transiciones ni motivo. Las reglas, `Reabrir` y el estado `EnPausa` van en la Etapa R (R.3 y R.4), cuando termine la Etapa 3. El test `CambiarEstado_SinMotivoNiFecha_LosDejaNulos` documenta el paso cerrado → abierto y se reescribe en R.4.
-- `FechaSolicitud` la escribe `ActualizarFechas` (3.8a); `FechaPrimeraRespuesta` y `RespuestaEmpresa`, `RegistrarRespuesta` (3.8b), con ambos valores opcionales e independientes.
-- `ProponerSeguimiento` es método de instancia de `Solicitud` (3.8a) y asigna él mismo la fecha; `PrepararNueva` lo llama. `ReglasSolicitud` desaparece (era su única regla). `Duplicar` copia con `Solicitud.CrearCopia()` (solo lo que describe la oferta; la nota localizada la pone el ViewModel) y `PrepararNueva` no asigna campos sueltos.
-- Longitudes máximas: una constante `LongitudMaximaX` por campo en el modelo, compartida por `[MaxLength]` y la validación de los métodos; `public const` si el editor las reutiliza. `RespuestaEmpresa` y `Notas` no tienen límite hoy: no añadir validación en 3.8b ni 3.9 sin decidirlo.
-- El editor repite esas longitudes con `[MaxLength]` y `MainViewModel.Validar` llama a `Editor.Validar()` (`ValidateAllProperties`) antes de `AplicarA`, para que los métodos del modelo no lancen `ArgumentException`. La pareja salario mínimo/máximo se valida en el editor (`ValidarRangoSalarial`).
-- El editor aplica estado, fechas y respuesta con una sola llamada a `CambiarEstado` (estado, motivo y fecha de cierre), `ActualizarFechas` y `RegistrarRespuesta` (fecha de primera respuesta y texto juntos); `AplicarFechas` ya no toca la primera respuesta ni el cierre.
-- Adjuntos: `AsignarCv`/`AsignarCarta` escriben ruta y nombre original juntos (500 y 260); `QuitarCv`/`QuitarCarta` borran ambos. `AplicarAdjuntos` los vuelca con esos métodos.
+- `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni `Id`: `Original` nulo es nuevo.
+- `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
+- EF accede por campo a `Evento` e `Id` de `Solicitud`; `Eventos` es `IReadOnlyList` sobre campo privado.
+- `CambiarEstado` no valida transiciones ni motivo: eso llega en R.3/R.4.
+- Longitudes: una constante por campo para `[MaxLength]` y la validación; `RespuestaEmpresa` y `Notas` sin límite hasta decidirlo.
+- El editor valida longitudes y rango salarial antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -38,11 +31,6 @@ Resolver las decisiones pendientes de `02-DOCS/decisiones/estados-y-reapertura.m
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- Auditoría previa a 3.14 completada: las escrituras de entidades estaban en `Solicitud` y `SolicitudBuilder`; las demás coincidencias eran del editor y sus tests. No hubo resultados para `SetValues`, `CurrentValue` ni `GetProperty`. `Duplicar` y `PrepararNueva` usan constructor y métodos del modelo.
-- 3.13b: completado en `5a5bf81`; el test de fallo de `SaveChanges` conserva adjuntos, editor y permite reintentar.
-- 3.15: propiedades económicas y fechas con `set` privados; el builder usa métodos del modelo y la ida y vuelta de `AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto` las comprueba.
-- 3.16: `Estado`, `MotivoRechazo`, `RespuestaEmpresa`, contacto y `Notas` con `set` privados; el builder pasa por `CambiarEstado`, `RegistrarRespuesta`, `ActualizarContacto` y `ActualizarNotas`, y la ida y vuelta los comprueba.
-- 3.17: `RutaCv`, `RutaCarta`, `NombreOriginal*` e `Id` con `set` privados; el builder usa `AsignarCv`/`AsignarCarta` y la ida y vuelta comprueba que la base asigna el `Id`.
-- Decidir si RespuestaEmpresa y Notas siguen siendo texto libre (hoy no tienen [MaxLength]).
-- Antes de R.3: resolver las decisiones pendientes de `02-DOCS/decisiones/estados-y-reapertura.md` (¿entra `EnPausa`?, ¿motivo obligatorio?, ¿`DiasProceso` cuenta el tiempo cerrada?, ¿se conserva el CV anterior?, ¿insignia por consulta o columna?).
+- Antes de R.2: decidir si entra `EnPausa`.
+- Antes de R.3: decidir motivo obligatorio, `DiasProceso` con tiempo cerrada, CV anterior e insignia.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
