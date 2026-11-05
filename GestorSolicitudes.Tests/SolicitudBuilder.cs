@@ -25,7 +25,8 @@ internal sealed class SolicitudBuilder
         return this;
     }
 
-    public SolicitudBuilder ConEstado(EstadoSolicitud estado) => this.Asignar(s => s.Estado = estado);
+    public SolicitudBuilder ConEstado(EstadoSolicitud estado) => this.Asignar(s =>
+        s.CambiarEstado(estado, s.MotivoRechazo, s.FechaCierre));
 
     public SolicitudBuilder ConFechaSolicitud(DateTime fecha) => this.Asignar(s =>
         s.ActualizarFechas(fecha, s.FechaEntrevista, s.ProximoSeguimiento));
@@ -72,18 +73,23 @@ internal sealed class SolicitudBuilder
     public SolicitudBuilder ConInteres(int interes) => this.Asignar(s =>
         s.ActualizarCondiciones(s.SalarioMin, s.SalarioMax, s.PretensionSalarial, interes));
 
-    public SolicitudBuilder ConMotivoRechazo(MotivoRechazo? motivo) => this.Asignar(s => s.MotivoRechazo = motivo);
+    public SolicitudBuilder ConMotivoRechazo(MotivoRechazo? motivo) => this.Asignar(s =>
+        s.CambiarEstado(s.Estado, motivo, s.FechaCierre));
 
     public SolicitudBuilder ConFechaEntrevista(DateTime? fecha) => this.Asignar(s =>
         s.ActualizarFechas(s.FechaSolicitud, fecha, s.ProximoSeguimiento));
 
-    public SolicitudBuilder ConRespuestaEmpresa(string? respuesta) => this.Asignar(s => s.RespuestaEmpresa = respuesta);
+    public SolicitudBuilder ConRespuestaEmpresa(string? respuesta) =>
+        this.Asignar(s => s.RegistrarRespuesta(s.FechaPrimeraRespuesta, respuesta));
 
-    public SolicitudBuilder ConContactoNombre(string? nombre) => this.Asignar(s => s.ContactoNombre = nombre);
+    public SolicitudBuilder ConContactoNombre(string? nombre) =>
+        this.Asignar(s => s.ActualizarContacto(nombre, s.ContactoEmail, s.ContactoTelefono));
 
-    public SolicitudBuilder ConContactoEmail(string? email) => this.Asignar(s => s.ContactoEmail = email);
+    public SolicitudBuilder ConContactoEmail(string? email) =>
+        this.Asignar(s => s.ActualizarContacto(s.ContactoNombre, email, s.ContactoTelefono));
 
-    public SolicitudBuilder ConContactoTelefono(string? telefono) => this.Asignar(s => s.ContactoTelefono = telefono);
+    public SolicitudBuilder ConContactoTelefono(string? telefono) =>
+        this.Asignar(s => s.ActualizarContacto(s.ContactoNombre, s.ContactoEmail, telefono));
 
     public SolicitudBuilder ConTecnologias(string? tecnologias)
     {
@@ -97,7 +103,7 @@ internal sealed class SolicitudBuilder
         return this;
     }
 
-    public SolicitudBuilder ConNotas(string? notas) => this.Asignar(s => s.Notas = notas);
+    public SolicitudBuilder ConNotas(string? notas) => this.Asignar(s => s.ActualizarNotas(notas));
 
     public SolicitudBuilder ConRutaCv(string? ruta) => this.Asignar(s => s.RutaCv = ruta);
 
@@ -140,10 +146,11 @@ internal sealed class SolicitudBuilder
             this.solicitud.ProximoSeguimiento);
         resultado.RegistrarRespuesta(this.solicitud.FechaPrimeraRespuesta, this.solicitud.RespuestaEmpresa);
         resultado.CambiarEstado(this.solicitud.Estado, this.solicitud.MotivoRechazo, this.solicitud.FechaCierre);
-        resultado.ContactoNombre = this.solicitud.ContactoNombre;
-        resultado.ContactoEmail = this.solicitud.ContactoEmail;
-        resultado.ContactoTelefono = this.solicitud.ContactoTelefono;
-        resultado.Notas = this.solicitud.Notas;
+        resultado.ActualizarContacto(
+            this.solicitud.ContactoNombre,
+            this.solicitud.ContactoEmail,
+            this.solicitud.ContactoTelefono);
+        resultado.ActualizarNotas(this.solicitud.Notas);
         resultado.RutaCv = this.solicitud.RutaCv;
         resultado.RutaCarta = this.solicitud.RutaCarta;
         resultado.NombreOriginalCv = this.solicitud.NombreOriginalCv;

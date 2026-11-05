@@ -6,12 +6,12 @@ Plan completo: 02-DOCS/plan-refactor-edicion.md (leer solo la sección en curso)
 - ✅ 0: red de seguridad (`SolicitudBuilder`, `RellenarObligatorios`).
 - ✅ 1: editor con búfer; la UI ya no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
-- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.15.
+- 🔄 3 (opcional): cerrar el modelo con constructor, métodos de negocio y `set` privados (3.1–3.17; la 3.7 se reduce, la 3.8 se divide en 3.8a y 3.8b, y se añaden 3.10b, 3.10c y 3.13b). Hechas: 3.1 a 3.16.
 - ⬜ R: estados y reapertura (R.1–R.15), entre la 3 y la 4; no empezar hasta cerrar la 3 (3.17); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6; la limpieza de `ReglasSolicitud` ya se hizo en 3.8a).
 
 ## Siguiente paso concreto
-Abordar el paso 3.16 (`refactor: set privado en estado, seguimiento y contacto`): cerrar `Estado`, `MotivoRechazo`, `RespuestaEmpresa`, los datos de contacto y `Notas`.
+Abordar el paso 3.17 (`refactor: set privado en adjuntos e Id`): cerrar `RutaCv`, `RutaCarta`, `NombreOriginal*` e `Id`, y comprobar en la ida y vuelta que la base asigna el `Id`.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -41,8 +41,9 @@ Abordar el paso 3.16 (`refactor: set privado en estado, seguimiento y contacto`)
 - Auditoría previa a 3.14 completada: las escrituras de entidades estaban en `Solicitud` y `SolicitudBuilder`; las demás coincidencias eran del editor y sus tests. No hubo resultados para `SetValues`, `CurrentValue` ni `GetProperty`. `Duplicar` y `PrepararNueva` usan constructor y métodos del modelo.
 - 3.13b: completado en `5a5bf81`; el test de fallo de `SaveChanges` conserva adjuntos, editor y permite reintentar.
 - 3.15: propiedades económicas y fechas con `set` privados; el builder usa métodos del modelo y la ida y vuelta de `AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto` las comprueba.
+- 3.16: `Estado`, `MotivoRechazo`, `RespuestaEmpresa`, contacto y `Notas` con `set` privados; el builder pasa por `CambiarEstado`, `RegistrarRespuesta`, `ActualizarContacto` y `ActualizarNotas`, y la ida y vuelta los comprueba.
 - 3.17: el test de ida y vuelta debe comprobar que la base asigna el `Id`.
 - Decidir si RespuestaEmpresa y Notas siguen siendo texto libre (hoy no tienen [MaxLength]).
-- 3.16–3.17: seguir ampliando el test de ida y vuelta (`AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto`) para probar los `set` privados.
+- 3.17: seguir ampliando el test de ida y vuelta (`AppDbContextTests.ActualizarEvento_SeGuardaYRecuperaCompleto`) para probar los `set` privados restantes.
 - Antes de R.3: resolver las decisiones pendientes de `02-DOCS/decisiones/estados-y-reapertura.md` (¿entra `EnPausa`?, ¿motivo obligatorio?, ¿`DiasProceso` cuenta el tiempo cerrada?, ¿se conserva el CV anterior?, ¿insignia por consulta o columna?).
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.

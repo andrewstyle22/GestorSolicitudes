@@ -62,8 +62,15 @@ public class AppDbContextTests
                 .ConFechaSolicitud(new DateTime(2026, 4, 10))
                 .ConFechaPrimeraRespuesta(new DateTime(2026, 4, 12))
                 .ConFechaEntrevista(new DateTime(2026, 4, 16))
+                .ConEstado(EstadoSolicitud.Rechazada)
+                .ConMotivoRechazo(MotivoRechazo.SeleccionaronOtroCandidato)
                 .ConFechaCierre(new DateTime(2026, 5, 1))
                 .ConProximoSeguimiento(new DateTime(2026, 4, 20))
+                .ConRespuestaEmpresa("Seguimos en contacto")
+                .ConContactoNombre("Ana")
+                .ConContactoEmail("ana@ejemplo.test")
+                .ConContactoTelefono("600123456")
+                .ConNotas("Hablar el lunes")
                 .ConEventos(new Evento(DateTime.Today, TipoEvento.Nota, "Antes"))
                 .Construir();
             db.Solicitudes.Add(solicitud);
@@ -98,6 +105,13 @@ public class AppDbContextTests
         Assert.Equal(new DateTime(2026, 4, 16), solicitudRecuperada.FechaEntrevista);
         Assert.Equal(new DateTime(2026, 5, 1), solicitudRecuperada.FechaCierre);
         Assert.Equal(new DateTime(2026, 4, 20), solicitudRecuperada.ProximoSeguimiento);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitudRecuperada.Estado);
+        Assert.Equal(MotivoRechazo.SeleccionaronOtroCandidato, solicitudRecuperada.MotivoRechazo);
+        Assert.Equal("Seguimos en contacto", solicitudRecuperada.RespuestaEmpresa);
+        Assert.Equal("Ana", solicitudRecuperada.ContactoNombre);
+        Assert.Equal("ana@ejemplo.test", solicitudRecuperada.ContactoEmail);
+        Assert.Equal("600123456", solicitudRecuperada.ContactoTelefono);
+        Assert.Equal("Hablar el lunes", solicitudRecuperada.Notas);
 
         Evento recuperado = solicitudRecuperada.Eventos[0];
         Assert.Equal(new DateTime(2026, 5, 1), recuperado.Fecha);

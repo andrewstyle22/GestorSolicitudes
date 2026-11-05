@@ -202,10 +202,10 @@ public class Solicitud
     }
 
     // --- Seguimiento ---
-    public EstadoSolicitud Estado { get; set; } = EstadoSolicitud.Enviada;
+    public EstadoSolicitud Estado { get; private set; } = EstadoSolicitud.Enviada;
 
     /// <summary>Gets or sets por qué se cerró en falso, cuando <see cref="Estado"/> es un rechazo.</summary>
-    public MotivoRechazo? MotivoRechazo { get; set; }
+    public MotivoRechazo? MotivoRechazo { get; private set; }
 
     /// <summary>
     /// Cambia el estado de la solicitud junto con su motivo de rechazo y su fecha de cierre.
@@ -219,7 +219,7 @@ public class Solicitud
     }
 
     /// <summary>Gets or sets texto literal o resumen de lo que contestó la empresa.</summary>
-    public string? RespuestaEmpresa { get; set; }
+    public string? RespuestaEmpresa { get; private set; }
 
     /// <summary>
     /// Registra la primera respuesta de la empresa. Fecha y texto son opcionales
@@ -232,14 +232,14 @@ public class Solicitud
     }
 
     [MaxLength(LongitudMaximaContactoNombre)]
-    public string? ContactoNombre { get; set; }
+    public string? ContactoNombre { get; private set; }
 
     [MaxLength(LongitudMaximaContactoEmail)]
-    public string? ContactoEmail { get; set; }
+    public string? ContactoEmail { get; private set; }
 
     /// <summary>Gets or sets teléfono de la persona de contacto (recruiter, hiring manager...).</summary>
     [MaxLength(LongitudMaximaContactoTelefono)]
-    public string? ContactoTelefono { get; set; }
+    public string? ContactoTelefono { get; private set; }
 
     /// <summary>
     /// Actualiza la persona de contacto: recorta espacios y exige que los textos
@@ -255,7 +255,7 @@ public class Solicitud
     /// <summary>Gets or sets interés propio en la oferta, de 1 a 5.</summary>
     public int Interes { get; private set; } = 3;
 
-    public string? Notas { get; set; }
+    public string? Notas { get; private set; }
 
     /// <summary>Actualiza las notas: recorta espacios y no impone límite de longitud.</summary>
     public void ActualizarNotas(string? notas) => this.Notas = notas?.Trim();
