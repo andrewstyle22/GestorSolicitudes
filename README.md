@@ -159,7 +159,7 @@ Lo vigila ArchUnitNET: las capas solo dependen hacia abajo, así que un helper n
 un `using` a `Views` dentro de un ViewModel tumba el CI.
 
 ```
-Solicitud.cs, Evento.cs, Adjunto.cs, Enumeraciones.cs → modelo, enums con [Description] y el adjunto que pinta la vista
+Solicitud.cs, Evento.cs, DatosOferta.cs, Adjunto.cs, Enumeraciones.cs → modelo, datos de oferta, enums con [Description] y el adjunto que pinta la vista
 EstadoSolicitudExtensiones.cs → estados que cuentan como proceso cerrado
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
@@ -213,15 +213,28 @@ todo el `ChangeTracker` y recarga de disco. Si algún día esto se convierte en 
 multiventana, el patrón correcto pasa a ser un contexto por operación con `IDbContextFactory`.
 
 **La edición va por un búfer, no por la entidad.** `SolicitudEdicionViewModel` (`Editor`) copia los
-datos al abrir, valida mientras se escribe y los vuelca de una vez con `AplicarA`; la UI no bindea
-contra `Solicitud`. Las filas de la tabla sí son POCOs sin `INotifyPropertyChanged`, por eso la lista
-se recarga entera después de cada guardado. El historial sigue el mismo camino: los hitos pendientes
-viven como `EventoViewModel` en `SolicitudEdicionViewModel.EventosEdicion` (emparejados por
-`Original`, nunca por posición ni por `Id`) y *Guardar* inserta, actualiza y borra contra la base.
-`Solicitud.Eventos` es un `IReadOnlyList<Evento>` sobre campo privado (`AgregarEvento` /
-`QuitarEvento`); `Evento` nace por constructor, se muta con `Actualizar` y EF lo lee por campo
-(`UsePropertyAccessMode(Field)`). Queda pendiente, y es opcional, cerrar del todo `Solicitud` con
-constructor, métodos de negocio y `set` privados: el detalle vive en `02-DOCS/plan-refactor-edicion.md`.
+datos al abrir y los valida mientras se escriben. La entidad no cambia hasta *Guardar*; *Cancelar*
+descarta el búfer. La validación se realiza antes de aplicar los datos al modelo. Las filas de la tabla
+siguen siendo entidades POCO de solo lectura y la lista se recarga después de cada guardado.
+
+El historial sigue el mismo camino: los hitos editables viven como `EventoViewModel` en
+`SolicitudEdicionViewModel.EventosEdicion`. Se emparejan con su entidad mediante `Original`, nunca
+por posición ni por `Id`; al guardar se crean los nuevos, se actualizan los existentes y se eliminan
+los quitados. Las bajas se conservan en el búfer hasta guardar, así que cancelar no las aplica.
+`Solicitud.Eventos` es un `IReadOnlyList<Evento>` sobre un campo privado y se modifica mediante
+`AgregarEvento` y `QuitarEvento`. `Evento` se crea con constructor y se actualiza con `Actualizar`;
+EF accede a sus propiedades por campo (`UsePropertyAccessMode(Field)`).
+
+**El modelo está encapsulado.** `Solicitud` se crea con empresa y puesto; su constructor sin
+parámetros es privado para EF. Los setters de sus propiedades son privados y los cambios pasan por
+métodos de negocio (`ActualizarOferta`, `ActualizarCondiciones`, `CambiarEstado`, entre otros), que
+aplican las validaciones y longitudes admitidas. `Solicitud.CrearCopia()` centraliza la duplicación de
+la parte reutilizable de una oferta. El plan completo y el estado de cada etapa están en
+[`02-DOCS/plan-refactor-edicion.md`](02-DOCS/plan-refactor-edicion.md).
+
+El cierre del modelo no implica todavía reglas para las transiciones de estado: por ahora,
+`CambiarEstado` asigna estado, motivo y fecha de cierre sin validar transiciones ni exigir motivo.
+La etapa R del plan abordará estados y reapertura antes de la etapa final de cierre y documentación.
 
 **`EnsureCreated()` en lugar de migraciones.** Va bien para empezar, pero no versiona el esquema:
 si añades una propiedad nueva al modelo, la tabla existente no se actualiza sola. Cuando quieras
