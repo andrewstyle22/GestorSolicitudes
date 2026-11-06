@@ -216,10 +216,25 @@ public class Solicitud
 
     /// <summary>
     /// Cambia el estado de la solicitud junto con su motivo de rechazo y su fecha de cierre.
+    /// Exige un motivo válido en los cierres negativos y lo limpia en el resto.
     /// Todavía no valida transiciones: eso llega con las reglas de estado.
     /// </summary>
     public void CambiarEstado(EstadoSolicitud estado, MotivoRechazo? motivo, DateTime? fechaCierre)
     {
+        if (estado.AdmiteMotivo())
+        {
+            if (motivo is not MotivoRechazo motivoValido || !estado.MotivosPermitidos().Contains(motivoValido))
+            {
+                throw new ArgumentException(
+                    "Los cierres negativos exigen un motivo válido para el estado.",
+                    nameof(motivo));
+            }
+        }
+        else
+        {
+            motivo = null;
+        }
+
         this.Estado = estado;
         this.MotivoRechazo = motivo;
         this.FechaCierre = fechaCierre;

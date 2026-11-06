@@ -314,6 +314,41 @@ public class SolicitudTests
         Assert.Equal(fecha, solicitud.FechaCierre);
     }
 
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.Retirada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    public void CambiarEstado_SinMotivoEnCierreNegativo_Lanza(EstadoSolicitud estado)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        ArgumentException excepcion = Assert.Throws<ArgumentException>(
+            () => solicitud.CambiarEstado(estado, null, null));
+
+        Assert.Equal("motivo", excepcion.ParamName);
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, MotivoRechazo.AceptoOtraOferta)]
+    [InlineData(EstadoSolicitud.Retirada, MotivoRechazo.ExperienciaInsuficiente)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, MotivoRechazo.CulturalFit)]
+    public void CambiarEstado_MotivoNoPermitido_Lanza(EstadoSolicitud estado, MotivoRechazo motivo)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.CambiarEstado(estado, motivo, null));
+    }
+
+    [Fact]
+    public void CambiarEstado_FueraDeLosCierres_LimpiaElMotivo()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Enviada, MotivoRechazo.Salario, null);
+
+        Assert.Null(solicitud.MotivoRechazo);
+    }
+
     [Fact]
     public void CambiarEstado_SinMotivoNiFecha_LosDejaNulos()
     {

@@ -2,6 +2,7 @@ namespace GestorSolicitudes.Tests;
 
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
+using Microsoft.EntityFrameworkCore;
 
 public class NormalizarMotivosTests
 {
@@ -47,9 +48,26 @@ public class NormalizarMotivosTests
     {
         using var db = TestDb.NuevoContexto(out string ruta);
         var solicitud = new Solicitud("Empresa", "Puesto");
-        solicitud.CambiarEstado(estado, motivo, null);
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
+
+        // Se escribe por SQL para simular una fila antigua con un motivo que el modelo ya rechaza.
+        if (motivo is null)
+        {
+            db.Database.ExecuteSqlRaw(
+                "UPDATE Solicitudes SET Estado = {0}, MotivoRechazo = NULL WHERE Id = {1}",
+                (int)estado,
+                solicitud.Id);
+        }
+        else
+        {
+            db.Database.ExecuteSqlRaw(
+                "UPDATE Solicitudes SET Estado = {0}, MotivoRechazo = {1} WHERE Id = {2}",
+                (int)estado,
+                (int)motivo.Value,
+                solicitud.Id);
+        }
+
         return ruta;
     }
 

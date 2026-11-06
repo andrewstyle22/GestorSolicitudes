@@ -11,14 +11,14 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.10 (`feat: CambiarEstado exige y valida el motivo`). R.9 quedó completado.
+R.11 (`feat: el editor detecta cerrado → abierto`). R.10 quedó completado.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
 - `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni `Id`: `Original` nulo es nuevo.
 - `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
 - EF accede por campo a `Evento` e `Id` de `Solicitud`; `Eventos` es `IReadOnlyList` sobre campo privado.
-- `CambiarEstado` no valida transiciones ni motivo: el motivo llega en R.10 y las transiciones en R.13.
+- `CambiarEstado` exige un motivo válido en los tres cierres negativos y lo limpia fuera de ellos; las transiciones llegan en R.13.
 - Estados: no se añade ninguno (ni `EnPausa` ni negociación). Reabrir es una acción, no un estado.
 - Motivo de cierre: obligatorio en Descartado, Retirada y Oferta rechazada por mí. Se amplía el enum `MotivoRechazo` con `NoIndicado`, `AceptoOtraOferta`, `ModalidadOUbicacion` y `YaNoMeInteresa`. El desplegable se filtra por estado y el editor preselecciona `NoIndicado`. El nombre `MotivoRechazo` no se cambia.
 - Reapertura: columna `FechaReapertura` (solo la última, sin contador) y `FueReabierta` [NotMapped]. `DiasProceso` cuenta desde `FechaReapertura ?? FechaSolicitud`. Insignia ↻ y borde magenta `#DB2777` en la fila.
@@ -35,6 +35,5 @@ R.10 (`feat: CambiarEstado exige y valida el motivo`). R.9 quedó completado.
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- Orden en la Etapa R: R.4, R.8 y R.9 antes de R.10; R.11 y R.12 antes de R.13. Si no, se rompen Guardar o la reapertura desde la interfaz.
-- Desde R.10, `SolicitudBuilder` debe poner `NoIndicado` por defecto en los tres estados con motivo.
+- Orden en la Etapa R: R.11 y R.12 antes de R.13. Si no, se rompe la reapertura desde la interfaz.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
