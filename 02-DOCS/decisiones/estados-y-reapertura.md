@@ -137,6 +137,8 @@ Método explícito del modelo, `Solicitud.Reabrir(nuevoEstado, nota)`, separado 
 6. `ProximoSeguimiento` se pone a `null` y la regla existente propone uno nuevo (+7 días).
 7. Se añade un hito `TipoEvento.Reapertura` con texto del estilo *"Reabierta. Antes: Descartado por la empresa (10/10, perfil no adecuado)"* más la nota opcional. Es la única copia del cierre anterior.
 
+La nota opcional del hito se toma del campo `Notas` del editor. Antes de guardar, la confirmación muestra el estado, fecha y motivo del cierre, el nuevo estado y esa nota; al reabrir una candidatura con oferta aceptada, el mensaje advierte expresamente que la oferta ya se había aceptado.
+
 **Modelo**
 - Propiedad `DateTime? FechaReapertura` con `set` privado, columna `TEXT NULL` añadida en `EsquemaDb`.
 - `[NotMapped] bool FueReabierta => FechaReapertura.HasValue`.

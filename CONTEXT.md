@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.12 (`feat: confirmación al reabrir`). R.11 quedó completado.
+R.13 (`feat: CambiarEstado valida las transiciones`). R.12 quedó completado.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -25,6 +25,7 @@ R.12 (`feat: confirmación al reabrir`). R.11 quedó completado.
 - El versionado de CV tras una reapertura queda fuera de alcance (otra refactorización).
 - Longitudes: una constante por campo para `[MaxLength]` y la validación; `RespuestaEmpresa` y `Notas` sin límite hasta decidirlo.
 - El editor valida longitudes y rango salarial antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
+- La nota opcional del hito de reapertura se toma del campo `Notas`.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.

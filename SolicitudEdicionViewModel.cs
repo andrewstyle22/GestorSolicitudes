@@ -328,11 +328,15 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// Vuelca al modelo solo los grupos cuya pestaña ya escribe en el editor. Mientras la UI
     /// siga bindeada a la entidad, ese grupo no se toca para no pisar lo editado.
     /// </summary>
-    public void AplicarA(Solicitud solicitud)
+    public void AplicarA(Solicitud solicitud, bool omitirEstado = false)
     {
         this.AplicarOferta(solicitud);
         this.AplicarEconomico(solicitud);
-        this.AplicarEstado(solicitud);
+        if (!omitirEstado)
+        {
+            this.AplicarEstado(solicitud);
+        }
+
         this.AplicarFechas(solicitud);
         this.AplicarRespuesta(solicitud);
         this.AplicarContacto(solicitud);

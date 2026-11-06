@@ -777,7 +777,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         if (this.Editor is SolicitudEdicionViewModel edicion)
         {
-            edicion.AplicarA(solicitud);
+            bool reaperturaPendiente = edicion.ReaperturaPendiente;
+            if (reaperturaPendiente && !this.ConfirmarReapertura(solicitud, edicion))
+            {
+                return;
+            }
+
+            edicion.AplicarA(solicitud, omitirEstado: reaperturaPendiente);
+            if (reaperturaPendiente)
+            {
+                solicitud.Reabrir(edicion.Estado, edicion.Notas);
+            }
 
             // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
             foreach (Evento eliminado in edicion.EventosEliminados)
@@ -800,6 +810,30 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
+    }
+
+    private bool ConfirmarReapertura(Solicitud solicitud, SolicitudEdicionViewModel edicion)
+    {
+        string fechaCierre = solicitud.FechaCierre?.ToString("d", Localizacion.CulturaActual)
+            ?? Localizacion.Texto("Mensaje.SinFechaCierre");
+        string motivoCierre = solicitud.MotivoRechazo is MotivoRechazo motivo
+            ? EnumHelper.Descripcion(motivo)
+            : Localizacion.Texto("Mensaje.SinMotivoCierre");
+        string nota = string.IsNullOrWhiteSpace(edicion.Notas)
+            ? Localizacion.Texto("Mensaje.SinNotaReapertura")
+            : edicion.Notas.Trim();
+        string claveMensaje = solicitud.Estado == EstadoSolicitud.OfertaAceptada
+            ? "Mensaje.ConfirmarReaperturaOfertaAceptada"
+            : "Mensaje.ConfirmarReapertura";
+        string mensaje = string.Format(
+            Localizacion.Texto(claveMensaje),
+            EnumHelper.Descripcion(solicitud.Estado),
+            fechaCierre,
+            motivoCierre,
+            EnumHelper.Descripcion(edicion.Estado),
+            nota);
+
+        return this.dialogo.Confirmar(mensaje, Localizacion.Texto("Titulo.ConfirmarReapertura"));
     }
 
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>

@@ -95,6 +95,104 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void Guardar_ReaperturaConfirmada_MuestraElCierreYRegistraElHito()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime fechaCierre = new(2026, 10, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.OfertaRechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(fechaCierre)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+        vm.Editor.Notas = "Retomamos el proceso";
+
+        vm.GuardarCommand.Execute(null);
+
+        string confirmacion = Assert.Single(dialogo.Confirmaciones);
+        Assert.Contains("Estado anterior: Oferta rechazada por mí", confirmacion);
+        Assert.Contains($"Fecha de cierre: {fechaCierre.ToString("d", Localizacion.CulturaActual)}", confirmacion);
+        Assert.Contains("Motivo de cierre: Salario / pretensión", confirmacion);
+        Assert.Contains("Nuevo estado: Entrevista técnica", confirmacion);
+        Assert.Contains("Nota: Retomamos el proceso", confirmacion);
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Null(solicitud.FechaCierre);
+        Assert.Null(solicitud.MotivoRechazo);
+        Assert.Equal(DateTime.Today, solicitud.FechaReapertura);
+        Evento hito = Assert.Single(solicitud.Eventos);
+        Assert.Equal(TipoEvento.Reapertura, hito.Tipo);
+        Assert.Contains("Retomamos el proceso", hito.Descripcion);
+        Assert.Null(vm.Editor);
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaCancelada_ConservaElCierreYLaEdicion()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime fechaCierre = new(2026, 10, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(fechaCierre)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.Enviada;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Confirmaciones);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.Equal(fechaCierre, solicitud.FechaCierre);
+        Assert.Equal(MotivoRechazo.Salario, solicitud.MotivoRechazo);
+        Assert.False(solicitud.FueReabierta);
+        Assert.NotNull(vm.Editor);
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaDesdeOfertaAceptada_UsaConfirmacionReforzada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.OfertaAceptada)
+            .ConFechaCierre(null)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.Enviada;
+
+        vm.GuardarCommand.Execute(null);
+
+        string confirmacion = Assert.Single(dialogo.Confirmaciones);
+        Assert.Contains("Habías aceptado esta oferta. ¿Seguro", confirmacion);
+        Assert.Contains("Fecha de cierre: Sin fecha", confirmacion);
+        Assert.Contains("Motivo de cierre: No aplica", confirmacion);
+        Assert.Contains("Nota: Sin nota", confirmacion);
+        Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
+        Assert.Equal(TipoEvento.Reapertura, Assert.Single(solicitud.Eventos).Tipo);
+    }
+
+    [Fact]
     public void AdjuntarCv_CopiaElFicheroYPoneElNombreOriginal()
     {
         using var db = TestDb.NuevoContexto();
