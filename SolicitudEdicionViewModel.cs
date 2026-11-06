@@ -194,7 +194,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.OnPropertyChanged(nameof(this.MotivosDelEstado));
     }
 
-    private static IReadOnlyList<EnumItem> CrearMotivos(EstadoSolicitud estado) =>
+    private static List<EnumItem> CrearMotivos(EstadoSolicitud estado) =>
         estado.MotivosPermitidos()
             .Select(motivo => new EnumItem(motivo, EnumHelper.Descripcion(motivo)))
             .ToList();
