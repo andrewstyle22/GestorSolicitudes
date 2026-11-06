@@ -560,4 +560,70 @@ public class SolicitudEdicionTests
 
         Assert.Equal(MotivoRechazo.NoIndicado, editor.MotivoRechazo);
     }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.OfertaAceptada, EstadoSolicitud.EntrevistaTecnica)]
+    [InlineData(EstadoSolicitud.Rechazada, EstadoSolicitud.Enviada)]
+    [InlineData(EstadoSolicitud.Retirada, EstadoSolicitud.OfertaRecibida)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, EstadoSolicitud.PruebaTecnica)]
+    public void ReaperturaPendiente_CerradoAAbierto_EsTrue(
+        EstadoSolicitud estadoCerrado,
+        EstadoSolicitud estadoAbierto)
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(estadoCerrado).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.False(editor.ReaperturaPendiente);
+
+        editor.Estado = estadoAbierto;
+
+        Assert.True(editor.ReaperturaPendiente);
+    }
+
+    [Fact]
+    public void ReaperturaPendiente_AbiertoAAbierto_EsFalse()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Enviada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        editor.Estado = EstadoSolicitud.EntrevistaRrhh;
+
+        Assert.False(editor.ReaperturaPendiente);
+    }
+
+    [Fact]
+    public void ReaperturaPendiente_CerradoACerrado_EsFalse()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        editor.Estado = EstadoSolicitud.Retirada;
+
+        Assert.False(editor.ReaperturaPendiente);
+    }
+
+    [Fact]
+    public void ReaperturaPendiente_AlVolverAlEstadoOriginal_EsFalse()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+        editor.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        editor.Estado = EstadoSolicitud.Rechazada;
+
+        Assert.False(editor.ReaperturaPendiente);
+    }
+
+    [Fact]
+    public void ReaperturaPendiente_SeNotificaAlCambiarEstado()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+        var notificados = new List<string?>();
+        editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
+
+        editor.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        Assert.Contains(nameof(editor.ReaperturaPendiente), notificados);
+    }
 }

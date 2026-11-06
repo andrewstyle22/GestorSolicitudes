@@ -72,6 +72,11 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Gets si el estado actual pide motivo de cierre.</summary>
     public bool AdmiteMotivo => this.Estado.AdmiteMotivo();
 
+    /// <summary>Gets si el búfer pasa una candidatura cerrada a un estado abierto.</summary>
+    public bool ReaperturaPendiente => this.estadoOriginal.EstaCerrada() && !this.Estado.EstaCerrada();
+
+    private EstadoSolicitud estadoOriginal = EstadoSolicitud.Enviada;
+
     private IReadOnlyList<EnumItem> motivosDelEstado = [];
 
     /// <summary>Gets los motivos válidos para el estado actual, sin la entrada vacía del filtro.</summary>
@@ -165,6 +170,8 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
     partial void OnEstadoChanged(EstadoSolicitud value)
     {
+        this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
+
         if (!value.AdmiteMotivo())
         {
             this.MotivoRechazo = null;
@@ -209,7 +216,9 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.Interes = solicitud.Interes;
         // El motivo va antes que el estado: al asignar el estado se normaliza el motivo.
         this.MotivoRechazo = solicitud.MotivoRechazo;
+        this.estadoOriginal = solicitud.Estado;
         this.Estado = solicitud.Estado;
+        this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
         this.FechaSolicitud = solicitud.FechaSolicitud;
         this.FechaPrimeraRespuesta = solicitud.FechaPrimeraRespuesta;
         this.FechaEntrevista = solicitud.FechaEntrevista;

@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.11 (`feat: el editor detecta cerrado → abierto`). R.10 quedó completado.
+R.12 (`feat: confirmación al reabrir`). R.11 quedó completado.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
