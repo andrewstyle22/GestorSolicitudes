@@ -44,6 +44,39 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void DiasProceso_ReabiertaCuentaDesdeLaUltimaReapertura()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
+            .Construir();
+        MarcarReabierta(solicitud, DateTime.Today.AddDays(-3));
+
+        Assert.Equal(3, solicitud.DiasProceso);
+    }
+
+    [Fact]
+    public void DiasProceso_ReabiertaYCerradaCuentaDesdeLaUltimaReapertura()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaSolicitud(new DateTime(2026, 1, 1))
+            .ConFechaCierre(new DateTime(2026, 1, 20))
+            .Construir();
+        MarcarReabierta(solicitud, new DateTime(2026, 1, 10));
+
+        Assert.Equal(10, solicitud.DiasProceso);
+    }
+
+    private static void MarcarReabierta(Solicitud solicitud, DateTime fecha)
+    {
+        // FechaReapertura aún no tiene setter público: se escribe como lo hará EF (por campo).
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(solicitud);
+        db.Entry(solicitud).Property(s => s.FechaReapertura).CurrentValue = fecha;
+    }
+
+    [Fact]
     public void Solicitud_ConstructorAsignaEmpresaYPuesto()
     {
         var solicitud = new Solicitud("ACME", "Dev");

@@ -342,14 +342,20 @@ public class Solicitud
     public int DiasDesdeSolicitud => (int)(DateTime.Today - this.FechaSolicitud.Date).TotalDays;
 
     /// <summary>
-    /// Gets días desde el envío mientras el proceso sigue abierto; una vez cerrado,
-    /// en vez de seguir contando hasta hoy (lo que ya no dice nada), muestra cuánto
-    /// duró en total hasta <see cref="FechaCierre"/>.
+    /// Gets días desde el envío, o desde la última reapertura, mientras el proceso sigue
+    /// abierto; una vez cerrado, en vez de seguir contando hasta hoy (lo que ya no dice
+    /// nada), muestra cuánto duró en total hasta <see cref="FechaCierre"/>.
     /// </summary>
     [NotMapped]
-    public int DiasProceso => this.EstaAbierta
-        ? this.DiasDesdeSolicitud
-        : (int)((this.FechaCierre ?? DateTime.Today).Date - this.FechaSolicitud.Date).TotalDays;
+    public int DiasProceso
+    {
+        get
+        {
+            DateTime referencia = this.FechaReapertura ?? this.FechaSolicitud;
+            DateTime fin = this.EstaAbierta ? DateTime.Today : this.FechaCierre ?? DateTime.Today;
+            return (int)(fin.Date - referencia.Date).TotalDays;
+        }
+    }
 
     [NotMapped]
     public int? DiasHastaRespuesta => this.FechaPrimeraRespuesta.HasValue
