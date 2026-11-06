@@ -469,4 +469,54 @@ public class SolicitudEdicionTests
         Assert.Equal("Ana", solicitud.ContactoNombre);
         Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
     }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, true)]
+    [InlineData(EstadoSolicitud.Retirada, true)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, true)]
+    [InlineData(EstadoSolicitud.Enviada, false)]
+    [InlineData(EstadoSolicitud.OfertaAceptada, false)]
+    public void AdmiteMotivo_DependeDelEstado(EstadoSolicitud estado, bool esperado)
+    {
+        var editor = new SolicitudEdicionViewModel { Estado = estado };
+
+        Assert.Equal(esperado, editor.AdmiteMotivo);
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.Retirada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    public void MotivosDelEstado_SonLosPermitidosSinLaEntradaVacia(EstadoSolicitud estado)
+    {
+        var editor = new SolicitudEdicionViewModel { Estado = estado };
+
+        Assert.Equal(estado.MotivosPermitidos(), editor.MotivosDelEstado.Select(i => (MotivoRechazo)i.Valor!));
+        Assert.DoesNotContain(editor.MotivosDelEstado, i => i.Valor is null);
+    }
+
+    [Fact]
+    public void CambiarEstado_NotificaLosMotivosYLaVisibilidad()
+    {
+        var editor = new SolicitudEdicionViewModel();
+        var notificados = new List<string?>();
+        editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
+
+        editor.Estado = EstadoSolicitud.Rechazada;
+
+        Assert.Contains(nameof(editor.AdmiteMotivo), notificados);
+        Assert.Contains(nameof(editor.MotivosDelEstado), notificados);
+    }
+
+    [Fact]
+    public void RefrescarMotivosDelEstado_NotificaLaLista()
+    {
+        var editor = new SolicitudEdicionViewModel { Estado = EstadoSolicitud.Rechazada };
+        var notificados = new List<string?>();
+        editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
+
+        editor.RefrescarMotivosDelEstado();
+
+        Assert.Contains(nameof(editor.MotivosDelEstado), notificados);
+    }
 }

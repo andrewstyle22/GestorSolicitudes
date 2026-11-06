@@ -12,10 +12,10 @@
                       SelectedValuePath="Valor"
                       SelectedValue="{Binding Editor.Estado}" Margin="9,0,9,0" />
 
-            <StackPanel Visibility="{Binding Editor.Estado, Converter={StaticResource EstadoEsRechazadaAVisibilidad}}">
+            <StackPanel Visibility="{Binding Editor.AdmiteMotivo, Converter={StaticResource BooleanoAVisibilidad}}">
                 <TextBlock Text="{DynamicResource Seguimiento.MotivoRechazo}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
                 <ComboBox Style="{StaticResource CampoCombo}"
-                          ItemsSource="{Binding MotivosRechazo}"
+                          ItemsSource="{Binding Editor.MotivosDelEstado}"
                           DisplayMemberPath="Descripcion"
                           SelectedValuePath="Valor"
                           SelectedValue="{Binding Editor.MotivoRechazo}" Margin="9,0,9,0" />

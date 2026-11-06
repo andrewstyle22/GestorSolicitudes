@@ -83,10 +83,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private IReadOnlyList<EnumItem> origenes = Array.Empty<EnumItem>();
 
-    /// <summary>Gets motivos de rechazo, con un valor "sin especificar" al principio para poder dejarlo en blanco.</summary>
-    [ObservableProperty]
-    private IReadOnlyList<EnumItem> motivosRechazo = Array.Empty<EnumItem>();
-
     /// <summary>Gets valores posibles del interés (1 a 5), para el desplegable del panel de detalle.</summary>
     public IReadOnlyList<int> NivelesInteres { get; } = new[] { 1, 2, 3, 4, 5 };
 
@@ -111,10 +107,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Origenes = EnumHelper.Valores<Origen>();
         this.GranularidadesEmbudo = EnumHelper.Valores<GranularidadEmbudo>();
 
-        this.MotivosRechazo = new List<EnumItem> { new(null, Localizacion.Texto("Filtro.SinEspecificar")) }
-            .Concat(EnumHelper.Valores<MotivoRechazo>())
-            .ToList();
-
         this.EstadosFiltro = new List<EnumItem> { new(null, Localizacion.Texto("Filtro.TodosLosEstados")) }
             .Concat(this.Estados)
             .ToList();
@@ -126,6 +118,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // Los nombres de las columnas ocultables salen del diccionario, así que también
         // se releen al cambiar de idioma.
         this.ColumnasVm.RefrescarNombres();
+
+        // El editor arma su lista de motivos al vuelo; hay que avisarle del cambio de idioma.
+        this.Editor?.RefrescarMotivosDelEstado();
     }
 
     // ---------------------------------------------------------------- Columnas

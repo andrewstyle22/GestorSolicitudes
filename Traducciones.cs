@@ -72,7 +72,6 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Borrar la búsqueda"),
         ("Filtro.SoloAbiertas", "Solo abiertas"),
         ("Filtro.SeguimientoPendiente", "Seguimiento pendiente"),
-        ("Filtro.SinEspecificar", "Sin especificar"),
         ("Filtro.TodosLosEstados", "Todos los estados"),
 
         // ----- Columnas de la tabla -----
@@ -126,7 +125,7 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Estado actual"),
-        ("Seguimiento.MotivoRechazo", "Motivo del rechazo"),
+        ("Seguimiento.MotivoRechazo", "Motivo del cierre"),
         ("Seguimiento.FechaSolicitud", "Fecha de solicitud"),
         ("Seguimiento.PrimeraContestacion", "1ª contestación"),
         ("Seguimiento.DiaEntrevista", "Día de la entrevista"),
@@ -334,7 +333,6 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Clear search"),
         ("Filtro.SoloAbiertas", "Open only"),
         ("Filtro.SeguimientoPendiente", "Follow-up due"),
-        ("Filtro.SinEspecificar", "Not specified"),
         ("Filtro.TodosLosEstados", "All statuses"),
 
         // ----- Columnas de la tabla -----
@@ -388,7 +386,7 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Current status"),
-        ("Seguimiento.MotivoRechazo", "Reason for rejection"),
+        ("Seguimiento.MotivoRechazo", "Reason for closing"),
         ("Seguimiento.FechaSolicitud", "Application date"),
         ("Seguimiento.PrimeraContestacion", "First response"),
         ("Seguimiento.DiaEntrevista", "Interview day"),
@@ -596,7 +594,6 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
         ("Filtro.SeguimientoPendiente", "Nachverfolgung fällig"),
-        ("Filtro.SinEspecificar", "Nicht angegeben"),
         ("Filtro.TodosLosEstados", "Alle Status"),
 
         // ----- Columnas de la tabla -----
@@ -650,7 +647,7 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Aktueller Status"),
-        ("Seguimiento.MotivoRechazo", "Grund der Ablehnung"),
+        ("Seguimiento.MotivoRechazo", "Grund des Abschlusses"),
         ("Seguimiento.FechaSolicitud", "Bewerbungsdatum"),
         ("Seguimiento.PrimeraContestacion", "Erste Antwort"),
         ("Seguimiento.DiaEntrevista", "Tag des Interviews"),

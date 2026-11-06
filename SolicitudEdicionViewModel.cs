@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
 /// <summary>
@@ -61,10 +62,21 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private int interes = 3;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AdmiteMotivo))]
+    [NotifyPropertyChangedFor(nameof(MotivosDelEstado))]
     private EstadoSolicitud estado = EstadoSolicitud.Enviada;
 
     [ObservableProperty]
     private MotivoRechazo? motivoRechazo;
+
+    /// <summary>Gets si el estado actual pide motivo de cierre.</summary>
+    public bool AdmiteMotivo => this.Estado.AdmiteMotivo();
+
+    /// <summary>Gets los motivos válidos para el estado actual, sin la entrada vacía del filtro.</summary>
+    public IReadOnlyList<EnumItem> MotivosDelEstado =>
+        this.Estado.MotivosPermitidos()
+            .Select(motivo => new EnumItem(motivo, EnumHelper.Descripcion(motivo)))
+            .ToList();
 
     [ObservableProperty]
     private DateTime fechaSolicitud = DateTime.Today;
@@ -153,6 +165,9 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>
     public void Validar() => this.ValidateAllProperties();
+
+    /// <summary>Relee los textos de los motivos del estado tras un cambio de idioma.</summary>
+    public void RefrescarMotivosDelEstado() => this.OnPropertyChanged(nameof(this.MotivosDelEstado));
 
     public void CargarDesde(Solicitud solicitud)
     {
