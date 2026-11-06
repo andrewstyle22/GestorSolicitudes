@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.9 (`feat: el editor preselecciona NoIndicado`). R.8 quedó completado.
+R.10 (`feat: CambiarEstado exige y valida el motivo`). R.9 quedó completado.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

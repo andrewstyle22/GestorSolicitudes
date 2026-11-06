@@ -519,4 +519,45 @@ public class SolicitudEdicionTests
 
         Assert.Contains(nameof(editor.MotivosDelEstado), notificados);
     }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, null, MotivoRechazo.NoIndicado)]
+    [InlineData(EstadoSolicitud.Retirada, MotivoRechazo.ExperienciaInsuficiente, MotivoRechazo.NoIndicado)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, MotivoRechazo.AceptoOtraOferta, MotivoRechazo.AceptoOtraOferta)]
+    public void CambiarEstado_PreseleccionaNoIndicadoSiElMotivoNoVale(
+        EstadoSolicitud estado,
+        MotivoRechazo? motivo,
+        MotivoRechazo esperado)
+    {
+        var editor = new SolicitudEdicionViewModel { Estado = EstadoSolicitud.Enviada, MotivoRechazo = motivo };
+
+        editor.Estado = estado;
+
+        Assert.Equal(esperado, editor.MotivoRechazo);
+    }
+
+    [Fact]
+    public void CambiarEstado_FueraDeLosCierres_LimpiaElMotivo()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Estado = EstadoSolicitud.Rechazada,
+            MotivoRechazo = MotivoRechazo.Salario,
+        };
+
+        editor.Estado = EstadoSolicitud.OfertaAceptada;
+
+        Assert.Null(editor.MotivoRechazo);
+    }
+
+    [Fact]
+    public void CargarDesde_ConEstadoQueAdmiteMotivoYVacio_PreseleccionaNoIndicado()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CargarDesde(solicitud);
+
+        Assert.Equal(MotivoRechazo.NoIndicado, editor.MotivoRechazo);
+    }
 }

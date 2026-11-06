@@ -163,6 +163,19 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     partial void OnPuestoChanged(string value) => this.ValidateProperty(value, nameof(this.Puesto));
 
+    /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
+    partial void OnEstadoChanged(EstadoSolicitud value)
+    {
+        if (!value.AdmiteMotivo())
+        {
+            this.MotivoRechazo = null;
+        }
+        else if (this.MotivoRechazo is not MotivoRechazo motivo || !value.MotivosPermitidos().Contains(motivo))
+        {
+            this.MotivoRechazo = Models.MotivoRechazo.NoIndicado;
+        }
+    }
+
     /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>
     public void Validar() => this.ValidateAllProperties();
 
@@ -184,8 +197,9 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.SalarioMax = solicitud.SalarioMax;
         this.PretensionSalarial = solicitud.PretensionSalarial;
         this.Interes = solicitud.Interes;
-        this.Estado = solicitud.Estado;
+        // El motivo va antes que el estado: al asignar el estado se normaliza el motivo.
         this.MotivoRechazo = solicitud.MotivoRechazo;
+        this.Estado = solicitud.Estado;
         this.FechaSolicitud = solicitud.FechaSolicitud;
         this.FechaPrimeraRespuesta = solicitud.FechaPrimeraRespuesta;
         this.FechaEntrevista = solicitud.FechaEntrevista;
