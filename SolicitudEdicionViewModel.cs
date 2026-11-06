@@ -72,11 +72,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Gets si el estado actual pide motivo de cierre.</summary>
     public bool AdmiteMotivo => this.Estado.AdmiteMotivo();
 
+    private IReadOnlyList<EnumItem> motivosDelEstado = [];
+
     /// <summary>Gets los motivos válidos para el estado actual, sin la entrada vacía del filtro.</summary>
-    public IReadOnlyList<EnumItem> MotivosDelEstado =>
-        this.Estado.MotivosPermitidos()
-            .Select(motivo => new EnumItem(motivo, EnumHelper.Descripcion(motivo)))
-            .ToList();
+    public IReadOnlyList<EnumItem> MotivosDelEstado => this.motivosDelEstado;
 
     [ObservableProperty]
     private DateTime fechaSolicitud = DateTime.Today;
@@ -174,13 +173,24 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         {
             this.MotivoRechazo = Models.MotivoRechazo.NoIndicado;
         }
+
+        this.motivosDelEstado = CrearMotivos(value);
     }
 
     /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>
     public void Validar() => this.ValidateAllProperties();
 
     /// <summary>Relee los textos de los motivos del estado tras un cambio de idioma.</summary>
-    public void RefrescarMotivosDelEstado() => this.OnPropertyChanged(nameof(this.MotivosDelEstado));
+    public void RefrescarMotivosDelEstado()
+    {
+        this.motivosDelEstado = CrearMotivos(this.Estado);
+        this.OnPropertyChanged(nameof(this.MotivosDelEstado));
+    }
+
+    private static IReadOnlyList<EnumItem> CrearMotivos(EstadoSolicitud estado) =>
+        estado.MotivosPermitidos()
+            .Select(motivo => new EnumItem(motivo, EnumHelper.Descripcion(motivo)))
+            .ToList();
 
     public void CargarDesde(Solicitud solicitud)
     {
