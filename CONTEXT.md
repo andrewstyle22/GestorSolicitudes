@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.7 (`feat: Solicitud.Reabrir(nuevoEstado, nota)`). R.6 quedó completado.
+R.8 (`feat: desplegable de motivo filtrado por estado`). R.7 quedó completado.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

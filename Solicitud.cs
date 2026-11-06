@@ -1,8 +1,10 @@
 namespace GestorSolicitudes.Models;
 
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
+using System.Reflection;
 
 /// <summary>
 /// Una candidatura enviada a una oferta concreta.
@@ -202,7 +204,7 @@ public class Solicitud
     {
         if (this.EstaAbierta && this.ProximoSeguimiento is null)
         {
-            this.ProximoSeguimiento = this.FechaSolicitud.AddDays(7);
+            this.ProximoSeguimiento = (this.FechaReapertura ?? this.FechaSolicitud).AddDays(7);
         }
     }
 
@@ -222,6 +224,64 @@ public class Solicitud
         this.MotivoRechazo = motivo;
         this.FechaCierre = fechaCierre;
     }
+
+    /// <summary>
+    /// Reabre una candidatura cerrada en un estado abierto: limpia el cierre anterior,
+    /// reinicia el contador de días y guarda el cierre en el historial.
+    /// </summary>
+    public void Reabrir(EstadoSolicitud nuevoEstado, string? nota)
+    {
+        if (!this.Estado.EstaCerrada())
+        {
+            throw new InvalidOperationException("Solo se puede reabrir una candidatura cerrada.");
+        }
+
+        if (nuevoEstado.EstaCerrada() || nuevoEstado == EstadoSolicitud.SinRespuesta)
+        {
+            throw new ArgumentException(
+                "La candidatura debe reabrirse a un estado abierto distinto de \"Sin respuesta\".",
+                nameof(nuevoEstado));
+        }
+
+        DateTime hoy = DateTime.Today;
+        string cierreAnterior = this.DescribirCierre();
+        string? notaRecortada = nota?.Trim();
+
+        this.Estado = nuevoEstado;
+        this.FechaCierre = null;
+        this.MotivoRechazo = null;
+        this.fechaReapertura = hoy;
+        this.FechaPrimeraRespuesta ??= hoy;
+        this.ProximoSeguimiento = null;
+        this.ProponerSeguimiento();
+
+        string descripcion = $"Reabierta. Antes: {cierreAnterior}";
+        if (!string.IsNullOrEmpty(notaRecortada))
+        {
+            descripcion += $". {notaRecortada}";
+        }
+
+        this.AgregarEvento(new Evento(hoy, TipoEvento.Reapertura, descripcion));
+    }
+
+    private string DescribirCierre()
+    {
+        string estado = Texto(this.Estado);
+        if (this.FechaCierre is null)
+        {
+            return estado;
+        }
+
+        string fecha = this.FechaCierre.Value.ToString("dd/MM", System.Globalization.CultureInfo.InvariantCulture);
+        string? motivo = this.MotivoRechazo is null ? null : Texto(this.MotivoRechazo.Value);
+        return motivo is null ? $"{estado} ({fecha})" : $"{estado} ({fecha}, {motivo})";
+    }
+
+    // El modelo no puede depender de Helpers: el hito guarda el cierre como texto histórico
+    // con el [Description] del enum, en castellano.
+    private static string Texto(Enum valor) =>
+        valor.GetType().GetField(valor.ToString())?.GetCustomAttribute<DescriptionAttribute>()?.Description
+        ?? valor.ToString();
 
     /// <summary>Gets or sets texto literal o resumen de lo que contestó la empresa.</summary>
     public string? RespuestaEmpresa { get; private set; }

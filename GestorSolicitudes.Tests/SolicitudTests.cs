@@ -331,6 +331,153 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void Reabrir_AsignaEstadoYLimpiaElCierre()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .ConFechaSolicitud(new DateTime(2026, 9, 1))
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.EntrevistaTecnica, null);
+
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Null(solicitud.FechaCierre);
+        Assert.Null(solicitud.MotivoRechazo);
+        Assert.Equal(new DateTime(2026, 9, 1), solicitud.FechaSolicitud);
+        Assert.True(solicitud.FueReabierta);
+    }
+
+    [Fact]
+    public void Reabrir_MarcaLaReaperturaDeHoy()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Retirada)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .Construir();
+        MarcarReabierta(solicitud, new DateTime(2026, 1, 1));
+
+        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+
+        Assert.Equal(DateTime.Today, solicitud.FechaReapertura);
+    }
+
+    [Fact]
+    public void Reabrir_SinPrimeraRespuesta_LaRellenaConHoy()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+    }
+
+    [Fact]
+    public void Reabrir_ConservaLaPrimeraRespuestaQueYaExistia()
+    {
+        var primeraRespuesta = new DateTime(2026, 9, 5);
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .ConFechaPrimeraRespuesta(primeraRespuesta)
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+
+        Assert.Equal(primeraRespuesta, solicitud.FechaPrimeraRespuesta);
+    }
+
+    [Fact]
+    public void Reabrir_ProponeUnSeguimientoNuevoASieteDias()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .ConFechaSolicitud(new DateTime(2026, 9, 1))
+            .ConProximoSeguimiento(new DateTime(2026, 9, 8))
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+
+        Assert.Equal(DateTime.Today.AddDays(7), solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void Reabrir_AnadeElHitoConElCierreAnteriorYLaNota()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.CulturalFit)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.EntrevistaRrhh, "  perfil no adecuado  ");
+
+        Evento evento = Assert.Single(solicitud.Eventos);
+        Assert.Equal(DateTime.Today, evento.Fecha);
+        Assert.Equal(TipoEvento.Reapertura, evento.Tipo);
+        Assert.Equal(
+            "Reabierta. Antes: Descartado por la empresa (10/10, No encajaba con el equipo/cultura). perfil no adecuado",
+            evento.Descripcion);
+    }
+
+    [Fact]
+    public void Reabrir_SinMotivoNiNota_DescribeSoloElEstadoYLaFecha()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.OfertaAceptada)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+
+        Assert.Equal(
+            "Reabierta. Antes: Oferta aceptada (10/10)",
+            Assert.Single(solicitud.Eventos).Descripcion);
+    }
+
+    [Fact]
+    public void Reabrir_SinFechaDeCierre_DescribeSoloElEstado()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(null)
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+
+        Assert.Equal(
+            "Reabierta. Antes: Descartado por la empresa",
+            Assert.Single(solicitud.Eventos).Descripcion);
+    }
+
+    [Fact]
+    public void Reabrir_UnaCandidaturaAbierta_Lanza()
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Enviada).Construir();
+
+        Assert.Throws<InvalidOperationException>(
+            () => solicitud.Reabrir(EstadoSolicitud.EntrevistaRrhh, null));
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.OfertaAceptada)]
+    [InlineData(EstadoSolicitud.SinRespuesta)]
+    public void Reabrir_AUnEstadoNoPermitido_Lanza(EstadoSolicitud nuevoEstado)
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.Reabrir(nuevoEstado, null));
+    }
+
+    [Fact]
     public void RegistrarRespuesta_AsignaFechaYTexto()
     {
         var solicitud = new SolicitudBuilder().Construir();
