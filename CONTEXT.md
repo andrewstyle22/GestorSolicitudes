@@ -7,11 +7,11 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ✅ 1: editor con búfer; la UI no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
-- 🔄 R: estados y reapertura (R.1–R.22); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
+- 🔄 R: estados y reapertura (R.1–R.22, con las correcciones R.12a–R.12g tras la R.12); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.13 (`feat: CambiarEstado valida las transiciones`). R.12 quedó completado.
+R.12a (`fix: la reapertura se decide con el estado de la entidad`). Después R.12b a R.12g, en orden, y solo entonces R.13. R.12 quedó completada, pero tras revisarla hay siete correcciones; el detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -25,7 +25,11 @@ R.13 (`feat: CambiarEstado valida las transiciones`). R.12 quedó completado.
 - El versionado de CV tras una reapertura queda fuera de alcance (otra refactorización).
 - Longitudes: una constante por campo para `[MaxLength]` y la validación; `RespuestaEmpresa` y `Notas` sin límite hasta decidirlo.
 - El editor valida longitudes y rango salarial antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
-- La nota opcional del hito de reapertura se toma del campo `Notas`.
+- La nota de la reapertura es **obligatoria**, en un campo propio del editor (`NotaReapertura`, 300 caracteres) visible en Seguimiento solo con reapertura pendiente; solo se guarda en el texto del hito. Hoy sale de `Notas` y se corrige en R.12d a R.12f.
+- Al reabrir se respeta el `ProximoSeguimiento` que edite el usuario en el mismo guardado; si no lo edita o lo deja vacío, se propone +7 días (R.12g).
+- `Reabrir` no admite "Sin respuesta" como destino: el editor lo valida (R.12b). La reapertura se decide con el estado de la entidad y, si el guardado falla, el editor se recarga desde ella (R.12a).
+- "Oferta rechazada por mí" → "Oferta aceptada" está prohibida: se reabre a "Oferta recibida" y luego se acepta (R.13).
+- Salida de "Sin respuesta" (R.13): rellena `FechaPrimeraRespuesta` y añade un hito `Respuesta`; `AplicarA` aplica la respuesta **antes** que el estado para que el editor no la pise.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -36,5 +40,8 @@ R.13 (`feat: CambiarEstado valida las transiciones`). R.12 quedó completado.
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- Orden en la Etapa R: R.11 y R.12 antes de R.13. Si no, se rompe la reapertura desde la interfaz.
+- Orden en la Etapa R: R.11, R.12 y R.12a a R.12g antes de R.13. Dentro de las correcciones, el campo de la nota (R.12d y R.12e) va antes de exigirla (R.12f); si no, el usuario no podría guardar una reapertura.
+- R.12a: test de fallo de `SaveChanges` seguido de reintento tras una reapertura (un solo hito, `FechaCierre` nula, seguimiento propuesto, primera respuesta rellena).
+- R.12c: prueba manual del combo de motivos al cambiar de Descartado a Retirada; WPF puede vaciar `SelectedValue` al reemplazar `MotivosDelEstado`.
+- R.13: test del orden de `AplicarA` (respuesta antes que estado).
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
