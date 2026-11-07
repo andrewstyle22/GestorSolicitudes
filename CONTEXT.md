@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.12a (`fix: la reapertura se decide con el estado de la entidad`). Después R.12b a R.12g, en orden, y solo entonces R.13. R.12 quedó completada, pero tras revisarla hay siete correcciones; el detalle de cada una está en el plan.
+R.12c (`fix: validar el motivo de cierre en el editor`). Después R.12d a R.12g, en orden, y solo entonces R.13. El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
