@@ -325,8 +325,9 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     }
 
     /// <summary>
-    /// Vuelca al modelo solo los grupos cuya pestaña ya escribe en el editor. Mientras la UI
-    /// siga bindeada a la entidad, ese grupo no se toca para no pisar lo editado.
+    /// Vuelca al modelo lo que el editor tiene en sus pestañas. Con <paramref name="omitirEstado"/>
+    /// el estado, el motivo y la fecha de cierre no salen de aquí: los pone
+    /// <see cref="Solicitud.Reabrir"/> junto con el resto de efectos de la reapertura.
     /// </summary>
     public void AplicarA(Solicitud solicitud, bool omitirEstado = false)
     {

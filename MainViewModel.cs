@@ -775,9 +775,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        bool reaperturaPendiente = false;
         if (this.Editor is SolicitudEdicionViewModel edicion)
         {
-            bool reaperturaPendiente = edicion.ReaperturaPendiente;
+            // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
+            // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
+            reaperturaPendiente = solicitud.Estado.EstaCerrada() && !edicion.Estado.EstaCerrada();
             if (reaperturaPendiente && !this.ConfirmarReapertura(solicitud, edicion))
             {
                 return;
@@ -805,6 +808,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         if (!this.Persistir())
         {
+            // La entidad ya tiene los efectos de Reabrir: recargar el búfer evita que el
+            // reintento los repita o los pise con las fechas antiguas.
+            if (reaperturaPendiente && this.Editor is SolicitudEdicionViewModel recargado)
+            {
+                recargado.CargarDesde(solicitud);
+            }
+
             return;
         }
 

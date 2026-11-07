@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
+using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -190,6 +191,68 @@ public class ViewModelDialogosTests
         Assert.Contains("Nota: Sin nota", confirmacion);
         Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
         Assert.Equal(TipoEvento.Reapertura, Assert.Single(solicitud.Eventos).Tipo);
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaQueFallaAlGuardar_ElReintentoNoLaRepite()
+    {
+        string ruta = TestDb.NuevaRuta();
+        using var db = new ContextoQueFallaUnaVez(ruta);
+        db.Database.EnsureCreated();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime fechaCierre = new(2026, 10, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConFechaSolicitud(new DateTime(2026, 10, 1))
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(fechaCierre)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+        vm.Editor.Notas = "Retomamos el proceso";
+        db.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Editor);
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Null(solicitud.FechaCierre);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.Single(dialogo.Confirmaciones);
+        Assert.Null(vm.Editor);
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Null(solicitud.FechaCierre);
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(DateTime.Today.AddDays(7), solicitud.ProximoSeguimiento);
+        Evento hito = Assert.Single(solicitud.Eventos);
+        Assert.Equal(TipoEvento.Reapertura, hito.Tipo);
+    }
+
+    /// <summary>Contexto que falla la primera vez que se guarda, para probar el reintento.</summary>
+    private sealed class ContextoQueFallaUnaVez(string ruta) : AppDbContext(ruta)
+    {
+        public bool Fallar { get; set; }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            if (this.Fallar)
+            {
+                this.Fallar = false;
+                throw new InvalidOperationException("fallo simulado");
+            }
+
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
     }
 
     [Fact]
