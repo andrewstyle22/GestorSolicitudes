@@ -375,7 +375,7 @@ public class SolicitudTests
             .ConFechaSolicitud(new DateTime(2026, 9, 1))
             .Construir();
 
-        solicitud.Reabrir(EstadoSolicitud.EntrevistaTecnica, null);
+        solicitud.Reabrir(EstadoSolicitud.EntrevistaTecnica, "Retomamos el proceso");
 
         Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
         Assert.Null(solicitud.FechaCierre);
@@ -393,7 +393,7 @@ public class SolicitudTests
             .Construir();
         MarcarReabierta(solicitud, new DateTime(2026, 1, 1));
 
-        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
 
         Assert.Equal(DateTime.Today, solicitud.FechaReapertura);
     }
@@ -406,7 +406,7 @@ public class SolicitudTests
             .ConFechaCierre(new DateTime(2026, 10, 10))
             .Construir();
 
-        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
 
         Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
     }
@@ -421,7 +421,7 @@ public class SolicitudTests
             .ConFechaPrimeraRespuesta(primeraRespuesta)
             .Construir();
 
-        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
 
         Assert.Equal(primeraRespuesta, solicitud.FechaPrimeraRespuesta);
     }
@@ -436,7 +436,7 @@ public class SolicitudTests
             .ConProximoSeguimiento(new DateTime(2026, 9, 8))
             .Construir();
 
-        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
 
         Assert.Equal(DateTime.Today.AddDays(7), solicitud.ProximoSeguimiento);
     }
@@ -472,33 +472,47 @@ public class SolicitudTests
     }
 
     [Fact]
-    public void Reabrir_SinMotivoNiNota_DescribeSoloElEstadoYLaFecha()
+    public void Reabrir_SinMotivo_DescribeElEstadoLaFechaYLaNota()
     {
         var solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.OfertaAceptada)
             .ConFechaCierre(new DateTime(2026, 10, 10))
             .Construir();
 
-        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
 
         Assert.Equal(
-            "Reabierta. Antes: Oferta aceptada (10/10)",
+            "Reabierta. Antes: Oferta aceptada (10/10). Retomamos el proceso",
             Assert.Single(solicitud.Eventos).Descripcion);
     }
 
     [Fact]
-    public void Reabrir_SinFechaDeCierre_DescribeSoloElEstado()
+    public void Reabrir_SinFechaDeCierre_DescribeElEstadoYLaNota()
     {
         var solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.Rechazada)
             .ConFechaCierre(null)
             .Construir();
 
-        solicitud.Reabrir(EstadoSolicitud.Enviada, null);
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
 
         Assert.Equal(
-            "Reabierta. Antes: Descartado por la empresa",
+            "Reabierta. Antes: Descartado por la empresa. Retomamos el proceso",
             Assert.Single(solicitud.Eventos).Descripcion);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Reabrir_SinNota_Lanza(string? nota)
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+
+        Assert.Throws<ArgumentException>(
+            () => solicitud.Reabrir(EstadoSolicitud.Enviada, nota));
     }
 
     [Fact]

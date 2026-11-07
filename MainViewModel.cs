@@ -789,7 +789,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             edicion.AplicarA(solicitud, omitirEstado: reaperturaPendiente);
             if (reaperturaPendiente)
             {
-                solicitud.Reabrir(edicion.Estado, edicion.Notas);
+                solicitud.Reabrir(edicion.Estado, edicion.NotaReapertura);
             }
 
             // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
@@ -829,9 +829,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         string motivoCierre = solicitud.MotivoRechazo is MotivoRechazo motivo
             ? EnumHelper.Descripcion(motivo)
             : Localizacion.Texto("Mensaje.SinMotivoCierre");
-        string nota = string.IsNullOrWhiteSpace(edicion.Notas)
-            ? Localizacion.Texto("Mensaje.SinNotaReapertura")
-            : edicion.Notas.Trim();
+        string nota = edicion.NotaReapertura?.Trim() ?? string.Empty;
         string claveMensaje = solicitud.Estado == EstadoSolicitud.OfertaAceptada
             ? "Mensaje.ConfirmarReaperturaOfertaAceptada"
             : "Mensaje.ConfirmarReapertura";

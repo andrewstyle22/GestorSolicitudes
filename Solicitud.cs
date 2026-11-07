@@ -260,6 +260,11 @@ public class Solicitud
                 nameof(nuevoEstado));
         }
 
+        if (string.IsNullOrWhiteSpace(nota))
+        {
+            throw new ArgumentException("La reapertura exige una nota.", nameof(nota));
+        }
+
         DateTime hoy = DateTime.Today;
         string cierreAnterior = this.DescribirCierre();
         string? notaRecortada = Recortar(nota, LongitudMaximaNotaReapertura, "La nota de la reapertura");
@@ -272,11 +277,7 @@ public class Solicitud
         this.ProximoSeguimiento = null;
         this.ProponerSeguimiento();
 
-        string descripcion = $"Reabierta. Antes: {cierreAnterior}";
-        if (!string.IsNullOrEmpty(notaRecortada))
-        {
-            descripcion += $". {notaRecortada}";
-        }
+        string descripcion = $"Reabierta. Antes: {cierreAnterior}. {notaRecortada}";
 
         this.AgregarEvento(new Evento(hoy, TipoEvento.Reapertura, descripcion));
     }

@@ -118,6 +118,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private string? notas;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarNotaReaperturaObligatoria))]
     [MaxLength(Solicitud.LongitudMaximaNotaReapertura)]
     private string? notaReapertura;
 
@@ -177,6 +178,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             ? new ValidationResult(Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"))
             : ValidationResult.Success;
 
+    /// <summary>Una reapertura exige una nota.</summary>
+    public static ValidationResult? ValidarNotaReaperturaObligatoria(string? valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && editor.ReaperturaPendiente
+        && string.IsNullOrWhiteSpace(valor)
+            ? new ValidationResult(Localizacion.Texto("Mensaje.NotaReaperturaObligatoria"))
+            : ValidationResult.Success;
+
     /// <summary>Los cierres negativos exigen un motivo permitido para el estado.</summary>
     public static ValidationResult? ValidarMotivoCierre(MotivoRechazo? valor, ValidationContext contexto) =>
         contexto.ObjectInstance is SolicitudEdicionViewModel editor
@@ -191,6 +200,9 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     partial void OnMotivoRechazoChanged(MotivoRechazo? value) =>
         this.ValidateProperty(value, nameof(this.MotivoRechazo));
+
+    partial void OnNotaReaperturaChanged(string? value) =>
+        this.ValidateProperty(value, nameof(this.NotaReapertura));
 
     /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
     partial void OnEstadoChanged(EstadoSolicitud value)
@@ -208,6 +220,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
         this.motivosDelEstado = CrearMotivos(value);
         this.ValidateProperty(this.MotivoRechazo, nameof(this.MotivoRechazo));
+        this.ValidateProperty(this.NotaReapertura, nameof(this.NotaReapertura));
     }
 
     /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>

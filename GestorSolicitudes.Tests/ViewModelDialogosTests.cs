@@ -114,7 +114,7 @@ public class ViewModelDialogosTests
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
         vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
-        vm.Editor.Notas = "Retomamos el proceso";
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
 
         vm.GuardarCommand.Execute(null);
 
@@ -153,6 +153,7 @@ public class ViewModelDialogosTests
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
         vm.Editor!.Estado = EstadoSolicitud.Enviada;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
 
         vm.GuardarCommand.Execute(null);
 
@@ -181,6 +182,7 @@ public class ViewModelDialogosTests
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
         vm.Editor!.Estado = EstadoSolicitud.Enviada;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
 
         vm.GuardarCommand.Execute(null);
 
@@ -188,7 +190,7 @@ public class ViewModelDialogosTests
         Assert.Contains("Habías aceptado esta oferta. ¿Seguro", confirmacion);
         Assert.Contains("Fecha de cierre: Sin fecha", confirmacion);
         Assert.Contains("Motivo de cierre: No aplica", confirmacion);
-        Assert.Contains("Nota: Sin nota", confirmacion);
+        Assert.Contains("Nota: Retomamos el proceso", confirmacion);
         Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
         Assert.Equal(TipoEvento.Reapertura, Assert.Single(solicitud.Eventos).Tipo);
     }
@@ -210,6 +212,7 @@ public class ViewModelDialogosTests
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
         vm.Editor!.Estado = EstadoSolicitud.SinRespuesta;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
 
         vm.GuardarCommand.Execute(null);
 
@@ -220,6 +223,35 @@ public class ViewModelDialogosTests
         Assert.Contains(
             vm.Editor.GetErrors(nameof(vm.Editor.Estado)),
             error => error.ErrorMessage == Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"));
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaSinNota_AvisaYNoReabre()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Empty(dialogo.Confirmaciones);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.False(solicitud.FueReabierta);
+        Assert.Contains(
+            vm.Editor.GetErrors(nameof(vm.Editor.NotaReapertura)),
+            error => error.ErrorMessage == Localizacion.Texto("Mensaje.NotaReaperturaObligatoria"));
     }
 
     [Fact]
@@ -244,7 +276,7 @@ public class ViewModelDialogosTests
         vm.Recargar();
         vm.SolicitudSeleccionada = solicitud;
         vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
-        vm.Editor.Notas = "Retomamos el proceso";
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
         db.Fallar = true;
 
         vm.GuardarCommand.Execute(null);

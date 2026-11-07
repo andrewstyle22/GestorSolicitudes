@@ -712,4 +712,50 @@ public class SolicitudEdicionTests
 
         Assert.Contains(nameof(editor.ReaperturaPendiente), notificados);
     }
+
+    [Fact]
+    public void Validar_ReaperturaPendienteSinNota_EsError()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+        editor.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        editor.Validar();
+
+        Assert.Equal(
+            Localizacion.Texto("Mensaje.NotaReaperturaObligatoria"),
+            Assert.Single(editor.GetErrors(nameof(editor.NotaReapertura)).Cast<ValidationResult>()).ErrorMessage);
+    }
+
+    [Fact]
+    public void Validar_ReaperturaPendienteConNota_NoEsError()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud)
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+        };
+        editor.Estado = EstadoSolicitud.EntrevistaTecnica;
+        editor.NotaReapertura = "Retomamos el proceso";
+
+        editor.Validar();
+
+        Assert.False(editor.HasErrors);
+    }
+
+    [Fact]
+    public void CambiarEstado_RevalidaLaNotaDeLaReapertura()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        editor.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        Assert.NotEmpty(editor.GetErrors(nameof(editor.NotaReapertura)));
+
+        editor.Estado = EstadoSolicitud.Rechazada;
+
+        Assert.Empty(editor.GetErrors(nameof(editor.NotaReapertura)));
+    }
 }

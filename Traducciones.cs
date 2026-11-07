@@ -194,8 +194,8 @@ public static class Traducciones
         ("Mensaje.ConfirmarReaperturaOfertaAceptada", "Habías aceptado esta oferta. ¿Seguro que quieres reabrirla?\n\nEstado anterior: {0}\nFecha de cierre: {1}\nMotivo de cierre: {2}\nNuevo estado: {3}\nNota: {4}"),
         ("Mensaje.SinFechaCierre", "Sin fecha"),
         ("Mensaje.SinMotivoCierre", "No aplica"),
-        ("Mensaje.SinNotaReapertura", "Sin nota"),
         ("Mensaje.ReaperturaSinRespuesta", "No se puede reabrir a «Sin respuesta»: indica el estado al que vuelve la candidatura."),
+        ("Mensaje.NotaReaperturaObligatoria", "La nota de la reapertura es obligatoria."),
         ("Mensaje.MotivoCierreNoValido", "Elige un motivo de cierre válido para este estado."),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
 
@@ -464,8 +464,8 @@ public static class Traducciones
         ("Mensaje.ConfirmarReaperturaOfertaAceptada", "You had accepted this offer. Are you sure you want to reopen it?\n\nPrevious status: {0}\nClosing date: {1}\nReason for closing: {2}\nNew status: {3}\nNote: {4}"),
         ("Mensaje.SinFechaCierre", "No date"),
         ("Mensaje.SinMotivoCierre", "Not applicable"),
-        ("Mensaje.SinNotaReapertura", "No note"),
         ("Mensaje.ReaperturaSinRespuesta", "Cannot reopen to \"No response\": choose the status the application returns to."),
+        ("Mensaje.NotaReaperturaObligatoria", "The reopening note is required."),
         ("Mensaje.MotivoCierreNoValido", "Choose a valid closing reason for this status."),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
 
@@ -734,8 +734,8 @@ public static class Traducciones
         ("Mensaje.ConfirmarReaperturaOfertaAceptada", "Du hattest dieses Angebot angenommen. Bist du sicher, dass du es wieder öffnen möchtest?\n\nBisheriger Status: {0}\nAbschlussdatum: {1}\nAbschlussgrund: {2}\nNeuer Status: {3}\nNotiz: {4}"),
         ("Mensaje.SinFechaCierre", "Kein Datum"),
         ("Mensaje.SinMotivoCierre", "Nicht zutreffend"),
-        ("Mensaje.SinNotaReapertura", "Keine Notiz"),
         ("Mensaje.ReaperturaSinRespuesta", "Eine Wiedereröffnung zu \"Keine Antwort\" ist nicht möglich: Wähle den Status, zu dem die Bewerbung zurückkehrt."),
+        ("Mensaje.NotaReaperturaObligatoria", "Die Notiz zur Wiedereröffnung ist erforderlich."),
         ("Mensaje.MotivoCierreNoValido", "Wähle einen gültigen Abschlussgrund für diesen Status."),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
 
