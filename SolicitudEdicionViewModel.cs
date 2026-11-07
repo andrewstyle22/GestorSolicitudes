@@ -96,6 +96,12 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     [ObservableProperty]
     private DateTime? proximoSeguimiento;
 
+    private DateTime? proximoSeguimientoOriginal;
+
+    /// <summary>Gets el seguimiento editado para la reapertura, o null si debe proponerse uno nuevo.</summary>
+    public DateTime? SeguimientoParaReapertura =>
+        this.ProximoSeguimiento != this.proximoSeguimientoOriginal ? this.ProximoSeguimiento : null;
+
     [ObservableProperty]
     private DateTime? fechaCierre;
 
@@ -262,6 +268,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.FechaPrimeraRespuesta = solicitud.FechaPrimeraRespuesta;
         this.FechaEntrevista = solicitud.FechaEntrevista;
         this.ProximoSeguimiento = solicitud.ProximoSeguimiento;
+        this.proximoSeguimientoOriginal = solicitud.ProximoSeguimiento;
         this.FechaCierre = solicitud.FechaCierre;
         this.RespuestaEmpresa = solicitud.RespuestaEmpresa;
         this.ContactoNombre = solicitud.ContactoNombre;

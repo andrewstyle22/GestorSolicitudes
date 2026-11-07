@@ -789,7 +789,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             edicion.AplicarA(solicitud, omitirEstado: reaperturaPendiente);
             if (reaperturaPendiente)
             {
-                solicitud.Reabrir(edicion.Estado, edicion.NotaReapertura);
+                solicitud.Reabrir(edicion.Estado, edicion.NotaReapertura, edicion.SeguimientoParaReapertura);
             }
 
             // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.

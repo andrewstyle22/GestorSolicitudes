@@ -299,6 +299,47 @@ public class ViewModelDialogosTests
         Assert.Equal(TipoEvento.Reapertura, hito.Tipo);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Guardar_ReaperturaRespetaElSeguimientoEditado(int caso)
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime seguimientoOriginal = new(2026, 10, 5);
+        DateTime seguimientoEditado = new(2026, 10, 1);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("Empresa R.12g")
+            .ConPuesto("Puesto R.12g")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConProximoSeguimiento(seguimientoOriginal)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+        vm.Editor.NotaReapertura = "Nota de reapertura R.12g";
+
+        if (caso == 1)
+        {
+            vm.Editor.ProximoSeguimiento = seguimientoEditado;
+        }
+        else if (caso == 2)
+        {
+            vm.Editor.ProximoSeguimiento = null;
+        }
+
+        vm.GuardarCommand.Execute(null);
+
+        DateTime esperado = caso == 1 ? seguimientoEditado : DateTime.Today.AddDays(7);
+        Assert.Equal(esperado, solicitud.ProximoSeguimiento);
+        Assert.Null(vm.Editor);
+    }
+
     /// <summary>Contexto que falla la primera vez que se guarda, para probar el reintento.</summary>
     private sealed class ContextoQueFallaUnaVez(string ruta) : AppDbContext(ruta)
     {

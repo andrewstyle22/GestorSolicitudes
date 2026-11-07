@@ -244,9 +244,10 @@ public class Solicitud
 
     /// <summary>
     /// Reabre una candidatura cerrada en un estado abierto: limpia el cierre anterior,
-    /// reinicia el contador de días y guarda el cierre en el historial.
+    /// reinicia el contador de días, conserva el seguimiento indicado o propone uno nuevo,
+    /// y guarda el cierre en el historial.
     /// </summary>
-    public void Reabrir(EstadoSolicitud nuevoEstado, string? nota)
+    public void Reabrir(EstadoSolicitud nuevoEstado, string? nota, DateTime? proximoSeguimiento = null)
     {
         if (!this.Estado.EstaCerrada())
         {
@@ -274,7 +275,7 @@ public class Solicitud
         this.MotivoRechazo = null;
         this.fechaReapertura = hoy;
         this.FechaPrimeraRespuesta ??= hoy;
-        this.ProximoSeguimiento = null;
+        this.ProximoSeguimiento = proximoSeguimiento;
         this.ProponerSeguimiento();
 
         string descripcion = $"Reabierta. Antes: {cierreAnterior}. {notaRecortada}";
