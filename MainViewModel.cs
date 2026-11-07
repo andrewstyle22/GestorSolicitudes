@@ -775,28 +775,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        bool reaperturaPendiente = false;
-        if (this.Editor is SolicitudEdicionViewModel edicion)
+        if (!this.AplicarCambiosDelEditor(solicitud, out bool reaperturaPendiente))
         {
-            // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
-            // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
-            reaperturaPendiente = solicitud.Estado.EstaCerrada() && !edicion.Estado.EstaCerrada();
-            if (reaperturaPendiente && !this.ConfirmarReapertura(solicitud, edicion))
-            {
-                return;
-            }
-
-            edicion.AplicarA(solicitud, omitirEstado: reaperturaPendiente);
-            if (reaperturaPendiente)
-            {
-                solicitud.Reabrir(edicion.Estado, edicion.NotaReapertura, edicion.SeguimientoParaReapertura);
-            }
-
-            // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
-            foreach (Evento eliminado in edicion.EventosEliminados)
-            {
-                this.db.Eventos.Remove(eliminado);
-            }
+            return;
         }
 
         bool esNueva = this.PrepararNueva(solicitud);
@@ -820,6 +801,37 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
+    }
+
+    private bool AplicarCambiosDelEditor(Solicitud solicitud, out bool reaperturaPendiente)
+    {
+        reaperturaPendiente = false;
+        if (this.Editor is not SolicitudEdicionViewModel editor)
+        {
+            return true;
+        }
+
+        // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
+        // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
+        reaperturaPendiente = solicitud.Estado.EstaCerrada() && !editor.Estado.EstaCerrada();
+        if (reaperturaPendiente && !this.ConfirmarReapertura(solicitud, editor))
+        {
+            return false;
+        }
+
+        editor.AplicarA(solicitud, omitirEstado: reaperturaPendiente);
+        if (reaperturaPendiente)
+        {
+            solicitud.Reabrir(editor.Estado, editor.NotaReapertura, editor.SeguimientoParaReapertura);
+        }
+
+        // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
+        foreach (Evento eliminado in editor.EventosEliminados)
+        {
+            this.db.Eventos.Remove(eliminado);
+        }
+
+        return true;
     }
 
     private bool ConfirmarReapertura(Solicitud solicitud, SolicitudEdicionViewModel edicion)
