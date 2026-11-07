@@ -1,8 +1,10 @@
 namespace GestorSolicitudes.Models;
 
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
+using System.Reflection;
 
 /// <summary>
 /// Una candidatura enviada a una oferta concreta.
@@ -18,6 +20,8 @@ public class Solicitud
     public const int LongitudMaximaContactoNombre = 120;
     public const int LongitudMaximaContactoEmail = 150;
     public const int LongitudMaximaContactoTelefono = 40;
+    public const int LongitudMaximaNotaReapertura = 300;
+
     private const int LongitudMaximaRutaAdjunto = 500;
     private const int LongitudMaximaNombreOriginalAdjunto = 260;
 
@@ -169,6 +173,8 @@ public class Solicitud
     }
 
     // --- Fechas clave ---
+    private DateTime? fechaReapertura = null;
+
     public DateTime FechaSolicitud { get; private set; } = DateTime.Today;
 
     public DateTime? FechaPrimeraRespuesta { get; private set; }
@@ -176,6 +182,8 @@ public class Solicitud
     public DateTime? FechaEntrevista { get; private set; }
 
     public DateTime? FechaCierre { get; private set; }
+
+    public DateTime? FechaReapertura => this.fechaReapertura;
 
     /// <summary>Gets or sets fecha en la que toca volver a escribir si no hay noticias.</summary>
     public DateTime? ProximoSeguimiento { get; private set; }
@@ -198,7 +206,7 @@ public class Solicitud
     {
         if (this.EstaAbierta && this.ProximoSeguimiento is null)
         {
-            this.ProximoSeguimiento = this.FechaSolicitud.AddDays(7);
+            this.ProximoSeguimiento = (this.FechaReapertura ?? this.FechaSolicitud).AddDays(7);
         }
     }
 
@@ -210,14 +218,89 @@ public class Solicitud
 
     /// <summary>
     /// Cambia el estado de la solicitud junto con su motivo de rechazo y su fecha de cierre.
+    /// Exige un motivo válido en los cierres negativos y lo limpia en el resto.
     /// Todavía no valida transiciones: eso llega con las reglas de estado.
     /// </summary>
     public void CambiarEstado(EstadoSolicitud estado, MotivoRechazo? motivo, DateTime? fechaCierre)
     {
+        if (estado.AdmiteMotivo())
+        {
+            if (motivo is not MotivoRechazo motivoValido || !estado.MotivosPermitidos().Contains(motivoValido))
+            {
+                throw new ArgumentException(
+                    "Los cierres negativos exigen un motivo válido para el estado.",
+                    nameof(motivo));
+            }
+        }
+        else
+        {
+            motivo = null;
+        }
+
         this.Estado = estado;
         this.MotivoRechazo = motivo;
         this.FechaCierre = fechaCierre;
     }
+
+    /// <summary>
+    /// Reabre una candidatura cerrada en un estado abierto: limpia el cierre anterior,
+    /// reinicia el contador de días, conserva el seguimiento indicado o propone uno nuevo,
+    /// y guarda el cierre en el historial.
+    /// </summary>
+    public void Reabrir(EstadoSolicitud nuevoEstado, string? nota, DateTime? proximoSeguimiento = null)
+    {
+        if (!this.Estado.EstaCerrada())
+        {
+            throw new InvalidOperationException("Solo se puede reabrir una candidatura cerrada.");
+        }
+
+        if (nuevoEstado.EstaCerrada() || nuevoEstado == EstadoSolicitud.SinRespuesta)
+        {
+            throw new ArgumentException(
+                "La candidatura debe reabrirse a un estado abierto distinto de \"Sin respuesta\".",
+                nameof(nuevoEstado));
+        }
+
+        if (string.IsNullOrWhiteSpace(nota))
+        {
+            throw new ArgumentException("La reapertura exige una nota.", nameof(nota));
+        }
+
+        DateTime hoy = DateTime.Today;
+        string cierreAnterior = this.DescribirCierre();
+        string? notaRecortada = Recortar(nota, LongitudMaximaNotaReapertura, "La nota de la reapertura");
+
+        this.Estado = nuevoEstado;
+        this.FechaCierre = null;
+        this.MotivoRechazo = null;
+        this.fechaReapertura = hoy;
+        this.FechaPrimeraRespuesta ??= hoy;
+        this.ProximoSeguimiento = proximoSeguimiento;
+        this.ProponerSeguimiento();
+
+        string descripcion = $"Reabierta. Antes: {cierreAnterior}. {notaRecortada}";
+
+        this.AgregarEvento(new Evento(hoy, TipoEvento.Reapertura, descripcion));
+    }
+
+    private string DescribirCierre()
+    {
+        string estado = Texto(this.Estado);
+        if (this.FechaCierre is null)
+        {
+            return estado;
+        }
+
+        string fecha = this.FechaCierre.Value.ToString("dd/MM", System.Globalization.CultureInfo.InvariantCulture);
+        string? motivo = this.MotivoRechazo is null ? null : Texto(this.MotivoRechazo.Value);
+        return motivo is null ? $"{estado} ({fecha})" : $"{estado} ({fecha}, {motivo})";
+    }
+
+    // El modelo no puede depender de Helpers: el hito guarda el cierre como texto histórico
+    // con el [Description] del enum, en castellano.
+    private static string Texto(Enum valor) =>
+        valor.GetType().GetField(valor.ToString())?.GetCustomAttribute<DescriptionAttribute>()?.Description
+        ?? valor.ToString();
 
     /// <summary>Gets or sets texto literal o resumen de lo que contestó la empresa.</summary>
     public string? RespuestaEmpresa { get; private set; }
@@ -338,14 +421,20 @@ public class Solicitud
     public int DiasDesdeSolicitud => (int)(DateTime.Today - this.FechaSolicitud.Date).TotalDays;
 
     /// <summary>
-    /// Gets días desde el envío mientras el proceso sigue abierto; una vez cerrado,
-    /// en vez de seguir contando hasta hoy (lo que ya no dice nada), muestra cuánto
-    /// duró en total hasta <see cref="FechaCierre"/>.
+    /// Gets días desde el envío, o desde la última reapertura, mientras el proceso sigue
+    /// abierto; una vez cerrado, en vez de seguir contando hasta hoy (lo que ya no dice
+    /// nada), muestra cuánto duró en total hasta <see cref="FechaCierre"/>.
     /// </summary>
     [NotMapped]
-    public int DiasProceso => this.EstaAbierta
-        ? this.DiasDesdeSolicitud
-        : (int)((this.FechaCierre ?? DateTime.Today).Date - this.FechaSolicitud.Date).TotalDays;
+    public int DiasProceso
+    {
+        get
+        {
+            DateTime referencia = this.FechaReapertura ?? this.FechaSolicitud;
+            DateTime fin = this.EstaAbierta ? DateTime.Today : this.FechaCierre ?? DateTime.Today;
+            return (int)(fin.Date - referencia.Date).TotalDays;
+        }
+    }
 
     [NotMapped]
     public int? DiasHastaRespuesta => this.FechaPrimeraRespuesta.HasValue
@@ -354,6 +443,9 @@ public class Solicitud
 
     [NotMapped]
     public bool EstaAbierta => !this.Estado.EstaCerrada();
+
+    [NotMapped]
+    public bool FueReabierta => this.FechaReapertura.HasValue;
 
     [NotMapped]
     public bool HuboRespuesta => this.FechaPrimeraRespuesta.HasValue;

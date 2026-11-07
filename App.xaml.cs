@@ -32,6 +32,10 @@ public partial class App : Application
             // EnsureCreated no versiona el esquema: si la base ya existía sin las
             // columnas nuevas, las añadimos aquí con un ALTER TABLE barato.
             EsquemaDb.VerificarColumnasFaltantes(AppDbContext.RutaBaseDatos);
+
+            // El motivo de cierre pasa a ser obligatorio en los cierres negativos:
+            // las filas antiguas se normalizan antes de que el editor lo exija.
+            EsquemaDb.NormalizarMotivosDeCierre(AppDbContext.RutaBaseDatos);
         }
         catch (Exception ex)
         {

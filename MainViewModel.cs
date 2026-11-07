@@ -83,10 +83,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private IReadOnlyList<EnumItem> origenes = Array.Empty<EnumItem>();
 
-    /// <summary>Gets motivos de rechazo, con un valor "sin especificar" al principio para poder dejarlo en blanco.</summary>
-    [ObservableProperty]
-    private IReadOnlyList<EnumItem> motivosRechazo = Array.Empty<EnumItem>();
-
     /// <summary>Gets valores posibles del interés (1 a 5), para el desplegable del panel de detalle.</summary>
     public IReadOnlyList<int> NivelesInteres { get; } = new[] { 1, 2, 3, 4, 5 };
 
@@ -111,10 +107,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.Origenes = EnumHelper.Valores<Origen>();
         this.GranularidadesEmbudo = EnumHelper.Valores<GranularidadEmbudo>();
 
-        this.MotivosRechazo = new List<EnumItem> { new(null, Localizacion.Texto("Filtro.SinEspecificar")) }
-            .Concat(EnumHelper.Valores<MotivoRechazo>())
-            .ToList();
-
         this.EstadosFiltro = new List<EnumItem> { new(null, Localizacion.Texto("Filtro.TodosLosEstados")) }
             .Concat(this.Estados)
             .ToList();
@@ -126,6 +118,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // Los nombres de las columnas ocultables salen del diccionario, así que también
         // se releen al cambiar de idioma.
         this.ColumnasVm.RefrescarNombres();
+
+        // El editor arma su lista de motivos al vuelo; hay que avisarle del cambio de idioma.
+        this.Editor?.RefrescarMotivosDelEstado();
     }
 
     // ---------------------------------------------------------------- Columnas
@@ -780,15 +775,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (this.Editor is SolicitudEdicionViewModel edicion)
+        if (!this.AplicarCambiosDelEditor(solicitud, out bool reaperturaPendiente))
         {
-            edicion.AplicarA(solicitud);
-
-            // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
-            foreach (Evento eliminado in edicion.EventosEliminados)
-            {
-                this.db.Eventos.Remove(eliminado);
-            }
+            return;
         }
 
         bool esNueva = this.PrepararNueva(solicitud);
@@ -800,11 +789,74 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         if (!this.Persistir())
         {
+            // La entidad ya tiene los efectos de Reabrir: recargar el búfer evita que el
+            // reintento los repita o los pise con las fechas antiguas.
+            if (reaperturaPendiente && this.Editor is SolicitudEdicionViewModel recargado)
+            {
+                recargado.CargarDesde(solicitud);
+            }
+
             return;
         }
 
         this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
         this.CerrarEdicion();
+    }
+
+    private bool AplicarCambiosDelEditor(Solicitud solicitud, out bool reaperturaPendiente)
+    {
+        reaperturaPendiente = false;
+        if (this.Editor is not SolicitudEdicionViewModel edicionSolicitud)
+        {
+            return true;
+        }
+
+        // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
+        // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
+        reaperturaPendiente = solicitud.Estado.EstaCerrada() && !edicionSolicitud.Estado.EstaCerrada();
+        if (reaperturaPendiente && !this.ConfirmarReapertura(solicitud, edicionSolicitud))
+        {
+            return false;
+        }
+
+        edicionSolicitud.AplicarA(solicitud, omitirEstado: reaperturaPendiente);
+        if (reaperturaPendiente)
+        {
+            solicitud.Reabrir(
+                edicionSolicitud.Estado,
+                edicionSolicitud.NotaReapertura,
+                edicionSolicitud.SeguimientoParaReapertura);
+        }
+
+        // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
+        foreach (Evento eliminado in edicionSolicitud.EventosEliminados)
+        {
+            this.db.Eventos.Remove(eliminado);
+        }
+
+        return true;
+    }
+
+    private bool ConfirmarReapertura(Solicitud solicitud, SolicitudEdicionViewModel edicion)
+    {
+        string fechaCierre = solicitud.FechaCierre?.ToString("d", Localizacion.CulturaActual)
+            ?? Localizacion.Texto("Mensaje.SinFechaCierre");
+        string motivoCierre = solicitud.MotivoRechazo is MotivoRechazo motivo
+            ? EnumHelper.Descripcion(motivo)
+            : Localizacion.Texto("Mensaje.SinMotivoCierre");
+        string nota = edicion.NotaReapertura?.Trim() ?? string.Empty;
+        string claveMensaje = solicitud.Estado == EstadoSolicitud.OfertaAceptada
+            ? "Mensaje.ConfirmarReaperturaOfertaAceptada"
+            : "Mensaje.ConfirmarReapertura";
+        string mensaje = string.Format(
+            Localizacion.Texto(claveMensaje),
+            EnumHelper.Descripcion(solicitud.Estado),
+            fechaCierre,
+            motivoCierre,
+            EnumHelper.Descripcion(edicion.Estado),
+            nota);
+
+        return this.dialogo.Confirmar(mensaje, Localizacion.Texto("Titulo.ConfirmarReapertura"));
     }
 
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>

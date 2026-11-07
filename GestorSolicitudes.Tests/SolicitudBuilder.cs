@@ -26,7 +26,16 @@ internal sealed class SolicitudBuilder
     }
 
     public SolicitudBuilder ConEstado(EstadoSolicitud estado) => this.Asignar(s =>
-        s.CambiarEstado(estado, s.MotivoRechazo, s.FechaCierre));
+    {
+        MotivoRechazo? motivo = s.MotivoRechazo;
+        if (estado.AdmiteMotivo()
+            && (motivo is not MotivoRechazo actual || !estado.MotivosPermitidos().Contains(actual)))
+        {
+            motivo = MotivoRechazo.NoIndicado;
+        }
+
+        s.CambiarEstado(estado, motivo, s.FechaCierre);
+    });
 
     public SolicitudBuilder ConFechaSolicitud(DateTime fecha) => this.Asignar(s =>
         s.ActualizarFechas(fecha, s.FechaEntrevista, s.ProximoSeguimiento));

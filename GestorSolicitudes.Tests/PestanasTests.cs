@@ -151,18 +151,47 @@ public class PestanasTests
             Descendientes<ComboBox>(detalleSeguimiento),
             c => BindingOperations.GetBinding(c, Selector.SelectedValueProperty)?.Path.Path == "Editor.Estado");
 
-        // El bloque del motivo de rechazo depende del estado a través del convertidor:
-        // solo aparece al marcar "Descartado por la empresa".
+        // El bloque del motivo se muestra en los tres cierres negativos.
         StackPanel panelMotivo = Descendientes<StackPanel>(detalleSeguimiento).Single(p =>
-            BindingOperations.GetBinding(p, UIElement.VisibilityProperty)?.Path.Path == "Editor.Estado");
+            BindingOperations.GetBinding(p, UIElement.VisibilityProperty)?.Path.Path == "Editor.AdmiteMotivo");
         Assert.Equal(Visibility.Collapsed, panelMotivo.Visibility);
 
-        vm.Editor!.Estado = EstadoSolicitud.Rechazada;
-        Assert.Equal(Visibility.Visible, panelMotivo.Visibility);
+        foreach (EstadoSolicitud estado in new[]
+                 {
+                     EstadoSolicitud.Rechazada,
+                     EstadoSolicitud.Retirada,
+                     EstadoSolicitud.OfertaRechazada,
+                 })
+        {
+            vm.Editor!.Estado = estado;
+            Assert.Equal(Visibility.Visible, panelMotivo.Visibility);
+        }
+
+        vm.Editor!.Estado = EstadoSolicitud.OfertaAceptada;
+        Assert.Equal(Visibility.Collapsed, panelMotivo.Visibility);
+
+        // La nota de la reapertura solo aparece al pasar de cerrada a abierta.
+        StackPanel panelNota = Descendientes<StackPanel>(detalleSeguimiento).Single(p =>
+            BindingOperations.GetBinding(p, UIElement.VisibilityProperty)?.Path.Path == "Editor.ReaperturaPendiente");
+        Assert.Equal(Visibility.Collapsed, panelNota.Visibility);
+        Assert.Contains(
+            Descendientes<TextBox>(detalleSeguimiento),
+            t => BindingOperations.GetBinding(t, TextBox.TextProperty)?.Path.Path == "Editor.NotaReapertura");
+
+        vm.SolicitudSeleccionada = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Programador")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+        Assert.Equal(Visibility.Collapsed, panelNota.Visibility);
+
+        vm.Editor!.Estado = EstadoSolicitud.Enviada;
+        Assert.Equal(Visibility.Visible, panelNota.Visibility);
 
         Assert.Contains(
             Descendientes<ComboBox>(detalleSeguimiento),
-            c => BindingOperations.GetBinding(c, Selector.SelectedValueProperty)?.Path.Path == "Editor.MotivoRechazo");
+            c => BindingOperations.GetBinding(c, Selector.SelectedValueProperty)?.Path.Path == "Editor.MotivoRechazo"
+                && BindingOperations.GetBinding(c, ItemsControl.ItemsSourceProperty)?.Path.Path == "Editor.MotivosDelEstado");
 
         var detalleAdjuntos = new PestanaAdjuntos { DataContext = vm };
         Dibujar(detalleAdjuntos);

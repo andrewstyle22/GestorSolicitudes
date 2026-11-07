@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.IO;
+using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +93,268 @@ public class ViewModelDialogosTests
 
         Assert.Single(dialogo.Errores);
         Assert.NotNull(vm.Editor);
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaConfirmada_MuestraElCierreYRegistraElHito()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime fechaCierre = new(2026, 10, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.OfertaRechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(fechaCierre)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
+
+        vm.GuardarCommand.Execute(null);
+
+        string confirmacion = Assert.Single(dialogo.Confirmaciones);
+        Assert.Contains("Estado anterior: Oferta rechazada por mí", confirmacion);
+        Assert.Contains($"Fecha de cierre: {fechaCierre.ToString("d", Localizacion.CulturaActual)}", confirmacion);
+        Assert.Contains("Motivo de cierre: Salario / pretensión", confirmacion);
+        Assert.Contains("Nuevo estado: Entrevista técnica", confirmacion);
+        Assert.Contains("Nota: Retomamos el proceso", confirmacion);
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Null(solicitud.FechaCierre);
+        Assert.Null(solicitud.MotivoRechazo);
+        Assert.Equal(DateTime.Today, solicitud.FechaReapertura);
+        Evento hito = Assert.Single(solicitud.Eventos);
+        Assert.Equal(TipoEvento.Reapertura, hito.Tipo);
+        Assert.Contains("Retomamos el proceso", hito.Descripcion);
+        Assert.Null(vm.Editor);
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaCancelada_ConservaElCierreYLaEdicion()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime fechaCierre = new(2026, 10, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(fechaCierre)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.Enviada;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Confirmaciones);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.Equal(fechaCierre, solicitud.FechaCierre);
+        Assert.Equal(MotivoRechazo.Salario, solicitud.MotivoRechazo);
+        Assert.False(solicitud.FueReabierta);
+        Assert.NotNull(vm.Editor);
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaDesdeOfertaAceptada_UsaConfirmacionReforzada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.OfertaAceptada)
+            .ConFechaCierre(null)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.Enviada;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
+
+        vm.GuardarCommand.Execute(null);
+
+        string confirmacion = Assert.Single(dialogo.Confirmaciones);
+        Assert.Contains("Habías aceptado esta oferta. ¿Seguro", confirmacion);
+        Assert.Contains("Fecha de cierre: Sin fecha", confirmacion);
+        Assert.Contains("Motivo de cierre: No aplica", confirmacion);
+        Assert.Contains("Nota: Retomamos el proceso", confirmacion);
+        Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
+        Assert.Equal(TipoEvento.Reapertura, Assert.Single(solicitud.Eventos).Tipo);
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaASinRespuesta_AvisaYNoReabre()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.SinRespuesta;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Empty(dialogo.Confirmaciones);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.False(solicitud.FueReabierta);
+        Assert.Contains(
+            vm.Editor.GetErrors(nameof(vm.Editor.Estado)),
+            error => error.ErrorMessage == Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"));
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaSinNota_AvisaYNoReabre()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Empty(dialogo.Confirmaciones);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.False(solicitud.FueReabierta);
+        Assert.Contains(
+            vm.Editor.GetErrors(nameof(vm.Editor.NotaReapertura)),
+            error => error.ErrorMessage == Localizacion.Texto("Mensaje.NotaReaperturaObligatoria"));
+    }
+
+    [Fact]
+    public void Guardar_ReaperturaQueFallaAlGuardar_ElReintentoNoLaRepite()
+    {
+        string ruta = TestDb.NuevaRuta();
+        using var db = new ContextoQueFallaUnaVez(ruta);
+        db.Database.EnsureCreated();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime fechaCierre = new(2026, 10, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConFechaSolicitud(new DateTime(2026, 10, 1))
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaCierre(fechaCierre)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
+        db.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Editor);
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Null(solicitud.FechaCierre);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.Single(dialogo.Confirmaciones);
+        Assert.Null(vm.Editor);
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Null(solicitud.FechaCierre);
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(DateTime.Today.AddDays(7), solicitud.ProximoSeguimiento);
+        Evento hito = Assert.Single(solicitud.Eventos);
+        Assert.Equal(TipoEvento.Reapertura, hito.Tipo);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Guardar_ReaperturaRespetaElSeguimientoEditado(int caso)
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        DateTime seguimientoOriginal = new(2026, 10, 5);
+        DateTime seguimientoEditado = new(2026, 10, 1);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("Empresa R.12g")
+            .ConPuesto("Puesto R.12g")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConProximoSeguimiento(seguimientoOriginal)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EntrevistaTecnica;
+        vm.Editor.NotaReapertura = "Nota de reapertura R.12g";
+
+        if (caso == 1)
+        {
+            vm.Editor.ProximoSeguimiento = seguimientoEditado;
+        }
+        else if (caso == 2)
+        {
+            vm.Editor.ProximoSeguimiento = null;
+        }
+
+        vm.GuardarCommand.Execute(null);
+
+        DateTime esperado = caso == 1 ? seguimientoEditado : DateTime.Today.AddDays(7);
+        Assert.Equal(esperado, solicitud.ProximoSeguimiento);
+        Assert.Null(vm.Editor);
+    }
+
+    /// <summary>Contexto que falla la primera vez que se guarda, para probar el reintento.</summary>
+    private sealed class ContextoQueFallaUnaVez(string ruta) : AppDbContext(ruta)
+    {
+        public bool Fallar { get; set; }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            if (this.Fallar)
+            {
+                this.Fallar = false;
+                throw new InvalidOperationException("fallo simulado");
+            }
+
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
     }
 
     [Fact]

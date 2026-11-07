@@ -18,6 +18,17 @@ public class SolicitudBuilderTests
         Assert.Empty(solicitud.Eventos);
     }
 
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.Retirada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    public void ConEstado_EnCierreNegativoSinMotivo_PoneNoIndicado(EstadoSolicitud estado)
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(estado).Construir();
+
+        Assert.Equal(MotivoRechazo.NoIndicado, solicitud.MotivoRechazo);
+    }
+
     [Fact]
     public void Con_AsignaCadaDatoYAcumulaEventos()
     {

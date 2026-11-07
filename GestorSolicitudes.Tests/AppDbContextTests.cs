@@ -40,6 +40,29 @@ public class AppDbContextTests
     }
 
     [Fact]
+    public void FechaReapertura_SeGuardaYRecupera()
+    {
+        int id;
+        string ruta;
+        DateTime fechaReapertura = new(2026, 6, 12);
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            Assert.False(solicitud.FueReabierta);
+            db.Solicitudes.Add(solicitud);
+            db.Entry(solicitud).Property(s => s.FechaReapertura).CurrentValue = fechaReapertura;
+            db.SaveChanges();
+            id = solicitud.Id;
+        }
+
+        using var db2 = new AppDbContext(ruta);
+        Solicitud recuperada = db2.Solicitudes.Single(s => s.Id == id);
+
+        Assert.Equal(fechaReapertura, recuperada.FechaReapertura);
+        Assert.True(recuperada.FueReabierta);
+    }
+
+    [Fact]
     public void ActualizarEvento_SeGuardaYRecuperaCompleto()
     {
         // El acceso por campo debe servir también para leer, mutar y volver a guardar.
