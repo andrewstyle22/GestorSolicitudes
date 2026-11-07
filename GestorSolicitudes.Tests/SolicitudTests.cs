@@ -461,6 +461,17 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void Reabrir_NotaDemasiadoLarga_Lanza()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+
+        Assert.Throws<ArgumentException>(() =>
+            solicitud.Reabrir(EstadoSolicitud.Enviada, new string('x', Solicitud.LongitudMaximaNotaReapertura + 1)));
+    }
+
+    [Fact]
     public void Reabrir_SinMotivoNiNota_DescribeSoloElEstadoYLaFecha()
     {
         var solicitud = new SolicitudBuilder()

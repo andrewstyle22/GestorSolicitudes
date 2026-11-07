@@ -118,6 +118,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private string? notas;
 
     [ObservableProperty]
+    [MaxLength(Solicitud.LongitudMaximaNotaReapertura)]
+    private string? notaReapertura;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
     private string? rutaCv;
 
@@ -251,6 +255,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ContactoEmail = solicitud.ContactoEmail;
         this.ContactoTelefono = solicitud.ContactoTelefono;
         this.Notas = solicitud.Notas;
+        this.NotaReapertura = null;
         this.RutaCv = solicitud.RutaCv;
         this.NombreOriginalCv = solicitud.NombreOriginalCv;
         this.RutaCarta = solicitud.RutaCarta;

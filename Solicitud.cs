@@ -20,6 +20,8 @@ public class Solicitud
     public const int LongitudMaximaContactoNombre = 120;
     public const int LongitudMaximaContactoEmail = 150;
     public const int LongitudMaximaContactoTelefono = 40;
+    public const int LongitudMaximaNotaReapertura = 300;
+
     private const int LongitudMaximaRutaAdjunto = 500;
     private const int LongitudMaximaNombreOriginalAdjunto = 260;
 
@@ -260,7 +262,7 @@ public class Solicitud
 
         DateTime hoy = DateTime.Today;
         string cierreAnterior = this.DescribirCierre();
-        string? notaRecortada = nota?.Trim();
+        string? notaRecortada = Recortar(nota, LongitudMaximaNotaReapertura, "La nota de la reapertura");
 
         this.Estado = nuevoEstado;
         this.FechaCierre = null;

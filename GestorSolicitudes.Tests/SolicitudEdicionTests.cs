@@ -47,6 +47,19 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void Validacion_NotaReaperturaQueSuperaElMaximo_MarcaElCampo()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            NotaReapertura = new string('x', Solicitud.LongitudMaximaNotaReapertura + 1),
+        };
+
+        editor.Validar();
+
+        Assert.NotEmpty(editor.GetErrors(nameof(editor.NotaReapertura)));
+    }
+
+    [Fact]
     public void Validacion_SalarioMinimoMayorQueElMaximo_MarcaElCampo()
     {
         var editor = new SolicitudEdicionViewModel
@@ -309,6 +322,16 @@ public class SolicitudEdicionTests
         Assert.Equal("ana@ejemplo.test", editor.ContactoEmail);
         Assert.Equal("600123456", editor.ContactoTelefono);
         Assert.Equal("Hablar el lunes", editor.Notas);
+    }
+
+    [Fact]
+    public void CargarDesde_VaciaLaNotaReapertura()
+    {
+        var editor = new SolicitudEdicionViewModel { NotaReapertura = "Retomamos el proceso" };
+
+        editor.CargarDesde(new SolicitudBuilder().Construir());
+
+        Assert.Null(editor.NotaReapertura);
     }
 
     [Fact]
