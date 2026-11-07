@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.12c (`fix: validar el motivo de cierre en el editor`). Después R.12d a R.12g, en orden, y solo entonces R.13. El detalle de cada una está en el plan.
+R.12d (`feat: NotaReapertura en el editor`). Después R.12e a R.12g, en orden, y solo entonces R.13. El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
@@ -24,7 +24,7 @@ R.12c (`fix: validar el motivo de cierre en el editor`). Después R.12d a R.12g,
 - Reapertura: columna `FechaReapertura` (solo la última, sin contador) y `FueReabierta` [NotMapped]. `DiasProceso` cuenta desde `FechaReapertura ?? FechaSolicitud`. Insignia ↻ y borde magenta `#DB2777` en la fila.
 - El versionado de CV tras una reapertura queda fuera de alcance (otra refactorización).
 - Longitudes: una constante por campo para `[MaxLength]` y la validación; `RespuestaEmpresa` y `Notas` sin límite hasta decidirlo.
-- El editor valida longitudes y rango salarial antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
+- El editor valida longitudes, rango salarial y motivo de cierre (obligatorio y permitido) antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
 - La nota de la reapertura es **obligatoria**, en un campo propio del editor (`NotaReapertura`, 300 caracteres) visible en Seguimiento solo con reapertura pendiente; solo se guarda en el texto del hito. Hoy sale de `Notas` y se corrige en R.12d a R.12f.
 - Al reabrir se respeta el `ProximoSeguimiento` que edite el usuario en el mismo guardado; si no lo edita o lo deja vacío, se propone +7 días (R.12g).
 - `Reabrir` no admite "Sin respuesta" como destino: el editor lo valida (R.12b). La reapertura se decide con el estado de la entidad y, si el guardado falla, el editor se recarga desde ella (R.12a).
