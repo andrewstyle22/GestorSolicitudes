@@ -550,6 +550,69 @@ public class SolicitudEdicionTests
         Assert.Null(editor.MotivoRechazo);
     }
 
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.Retirada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    public void Validar_SinMotivoDeCierre_EsError(EstadoSolicitud estado)
+    {
+        var editor = new SolicitudEdicionViewModel { Estado = estado, MotivoRechazo = null };
+
+        Assert.Equal(
+            Localizacion.Texto("Mensaje.MotivoCierreNoValido"),
+            Assert.Single(editor.GetErrors(nameof(editor.MotivoRechazo)).Cast<ValidationResult>()).ErrorMessage);
+    }
+
+    [Fact]
+    public void Validar_MotivoNoPermitidoParaElEstado_EsError()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Estado = EstadoSolicitud.Rechazada,
+            MotivoRechazo = MotivoRechazo.AceptoOtraOferta,
+        };
+
+        editor.Validar();
+
+        Assert.Single(editor.GetErrors(nameof(editor.MotivoRechazo)));
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, MotivoRechazo.Salario)]
+    [InlineData(EstadoSolicitud.Retirada, MotivoRechazo.YaNoMeInteresa)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, MotivoRechazo.AceptoOtraOferta)]
+    public void Validar_MotivoPermitido_NoEsError(EstadoSolicitud estado, MotivoRechazo motivo)
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            Estado = estado,
+            MotivoRechazo = motivo,
+        };
+
+        editor.Validar();
+
+        Assert.False(editor.HasErrors);
+    }
+
+    [Fact]
+    public void CambiarEstado_RevalidaElMotivo()
+    {
+        var editor = new SolicitudEdicionViewModel
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            Estado = EstadoSolicitud.Rechazada,
+            MotivoRechazo = null,
+        };
+        Assert.True(editor.HasErrors);
+
+        editor.Estado = EstadoSolicitud.Enviada;
+
+        Assert.False(editor.HasErrors);
+    }
+
     [Fact]
     public void CargarDesde_ConEstadoQueAdmiteMotivoYVacio_PreseleccionaNoIndicado()
     {

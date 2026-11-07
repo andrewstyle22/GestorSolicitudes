@@ -68,6 +68,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private EstadoSolicitud estado = EstadoSolicitud.Enviada;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarMotivoCierre))]
     private MotivoRechazo? motivoRechazo;
 
     /// <summary>Gets si el estado actual pide motivo de cierre.</summary>
@@ -172,9 +173,20 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             ? new ValidationResult(Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"))
             : ValidationResult.Success;
 
+    /// <summary>Los cierres negativos exigen un motivo permitido para el estado.</summary>
+    public static ValidationResult? ValidarMotivoCierre(MotivoRechazo? valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && editor.Estado.AdmiteMotivo()
+        && (valor is not MotivoRechazo motivo || !editor.Estado.MotivosPermitidos().Contains(motivo))
+            ? new ValidationResult(Localizacion.Texto("Mensaje.MotivoCierreNoValido"))
+            : ValidationResult.Success;
+
     partial void OnEmpresaChanged(string value) => this.ValidateProperty(value, nameof(this.Empresa));
 
     partial void OnPuestoChanged(string value) => this.ValidateProperty(value, nameof(this.Puesto));
+
+    partial void OnMotivoRechazoChanged(MotivoRechazo? value) =>
+        this.ValidateProperty(value, nameof(this.MotivoRechazo));
 
     /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
     partial void OnEstadoChanged(EstadoSolicitud value)
@@ -191,6 +203,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         }
 
         this.motivosDelEstado = CrearMotivos(value);
+        this.ValidateProperty(this.MotivoRechazo, nameof(this.MotivoRechazo));
     }
 
     /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>

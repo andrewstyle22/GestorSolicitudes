@@ -195,6 +195,7 @@ public static class Traducciones
         ("Mensaje.SinMotivoCierre", "No aplica"),
         ("Mensaje.SinNotaReapertura", "Sin nota"),
         ("Mensaje.ReaperturaSinRespuesta", "No se puede reabrir a «Sin respuesta»: indica el estado al que vuelve la candidatura."),
+        ("Mensaje.MotivoCierreNoValido", "Elige un motivo de cierre válido para este estado."),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
 
         // ----- Títulos de avisos -----
@@ -463,6 +464,7 @@ public static class Traducciones
         ("Mensaje.SinMotivoCierre", "Not applicable"),
         ("Mensaje.SinNotaReapertura", "No note"),
         ("Mensaje.ReaperturaSinRespuesta", "Cannot reopen to \"No response\": choose the status the application returns to."),
+        ("Mensaje.MotivoCierreNoValido", "Choose a valid closing reason for this status."),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
 
         // ----- Títulos de avisos -----
@@ -731,6 +733,7 @@ public static class Traducciones
         ("Mensaje.SinMotivoCierre", "Nicht zutreffend"),
         ("Mensaje.SinNotaReapertura", "Keine Notiz"),
         ("Mensaje.ReaperturaSinRespuesta", "Eine Wiedereröffnung zu \"Keine Antwort\" ist nicht möglich: Wähle den Status, zu dem die Bewerbung zurückkehrt."),
+        ("Mensaje.MotivoCierreNoValido", "Wähle einen gültigen Abschlussgrund für diesen Status."),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
 
         // ----- Títulos de avisos -----
