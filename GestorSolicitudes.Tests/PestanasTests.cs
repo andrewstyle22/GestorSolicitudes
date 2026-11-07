@@ -170,6 +170,24 @@ public class PestanasTests
         vm.Editor!.Estado = EstadoSolicitud.OfertaAceptada;
         Assert.Equal(Visibility.Collapsed, panelMotivo.Visibility);
 
+        // La nota de la reapertura solo aparece al pasar de cerrada a abierta.
+        StackPanel panelNota = Descendientes<StackPanel>(detalleSeguimiento).Single(p =>
+            BindingOperations.GetBinding(p, UIElement.VisibilityProperty)?.Path.Path == "Editor.ReaperturaPendiente");
+        Assert.Equal(Visibility.Collapsed, panelNota.Visibility);
+        Assert.Contains(
+            Descendientes<TextBox>(detalleSeguimiento),
+            t => BindingOperations.GetBinding(t, TextBox.TextProperty)?.Path.Path == "Editor.NotaReapertura");
+
+        vm.SolicitudSeleccionada = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Programador")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+        Assert.Equal(Visibility.Collapsed, panelNota.Visibility);
+
+        vm.Editor!.Estado = EstadoSolicitud.Enviada;
+        Assert.Equal(Visibility.Visible, panelNota.Visibility);
+
         Assert.Contains(
             Descendientes<ComboBox>(detalleSeguimiento),
             c => BindingOperations.GetBinding(c, Selector.SelectedValueProperty)?.Path.Path == "Editor.MotivoRechazo"

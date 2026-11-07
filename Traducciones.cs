@@ -125,6 +125,7 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Estado actual"),
+        ("Seguimiento.NotaReapertura", "Nota de la reapertura"),
         ("Seguimiento.MotivoRechazo", "Motivo del cierre"),
         ("Seguimiento.FechaSolicitud", "Fecha de solicitud"),
         ("Seguimiento.PrimeraContestacion", "1ª contestación"),
@@ -394,6 +395,7 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Current status"),
+        ("Seguimiento.NotaReapertura", "Reopening note"),
         ("Seguimiento.MotivoRechazo", "Reason for closing"),
         ("Seguimiento.FechaSolicitud", "Application date"),
         ("Seguimiento.PrimeraContestacion", "First response"),
@@ -663,6 +665,7 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Aktueller Status"),
+        ("Seguimiento.NotaReapertura", "Notiz zur Wiedereröffnung"),
         ("Seguimiento.MotivoRechazo", "Grund des Abschlusses"),
         ("Seguimiento.FechaSolicitud", "Bewerbungsdatum"),
         ("Seguimiento.PrimeraContestacion", "Erste Antwort"),

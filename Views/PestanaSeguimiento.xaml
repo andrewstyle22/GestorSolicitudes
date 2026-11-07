@@ -12,6 +12,16 @@
                       SelectedValuePath="Valor"
                       SelectedValue="{Binding Editor.Estado}" Margin="9,0,9,0" />
 
+            <StackPanel Visibility="{Binding Editor.ReaperturaPendiente, Converter={StaticResource BooleanoAVisibilidad}}">
+                <TextBlock Text="{DynamicResource Seguimiento.NotaReapertura}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
+                <TextBox x:Name="NotaReapertura" Style="{StaticResource CampoMultilinea}"
+                         Text="{Binding Editor.NotaReapertura}" Margin="9,0,9,0" />
+                <TextBlock Text="{Binding ElementName=NotaReapertura, Path=(Validation.Errors)/ErrorContent}"
+                           Foreground="{StaticResource Peligro}" FontSize="11" TextWrapping="Wrap"
+                           Margin="9,3,9,0"
+                           Visibility="{Binding ElementName=NotaReapertura, Path=(Validation.HasError), Converter={StaticResource BooleanoAVisibilidad}}" />
+            </StackPanel>
+
             <StackPanel Visibility="{Binding Editor.AdmiteMotivo, Converter={StaticResource BooleanoAVisibilidad}}">
                 <TextBlock Text="{DynamicResource Seguimiento.MotivoRechazo}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
                 <ComboBox Style="{StaticResource CampoCombo}"
