@@ -62,6 +62,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private int interes = 3;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarReaperturaSinRespuesta))]
     [NotifyPropertyChangedFor(nameof(AdmiteMotivo))]
     [NotifyPropertyChangedFor(nameof(MotivosDelEstado))]
     private EstadoSolicitud estado = EstadoSolicitud.Enviada;
@@ -161,6 +162,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     public static ValidationResult? ValidarRangoSalarial(int? valor, ValidationContext contexto) =>
         contexto.ObjectInstance is SolicitudEdicionViewModel editor && editor.SalarioMin > valor
             ? new ValidationResult(Localizacion.Texto("Mensaje.SalarioMinimoMayor"))
+            : ValidationResult.Success;
+
+    /// <summary>Una reapertura no puede volver a "Sin respuesta", como exige la entidad.</summary>
+    public static ValidationResult? ValidarReaperturaSinRespuesta(EstadoSolicitud valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && editor.ReaperturaPendiente
+        && valor == EstadoSolicitud.SinRespuesta
+            ? new ValidationResult(Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"))
             : ValidationResult.Success;
 
     partial void OnEmpresaChanged(string value) => this.ValidateProperty(value, nameof(this.Empresa));
