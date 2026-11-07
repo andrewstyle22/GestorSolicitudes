@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.12e (`feat: campo de nota de la reapertura en Seguimiento`). Después R.12f y R.12g, en orden, y solo entonces R.13. El detalle de cada una está en el plan.
+R.12f (`feat: la reapertura exige la nota`). Después R.12g, en orden, y solo entonces R.13. El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
