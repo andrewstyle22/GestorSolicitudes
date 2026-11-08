@@ -11,6 +11,7 @@
         <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
         <conv:FechaCortaConverter x:Key="FechaCorta" />
+        <conv:NuloAVisibilidadConverter x:Key="NuloAVisibilidad" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 
         <!-- ============ Paleta ============ -->

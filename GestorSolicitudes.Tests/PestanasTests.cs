@@ -151,6 +151,14 @@ public class PestanasTests
             Descendientes<ComboBox>(detalleSeguimiento),
             c => BindingOperations.GetBinding(c, Selector.SelectedValueProperty)?.Path.Path == "Editor.Estado");
 
+        // La franja de la última reapertura solo aparece cuando hay un hito Reapertura.
+        Border franja = Descendientes<Border>(detalleSeguimiento).Single(b =>
+            BindingOperations.GetBinding(b, UIElement.VisibilityProperty)?.Path.Path == "Editor.ReaperturaResumen");
+        Assert.Contains(
+            Descendientes<TextBlock>(franja),
+            t => BindingOperations.GetBinding(t, TextBlock.TextProperty)?.Path.Path == "Editor.ReaperturaResumen");
+        Assert.Equal(Visibility.Collapsed, franja.Visibility);
+
         // El bloque del motivo se muestra en los tres cierres negativos.
         StackPanel panelMotivo = Descendientes<StackPanel>(detalleSeguimiento).Single(p =>
             BindingOperations.GetBinding(p, UIElement.VisibilityProperty)?.Path.Path == "Editor.AdmiteMotivo");

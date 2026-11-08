@@ -157,6 +157,31 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
     public ObservableCollection<EventoViewModel> EventosEdicion { get; } = [];
 
+    /// <summary>
+    /// Resumen del último hito de reapertura, o null si la candidatura no se ha reabierto.
+    /// El cierre anterior y la nota solo existen en el texto del hito.
+    /// </summary>
+    public string? ReaperturaResumen
+    {
+        get
+        {
+            EventoViewModel? evento = this.EventosEdicion.LastOrDefault(e => e.Tipo == TipoEvento.Reapertura);
+            if (evento is null)
+            {
+                return null;
+            }
+
+            const string Prefijo = "Reabierta. ";
+            string detalle = evento.Descripcion.StartsWith(Prefijo, StringComparison.Ordinal)
+                ? evento.Descripcion[Prefijo.Length..]
+                : evento.Descripcion;
+            return string.Format(
+                Localizacion.Texto("Seguimiento.ReaperturaResumen"),
+                evento.Fecha.ToString("d", Localizacion.CulturaActual),
+                detalle);
+        }
+    }
+
     /// <summary>Eventos guardados que se han quitado del búfer: el guardado los borra del modelo.</summary>
     public List<Evento> EventosEliminados { get; } = [];
 
@@ -281,6 +306,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.RutaCarta = solicitud.RutaCarta;
         this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
         this.CargarEventos(solicitud);
+        this.OnPropertyChanged(nameof(this.ReaperturaResumen));
         this.ValidateAllProperties();
     }
 
@@ -300,6 +326,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     public void EliminarEvento(EventoViewModel evento)
     {
         this.EventosEdicion.Remove(evento);
+        this.OnPropertyChanged(nameof(this.ReaperturaResumen));
 
         if (evento.Original is Evento original && original.Id != 0)
         {

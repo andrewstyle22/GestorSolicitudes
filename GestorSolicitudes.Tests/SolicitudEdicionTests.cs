@@ -352,6 +352,63 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void ReaperturaResumen_SinHitoDeReapertura_EsNulo()
+    {
+        var editor = new SolicitudEdicionViewModel(new SolicitudBuilder().Construir());
+
+        Assert.Null(editor.ReaperturaResumen);
+    }
+
+    [Fact]
+    public void ReaperturaResumen_LeeElUltimoHitoSinRepetirElPrefijo()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(new DateTime(2026, 10, 10))
+            .Construir();
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
+
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.Equal(
+            string.Format(
+                Localizacion.Texto("Seguimiento.ReaperturaResumen"),
+                DateTime.Today.ToString("d", Localizacion.CulturaActual),
+                "Antes: Descartado por la empresa (10/10, No indicado). Retomamos el proceso"),
+            editor.ReaperturaResumen);
+    }
+
+    [Fact]
+    public void EliminarEvento_Reapertura_DejaElResumenVacio()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        editor.EliminarEvento(editor.EventosEdicion.Single(e => e.Tipo == TipoEvento.Reapertura));
+
+        Assert.Null(editor.ReaperturaResumen);
+    }
+
+    [Fact]
+    public void CargarDesde_NotificaElResumenDeReapertura()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
+        var editor = new SolicitudEdicionViewModel();
+        var notificados = new List<string?>();
+        editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
+
+        editor.CargarDesde(solicitud);
+
+        Assert.Contains(nameof(editor.ReaperturaResumen), notificados);
+    }
+
+    [Fact]
     public void AplicarContacto_VuelcaContactoYNotas()
     {
         Solicitud solicitud = new SolicitudBuilder().Construir();
