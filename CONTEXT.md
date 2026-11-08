@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.20 (opcional, `feat: Duplicar enlaza con la candidatura anterior`). R.19 ya quedó completado. El detalle de cada una está en el plan.
+R.21 (opcional, `feat: aviso al guardar una candidatura repetida`). R.20 ya quedó completado. El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

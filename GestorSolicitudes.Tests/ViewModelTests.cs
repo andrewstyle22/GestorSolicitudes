@@ -148,6 +148,7 @@ public class ViewModelTests
         vm.GuardarCommand.Execute(null);
 
         vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
+        int candidaturaAnteriorId = vm.SolicitudSeleccionada.Id;
         vm.DuplicarCommand.Execute(null);
 
         Assert.NotNull(vm.Editor);
@@ -162,6 +163,11 @@ public class ViewModelTests
         Assert.Contains(
             DateTime.Today.AddDays(-20).ToString("d", Localizacion.CulturaActual),
             vm.Editor.Notas!);
+
+        vm.GuardarCommand.Execute(null);
+
+        Solicitud duplicadaGuardada = db.Solicitudes.Single(solicitud => solicitud.Id != candidaturaAnteriorId);
+        Assert.Equal(candidaturaAnteriorId, duplicadaGuardada.SolicitudAnteriorId);
     }
 
     [Fact]

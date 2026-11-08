@@ -131,6 +131,7 @@ public class SolicitudTests
         Assert.Equal(5, copia.Interes);
         Assert.Equal(DateTime.Today, copia.FechaSolicitud);
         Assert.Equal(EstadoSolicitud.Enviada, copia.Estado);
+        Assert.Null(copia.SolicitudAnteriorId);
         Assert.Null(copia.EnlaceOferta);
         Assert.Null(copia.Requisitos);
         Assert.Null(copia.ContactoNombre);

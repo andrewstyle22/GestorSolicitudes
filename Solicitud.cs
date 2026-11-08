@@ -38,7 +38,8 @@ public class Solicitud
     /// <summary>
     /// Crea una candidatura nueva a partir de esta: copia lo que describe la oferta
     /// (portal, ubicación, modalidad, tecnologías, salario e interés) y deja en blanco
-    /// el proceso, el enlace, los requisitos y los adjuntos.
+    /// el proceso, el enlace, los requisitos y los adjuntos. Si esta candidatura ya está
+    /// guardada, conserva su Id como origen de la copia.
     /// </summary>
     public Solicitud CrearCopia()
     {
@@ -53,6 +54,7 @@ public class Solicitud
             Tecnologias: this.Tecnologias,
             Requisitos: null));
         copia.ActualizarCondiciones(this.SalarioMin, this.SalarioMax, this.PretensionSalarial, this.Interes);
+        copia.SolicitudAnteriorId = this.Id == 0 ? null : this.Id;
 
         return copia;
     }

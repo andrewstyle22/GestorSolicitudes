@@ -101,8 +101,8 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
 - Las candidaturas cerradas se muestran en gris, y el filtro *Solo abiertas* las esconde.
 - **Duplicar** (en el panel de detalle de una candidatura ya guardada) crea una candidatura nueva con
   los mismos datos de la oferta —empresa, puesto, ubicación, tecnologías, salario, interés— pero sin
-  fechas de proceso, contacto ni adjuntos: pensado para reaplicar a la misma empresa en otro puesto,
-  o a una oferta calcada de otra fuente.
+  fechas de proceso, contacto ni adjuntos. La copia queda enlazada a la candidatura de origen para
+  rastrear reaplicaciones: pensado para volver a la misma empresa en otro puesto o a una oferta calcada.
 - La columna **Días** de la tabla cuenta desde el envío mientras el proceso sigue abierto; en cuanto
   lo cierras se congela y muestra cuánto duró en total hasta la fecha de cierre.
 - La tabla muestra además **Seguimiento** (la próxima fecha de contacto) e **Interés** en estrellas,
