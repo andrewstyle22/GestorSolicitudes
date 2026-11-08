@@ -430,6 +430,11 @@
                                     <DataTrigger Binding="{Binding SeguimientoPendiente}" Value="True">
                                         <Setter Property="Background" Value="{StaticResource Aviso}" />
                                     </DataTrigger>
+                                    <!-- Borde, no fondo: así convive con el ámbar de seguimiento pendiente. -->
+                                    <DataTrigger Binding="{Binding FueReabierta}" Value="True">
+                                        <Setter Property="BorderBrush" Value="#DB2777" />
+                                        <Setter Property="BorderThickness" Value="3,0,0,0" />
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding EstaAbierta}" Value="False">
                                         <Setter Property="Foreground" Value="{StaticResource TextoSuave}" />
                                     </DataTrigger>

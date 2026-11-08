@@ -79,6 +79,35 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LaFilaReabiertaLlevaBordeIzquierdoMagentaSinPintarElFondo()
+    {
+        // El magenta va en el borde y no en el fondo: el fondo ámbar de seguimiento
+        // pendiente tiene que seguir viéndose en una fila reabierta.
+        XElement estilo = XDocument.Load(Path.Combine(Raiz, "Views", "MainWindow.xaml"))
+            .Descendants()
+            .Single(e => e.Name.LocalName == "DataGrid.RowStyle")
+            .Descendants()
+            .Single(e => e.Name.LocalName == "Style");
+
+        XElement disparador = estilo
+            .Descendants()
+            .Single(e => e.Name.LocalName == "DataTrigger"
+                && ((string?)e.Attribute("Binding"))?.Contains("FueReabierta") == true);
+
+        Dictionary<string, string?> setters = disparador
+            .Descendants()
+            .Where(e => e.Name.LocalName == "Setter")
+            .ToDictionary(
+                e => (string)e.Attribute("Property")!,
+                e => (string?)e.Attribute("Value"));
+
+        Assert.Equal("True", (string?)disparador.Attribute("Value"));
+        Assert.Equal("#DB2777", setters["BorderBrush"]);
+        Assert.Equal("3,0,0,0", setters["BorderThickness"]);
+        Assert.False(setters.ContainsKey("Background"));
+    }
+
+    [Fact]
     public void NingunaColumnaSustituyeElEstiloDeLaCabecera()
     {
         // Un HeaderStyle propio sustituye al ColumnHeaderStyle del DataGrid en vez de
