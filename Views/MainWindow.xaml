@@ -504,19 +504,35 @@
                                 </DataGridTextColumn.HeaderTemplate>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn x:Name="Dias" Binding="{Binding DiasProceso}" Width="60"
-                                                ElementStyle="{StaticResource EstiloCelda}">
+                            <DataGridTemplateColumn x:Name="Dias" Width="60">
                                 <!-- El tooltip va en el HeaderTemplate y no en un HeaderStyle
                                      propio: un estilo por columna sustituye al ColumnHeaderStyle
                                      del DataGrid en vez de heredarlo, y esa columna se quedaba
                                      sin el fondo gris de las demás. -->
-                                <DataGridTextColumn.HeaderTemplate>
+                                <DataGridTemplateColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{DynamicResource Columna.Dias}"
                                                    ToolTip="{DynamicResource Columna.DiasToolTip}" />
                                     </DataTemplate>
-                                </DataGridTextColumn.HeaderTemplate>
-                            </DataGridTextColumn>
+                                </DataGridTemplateColumn.HeaderTemplate>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DiasProceso}"
+                                                   Style="{StaticResource EstiloCelda}">
+                                            <TextBlock.ToolTip>
+                                                <StackPanel>
+                                                    <TextBlock>
+                                                        <Run Text="{DynamicResource Columna.DiasTotal}" /><Run Text=": " /><Run Text="{Binding DiasDesdeSolicitud, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                    <TextBlock Visibility="{Binding FueReabierta, Converter={StaticResource BooleanoAVisibilidad}}">
+                                                        <Run Text="{DynamicResource Columna.Reabierta}" /><Run Text=": " /><Run Text="{Binding FechaReapertura, Mode=OneWay, Converter={StaticResource FechaCorta}}" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTextColumn x:Name="PrimeraRespuesta" Binding="{Binding FechaPrimeraRespuesta, Converter={StaticResource FechaCorta}}"
                                                 Width="110" ElementStyle="{StaticResource EstiloCelda}">

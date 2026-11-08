@@ -79,6 +79,27 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LaColumnaDiasMuestraElTotalDesdeElEnvioYLaFechaDeReapertura()
+    {
+        // El contador se reinicia al reabrir; el total y la fecha de la reapertura
+        // viven en el tooltip de la celda. Sin estos bindings se pierden sin fallar.
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        XElement columnaDias = Columnas().Single(c => (string?)c.Attribute(x + "Name") == "Dias");
+
+        XElement tooltip = columnaDias.Descendants().Single(e => e.Name.LocalName == "TextBlock.ToolTip");
+        XElement fecha = tooltip
+            .Descendants()
+            .Single(e => e.Name.LocalName == "TextBlock"
+                && e.Descendants().Any(r => ((string?)r.Attribute("Text"))?.Contains("FechaReapertura") == true));
+
+        Assert.Contains(
+            tooltip.Descendants(),
+            e => ((string?)e.Attribute("Text"))?.Contains("DiasDesdeSolicitud") == true);
+        Assert.Contains("FueReabierta", (string?)fecha.Attribute("Visibility"));
+        Assert.Contains("BooleanoAVisibilidad", (string?)fecha.Attribute("Visibility"));
+    }
+
+    [Fact]
     public void LaFilaReabiertaLlevaBordeIzquierdoMagentaSinPintarElFondo()
     {
         // El magenta va en el borde y no en el fondo: el fondo ámbar de seguimiento
