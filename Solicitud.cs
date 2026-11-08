@@ -60,6 +60,9 @@ public class Solicitud
     // Sin setter: EF escribe el campo de respaldo al insertar (ver AppDbContext).
     public int Id { get; }
 
+    /// <summary>Gets la candidatura de la que salió esta, cuando Duplicar abre un proceso nuevo.</summary>
+    public int? SolicitudAnteriorId { get; private set; }
+
     // --- Identificación de la oferta ---
     [MaxLength(LongitudMaximaIdentificacion)]
     public string Empresa { get; private set; } = string.Empty;

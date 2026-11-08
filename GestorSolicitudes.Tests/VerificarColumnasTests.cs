@@ -7,6 +7,7 @@ using Microsoft.Data.Sqlite;
 public class VerificarColumnasTests
 {
     private const string ColumnaFechaReapertura = "FechaReapertura";
+    private const string ColumnaSolicitudAnteriorId = "SolicitudAnteriorId";
 
     [Fact]
     public void VerificarColumnas_AñadeLasColumnasNuevasAUnaBaseVieja()
@@ -27,7 +28,7 @@ public class VerificarColumnasTests
                 columnas.Add(Convert.ToString(lector["name"])!);
             }
 
-            foreach (string esperada in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono", ColumnaFechaReapertura })
+            foreach (string esperada in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono", ColumnaFechaReapertura, ColumnaSolicitudAnteriorId })
             {
                 Assert.Contains(esperada, columnas);
             }
@@ -86,6 +87,10 @@ public class VerificarColumnasTests
             Assert.False(columnas["ContactoTelefono"].NoNulo);
             Assert.Equal("TEXT", columnas[ColumnaFechaReapertura].Tipo);
             Assert.False(columnas[ColumnaFechaReapertura].NoNulo);
+
+            // El enlace con la candidatura anterior es opcional.
+            Assert.Equal("INTEGER", columnas[ColumnaSolicitudAnteriorId].Tipo);
+            Assert.False(columnas[ColumnaSolicitudAnteriorId].NoNulo);
         }
     }
 
