@@ -791,6 +791,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         bool esNueva = this.PrepararNueva(solicitud);
+        Solicitud? candidaturaRepetida = esNueva ? this.BuscarCandidaturaRepetida(solicitud) : null;
 
         // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
         (string? cvAnterior, string? cartaAnterior) = esNueva
@@ -810,6 +811,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
+        if (candidaturaRepetida is not null)
+        {
+            string motivo = candidaturaRepetida.MotivoRechazo is MotivoRechazo motivoRechazo
+                ? string.Format(
+                    Localizacion.Texto("Mensaje.CandidaturaRepetidaMotivo"),
+                    EnumHelper.Descripcion(motivoRechazo))
+                : string.Empty;
+            this.dialogo.Avisar(
+                string.Format(
+                    Localizacion.Texto("Mensaje.CandidaturaRepetida"),
+                    candidaturaRepetida.FechaSolicitud.ToString("d", Localizacion.CulturaActual),
+                    EnumHelper.Descripcion(candidaturaRepetida.Estado),
+                    motivo),
+                Localizacion.Texto("Titulo.CandidaturaRepetida"));
+        }
+
         this.CerrarEdicion();
     }
 
@@ -904,6 +921,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         solicitud.RegistrarEnvio(Traducciones.Texto("Evento.CandidaturaEnviada"));
         return true;
+    }
+
+    private Solicitud? BuscarCandidaturaRepetida(Solicitud solicitud)
+    {
+        string empresa = TextoHelper.NormalizarBusqueda(solicitud.Empresa.Trim());
+        string puesto = TextoHelper.NormalizarBusqueda(solicitud.Puesto.Trim());
+
+        return this.db.Solicitudes.Local
+            .Where(anterior => !ReferenceEquals(anterior, solicitud)
+                && TextoHelper.NormalizarBusqueda(anterior.Empresa.Trim()) == empresa
+                && TextoHelper.NormalizarBusqueda(anterior.Puesto.Trim()) == puesto)
+            .OrderByDescending(anterior => anterior.FechaSolicitud)
+            .ThenByDescending(anterior => anterior.Id)
+            .FirstOrDefault();
     }
 
     /// <summary>Escribe los cambios; si la base falla, avisa y deja el panel abierto.</summary>

@@ -170,6 +170,70 @@ public class ViewModelTests
         Assert.Equal(candidaturaAnteriorId, duplicadaGuardada.SolicitudAnteriorId);
     }
 
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, MotivoRechazo.Salario)]
+    [InlineData(EstadoSolicitud.Enviada, null)]
+    public void Guardar_NuevaCandidaturaRepetida_AvisaSinImpedirElGuardado(
+        EstadoSolicitud estado,
+        MotivoRechazo? motivo)
+    {
+        using var db = TestDb.NuevoContexto();
+        DateTime fechaAnterior = new(2026, 10, 10);
+        Solicitud anterior = new SolicitudBuilder()
+            .ConEmpresa("ÁCME")
+            .ConPuesto("Desarrollador")
+            .ConFechaSolicitud(fechaAnterior)
+            .ConEstado(estado)
+            .ConMotivoRechazo(motivo)
+            .Construir();
+        db.Solicitudes.Add(anterior);
+        db.SaveChanges();
+
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("acme", "Desarrollador");
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Equal(2, db.Solicitudes.Count());
+        string aviso = Assert.Single(dialogo.Avisos);
+        string motivoAviso = motivo is MotivoRechazo motivoRechazo
+            ? string.Format(
+                Localizacion.Texto("Mensaje.CandidaturaRepetidaMotivo"),
+                EnumHelper.Descripcion(motivoRechazo))
+            : string.Empty;
+        Assert.Equal(
+            string.Format(
+                Localizacion.Texto("Mensaje.CandidaturaRepetida"),
+                fechaAnterior.ToString("d", Localizacion.CulturaActual),
+                EnumHelper.Descripcion(estado),
+                motivoAviso),
+            aviso);
+        Assert.Null(vm.Editor);
+    }
+
+    [Theory]
+    [InlineData("ACME", "Analista")]
+    [InlineData("Otra empresa", "Desarrollador")]
+    public void Guardar_NuevaCandidaturaDistinta_NoAvisaComoRepetida(string empresa, string puesto)
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Desarrollador")
+            .Construir());
+        db.SaveChanges();
+
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios(empresa, puesto);
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Empty(dialogo.Avisos);
+        Assert.Equal(2, db.Solicitudes.Count());
+    }
+
     [Fact]
     public void Cancelar_BorradorSinGuardar_DescartaEdicion()
     {

@@ -7,11 +7,11 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ✅ 1: editor con búfer; la UI no ve la entidad.
 - ✅ 2: historial de eventos (2.1–2.10).
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
-- 🔄 R: estados y reapertura (R.1–R.22, con las correcciones R.12a–R.12g tras la R.12); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
+- 🔄 R: estados y reapertura (R.1–R.21 completos; R.22 pendiente; correcciones R.12a–R.12g tras la R.12); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.21 (opcional, `feat: aviso al guardar una candidatura repetida`). R.20 ya quedó completado. El detalle de cada una está en el plan.
+R.22 (`docs: registrar la decisión de estados y reapertura`). R.21 ya quedó completado. El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.

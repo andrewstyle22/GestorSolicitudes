@@ -208,6 +208,7 @@ public static class Traducciones
         ("Titulo.Confirmar", "Confirmar"),
         ("Titulo.ConfirmarReapertura", "Confirmar reapertura"),
         ("Titulo.FaltanDatos", "Faltan datos"),
+        ("Titulo.CandidaturaRepetida", "Candidatura repetida"),
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
 
@@ -216,6 +217,8 @@ public static class Traducciones
 
         // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Duplicada de la candidatura #{0} ({1}, {2})."),
+        ("Mensaje.CandidaturaRepetida", "Ya te presentaste el {0} a este puesto: {1}{2}."),
+        ("Mensaje.CandidaturaRepetidaMotivo", ", motivo {0}"),
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Requisitos del cargo"),
@@ -482,6 +485,7 @@ public static class Traducciones
         ("Titulo.Confirmar", "Confirm"),
         ("Titulo.ConfirmarReapertura", "Confirm reopening"),
         ("Titulo.FaltanDatos", "Missing data"),
+        ("Titulo.CandidaturaRepetida", "Duplicate application"),
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
 
@@ -490,6 +494,8 @@ public static class Traducciones
 
         // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Duplicated from application #{0} ({1}, {2})."),
+        ("Mensaje.CandidaturaRepetida", "You already applied for this position on {0}: {1}{2}."),
+        ("Mensaje.CandidaturaRepetidaMotivo", ", reason: {0}"),
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Job requirements"),
@@ -756,6 +762,7 @@ public static class Traducciones
         ("Titulo.Confirmar", "Bestätigen"),
         ("Titulo.ConfirmarReapertura", "Wiedereröffnung bestätigen"),
         ("Titulo.FaltanDatos", "Fehlende Angaben"),
+        ("Titulo.CandidaturaRepetida", "Doppelte Bewerbung"),
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),
 
@@ -764,6 +771,8 @@ public static class Traducciones
 
         // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Dupliziert aus Bewerbung Nr. {0} ({1}, {2})."),
+        ("Mensaje.CandidaturaRepetida", "Du hast dich am {0} bereits auf diese Stelle beworben: {1}{2}."),
+        ("Mensaje.CandidaturaRepetidaMotivo", ", Grund: {0}"),
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Anforderungen an die Stelle"),
