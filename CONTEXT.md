@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.14 (`feat: insignia ↻ en la tabla`). R.13 ya quedó completado. El detalle de cada una está en el plan.
+R.15 (`feat: color de fila para reabiertas`). R.14 ya quedó completado. El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
