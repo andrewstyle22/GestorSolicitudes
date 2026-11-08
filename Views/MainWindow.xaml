@@ -402,6 +402,9 @@
                             <CheckBox Content="{DynamicResource Filtro.SeguimientoPendiente}" VerticalAlignment="Center"
                                       Margin="12,0,0,0"
                                       IsChecked="{Binding SoloConSeguimientoPendiente}" />
+                            <CheckBox Content="{DynamicResource Filtro.Reabiertas}" VerticalAlignment="Center"
+                                      Margin="12,0,0,0"
+                                      IsChecked="{Binding SoloReabiertas}" />
                         </StackPanel>
                     </Grid>
 

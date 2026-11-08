@@ -272,6 +272,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSoloConSeguimientoPendienteChanged(bool value) => Recargar();
 
+    [ObservableProperty]
+    private bool soloReabiertas;
+
+    partial void OnSoloReabiertasChanged(bool value) => Recargar();
+
     // ---------------------------------------------------------------- Selección
     [ObservableProperty]
     private Solicitud? solicitudSeleccionada;
@@ -499,6 +504,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (this.SoloConSeguimientoPendiente)
         {
             lista = lista.Where(s => s.SeguimientoPendiente).ToList();
+        }
+
+        if (this.SoloReabiertas)
+        {
+            lista = lista.Where(s => s.FueReabierta).ToList();
         }
 
         this.Paginar(lista, pagina);

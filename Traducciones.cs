@@ -72,6 +72,7 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Borrar la búsqueda"),
         ("Filtro.SoloAbiertas", "Solo abiertas"),
         ("Filtro.SeguimientoPendiente", "Seguimiento pendiente"),
+        ("Filtro.Reabiertas", "Reabiertas"),
         ("Filtro.TodosLosEstados", "Todos los estados"),
 
         // ----- Columnas de la tabla -----
@@ -345,6 +346,7 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Clear search"),
         ("Filtro.SoloAbiertas", "Open only"),
         ("Filtro.SeguimientoPendiente", "Follow-up due"),
+        ("Filtro.Reabiertas", "Reopened"),
         ("Filtro.TodosLosEstados", "All statuses"),
 
         // ----- Columnas de la tabla -----
@@ -618,6 +620,7 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
         ("Filtro.SeguimientoPendiente", "Nachverfolgung fällig"),
+        ("Filtro.Reabiertas", "Wieder geöffnet"),
         ("Filtro.TodosLosEstados", "Alle Status"),
 
         // ----- Columnas de la tabla -----

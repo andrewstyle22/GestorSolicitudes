@@ -254,6 +254,31 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void FiltroReabiertas_MuestraSoloLasQueSeReabrieron()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        Solicitud reabierta = new SolicitudBuilder()
+            .ConEmpresa("Reabierta")
+            .ConPuesto("A")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(DateTime.Today.AddDays(-5))
+            .Construir();
+        reabierta.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
+
+        db.Solicitudes.Add(reabierta);
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Normal").ConPuesto("B").Construir());
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.SoloReabiertas = true;
+
+        Assert.Single(vm.Solicitudes);
+        Assert.Equal("Reabierta", vm.Solicitudes[0].Empresa);
+    }
+
+    [Fact]
     public void TextoBusqueda_IgnoraTildesYMayusculas()
     {
         using var db = TestDb.NuevoContexto();

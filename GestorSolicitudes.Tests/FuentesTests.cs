@@ -129,6 +129,18 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void ElFiltroDeReabiertasEstaEnLaBarraYEnlazaSuPropiedad()
+    {
+        // Un binding mal escrito no rompe la compilación: la casilla existiría pero no filtraría.
+        XElement casilla = XDocument.Load(Path.Combine(Raiz, "Views", "MainWindow.xaml"))
+            .Descendants()
+            .Single(e => e.Name.LocalName == "CheckBox"
+                && ((string?)e.Attribute("Content"))?.Contains("Filtro.Reabiertas") == true);
+
+        Assert.Contains("SoloReabiertas", (string?)casilla.Attribute("IsChecked"));
+    }
+
+    [Fact]
     public void NingunaColumnaSustituyeElEstiloDeLaCabecera()
     {
         // Un HeaderStyle propio sustituye al ColumnHeaderStyle del DataGrid en vez de
