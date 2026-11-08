@@ -375,18 +375,20 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// Vuelca al modelo lo que el editor tiene en sus pestañas. Con <paramref name="omitirEstado"/>
     /// el estado, el motivo y la fecha de cierre no salen de aquí: los pone
     /// <see cref="Solicitud.Reabrir"/> junto con el resto de efectos de la reapertura.
+    /// La respuesta va antes que el estado: al salir de "Sin respuesta", el estado rellena
+    /// <see cref="Solicitud.FechaPrimeraRespuesta"/> y el editor no debe pisarla.
     /// </summary>
     public void AplicarA(Solicitud solicitud, bool omitirEstado = false)
     {
         this.AplicarOferta(solicitud);
         this.AplicarEconomico(solicitud);
+        this.AplicarRespuesta(solicitud);
         if (!omitirEstado)
         {
             this.AplicarEstado(solicitud);
         }
 
         this.AplicarFechas(solicitud);
-        this.AplicarRespuesta(solicitud);
         this.AplicarContacto(solicitud);
         this.AplicarIdentificacion(solicitud);
         this.AplicarAdjuntos(solicitud);

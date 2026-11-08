@@ -295,8 +295,7 @@ public class ViewModelDialogosTests
         Assert.Null(solicitud.FechaCierre);
         Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
         Assert.Equal(DateTime.Today.AddDays(7), solicitud.ProximoSeguimiento);
-        Evento hito = Assert.Single(solicitud.Eventos);
-        Assert.Equal(TipoEvento.Reapertura, hito.Tipo);
+        Assert.Equal(TipoEvento.Reapertura, solicitud.Eventos[^1].Tipo);
     }
 
     [Theory]

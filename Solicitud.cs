@@ -218,11 +218,26 @@ public class Solicitud
 
     /// <summary>
     /// Cambia el estado de la solicitud junto con su motivo de rechazo y su fecha de cierre.
-    /// Exige un motivo válido en los cierres negativos y lo limpia en el resto.
-    /// Todavía no valida transiciones: eso llega con las reglas de estado.
+    /// Exige un motivo válido en los cierres negativos, lo limpia en el resto y fija hoy
+    /// como fecha de cierre si no se indica otra. Una candidatura cerrada solo se reabre
+    /// con <see cref="Reabrir"/>.
     /// </summary>
     public void CambiarEstado(EstadoSolicitud estado, MotivoRechazo? motivo, DateTime? fechaCierre)
     {
+        bool esTransicion = estado != this.Estado;
+
+        if (esTransicion && this.Estado.EstaCerrada() && !estado.EstaCerrada())
+        {
+            throw new InvalidOperationException(
+                "Una candidatura cerrada solo se reabre con Reabrir.");
+        }
+
+        if (esTransicion && estado == EstadoSolicitud.OfertaAceptada && this.Estado.EstaCerrada())
+        {
+            throw new InvalidOperationException(
+                "Una oferta cerrada no se puede aceptar sin reabrirla a \"Oferta recibida\".");
+        }
+
         if (estado.AdmiteMotivo())
         {
             if (motivo is not MotivoRechazo motivoValido || !estado.MotivosPermitidos().Contains(motivoValido))
@@ -235,6 +250,29 @@ public class Solicitud
         else
         {
             motivo = null;
+        }
+
+        DateTime hoy = DateTime.Today;
+        if (esTransicion && estado.EstaCerrada())
+        {
+            fechaCierre ??= hoy;
+        }
+
+        if (esTransicion && this.Estado == EstadoSolicitud.SinRespuesta)
+        {
+            this.FechaPrimeraRespuesta ??= hoy;
+            this.AgregarEvento(new Evento(
+                hoy,
+                TipoEvento.Respuesta,
+                $"La empresa respondió. Nuevo estado: {Texto(estado)}"));
+        }
+
+        if (esTransicion && estado == EstadoSolicitud.Rechazada && motivo is MotivoRechazo motivoCierre)
+        {
+            this.AgregarEvento(new Evento(
+                hoy,
+                TipoEvento.Rechazo,
+                $"{Texto(estado)}: {Texto(motivoCierre)}"));
         }
 
         this.Estado = estado;

@@ -34,7 +34,7 @@ internal sealed class SolicitudBuilder
             motivo = MotivoRechazo.NoIndicado;
         }
 
-        s.CambiarEstado(estado, motivo, s.FechaCierre);
+        CambiarEstadoSinHitos(s, estado, motivo, s.FechaCierre);
     });
 
     public SolicitudBuilder ConFechaSolicitud(DateTime fecha) => this.Asignar(s =>
@@ -83,7 +83,7 @@ internal sealed class SolicitudBuilder
         s.ActualizarCondiciones(s.SalarioMin, s.SalarioMax, s.PretensionSalarial, interes));
 
     public SolicitudBuilder ConMotivoRechazo(MotivoRechazo? motivo) => this.Asignar(s =>
-        s.CambiarEstado(s.Estado, motivo, s.FechaCierre));
+        CambiarEstadoSinHitos(s, s.Estado, motivo, s.FechaCierre));
 
     public SolicitudBuilder ConFechaEntrevista(DateTime? fecha) => this.Asignar(s =>
         s.ActualizarFechas(s.FechaSolicitud, fecha, s.ProximoSeguimiento));
@@ -128,7 +128,7 @@ internal sealed class SolicitudBuilder
         this.Asignar(s => s.RegistrarRespuesta(fecha, s.RespuestaEmpresa));
 
     public SolicitudBuilder ConFechaCierre(DateTime? fecha) => this.Asignar(s =>
-        s.CambiarEstado(s.Estado, s.MotivoRechazo, fecha));
+        CambiarEstadoSinHitos(s, s.Estado, s.MotivoRechazo, fecha));
 
     public SolicitudBuilder ConProximoSeguimiento(DateTime? fecha) => this.Asignar(s =>
         s.ActualizarFechas(s.FechaSolicitud, s.FechaEntrevista, fecha));
@@ -155,7 +155,17 @@ internal sealed class SolicitudBuilder
             this.solicitud.FechaEntrevista,
             this.solicitud.ProximoSeguimiento);
         resultado.RegistrarRespuesta(this.solicitud.FechaPrimeraRespuesta, this.solicitud.RespuestaEmpresa);
-        resultado.CambiarEstado(this.solicitud.Estado, this.solicitud.MotivoRechazo, this.solicitud.FechaCierre);
+        CambiarEstadoSinHitos(
+            resultado,
+            this.solicitud.Estado,
+            this.solicitud.MotivoRechazo,
+            this.solicitud.FechaCierre);
+        if (this.solicitud.FechaCierre is null && this.solicitud.Estado.EstaCerrada())
+        {
+            // Al cerrar sin fecha, CambiarEstado pone hoy: el andamio solo copia el valor.
+            CambiarEstadoSinHitos(resultado, this.solicitud.Estado, this.solicitud.MotivoRechazo, null);
+        }
+
         resultado.ActualizarContacto(
             this.solicitud.ContactoNombre,
             this.solicitud.ContactoEmail,
@@ -176,5 +186,24 @@ internal sealed class SolicitudBuilder
     {
         asignacion(this.solicitud);
         return this;
+    }
+
+    /// <summary>
+    /// Cambia el estado como la app, pero sin dejar los hitos que genera la transición:
+    /// el andamio solo acumula los eventos que pide <see cref="ConEventos"/>.
+    /// </summary>
+    private static void CambiarEstadoSinHitos(
+        Solicitud solicitud,
+        EstadoSolicitud estado,
+        MotivoRechazo? motivo,
+        DateTime? fechaCierre)
+    {
+        int eventosAntes = solicitud.Eventos.Count;
+        solicitud.CambiarEstado(estado, motivo, fechaCierre);
+
+        while (solicitud.Eventos.Count > eventosAntes)
+        {
+            solicitud.QuitarEvento(solicitud.Eventos[solicitud.Eventos.Count - 1]);
+        }
     }
 }

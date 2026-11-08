@@ -352,17 +352,116 @@ public class SolicitudTests
     [Fact]
     public void CambiarEstado_SinMotivoNiFecha_LosDejaNulos()
     {
-        var solicitud = new SolicitudBuilder()
-            .ConEstado(EstadoSolicitud.Rechazada)
-            .ConMotivoRechazo(MotivoRechazo.Salario)
-            .ConFechaCierre(new DateTime(2026, 2, 3))
-            .Construir();
+        var solicitud = new SolicitudBuilder().Construir();
 
-        solicitud.CambiarEstado(EstadoSolicitud.Enviada, null, null);
+        solicitud.CambiarEstado(EstadoSolicitud.EntrevistaRrhh, null, null);
 
-        Assert.Equal(EstadoSolicitud.Enviada, solicitud.Estado);
+        Assert.Equal(EstadoSolicitud.EntrevistaRrhh, solicitud.Estado);
         Assert.Null(solicitud.MotivoRechazo);
         Assert.Null(solicitud.FechaCierre);
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.OfertaAceptada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.Retirada)]
+    public void CambiarEstado_CerradaAAbierta_Lanza(EstadoSolicitud estadoCerrado)
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(estadoCerrado).Construir();
+
+        Assert.Throws<InvalidOperationException>(
+            () => solicitud.CambiarEstado(EstadoSolicitud.Enviada, null, null));
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.Retirada)]
+    public void CambiarEstado_CerradaAOfertaAceptada_Lanza(EstadoSolicitud estadoCerrado)
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(estadoCerrado).Construir();
+
+        Assert.Throws<InvalidOperationException>(
+            () => solicitud.CambiarEstado(EstadoSolicitud.OfertaAceptada, null, null));
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.Retirada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    public void CambiarEstado_AlCerrarSinFecha_UsaHoy(EstadoSolicitud estado)
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.CambiarEstado(estado, MotivoRechazo.NoIndicado, null);
+
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void CambiarEstado_CerradoACerrado_ActualizaElMotivo()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.OfertaRechazada)
+            .Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Retirada, MotivoRechazo.YaNoMeInteresa, null);
+
+        Assert.Equal(EstadoSolicitud.Retirada, solicitud.Estado);
+        Assert.Equal(MotivoRechazo.YaNoMeInteresa, solicitud.MotivoRechazo);
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void CambiarEstado_Descartado_AnadeElHitoDeRechazo()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.Salario, null);
+
+        Evento evento = Assert.Single(solicitud.Eventos);
+        Assert.Equal(DateTime.Today, evento.Fecha);
+        Assert.Equal(TipoEvento.Rechazo, evento.Tipo);
+        Assert.Contains("Salario / pretensión", evento.Descripcion);
+    }
+
+    [Fact]
+    public void CambiarEstado_RepiteElMismoCierre_NoDuplicaElHito()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.Salario, null);
+        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.Salario, null);
+
+        Assert.Single(solicitud.Eventos);
+    }
+
+    [Fact]
+    public void CambiarEstado_SalirDeSinRespuesta_RellenaLaPrimeraRespuestaYAnadeElHito()
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.SinRespuesta).Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.EntrevistaTecnica, null, null);
+
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+        Evento evento = Assert.Single(solicitud.Eventos);
+        Assert.Equal(TipoEvento.Respuesta, evento.Tipo);
+    }
+
+    [Fact]
+    public void CambiarEstado_SalirDeSinRespuesta_ConservaLaPrimeraRespuesta()
+    {
+        var primeraRespuesta = new DateTime(2026, 3, 1);
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.SinRespuesta)
+            .ConFechaPrimeraRespuesta(primeraRespuesta)
+            .Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.EnRevision, null, null);
+
+        Assert.Equal(primeraRespuesta, solicitud.FechaPrimeraRespuesta);
+        Assert.Single(solicitud.Eventos);
     }
 
     [Fact]
@@ -452,7 +551,7 @@ public class SolicitudTests
 
         solicitud.Reabrir(EstadoSolicitud.EntrevistaRrhh, "  perfil no adecuado  ");
 
-        Evento evento = Assert.Single(solicitud.Eventos);
+        Evento evento = solicitud.Eventos[^1];
         Assert.Equal(DateTime.Today, evento.Fecha);
         Assert.Equal(TipoEvento.Reapertura, evento.Tipo);
         Assert.Equal(
@@ -483,7 +582,7 @@ public class SolicitudTests
 
         Assert.Equal(
             "Reabierta. Antes: Oferta aceptada (10/10). Retomamos el proceso",
-            Assert.Single(solicitud.Eventos).Descripcion);
+            solicitud.Eventos[^1].Descripcion);
     }
 
     [Fact]
@@ -498,7 +597,7 @@ public class SolicitudTests
 
         Assert.Equal(
             "Reabierta. Antes: Descartado por la empresa. Retomamos el proceso",
-            Assert.Single(solicitud.Eventos).Descripcion);
+            solicitud.Eventos[^1].Descripcion);
     }
 
     [Theory]

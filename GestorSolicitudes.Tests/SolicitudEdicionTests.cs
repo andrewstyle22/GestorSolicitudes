@@ -241,9 +241,7 @@ public class SolicitudEdicionTests
     {
         DateTime cierre = new(2026, 2, 10);
         Solicitud solicitud = new SolicitudBuilder()
-            .ConEstado(EstadoSolicitud.Rechazada)
-            .ConMotivoRechazo(MotivoRechazo.Salario)
-            .ConFechaCierre(new DateTime(2026, 1, 1))
+            .ConEstado(EstadoSolicitud.Enviada)
             .Construir();
         var editor = new SolicitudEdicionViewModel
         {
@@ -303,6 +301,25 @@ public class SolicitudEdicionTests
 
         Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
+    }
+
+    [Fact]
+    public void AplicarA_SalirDeSinRespuesta_ConservaLaFechaQueRellenaElEstado()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.SinRespuesta)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+        editor.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        editor.AplicarA(solicitud);
+
+        Assert.Equal(EstadoSolicitud.EntrevistaTecnica, solicitud.Estado);
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+        Assert.Contains(solicitud.Eventos, e => e.Tipo == TipoEvento.Respuesta);
     }
 
     [Fact]
