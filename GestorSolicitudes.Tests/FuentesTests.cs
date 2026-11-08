@@ -61,6 +61,24 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LaInsigniaDeReaperturaSeVeSoloSiFueReabiertaYTraeLaFecha()
+    {
+        // La insignia va en la celda del estado: si se pierde el binding, la reapertura
+        // deja de distinguirse en la tabla sin que falle nada al compilar.
+        XElement columnaEstado = Columnas().Single(c => c
+            .Descendants()
+            .Any(e => (string?)e.Attribute("Text") == "{DynamicResource Columna.Estado}"));
+
+        XElement insignia = columnaEstado.Descendants().Single(e => (string?)e.Attribute("Text") == "↻");
+
+        Assert.Contains("FueReabierta", (string?)insignia.Attribute("Visibility"));
+        Assert.Contains("BooleanoAVisibilidad", (string?)insignia.Attribute("Visibility"));
+        Assert.Contains(
+            insignia.Descendants(),
+            e => ((string?)e.Attribute("Text"))?.Contains("FechaReapertura") == true);
+    }
+
+    [Fact]
     public void NingunaColumnaSustituyeElEstiloDeLaCabecera()
     {
         // Un HeaderStyle propio sustituye al ColumnHeaderStyle del DataGrid en vez de

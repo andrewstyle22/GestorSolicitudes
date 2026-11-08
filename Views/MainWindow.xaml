@@ -464,13 +464,28 @@
                                 </DataGridTemplateColumn.HeaderTemplate>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="10" Padding="8,3"
-                                                HorizontalAlignment="Left" VerticalAlignment="Center"
-                                                Margin="4,0,0,0"
-                                                Background="{Binding Estado, Converter={StaticResource EstadoAColor}}">
-                                            <TextBlock Text="{Binding Estado, Converter={StaticResource EnumDescripcion}}"
-                                                       Foreground="White" FontSize="11" FontWeight="SemiBold" />
-                                        </Border>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border CornerRadius="10" Padding="8,3"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                    Margin="4,0,0,0"
+                                                    Background="{Binding Estado, Converter={StaticResource EstadoAColor}}">
+                                                <TextBlock Text="{Binding Estado, Converter={StaticResource EnumDescripcion}}"
+                                                           Foreground="White" FontSize="11" FontWeight="SemiBold" />
+                                            </Border>
+                                            <!-- Insignia de reapertura: solo si FueReabierta, con la fecha en el tooltip. -->
+                                            <TextBlock Text="↻"
+                                                       Margin="6,0,0,0" VerticalAlignment="Center"
+                                                       FontSize="12" FontWeight="Bold"
+                                                       AutomationProperties.Name="{DynamicResource Columna.Reabierta}"
+                                                       Visibility="{Binding FueReabierta, Converter={StaticResource BooleanoAVisibilidad}}">
+                                                <TextBlock.ToolTip>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{DynamicResource Columna.Reabierta}" />
+                                                        <TextBlock Text="{Binding FechaReapertura, Converter={StaticResource FechaCorta}}" />
+                                                    </StackPanel>
+                                                </TextBlock.ToolTip>
+                                            </TextBlock>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
