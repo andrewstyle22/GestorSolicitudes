@@ -11,14 +11,14 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ⬜ 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-R.13 (`feat: CambiarEstado valida las transiciones`). R.12g ya quedó completado. El detalle de cada una está en el plan.
+R.14 (`feat: insignia ↻ en la tabla`). R.13 ya quedó completado. El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
 - `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni `Id`: `Original` nulo es nuevo.
 - `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
 - EF accede por campo a `Evento` e `Id` de `Solicitud`; `Eventos` es `IReadOnlyList` sobre campo privado.
-- `CambiarEstado` exige un motivo válido en los tres cierres negativos y lo limpia fuera de ellos; las transiciones llegan en R.13.
+- `CambiarEstado` exige un motivo válido en los tres cierres negativos y lo limpia fuera de ellos; un proceso cerrado solo sale de ahí con `Reabrir`. Al cerrar sin fecha pone hoy y, al pasar a Descartado, añade un hito `Rechazo` (solo en la transición para no duplicarlo al reguardar).
 - Estados: no se añade ninguno (ni `EnPausa` ni negociación). Reabrir es una acción, no un estado.
 - Motivo de cierre: obligatorio en Descartado, Retirada y Oferta rechazada por mí. Se amplía el enum `MotivoRechazo` con `NoIndicado`, `AceptoOtraOferta`, `ModalidadOUbicacion` y `YaNoMeInteresa`. El desplegable se filtra por estado y el editor preselecciona `NoIndicado`. El nombre `MotivoRechazo` no se cambia.
 - Reapertura: columna `FechaReapertura` (solo la última, sin contador) y `FueReabierta` [NotMapped]. `DiasProceso` cuenta desde `FechaReapertura ?? FechaSolicitud`. Insignia ↻ y borde magenta `#DB2777` en la fila.
@@ -40,8 +40,6 @@ R.13 (`feat: CambiarEstado valida las transiciones`). R.12g ya quedó completado
 - No hacer push salvo que se pida.
 
 ## Puntos de control pendientes
-- Orden en la Etapa R: R.11, R.12 y R.12a a R.12g antes de R.13. Dentro de las correcciones, el campo de la nota (R.12d y R.12e) va antes de exigirla (R.12f); si no, el usuario no podría guardar una reapertura.
 - R.12a: test de fallo de `SaveChanges` seguido de reintento tras una reapertura (un solo hito, `FechaCierre` nula, seguimiento propuesto, primera respuesta rellena).
 - R.12c: prueba manual del combo de motivos al cambiar de Descartado a Retirada; WPF puede vaciar `SelectedValue` al reemplazar `MotivosDelEstado`.
-- R.13: test del orden de `AplicarA` (respuesta antes que estado).
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
