@@ -8,10 +8,10 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ✅ 2: historial de eventos (2.1–2.10).
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ✅ R: estados y reapertura (R.1–R.22 completos; correcciones R.12a–R.12g tras la R.12); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
-- 🔄 4: `Evento` sin setters públicos (4.1), test por reflexión (4.2), prefijo compartido del hito de reapertura y documentación (4.3–4.8).
+- 🔄 4: `Evento` sin setters públicos (4.1), test por reflexión (4.2) y prefijo compartido del hito de reapertura (4.3); queda la documentación (4.4–4.8).
 
 ## Siguiente paso concreto
-4.3 (`refactor: prefijo del hito de reapertura compartido`); el resto es documentación. El detalle está en el plan.
+4.4 (`docs: actualizar AGENTS.md`); el resto es documentación. El detalle está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
