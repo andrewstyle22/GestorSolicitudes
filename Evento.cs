@@ -18,11 +18,11 @@ public class Evento
     {
     }
 
-    public int Id { get; set; }
+    public int Id { get; private set; }
 
-    public int SolicitudId { get; set; }
+    public int SolicitudId { get; private set; }
 
-    public Solicitud? Solicitud { get; set; }
+    public Solicitud? Solicitud { get; private set; }
 
     public DateTime Fecha { get; private set; }
 
