@@ -171,9 +171,8 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
                 return null;
             }
 
-            const string Prefijo = "Reabierta. ";
-            string detalle = evento.Descripcion.StartsWith(Prefijo, StringComparison.Ordinal)
-                ? evento.Descripcion[Prefijo.Length..]
+            string detalle = evento.Descripcion.StartsWith(Solicitud.PrefijoHitoReapertura, StringComparison.Ordinal)
+                ? evento.Descripcion[Solicitud.PrefijoHitoReapertura.Length..]
                 : evento.Descripcion;
             return string.Format(
                 Localizacion.Texto("Seguimiento.ReaperturaResumen"),
