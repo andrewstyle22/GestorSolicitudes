@@ -72,7 +72,7 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Borrar la búsqueda"),
         ("Filtro.SoloAbiertas", "Solo abiertas"),
         ("Filtro.SeguimientoPendiente", "Seguimiento pendiente"),
-        ("Filtro.SinEspecificar", "Sin especificar"),
+        ("Filtro.Reabiertas", "Reabiertas"),
         ("Filtro.TodosLosEstados", "Todos los estados"),
 
         // ----- Columnas de la tabla -----
@@ -83,6 +83,8 @@ public static class Traducciones
         ("Columna.Enviada", "Enviada"),
         ("Columna.Dias", "Días"),
         ("Columna.DiasToolTip", "Días desde el envío; si el proceso ya se cerró, cuánto duró hasta el cierre"),
+        ("Columna.DiasTotal", "Días desde el envío"),
+        ("Columna.Reabierta", "Reabierta"),
         ("Columna.PrimeraRespuesta", "1ª respuesta"),
         ("Columna.Entrevista", "Entrevista"),
         ("Columna.Seguimiento", "Seguimiento"),
@@ -126,7 +128,9 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Estado actual"),
-        ("Seguimiento.MotivoRechazo", "Motivo del rechazo"),
+        ("Seguimiento.NotaReapertura", "Nota de la reapertura"),
+        ("Seguimiento.ReaperturaResumen", "↻ Reabierta el {0}. {1}"),
+        ("Seguimiento.MotivoRechazo", "Motivo del cierre"),
         ("Seguimiento.FechaSolicitud", "Fecha de solicitud"),
         ("Seguimiento.PrimeraContestacion", "1ª contestación"),
         ("Seguimiento.DiaEntrevista", "Día de la entrevista"),
@@ -190,12 +194,21 @@ public static class Traducciones
         ("Mensaje.NoSePudoEliminar", "No se pudo eliminar: {0}"),
         ("Mensaje.NoSePudoExportar", "No se pudo exportar el CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "¿Eliminar la candidatura de {0} ({1})?"),
+        ("Mensaje.ConfirmarReapertura", "Vas a reabrir la candidatura.\nEstado anterior: {0}\nFecha de cierre: {1}\nMotivo de cierre: {2}\nNuevo estado: {3}\nNota: {4}\n\n¿Quieres continuar?"),
+        ("Mensaje.ConfirmarReaperturaOfertaAceptada", "Habías aceptado esta oferta. ¿Seguro que quieres reabrirla?\n\nEstado anterior: {0}\nFecha de cierre: {1}\nMotivo de cierre: {2}\nNuevo estado: {3}\nNota: {4}"),
+        ("Mensaje.SinFechaCierre", "Sin fecha"),
+        ("Mensaje.SinMotivoCierre", "No aplica"),
+        ("Mensaje.ReaperturaSinRespuesta", "No se puede reabrir a «Sin respuesta»: indica el estado al que vuelve la candidatura."),
+        ("Mensaje.NotaReaperturaObligatoria", "La nota de la reapertura es obligatoria."),
+        ("Mensaje.MotivoCierreNoValido", "Elige un motivo de cierre válido para este estado."),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Adjunto"),
         ("Titulo.Confirmar", "Confirmar"),
+        ("Titulo.ConfirmarReapertura", "Confirmar reapertura"),
         ("Titulo.FaltanDatos", "Faltan datos"),
+        ("Titulo.CandidaturaRepetida", "Candidatura repetida"),
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
 
@@ -204,6 +217,8 @@ public static class Traducciones
 
         // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Duplicada de la candidatura #{0} ({1}, {2})."),
+        ("Mensaje.CandidaturaRepetida", "Ya te presentaste el {0} a este puesto: {1}{2}."),
+        ("Mensaje.CandidaturaRepetidaMotivo", ", motivo {0}"),
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Requisitos del cargo"),
@@ -269,12 +284,17 @@ public static class Traducciones
         ("TipoEvento.Seguimiento", "Seguimiento enviado"),
         ("TipoEvento.Oferta", "Oferta"),
         ("TipoEvento.Rechazo", "Rechazo"),
+        ("TipoEvento.Reapertura", "Reabierta"),
         ("MotivoRechazo.Salario", "Salario / pretensión"),
         ("MotivoRechazo.ExperienciaInsuficiente", "Experiencia insuficiente"),
         ("MotivoRechazo.SeleccionaronOtroCandidato", "Seleccionaron a otro candidato"),
         ("MotivoRechazo.CulturalFit", "No encajaba con el equipo/cultura"),
         ("MotivoRechazo.PuestoCanceladoOPausado", "Puesto cancelado o pausado"),
         ("MotivoRechazo.Otro", "Otro motivo"),
+        ("MotivoRechazo.NoIndicado", "No indicado"),
+        ("MotivoRechazo.AceptoOtraOferta", "Acepté otra oferta"),
+        ("MotivoRechazo.ModalidadOUbicacion", "Modalidad o ubicación"),
+        ("MotivoRechazo.YaNoMeInteresa", "Ya no me interesa"),
         ("Origen.AplicacionDirecta", "Aplicación directa"),
         ("Origen.RecruiterMeContacto", "Recruiter me contactó"),
         ("Origen.Referido", "Referido por alguien"),
@@ -329,7 +349,7 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Clear search"),
         ("Filtro.SoloAbiertas", "Open only"),
         ("Filtro.SeguimientoPendiente", "Follow-up due"),
-        ("Filtro.SinEspecificar", "Not specified"),
+        ("Filtro.Reabiertas", "Reopened"),
         ("Filtro.TodosLosEstados", "All statuses"),
 
         // ----- Columnas de la tabla -----
@@ -340,6 +360,8 @@ public static class Traducciones
         ("Columna.Enviada", "Sent"),
         ("Columna.Dias", "Days"),
         ("Columna.DiasToolTip", "Days since it was sent; once closed, how long the process lasted"),
+        ("Columna.DiasTotal", "Days since sent"),
+        ("Columna.Reabierta", "Reopened"),
         ("Columna.PrimeraRespuesta", "1st response"),
         ("Columna.Entrevista", "Interview"),
         ("Columna.Seguimiento", "Follow-up"),
@@ -383,7 +405,9 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Current status"),
-        ("Seguimiento.MotivoRechazo", "Reason for rejection"),
+        ("Seguimiento.NotaReapertura", "Reopening note"),
+        ("Seguimiento.ReaperturaResumen", "↻ Reopened on {0}. {1}"),
+        ("Seguimiento.MotivoRechazo", "Reason for closing"),
         ("Seguimiento.FechaSolicitud", "Application date"),
         ("Seguimiento.PrimeraContestacion", "First response"),
         ("Seguimiento.DiaEntrevista", "Interview day"),
@@ -447,12 +471,21 @@ public static class Traducciones
         ("Mensaje.NoSePudoEliminar", "Could not delete: {0}"),
         ("Mensaje.NoSePudoExportar", "Could not export the CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "Delete the application for {0} ({1})?"),
+        ("Mensaje.ConfirmarReapertura", "You are about to reopen this application.\nPrevious status: {0}\nClosing date: {1}\nReason for closing: {2}\nNew status: {3}\nNote: {4}\n\nDo you want to continue?"),
+        ("Mensaje.ConfirmarReaperturaOfertaAceptada", "You had accepted this offer. Are you sure you want to reopen it?\n\nPrevious status: {0}\nClosing date: {1}\nReason for closing: {2}\nNew status: {3}\nNote: {4}"),
+        ("Mensaje.SinFechaCierre", "No date"),
+        ("Mensaje.SinMotivoCierre", "Not applicable"),
+        ("Mensaje.ReaperturaSinRespuesta", "Cannot reopen to \"No response\": choose the status the application returns to."),
+        ("Mensaje.NotaReaperturaObligatoria", "The reopening note is required."),
+        ("Mensaje.MotivoCierreNoValido", "Choose a valid closing reason for this status."),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Attachment"),
         ("Titulo.Confirmar", "Confirm"),
+        ("Titulo.ConfirmarReapertura", "Confirm reopening"),
         ("Titulo.FaltanDatos", "Missing data"),
+        ("Titulo.CandidaturaRepetida", "Duplicate application"),
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
 
@@ -461,6 +494,8 @@ public static class Traducciones
 
         // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Duplicated from application #{0} ({1}, {2})."),
+        ("Mensaje.CandidaturaRepetida", "You already applied for this position on {0}: {1}{2}."),
+        ("Mensaje.CandidaturaRepetidaMotivo", ", reason: {0}"),
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Job requirements"),
@@ -526,12 +561,17 @@ public static class Traducciones
         ("TipoEvento.Seguimiento", "Follow-up sent"),
         ("TipoEvento.Oferta", "Offer"),
         ("TipoEvento.Rechazo", "Rejection"),
+        ("TipoEvento.Reapertura", "Reopened"),
         ("MotivoRechazo.Salario", "Salary / expectation"),
         ("MotivoRechazo.ExperienciaInsuficiente", "Insufficient experience"),
         ("MotivoRechazo.SeleccionaronOtroCandidato", "Another candidate was chosen"),
         ("MotivoRechazo.CulturalFit", "Did not fit the team/culture"),
         ("MotivoRechazo.PuestoCanceladoOPausado", "Position cancelled or on hold"),
         ("MotivoRechazo.Otro", "Other reason"),
+        ("MotivoRechazo.NoIndicado", "Not specified"),
+        ("MotivoRechazo.AceptoOtraOferta", "Accepted another offer"),
+        ("MotivoRechazo.ModalidadOUbicacion", "Work mode or location"),
+        ("MotivoRechazo.YaNoMeInteresa", "No longer interested"),
         ("Origen.AplicacionDirecta", "Direct application"),
         ("Origen.RecruiterMeContacto", "Recruiter contacted me"),
         ("Origen.Referido", "Referral"),
@@ -586,7 +626,7 @@ public static class Traducciones
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
         ("Filtro.SeguimientoPendiente", "Nachverfolgung fällig"),
-        ("Filtro.SinEspecificar", "Nicht angegeben"),
+        ("Filtro.Reabiertas", "Wieder geöffnet"),
         ("Filtro.TodosLosEstados", "Alle Status"),
 
         // ----- Columnas de la tabla -----
@@ -597,6 +637,8 @@ public static class Traducciones
         ("Columna.Enviada", "Gesendet"),
         ("Columna.Dias", "Tage"),
         ("Columna.DiasToolTip", "Tage seit dem Versand; nach Abschluss, wie lange der Prozess gedauert hat"),
+        ("Columna.DiasTotal", "Tage seit dem Versand"),
+        ("Columna.Reabierta", "Wiedereröffnet"),
         ("Columna.PrimeraRespuesta", "1. Antwort"),
         ("Columna.Entrevista", "Interview"),
         ("Columna.Seguimiento", "Nachverfolgung"),
@@ -640,7 +682,9 @@ public static class Traducciones
 
         // ----- Pestaña Seguimiento -----
         ("Seguimiento.EstadoActual", "Aktueller Status"),
-        ("Seguimiento.MotivoRechazo", "Grund der Ablehnung"),
+        ("Seguimiento.NotaReapertura", "Notiz zur Wiedereröffnung"),
+        ("Seguimiento.ReaperturaResumen", "↻ Wiedereröffnet am {0}. {1}"),
+        ("Seguimiento.MotivoRechazo", "Grund des Abschlusses"),
         ("Seguimiento.FechaSolicitud", "Bewerbungsdatum"),
         ("Seguimiento.PrimeraContestacion", "Erste Antwort"),
         ("Seguimiento.DiaEntrevista", "Tag des Interviews"),
@@ -704,12 +748,21 @@ public static class Traducciones
         ("Mensaje.NoSePudoEliminar", "Löschen fehlgeschlagen: {0}"),
         ("Mensaje.NoSePudoExportar", "CSV-Export fehlgeschlagen: {0}"),
         ("Mensaje.ConfirmarEliminar", "Bewerbung von {0} ({1}) löschen?"),
+        ("Mensaje.ConfirmarReapertura", "Diese Bewerbung wird wieder geöffnet.\nBisheriger Status: {0}\nAbschlussdatum: {1}\nAbschlussgrund: {2}\nNeuer Status: {3}\nNotiz: {4}\n\nMöchtest du fortfahren?"),
+        ("Mensaje.ConfirmarReaperturaOfertaAceptada", "Du hattest dieses Angebot angenommen. Bist du sicher, dass du es wieder öffnen möchtest?\n\nBisheriger Status: {0}\nAbschlussdatum: {1}\nAbschlussgrund: {2}\nNeuer Status: {3}\nNotiz: {4}"),
+        ("Mensaje.SinFechaCierre", "Kein Datum"),
+        ("Mensaje.SinMotivoCierre", "Nicht zutreffend"),
+        ("Mensaje.ReaperturaSinRespuesta", "Eine Wiedereröffnung zu \"Keine Antwort\" ist nicht möglich: Wähle den Status, zu dem die Bewerbung zurückkehrt."),
+        ("Mensaje.NotaReaperturaObligatoria", "Die Notiz zur Wiedereröffnung ist erforderlich."),
+        ("Mensaje.MotivoCierreNoValido", "Wähle einen gültigen Abschlussgrund für diesen Status."),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Anlage"),
         ("Titulo.Confirmar", "Bestätigen"),
+        ("Titulo.ConfirmarReapertura", "Wiedereröffnung bestätigen"),
         ("Titulo.FaltanDatos", "Fehlende Angaben"),
+        ("Titulo.CandidaturaRepetida", "Doppelte Bewerbung"),
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),
 
@@ -718,6 +771,8 @@ public static class Traducciones
 
         // ----- Duplicar / exportar -----
         ("Duplicar.Nota", "Dupliziert aus Bewerbung Nr. {0} ({1}, {2})."),
+        ("Mensaje.CandidaturaRepetida", "Du hast dich am {0} bereits auf diese Stelle beworben: {1}{2}."),
+        ("Mensaje.CandidaturaRepetidaMotivo", ", Grund: {0}"),
 
         // ----- Ventana de requisitos -----
         ("VentanaRequisitos.Titulo", "Anforderungen an die Stelle"),
@@ -783,12 +838,17 @@ public static class Traducciones
         ("TipoEvento.Seguimiento", "Nachverfolgung gesendet"),
         ("TipoEvento.Oferta", "Angebot"),
         ("TipoEvento.Rechazo", "Absage"),
+        ("TipoEvento.Reapertura", "Wiedereröffnet"),
         ("MotivoRechazo.Salario", "Gehalt / Vorstellung"),
         ("MotivoRechazo.ExperienciaInsuficiente", "Unzureichende Erfahrung"),
         ("MotivoRechazo.SeleccionaronOtroCandidato", "Anderer Kandidat gewählt"),
         ("MotivoRechazo.CulturalFit", "Passte nicht zu Team/Kultur"),
         ("MotivoRechazo.PuestoCanceladoOPausado", "Position abgesagt oder pausiert"),
         ("MotivoRechazo.Otro", "Anderer Grund"),
+        ("MotivoRechazo.NoIndicado", "Nicht angegeben"),
+        ("MotivoRechazo.AceptoOtraOferta", "Anderes Angebot angenommen"),
+        ("MotivoRechazo.ModalidadOUbicacion", "Arbeitsmodell oder Standort"),
+        ("MotivoRechazo.YaNoMeInteresa", "Kein Interesse mehr"),
         ("Origen.AplicacionDirecta", "Direktbewerbung"),
         ("Origen.RecruiterMeContacto", "Recruiter kontaktierte mich"),
         ("Origen.Referido", "Empfehlung"),

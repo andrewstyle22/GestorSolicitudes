@@ -40,6 +40,49 @@ public class AppDbContextTests
     }
 
     [Fact]
+    public void FechaReapertura_SeGuardaYRecupera()
+    {
+        int id;
+        string ruta;
+        DateTime fechaReapertura = new(2026, 6, 12);
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            Assert.False(solicitud.FueReabierta);
+            db.Solicitudes.Add(solicitud);
+            db.Entry(solicitud).Property(s => s.FechaReapertura).CurrentValue = fechaReapertura;
+            db.SaveChanges();
+            id = solicitud.Id;
+        }
+
+        using var db2 = new AppDbContext(ruta);
+        Solicitud recuperada = db2.Solicitudes.Single(s => s.Id == id);
+
+        Assert.Equal(fechaReapertura, recuperada.FechaReapertura);
+        Assert.True(recuperada.FueReabierta);
+    }
+
+    [Fact]
+    public void SolicitudAnteriorId_SeGuardaYRecupera()
+    {
+        // Vacío por defecto; R.20 lo rellenará al duplicar. Se escribe como lo hará EF.
+        int id;
+        string ruta;
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            Assert.Null(solicitud.SolicitudAnteriorId);
+            db.Solicitudes.Add(solicitud);
+            db.Entry(solicitud).Property(s => s.SolicitudAnteriorId).CurrentValue = 42;
+            db.SaveChanges();
+            id = solicitud.Id;
+        }
+
+        using var db2 = new AppDbContext(ruta);
+        Assert.Equal(42, db2.Solicitudes.Single(s => s.Id == id).SolicitudAnteriorId);
+    }
+
+    [Fact]
     public void ActualizarEvento_SeGuardaYRecuperaCompleto()
     {
         // El acceso por campo debe servir también para leer, mutar y volver a guardar.

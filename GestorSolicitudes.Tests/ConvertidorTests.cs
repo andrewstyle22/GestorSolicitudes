@@ -110,25 +110,6 @@ public class ConvertidorTests
     }
 
     [Theory]
-    [InlineData(EstadoSolicitud.Rechazada, Visibility.Visible)]
-    [InlineData(EstadoSolicitud.Enviada, Visibility.Collapsed)]
-    [InlineData(EstadoSolicitud.EnRevision, Visibility.Collapsed)]
-    [InlineData(EstadoSolicitud.OfertaAceptada, Visibility.Collapsed)]
-    [InlineData(EstadoSolicitud.Retirada, Visibility.Collapsed)]
-    public void EstadoEsRechazadaAVisibilidad_SoloRechazadaEsVisible(EstadoSolicitud estado, Visibility esperado)
-    {
-        var conversor = new EstadoEsRechazadaAVisibilidadConverter();
-        Assert.Equal(esperado, conversor.Convert(estado, typeof(Visibility), null, null!));
-    }
-
-    [Fact]
-    public void EstadoEsRechazadaAVisibilidad_ConValorNuloColapsado()
-    {
-        var conversor = new EstadoEsRechazadaAVisibilidadConverter();
-        Assert.Equal(Visibility.Collapsed, conversor.Convert(null, typeof(Visibility), null, null!));
-    }
-
-    [Theory]
     [InlineData(1, "★☆☆☆☆")]
     [InlineData(2, "★★☆☆☆")]
     [InlineData(3, "★★★☆☆")]
@@ -161,7 +142,6 @@ public class ConvertidorTests
         invertir(new EstadoAColorConverter());
         invertir(new FechaCortaConverter());
         invertir(new VerGraficaATextoConverter());
-        invertir(new EstadoEsRechazadaAVisibilidadConverter());
         invertir(new InteresATextoEstrellasConverter());
     }
 }

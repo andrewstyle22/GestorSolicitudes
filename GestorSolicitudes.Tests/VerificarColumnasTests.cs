@@ -6,6 +6,9 @@ using Microsoft.Data.Sqlite;
 
 public class VerificarColumnasTests
 {
+    private const string ColumnaFechaReapertura = "FechaReapertura";
+    private const string ColumnaSolicitudAnteriorId = "SolicitudAnteriorId";
+
     [Fact]
     public void VerificarColumnas_AñadeLasColumnasNuevasAUnaBaseVieja()
     {
@@ -25,7 +28,7 @@ public class VerificarColumnasTests
                 columnas.Add(Convert.ToString(lector["name"])!);
             }
 
-            foreach (string esperada in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono" })
+            foreach (string esperada in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono", ColumnaFechaReapertura, ColumnaSolicitudAnteriorId })
             {
                 Assert.Contains(esperada, columnas);
             }
@@ -59,15 +62,16 @@ public class VerificarColumnasTests
             using var comando = conexion.CreateCommand();
             comando.CommandText = "PRAGMA table_info(Solicitudes);";
             using var lector = comando.ExecuteReader();
-            var columnas = new Dictionary<string, (bool NoNulo, string? Default)>();
+            var columnas = new Dictionary<string, (string Tipo, bool NoNulo, string? Default)>();
             while (lector.Read())
             {
                 string nombre = Convert.ToString(lector["name"])!;
+                string tipo = Convert.ToString(lector["type"])!;
                 bool noNulo = Convert.ToInt64(lector["notnull"]) == 1;
                 string? valorDefault = lector["dflt_value"] is DBNull
                     ? null
                     : Convert.ToString(lector["dflt_value"]);
-                columnas[nombre] = (noNulo, valorDefault);
+                columnas[nombre] = (tipo, noNulo, valorDefault);
             }
 
             // Origen es entero NOT NULL con DEFAULT 0 para que las filas ya
@@ -76,11 +80,17 @@ public class VerificarColumnasTests
             Assert.True(columnas["Origen"].NoNulo);
             Assert.Equal("0", columnas["Origen"].Default);
 
-            // MotivoRechazo y ContactoTelefono admiten nulo.
+            // MotivoRechazo, ContactoTelefono y FechaReapertura admiten nulo.
             Assert.True(columnas.ContainsKey("MotivoRechazo"));
             Assert.False(columnas["MotivoRechazo"].NoNulo);
             Assert.True(columnas.ContainsKey("ContactoTelefono"));
             Assert.False(columnas["ContactoTelefono"].NoNulo);
+            Assert.Equal("TEXT", columnas[ColumnaFechaReapertura].Tipo);
+            Assert.False(columnas[ColumnaFechaReapertura].NoNulo);
+
+            // El enlace con la candidatura anterior es opcional.
+            Assert.Equal("INTEGER", columnas[ColumnaSolicitudAnteriorId].Tipo);
+            Assert.False(columnas[ColumnaSolicitudAnteriorId].NoNulo);
         }
     }
 

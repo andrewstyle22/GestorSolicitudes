@@ -30,6 +30,9 @@ Ubicación: `02-DOCS/decisiones/estados-y-reapertura.md`. Todas las decisiones q
 | 5 | ¿Se conserva el CV anterior? | **No ahora**. Se deja para otra refactorización (versionado de adjuntos). |
 | 6 | ¿Insignia por consulta o columna? | **Columna**, a raíz de la decisión 4. La consulta de ids con hito de reapertura ya no hace falta. |
 | 7 | ¿`RespuestaEmpresa` y `Notas` sin límite? | Aplazada; siguen sin límite. |
+| 8 | ¿Nota en la reapertura? | **Sí, obligatoria**, en un campo propio del editor (`NotaReapertura`, máximo 300 caracteres) que aparece en Seguimiento, junto al estado, solo cuando hay una reapertura pendiente. Solo se guarda en el texto del hito, sin columna nueva. |
+| 9 | ¿"Oferta rechazada por mí" → "Oferta aceptada"? | **En dos pasos**: reabrir a "Oferta recibida" y después aceptar. No hay atajo. |
+| 10 | ¿Qué pasa con `ProximoSeguimiento` al reabrir? | **Se respeta lo que edite el usuario** en el mismo guardado (aunque sea una fecha pasada). Si no lo edita, o lo deja vacío, se propone +7 días. |
 
 ---
 
@@ -106,7 +109,7 @@ Leyenda: ✅ libre · 🔁 solo con **Reabrir** · ⚠️ con reglas · ⛔ no p
 | **Abierto** | ✅ (avanzar o corregir) | ⚠️ A | ⚠️ A | ⚠️ A (solo desde Oferta recibida) | ⚠️ B (solo desde Oferta recibida) |
 | **Descartado** | 🔁 | ✅ (cambiar motivo) | ⚠️ C | ⚠️ C | ⛔ |
 | **Retirada** | 🔁 | ⚠️ C | ✅ | ⚠️ C | ⛔ |
-| **Oferta rechazada por mí** | 🔁 | ⚠️ C | ⚠️ C | ✅ | 🔁 (confirmación reforzada) |
+| **Oferta rechazada por mí** | 🔁 | ⚠️ C | ⚠️ C | ✅ | ⛔ (reabrir a «Oferta recibida» y luego aceptar) |
 | **Oferta aceptada** | 🔁 (confirmación reforzada) | ⛔ | ⛔ | ⛔ | ✅ |
 
 Reglas:
@@ -114,7 +117,8 @@ Reglas:
 - **A. Hacia un cierre negativo:** motivo obligatorio y permitido (sección 4) y `FechaCierre` = hoy si está vacía. Para "Descartado" se añade además el hito `Rechazo`.
 - **B. Hacia Oferta aceptada:** `FechaCierre` = hoy si está vacía; sin motivo.
 - **C. Cerrado → cerrado:** es una corrección, no una reapertura. Si el motivo anterior no pertenece a la lista del nuevo estado, se preselecciona `NoIndicado`. No pide confirmación.
-- **"Sin respuesta" → otro estado** no es reapertura (ya estaba abierta). Si no hay `FechaPrimeraRespuesta`, se rellena con hoy y se añade un hito `Respuesta`.
+- **"Sin respuesta" → otro estado** no es reapertura (ya estaba abierta). Si no hay `FechaPrimeraRespuesta`, se rellena con hoy y se añade un hito `Respuesta`. Se implementa en `CambiarEstado`, y `AplicarA` aplica la respuesta **antes** que el estado; si no, el editor (con la fecha vacía) pisaría la que acaba de rellenar el modelo.
+- **Oferta rechazada por mí → Oferta aceptada** está prohibida: `Reabrir` solo va a estados abiertos, así que se reabre a "Oferta recibida" y después se acepta. Así queda el hito y `FechaReapertura`.
 - **Cerrado → abierto nunca va por el combo de estado.** Si el usuario lo intenta, la app lo redirige a la acción Reabrir.
 - **Oferta aceptada → cualquier otro:** confirmación reforzada ("Habías aceptado esta oferta. ¿Seguro?").
 
@@ -122,11 +126,12 @@ Reglas:
 
 ## 6. La acción Reabrir
 
-Método explícito del modelo, `Solicitud.Reabrir(nuevoEstado, nota)`, separado de `CambiarEstado` para que este pueda seguir rechazando saltos incoherentes.
+Método explícito del modelo, `Solicitud.Reabrir(nuevoEstado, nota, proximoSeguimiento)`, separado de `CambiarEstado` para que este pueda seguir rechazando saltos incoherentes.
 
 **Precondiciones**
 - La candidatura está cerrada.
-- `nuevoEstado` es un estado abierto distinto de "Sin respuesta" (se reabre a una fase real).
+- `nuevoEstado` es un estado abierto distinto de "Sin respuesta" (se reabre a una fase real). El editor lo valida: con una reapertura pendiente y destino "Sin respuesta", Guardar muestra un error y no llega a `Reabrir`.
+- `nota` no está vacía y no supera los 300 caracteres. El editor lo valida antes de guardar (mismo mecanismo que Empresa y Puesto).
 
 **Efectos**
 1. `Estado = nuevoEstado`.
@@ -134,8 +139,12 @@ Método explícito del modelo, `Solicitud.Reabrir(nuevoEstado, nota)`, separado 
 3. **`FechaReapertura = hoy`.** Si ya había una, se sustituye: solo se guarda la última, no hay contador. Las anteriores quedan en los hitos del historial.
 4. `FechaSolicitud` **no cambia**.
 5. Si `FechaPrimeraRespuesta` está vacía, se rellena con hoy.
-6. `ProximoSeguimiento` se pone a `null` y la regla existente propone uno nuevo (+7 días).
-7. Se añade un hito `TipoEvento.Reapertura` con texto del estilo *"Reabierta. Antes: Descartado por la empresa (10/10, perfil no adecuado)"* más la nota opcional. Es la única copia del cierre anterior.
+6. `ProximoSeguimiento`: si el usuario lo ha editado en el mismo guardado, se guarda su valor, aunque sea una fecha pasada. Si no lo ha editado, o lo ha dejado vacío, se pone a `null` y la regla existente propone uno nuevo (+7 días). El editor recuerda el valor con el que abrió la candidatura y solo pasa a `Reabrir` el que haya cambiado.
+7. Se añade un hito `TipoEvento.Reapertura` con texto del estilo *"Reabierta. Antes: Descartado por la empresa (10/10, perfil no adecuado). Nota: …"*, que incluye la nota obligatoria. Es la única copia del cierre anterior.
+
+La nota de la reapertura es **obligatoria** (decisión 8) y se escribe en un campo propio, `NotaReapertura`, que no es el campo `Notas` de la candidatura. Aparece en la pestaña Seguimiento, junto al estado, solo cuando hay una reapertura pendiente, con el error en línea. Antes de guardar, la confirmación muestra el estado, fecha y motivo del cierre, el nuevo estado y la nota; al reabrir una oferta aceptada, el mensaje advierte expresamente que ya se había aceptado.
+
+Si el guardado falla después de aplicar `Reabrir`, el editor se recarga desde la entidad (que ya incluye los efectos de la reapertura). Así el reintento no repite `Reabrir` ni pisa `FechaCierre`, `ProximoSeguimiento` o `FechaPrimeraRespuesta` con los valores antiguos del búfer. Como la candidatura ya figura como reabierta, el reintento no vuelve a pedir la nota.
 
 **Modelo**
 - Propiedad `DateTime? FechaReapertura` con `set` privado, columna `TEXT NULL` añadida en `EsquemaDb`.
@@ -162,7 +171,8 @@ Al guardar una candidatura nueva con la misma empresa y puesto, la app avisa sin
 
 | # | Elemento | Cuándo aparece | Prioridad |
 |---|----------|----------------|-----------|
-| 1 | **Confirmación al reabrir** con estado, fecha y motivo del cierre, nuevo estado y nota opcional | Al pasar de cerrado a abierto | Primera versión |
+| 1 | **Confirmación al reabrir** con estado, fecha y motivo del cierre, nuevo estado y nota (refuerzo si la oferta estaba aceptada) | Al pasar de cerrado a abierto | Primera versión |
+| 1b | **Campo de nota de la reapertura** en Seguimiento, junto al estado, obligatorio y con error en línea | Solo con reapertura pendiente | Primera versión |
 | 2 | **Hito "Reabierta"** en el historial | Siempre que se reabre | Primera versión |
 | 3 | **Insignia "↻"** junto al estado en la tabla, con tooltip (fecha de la reapertura) | Si `FueReabierta` | Primera versión |
 | 4 | **Color de fila:** borde izquierdo magenta (`#DB2777`) mediante un `DataTrigger` sobre `FueReabierta` en el `RowStyle`. No pisa el fondo ámbar de seguimiento pendiente. Siempre junto a la insignia, nunca solo el color | Si `FueReabierta` | Primera versión |
@@ -181,7 +191,7 @@ Detalle completo en `02-DOCS/plan-refactor-edicion.md` (Etapa R, R.1 a R.22). Re
 1. **R.1 a R.4:** hito `Reapertura`, valores nuevos del motivo, tabla de motivos permitidos y relleno de datos antiguos.
 2. **R.5 a R.7:** `FechaReapertura`, `DiasProceso` y `Reabrir` en el modelo.
 3. **R.8 a R.10:** el desplegable filtrado y la preselección van **antes** de que `CambiarEstado` exija el motivo (R.10), y el relleno de datos antiguos (R.4) también; si no, Guardar fallaría en filas existentes.
-4. **R.11 a R.13:** el editor detecta la reapertura y la confirma **antes** de que `CambiarEstado` prohíba cerrado → abierto (R.13); si no, reabrir desde la interfaz fallaría.
+4. **R.11 a R.13:** el editor detecta la reapertura y la confirma **antes** de que `CambiarEstado` prohíba cerrado → abierto (R.13); si no, reabrir desde la interfaz fallaría. Entre R.12 y R.13 van siete correcciones (R.12a a R.12g): reintento tras un fallo de guardado, destino "Sin respuesta", validación del motivo, nota obligatoria (campo propio, interfaz y exigencia) y seguimiento editado. El campo de la nota (R.12d, R.12e) va antes de exigirla (R.12f).
 5. **R.14 a R.17:** insignia, color de fila, tooltip de "Días" y franja.
 6. **R.18 a R.21:** opcionales. **R.22:** documentación.
 

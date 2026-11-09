@@ -10,8 +10,8 @@
         <conv:EstadoAColorConverter x:Key="EstadoAColor" />
         <conv:InteresATextoEstrellasConverter x:Key="InteresATextoEstrellas" />
         <conv:VerGraficaATextoConverter x:Key="VerGraficaATexto" />
-        <conv:EstadoEsRechazadaAVisibilidadConverter x:Key="EstadoEsRechazadaAVisibilidad" />
         <conv:FechaCortaConverter x:Key="FechaCorta" />
+        <conv:NuloAVisibilidadConverter x:Key="NuloAVisibilidad" />
         <BooleanToVisibilityConverter x:Key="BooleanoAVisibilidad" />
 
         <!-- ============ Paleta ============ -->

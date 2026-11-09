@@ -148,6 +148,7 @@ public class ViewModelTests
         vm.GuardarCommand.Execute(null);
 
         vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
+        int candidaturaAnteriorId = vm.SolicitudSeleccionada.Id;
         vm.DuplicarCommand.Execute(null);
 
         Assert.NotNull(vm.Editor);
@@ -162,6 +163,75 @@ public class ViewModelTests
         Assert.Contains(
             DateTime.Today.AddDays(-20).ToString("d", Localizacion.CulturaActual),
             vm.Editor.Notas!);
+
+        vm.GuardarCommand.Execute(null);
+
+        Solicitud duplicadaGuardada = db.Solicitudes.Single(solicitud => solicitud.Id != candidaturaAnteriorId);
+        Assert.Equal(candidaturaAnteriorId, duplicadaGuardada.SolicitudAnteriorId);
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Rechazada, MotivoRechazo.Salario)]
+    [InlineData(EstadoSolicitud.Enviada, null)]
+    public void Guardar_NuevaCandidaturaRepetida_AvisaSinImpedirElGuardado(
+        EstadoSolicitud estado,
+        MotivoRechazo? motivo)
+    {
+        using var db = TestDb.NuevoContexto();
+        DateTime fechaAnterior = new(2026, 10, 10);
+        Solicitud anterior = new SolicitudBuilder()
+            .ConEmpresa("ÁCME")
+            .ConPuesto("Desarrollador")
+            .ConFechaSolicitud(fechaAnterior)
+            .ConEstado(estado)
+            .ConMotivoRechazo(motivo)
+            .Construir();
+        db.Solicitudes.Add(anterior);
+        db.SaveChanges();
+
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("acme", "Desarrollador");
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Equal(2, db.Solicitudes.Count());
+        string aviso = Assert.Single(dialogo.Avisos);
+        string motivoAviso = motivo is MotivoRechazo motivoRechazo
+            ? string.Format(
+                Localizacion.Texto("Mensaje.CandidaturaRepetidaMotivo"),
+                EnumHelper.Descripcion(motivoRechazo))
+            : string.Empty;
+        Assert.Equal(
+            string.Format(
+                Localizacion.Texto("Mensaje.CandidaturaRepetida"),
+                fechaAnterior.ToString("d", Localizacion.CulturaActual),
+                EnumHelper.Descripcion(estado),
+                motivoAviso),
+            aviso);
+        Assert.Null(vm.Editor);
+    }
+
+    [Theory]
+    [InlineData("ACME", "Analista")]
+    [InlineData("Otra empresa", "Desarrollador")]
+    public void Guardar_NuevaCandidaturaDistinta_NoAvisaComoRepetida(string empresa, string puesto)
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Desarrollador")
+            .Construir());
+        db.SaveChanges();
+
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios(empresa, puesto);
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Empty(dialogo.Avisos);
+        Assert.Equal(2, db.Solicitudes.Count());
     }
 
     [Fact]
@@ -251,6 +321,31 @@ public class ViewModelTests
 
         Assert.Single(vm.Solicitudes);
         Assert.Equal("Vencida", vm.Solicitudes[0].Empresa);
+    }
+
+    [Fact]
+    public void FiltroReabiertas_MuestraSoloLasQueSeReabrieron()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        Solicitud reabierta = new SolicitudBuilder()
+            .ConEmpresa("Reabierta")
+            .ConPuesto("A")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaCierre(DateTime.Today.AddDays(-5))
+            .Construir();
+        reabierta.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
+
+        db.Solicitudes.Add(reabierta);
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Normal").ConPuesto("B").Construir());
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.SoloReabiertas = true;
+
+        Assert.Single(vm.Solicitudes);
+        Assert.Equal("Reabierta", vm.Solicitudes[0].Empresa);
     }
 
     [Fact]

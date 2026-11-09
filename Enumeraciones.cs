@@ -80,12 +80,14 @@ public enum TipoEvento
     Oferta = 7,
     [Description("Rechazo")]
     Rechazo = 8,
+    [Description("Reabierta")]
+    Reapertura = 9,
 }
 
 /// <summary>
-/// Por qué se cerró en falso una candidatura. Solo tiene sentido cuando
-/// <see cref="EstadoSolicitud.Rechazada"/>; con suficientes candidaturas es el dato
-/// que más dice sobre qué ajustar (CV, pretensión salarial, a qué perfiles aplicar).
+/// Por qué se cerró una candidatura, tanto por decisión de la empresa como propia.
+/// Con suficientes candidaturas es el dato que más dice sobre qué ajustar (CV,
+/// pretensión salarial, a qué perfiles aplicar).
 /// </summary>
 public enum MotivoRechazo
 {
@@ -101,6 +103,14 @@ public enum MotivoRechazo
     PuestoCanceladoOPausado = 4,
     [Description("Otro motivo")]
     Otro = 5,
+    [Description("No indicado")]
+    NoIndicado = 6,
+    [Description("Acepté otra oferta")]
+    AceptoOtraOferta = 7,
+    [Description("Modalidad o ubicación")]
+    ModalidadOUbicacion = 8,
+    [Description("Ya no me interesa")]
+    YaNoMeInteresa = 9,
 }
 
 /// <summary>

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 
 /// <summary>
@@ -61,10 +62,27 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private int interes = 3;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarReaperturaSinRespuesta))]
+    [NotifyPropertyChangedFor(nameof(AdmiteMotivo))]
+    [NotifyPropertyChangedFor(nameof(MotivosDelEstado))]
     private EstadoSolicitud estado = EstadoSolicitud.Enviada;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarMotivoCierre))]
     private MotivoRechazo? motivoRechazo;
+
+    /// <summary>Gets si el estado actual pide motivo de cierre.</summary>
+    public bool AdmiteMotivo => this.Estado.AdmiteMotivo();
+
+    /// <summary>Gets si el búfer pasa una candidatura cerrada a un estado abierto.</summary>
+    public bool ReaperturaPendiente => this.estadoOriginal.EstaCerrada() && !this.Estado.EstaCerrada();
+
+    private EstadoSolicitud estadoOriginal = EstadoSolicitud.Enviada;
+
+    private IReadOnlyList<EnumItem> motivosDelEstado = [];
+
+    /// <summary>Gets los motivos válidos para el estado actual, sin la entrada vacía del filtro.</summary>
+    public IReadOnlyList<EnumItem> MotivosDelEstado => this.motivosDelEstado;
 
     [ObservableProperty]
     private DateTime fechaSolicitud = DateTime.Today;
@@ -77,6 +95,12 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     [ObservableProperty]
     private DateTime? proximoSeguimiento;
+
+    private DateTime? proximoSeguimientoOriginal;
+
+    /// <summary>Gets el seguimiento editado para la reapertura, o null si debe proponerse uno nuevo.</summary>
+    public DateTime? SeguimientoParaReapertura =>
+        this.ProximoSeguimiento != this.proximoSeguimientoOriginal ? this.ProximoSeguimiento : null;
 
     [ObservableProperty]
     private DateTime? fechaCierre;
@@ -98,6 +122,11 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     [ObservableProperty]
     private string? notas;
+
+    [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarNotaReaperturaObligatoria))]
+    [MaxLength(Solicitud.LongitudMaximaNotaReapertura)]
+    private string? notaReapertura;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
@@ -128,6 +157,31 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
     public ObservableCollection<EventoViewModel> EventosEdicion { get; } = [];
 
+    /// <summary>
+    /// Resumen del último hito de reapertura, o null si la candidatura no se ha reabierto.
+    /// El cierre anterior y la nota solo existen en el texto del hito.
+    /// </summary>
+    public string? ReaperturaResumen
+    {
+        get
+        {
+            EventoViewModel? evento = this.EventosEdicion.LastOrDefault(e => e.Tipo == TipoEvento.Reapertura);
+            if (evento is null)
+            {
+                return null;
+            }
+
+            const string Prefijo = "Reabierta. ";
+            string detalle = evento.Descripcion.StartsWith(Prefijo, StringComparison.Ordinal)
+                ? evento.Descripcion[Prefijo.Length..]
+                : evento.Descripcion;
+            return string.Format(
+                Localizacion.Texto("Seguimiento.ReaperturaResumen"),
+                evento.Fecha.ToString("d", Localizacion.CulturaActual),
+                detalle);
+        }
+    }
+
     /// <summary>Eventos guardados que se han quitado del búfer: el guardado los borra del modelo.</summary>
     public List<Evento> EventosEliminados { get; } = [];
 
@@ -147,12 +201,73 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             ? new ValidationResult(Localizacion.Texto("Mensaje.SalarioMinimoMayor"))
             : ValidationResult.Success;
 
+    /// <summary>Una reapertura no puede volver a "Sin respuesta", como exige la entidad.</summary>
+    public static ValidationResult? ValidarReaperturaSinRespuesta(EstadoSolicitud valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && editor.ReaperturaPendiente
+        && valor == EstadoSolicitud.SinRespuesta
+            ? new ValidationResult(Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"))
+            : ValidationResult.Success;
+
+    /// <summary>Una reapertura exige una nota.</summary>
+    public static ValidationResult? ValidarNotaReaperturaObligatoria(string? valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && editor.ReaperturaPendiente
+        && string.IsNullOrWhiteSpace(valor)
+            ? new ValidationResult(Localizacion.Texto("Mensaje.NotaReaperturaObligatoria"))
+            : ValidationResult.Success;
+
+    /// <summary>Los cierres negativos exigen un motivo permitido para el estado.</summary>
+    public static ValidationResult? ValidarMotivoCierre(MotivoRechazo? valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && editor.Estado.AdmiteMotivo()
+        && (valor is not MotivoRechazo motivo || !editor.Estado.MotivosPermitidos().Contains(motivo))
+            ? new ValidationResult(Localizacion.Texto("Mensaje.MotivoCierreNoValido"))
+            : ValidationResult.Success;
+
     partial void OnEmpresaChanged(string value) => this.ValidateProperty(value, nameof(this.Empresa));
 
     partial void OnPuestoChanged(string value) => this.ValidateProperty(value, nameof(this.Puesto));
 
+    partial void OnMotivoRechazoChanged(MotivoRechazo? value) =>
+        this.ValidateProperty(value, nameof(this.MotivoRechazo));
+
+    partial void OnNotaReaperturaChanged(string? value) =>
+        this.ValidateProperty(value, nameof(this.NotaReapertura));
+
+    /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
+    partial void OnEstadoChanged(EstadoSolicitud value)
+    {
+        this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
+
+        if (!value.AdmiteMotivo())
+        {
+            this.MotivoRechazo = null;
+        }
+        else if (this.MotivoRechazo is not MotivoRechazo motivo || !value.MotivosPermitidos().Contains(motivo))
+        {
+            this.MotivoRechazo = Models.MotivoRechazo.NoIndicado;
+        }
+
+        this.motivosDelEstado = CrearMotivos(value);
+        this.ValidateProperty(this.MotivoRechazo, nameof(this.MotivoRechazo));
+        this.ValidateProperty(this.NotaReapertura, nameof(this.NotaReapertura));
+    }
+
     /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>
     public void Validar() => this.ValidateAllProperties();
+
+    /// <summary>Relee los textos de los motivos del estado tras un cambio de idioma.</summary>
+    public void RefrescarMotivosDelEstado()
+    {
+        this.motivosDelEstado = CrearMotivos(this.Estado);
+        this.OnPropertyChanged(nameof(this.MotivosDelEstado));
+    }
+
+    private static List<EnumItem> CrearMotivos(EstadoSolicitud estado) =>
+        estado.MotivosPermitidos()
+            .Select(motivo => new EnumItem(motivo, EnumHelper.Descripcion(motivo)))
+            .ToList();
 
     public void CargarDesde(Solicitud solicitud)
     {
@@ -169,23 +284,29 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.SalarioMax = solicitud.SalarioMax;
         this.PretensionSalarial = solicitud.PretensionSalarial;
         this.Interes = solicitud.Interes;
-        this.Estado = solicitud.Estado;
+        // El motivo va antes que el estado: al asignar el estado se normaliza el motivo.
         this.MotivoRechazo = solicitud.MotivoRechazo;
+        this.estadoOriginal = solicitud.Estado;
+        this.Estado = solicitud.Estado;
+        this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
         this.FechaSolicitud = solicitud.FechaSolicitud;
         this.FechaPrimeraRespuesta = solicitud.FechaPrimeraRespuesta;
         this.FechaEntrevista = solicitud.FechaEntrevista;
         this.ProximoSeguimiento = solicitud.ProximoSeguimiento;
+        this.proximoSeguimientoOriginal = solicitud.ProximoSeguimiento;
         this.FechaCierre = solicitud.FechaCierre;
         this.RespuestaEmpresa = solicitud.RespuestaEmpresa;
         this.ContactoNombre = solicitud.ContactoNombre;
         this.ContactoEmail = solicitud.ContactoEmail;
         this.ContactoTelefono = solicitud.ContactoTelefono;
         this.Notas = solicitud.Notas;
+        this.NotaReapertura = null;
         this.RutaCv = solicitud.RutaCv;
         this.NombreOriginalCv = solicitud.NombreOriginalCv;
         this.RutaCarta = solicitud.RutaCarta;
         this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
         this.CargarEventos(solicitud);
+        this.OnPropertyChanged(nameof(this.ReaperturaResumen));
         this.ValidateAllProperties();
     }
 
@@ -205,6 +326,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     public void EliminarEvento(EventoViewModel evento)
     {
         this.EventosEdicion.Remove(evento);
+        this.OnPropertyChanged(nameof(this.ReaperturaResumen));
 
         if (evento.Original is Evento original && original.Id != 0)
         {
@@ -277,16 +399,23 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     }
 
     /// <summary>
-    /// Vuelca al modelo solo los grupos cuya pestaña ya escribe en el editor. Mientras la UI
-    /// siga bindeada a la entidad, ese grupo no se toca para no pisar lo editado.
+    /// Vuelca al modelo lo que el editor tiene en sus pestañas. Con <paramref name="omitirEstado"/>
+    /// el estado, el motivo y la fecha de cierre no salen de aquí: los pone
+    /// <see cref="Solicitud.Reabrir"/> junto con el resto de efectos de la reapertura.
+    /// La respuesta va antes que el estado: al salir de "Sin respuesta", el estado rellena
+    /// <see cref="Solicitud.FechaPrimeraRespuesta"/> y el editor no debe pisarla.
     /// </summary>
-    public void AplicarA(Solicitud solicitud)
+    public void AplicarA(Solicitud solicitud, bool omitirEstado = false)
     {
         this.AplicarOferta(solicitud);
         this.AplicarEconomico(solicitud);
-        this.AplicarEstado(solicitud);
-        this.AplicarFechas(solicitud);
         this.AplicarRespuesta(solicitud);
+        if (!omitirEstado)
+        {
+            this.AplicarEstado(solicitud);
+        }
+
+        this.AplicarFechas(solicitud);
         this.AplicarContacto(solicitud);
         this.AplicarIdentificacion(solicitud);
         this.AplicarAdjuntos(solicitud);

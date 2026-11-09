@@ -59,19 +59,6 @@ public class VerGraficaATextoConverter : IValueConverter
         throw new NotSupportedException();
 }
 
-/// <summary>
-/// Visible solo cuando el estado es "Descartado por la empresa": es el único caso
-/// en el que tiene sentido preguntar el motivo del rechazo.
-/// </summary>
-public class EstadoEsRechazadaAVisibilidadConverter : IValueConverter
-{
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is EstadoSolicitud.Rechazada ? Visibility.Visible : Visibility.Collapsed;
-
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        throw new NotSupportedException();
-}
-
 /// <summary>Convierte un nivel de interés (1 a 5) en su representación compacta con estrellas Unicode.</summary>
 public class InteresATextoEstrellasConverter : IValueConverter
 {

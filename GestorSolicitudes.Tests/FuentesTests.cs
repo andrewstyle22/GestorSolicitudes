@@ -61,6 +61,86 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LaInsigniaDeReaperturaSeVeSoloSiFueReabiertaYTraeLaFecha()
+    {
+        // La insignia va en la celda del estado: si se pierde el binding, la reapertura
+        // deja de distinguirse en la tabla sin que falle nada al compilar.
+        XElement columnaEstado = Columnas().Single(c => c
+            .Descendants()
+            .Any(e => (string?)e.Attribute("Text") == "{DynamicResource Columna.Estado}"));
+
+        XElement insignia = columnaEstado.Descendants().Single(e => (string?)e.Attribute("Text") == "↻");
+
+        Assert.Contains("FueReabierta", (string?)insignia.Attribute("Visibility"));
+        Assert.Contains("BooleanoAVisibilidad", (string?)insignia.Attribute("Visibility"));
+        Assert.Contains(
+            insignia.Descendants(),
+            e => ((string?)e.Attribute("Text"))?.Contains("FechaReapertura") == true);
+    }
+
+    [Fact]
+    public void LaColumnaDiasMuestraElTotalDesdeElEnvioYLaFechaDeReapertura()
+    {
+        // El contador se reinicia al reabrir; el total y la fecha de la reapertura
+        // viven en el tooltip de la celda. Sin estos bindings se pierden sin fallar.
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        XElement columnaDias = Columnas().Single(c => (string?)c.Attribute(x + "Name") == "Dias");
+
+        XElement tooltip = columnaDias.Descendants().Single(e => e.Name.LocalName == "TextBlock.ToolTip");
+        XElement fecha = tooltip
+            .Descendants()
+            .Single(e => e.Name.LocalName == "TextBlock"
+                && e.Descendants().Any(r => ((string?)r.Attribute("Text"))?.Contains("FechaReapertura") == true));
+
+        Assert.Contains(
+            tooltip.Descendants(),
+            e => ((string?)e.Attribute("Text"))?.Contains("DiasDesdeSolicitud") == true);
+        Assert.Contains("FueReabierta", (string?)fecha.Attribute("Visibility"));
+        Assert.Contains("BooleanoAVisibilidad", (string?)fecha.Attribute("Visibility"));
+    }
+
+    [Fact]
+    public void LaFilaReabiertaLlevaBordeIzquierdoMagentaSinPintarElFondo()
+    {
+        // El magenta va en el borde y no en el fondo: el fondo ámbar de seguimiento
+        // pendiente tiene que seguir viéndose en una fila reabierta.
+        XElement estilo = XDocument.Load(Path.Combine(Raiz, "Views", "MainWindow.xaml"))
+            .Descendants()
+            .Single(e => e.Name.LocalName == "DataGrid.RowStyle")
+            .Descendants()
+            .Single(e => e.Name.LocalName == "Style");
+
+        XElement disparador = estilo
+            .Descendants()
+            .Single(e => e.Name.LocalName == "DataTrigger"
+                && ((string?)e.Attribute("Binding"))?.Contains("FueReabierta") == true);
+
+        Dictionary<string, string?> setters = disparador
+            .Descendants()
+            .Where(e => e.Name.LocalName == "Setter")
+            .ToDictionary(
+                e => (string)e.Attribute("Property")!,
+                e => (string?)e.Attribute("Value"));
+
+        Assert.Equal("True", (string?)disparador.Attribute("Value"));
+        Assert.Equal("#DB2777", setters["BorderBrush"]);
+        Assert.Equal("3,0,0,0", setters["BorderThickness"]);
+        Assert.False(setters.ContainsKey("Background"));
+    }
+
+    [Fact]
+    public void ElFiltroDeReabiertasEstaEnLaBarraYEnlazaSuPropiedad()
+    {
+        // Un binding mal escrito no rompe la compilación: la casilla existiría pero no filtraría.
+        XElement casilla = XDocument.Load(Path.Combine(Raiz, "Views", "MainWindow.xaml"))
+            .Descendants()
+            .Single(e => e.Name.LocalName == "CheckBox"
+                && ((string?)e.Attribute("Content"))?.Contains("Filtro.Reabiertas") == true);
+
+        Assert.Contains("SoloReabiertas", (string?)casilla.Attribute("IsChecked"));
+    }
+
+    [Fact]
     public void NingunaColumnaSustituyeElEstiloDeLaCabecera()
     {
         // Un HeaderStyle propio sustituye al ColumnHeaderStyle del DataGrid en vez de

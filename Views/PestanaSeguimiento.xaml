@@ -12,10 +12,27 @@
                       SelectedValuePath="Valor"
                       SelectedValue="{Binding Editor.Estado}" Margin="9,0,9,0" />
 
-            <StackPanel Visibility="{Binding Editor.Estado, Converter={StaticResource EstadoEsRechazadaAVisibilidad}}">
+            <!-- Franja de la última reapertura: el cierre anterior solo vive en el hito del historial. -->
+            <Border Margin="9,10,9,0" Padding="8,6" Background="#FDF2F8"
+                    BorderBrush="#DB2777" BorderThickness="3,0,0,0"
+                    Visibility="{Binding Editor.ReaperturaResumen, Converter={StaticResource NuloAVisibilidad}}">
+                <TextBlock Text="{Binding Editor.ReaperturaResumen}" FontSize="12" TextWrapping="Wrap" />
+            </Border>
+
+            <StackPanel Visibility="{Binding Editor.ReaperturaPendiente, Converter={StaticResource BooleanoAVisibilidad}}">
+                <TextBlock Text="{DynamicResource Seguimiento.NotaReapertura}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
+                <TextBox x:Name="NotaReapertura" Style="{StaticResource CampoMultilinea}"
+                         Text="{Binding Editor.NotaReapertura}" Margin="9,0,9,0" />
+                <TextBlock Text="{Binding ElementName=NotaReapertura, Path=(Validation.Errors)/ErrorContent}"
+                           Foreground="{StaticResource Peligro}" FontSize="11" TextWrapping="Wrap"
+                           Margin="9,3,9,0"
+                           Visibility="{Binding ElementName=NotaReapertura, Path=(Validation.HasError), Converter={StaticResource BooleanoAVisibilidad}}" />
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding Editor.AdmiteMotivo, Converter={StaticResource BooleanoAVisibilidad}}">
                 <TextBlock Text="{DynamicResource Seguimiento.MotivoRechazo}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
                 <ComboBox Style="{StaticResource CampoCombo}"
-                          ItemsSource="{Binding MotivosRechazo}"
+                          ItemsSource="{Binding Editor.MotivosDelEstado}"
                           DisplayMemberPath="Descripcion"
                           SelectedValuePath="Valor"
                           SelectedValue="{Binding Editor.MotivoRechazo}" Margin="9,0,9,0" />
