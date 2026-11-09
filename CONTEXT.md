@@ -11,7 +11,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - 🔄 4: `Evento` sin setters públicos (4.1), test por reflexión (4.2) y prefijo compartido del hito de reapertura (4.3); queda la documentación (4.4–4.8).
 
 ## Siguiente paso concreto
-4.4 (`docs: actualizar AGENTS.md`); el resto es documentación. El detalle está en el plan.
+4.5 (`docs: actualizar README`); el resto es documentación. El detalle está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.

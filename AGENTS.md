@@ -22,7 +22,8 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 - **Los diálogos van por `IDialogoService`** (`ViewModels`), que implementa `DialogoService` (`Views`). El ViewModel nunca llama a `MessageBox`, `OpenFileDialog`, `SaveFileDialog` ni `Process.Start`: se le inyecta el servicio (en los tests, un falso). Un test de fuentes lo vigila.
 - **Entidades POCO sin `INotifyPropertyChanged`**: el panel de detalle edita un búfer (`Editor`, `SolicitudEdicionViewModel`) y la entidad solo se escribe al pulsar Guardar (`Editor.AplicarA`). La UI no bindea contra la entidad: no expongas `Solicitud` para editar.
 - **Un solo `AppDbContext` durante toda la sesión** (explota el change tracking de EF).
-- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`), añadirla al editor (`CargarDesde` y su `Aplicar…`), y darle test y traducción si se ve. Los enums se guardan como entero.
+- **Los modelos no exponen setters públicos** (lo vigila un test por reflexión): `Solicitud` y `Evento` solo cambian por métodos de negocio (`Actualizar…`, `CambiarEstado`, `Reabrir`, `AgregarEvento`…) y EF escribe por campo.
+- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Su `set` es privado, así que se escribe desde un método de negocio de `Solicitud` (con su constante `LongitudMaximaX` si es texto, compartida por `[MaxLength]` y la validación). Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`), añadirla al editor (`CargarDesde`, su `Aplicar…` y la validación de longitud) y darle test y traducción si se ve. Los enums se guardan como entero.
 - **XAML nuevo**: el csproj declara las páginas a mano (`EnableDefaultPageItems=false`): hay que añadir el `<Page>` al csproj o no se compila a BAML y la app falla buscando el recurso.
 
 ## Decisiones vigentes (etapa R: estados y reapertura)
@@ -34,6 +35,9 @@ Resumen de `02-DOCS/decisiones/estados-y-reapertura.md`:
 - Motivo de cierre: obligatorio en los tres cierres negativos. `MotivoRechazo` se amplía al final con `NoIndicado` (6), `AceptoOtraOferta` (7), `ModalidadOUbicacion` (8), `YaNoMeInteresa` (9); el nombre del enum y la propiedad no cambian. El desplegable se filtra por estado y el editor preselecciona `NoIndicado`; al salir de esos estados se limpia. Bases existentes: `EsquemaDb` rellena `MotivoRechazo = 6` donde falte (idempotente). `CambiarEstado` lanza `ArgumentException` si el motivo no es válido para el estado; fuera de los tres cierres negativos lo deja en `null`.
 - Reapertura: `Solicitud.Reabrir(nuevoEstado, nota, proximoSeguimiento)`. `FechaReapertura = hoy` (solo la última, sin contador), `FechaCierre = null`, `MotivoRechazo = null`, `FechaSolicitud` no cambia. `nota` obligatoria (máx. 300, campo `NotaReapertura` del editor, guardada solo en el hito `Reapertura`). `ProximoSeguimiento`: respeta lo editado en el mismo guardado; si no, `null` y la regla propone +7 días. `Reabrir` no admite "Sin respuesta". Si el guardado falla tras `Reabrir`, el editor se recarga desde la entidad.
 - `FechaReapertura` columna `TEXT NULL` + `[NotMapped] FueReabierta`. `DiasProceso` cuenta desde `FechaReapertura ?? FechaSolicitud`. Insignia ↻ y borde magenta `#DB2777` en la fila.
+- Desde cualquier estado abierto se puede pasar a Oferta aceptada u Oferta rechazada por mí: no se exige pasar por «Oferta recibida».
+- `RespuestaEmpresa` y `Notas` son texto libre sin límite.
+- Los hitos que crea el modelo (`Reapertura`, `Respuesta`, `Rechazo`) guardan su texto en castellano: solo se traduce el tipo. El prefijo del hito de reapertura es una constante compartida con la franja de Seguimiento. Guardar valores únicos y traducir al mostrar es otra refactorización.
 
 ## UI y localización
 
