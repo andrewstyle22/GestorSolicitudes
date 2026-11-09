@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Models;
 
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
 /// Hito dentro de un proceso de selección: una llamada, una prueba, una entrevista...
@@ -18,10 +19,13 @@ public class Evento
     {
     }
 
+    [SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed", Justification = "EF Core escribe esta propiedad por campo")]
     public int Id { get; private set; }
 
+    [SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed", Justification = "EF Core escribe esta propiedad por campo")]
     public int SolicitudId { get; private set; }
 
+    [SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed", Justification = "EF Core escribe esta propiedad por campo")]
     public Solicitud? Solicitud { get; private set; }
 
     public DateTime Fecha { get; private set; }
