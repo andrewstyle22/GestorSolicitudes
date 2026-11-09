@@ -8,28 +8,25 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ✅ 2: historial de eventos (2.1–2.10).
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ✅ R: estados y reapertura (R.1–R.22 completos; correcciones R.12a–R.12g tras la R.12); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
-- ⬜ 4: test por reflexión y documentación (4.1–4.6).
+- 🔄 4: test por reflexión y documentación (4.1–4.6).
 
 ## Siguiente paso concreto
-4.1 (`test: Models no expone setters públicos`). R.22 ya quedó completado. El detalle de cada una está en el plan.
+4.1 (`test: Models no expone setters públicos`). El detalle de cada una está en el plan.
 
 ## Decisiones vigentes
-- Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta.
+- Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
 - `AplicarEventos` empareja por `EventoViewModel.Original`, nunca por posición ni `Id`: `Original` nulo es nuevo.
 - `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
 - EF accede por campo a `Evento` e `Id` de `Solicitud`; `Eventos` es `IReadOnlyList` sobre campo privado.
-- `CambiarEstado` exige un motivo válido en los tres cierres negativos y lo limpia fuera de ellos; un proceso cerrado solo sale de ahí con `Reabrir`. Al cerrar sin fecha pone hoy y, al pasar a Descartado, añade un hito `Rechazo` (solo en la transición para no duplicarlo al reguardar).
-- Estados: no se añade ninguno (ni `EnPausa` ni negociación). Reabrir es una acción, no un estado.
-- Motivo de cierre: obligatorio en Descartado, Retirada y Oferta rechazada por mí. Se amplía el enum `MotivoRechazo` con `NoIndicado`, `AceptoOtraOferta`, `ModalidadOUbicacion` y `YaNoMeInteresa`. El desplegable se filtra por estado y el editor preselecciona `NoIndicado`. El nombre `MotivoRechazo` no se cambia.
-- Reapertura: columna `FechaReapertura` (solo la última, sin contador) y `FueReabierta` [NotMapped]. `DiasProceso` cuenta desde `FechaReapertura ?? FechaSolicitud`. Insignia ↻ y borde magenta `#DB2777` en la fila.
-- El versionado de CV tras una reapertura queda fuera de alcance (otra refactorización).
+- Un proceso cerrado solo vuelve a abrirse con `Reabrir`; el combo de estado no lo permite. `CambiarEstado` exige motivo válido en los tres cierres negativos y lo limpia fuera de ellos; al cerrar sin fecha pone hoy y, al pasar a Descartado, añade un hito `Rechazo` solo en la transición para no duplicarlo al reguardar.
+- Estados: no se añade ninguno (ni `EnPausa` ni negociación); "Reabierta" es una acción, no un estado. El enum y la propiedad siguen llamándose `MotivoRechazo`, aunque el desplegable se filtre por estado y preseleccione `NoIndicado`.
+- Reapertura: `Reabrir` solo va a un estado abierto distinto de "Sin respuesta"; solo se guarda la última `FechaReapertura` y `DiasProceso` cuenta desde ella, con insignia ↻ y borde magenta en la fila. El versionado del CV anterior queda fuera de alcance.
 - Longitudes: una constante por campo para `[MaxLength]` y la validación; `RespuestaEmpresa` y `Notas` sin límite hasta decidirlo.
-- El editor valida longitudes, rango salarial y motivo de cierre (obligatorio y permitido) antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
-- La nota de la reapertura es **obligatoria**, en un campo propio del editor (`NotaReapertura`, 300 caracteres) visible en Seguimiento solo con reapertura pendiente; solo se guarda en el texto del hito. El editor y `Reabrir` la exigen (R.12f).
-- Al reabrir se respeta el `ProximoSeguimiento` que edite el usuario en el mismo guardado; si no lo edita o lo deja vacío, se propone +7 días (R.12g).
-- `Reabrir` no admite "Sin respuesta" como destino: el editor lo valida (R.12b). La reapertura se decide con el estado de la entidad y, si el guardado falla, el editor se recarga desde ella (R.12a).
-- "Oferta rechazada por mí" → "Oferta aceptada" está prohibida: se reabre a "Oferta recibida" y luego se acepta (R.13).
-- Salida de "Sin respuesta" (R.13): rellena `FechaPrimeraRespuesta` y añade un hito `Respuesta`; `AplicarA` aplica la respuesta **antes** que el estado para que el editor no la pise.
+- El editor valida longitudes, rango salarial, motivo de cierre y nota de reapertura antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
+- La nota de la reapertura es **obligatoria** y vive en `NotaReapertura` (300), no en `Notas`: solo se guarda en el texto del hito.
+- Al reabrir se respeta el `ProximoSeguimiento` editado; si no lo edita o lo deja vacío, se propone +7 días. Si el guardado falla tras `Reabrir`, el editor se recarga desde la entidad para no repetir la reapertura ni pisar datos.
+- "Oferta rechazada por mí" → "Oferta aceptada" está prohibida: se reabre a "Oferta recibida" y luego se acepta.
+- Salir de "Sin respuesta" rellena `FechaPrimeraRespuesta` y añade un hito `Respuesta`; `AplicarA` aplica la respuesta **antes** que el estado para que el editor no la pise.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -38,8 +35,3 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - Mensaje en español; un commit, una idea reversible.
 - Cada paso del plan lleva su propio commit, con el mensaje que indica el plan. No fusiones pasos ni los des por cubiertos por otro sin preguntarme.
 - No hacer push salvo que se pida.
-
-## Puntos de control pendientes
-- R.12a: test de fallo de `SaveChanges` seguido de reintento tras una reapertura (un solo hito, `FechaCierre` nula, seguimiento propuesto, primera respuesta rellena).
-- R.12c: prueba manual del combo de motivos al cambiar de Descartado a Retirada; WPF puede vaciar `SelectedValue` al reemplazar `MotivosDelEstado`.
-- `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
