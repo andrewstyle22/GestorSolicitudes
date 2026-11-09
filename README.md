@@ -66,12 +66,14 @@ que los abre en una ventana más grande, con texto seleccionable y scroll, para 
 
 **El proceso**: estado dentro del embudo, fecha de envío, fecha de la primera contestación, día de
 la entrevista, fecha de cierre, fecha de próximo seguimiento y el texto de la respuesta de la empresa. Al marcar el
-estado como *Descartado por la empresa* aparece un desplegable para anotar el motivo del rechazo
-(salario, experiencia insuficiente, otro candidato, ajuste cultural, puesto cancelado u otro), el dato
-que con suficientes candidaturas mejor dice qué ajustar.
+estado como un cierre negativo —*Descartado por la empresa*, *Retirada por mí* u *Oferta rechazada por mí*—
+aparece un desplegable **obligatorio** con el motivo, filtrado por estado: motivos de la empresa
+(salario, experiencia insuficiente, otro candidato, ajuste cultural, puesto cancelado u otro) o
+propios (aceptaste otra oferta, modalidad o ubicación, ya no te interesa, salario u otro). Si no lo
+sabes, se preselecciona *No indicado*. Es el dato que con suficientes candidaturas mejor dice qué ajustar.
 Si dejas el próximo seguimiento en blanco, al guardar se propone automáticamente una fecha 7 días
-después del envío, para que el aviso de "seguimiento pendiente" no dependa de que te acuerdes de
-rellenarlo a mano.
+después del envío (o de la reapertura, si la hubo), para que el aviso de "seguimiento pendiente" no
+dependa de que te acuerdes de rellenarlo a mano.
 
 **El contacto**: nombre, email y teléfono del recruiter o la persona técnica.
 
@@ -104,7 +106,17 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
   fechas de proceso, contacto ni adjuntos. La copia queda enlazada a la candidatura de origen para
   rastrear reaplicaciones: pensado para volver a la misma empresa en otro puesto o a una oferta calcada.
 - La columna **Días** de la tabla cuenta desde el envío mientras el proceso sigue abierto; en cuanto
-  lo cierras se congela y muestra cuánto duró en total hasta la fecha de cierre.
+  lo cierras se congela y muestra cuánto duró en total hasta la fecha de cierre. Si la candidatura
+  se reabrió, cuenta desde la última reapertura y el tooltip muestra el total desde el envío.
+- **Reabrir una candidatura cerrada**: al cambiar el estado de una cerrada a uno abierto, la app pide
+  confirmación y una **nota obligatoria** (máximo 300 caracteres), limpia el cierre y el motivo,
+  guarda la fecha de reapertura y añade un hito *Reapertura* con el cierre anterior y la nota. Respeta
+  el próximo seguimiento que hayas editado en ese guardado (si no, propone +7 días). Desde *Oferta
+  aceptada* la confirmación es reforzada, y no se puede reabrir a *Sin respuesta*. Las reabiertas
+  llevan la insignia ↻ junto al estado, un borde magenta en la fila, una franja informativa en
+  *Seguimiento* y un filtro *Reabiertas*.
+- Al guardar una candidatura nueva a una empresa y puesto que ya existen, la app avisa del estado y
+  el motivo de la anterior, sin impedir el guardado.
 - La tabla muestra además **Seguimiento** (la próxima fecha de contacto) e **Interés** en estrellas,
   y todas sus columnas se pueden ordenar clicando la cabecera.
 - El botón **Ver todas** junto al campo *Empresa* filtra la lista a todas las candidaturas de esa
@@ -160,7 +172,7 @@ un `using` a `Views` dentro de un ViewModel tumba el CI.
 
 ```
 Solicitud.cs, Evento.cs, DatosOferta.cs, Adjunto.cs, Enumeraciones.cs → modelo, datos de oferta, enums con [Description] y el adjunto que pinta la vista
-EstadoSolicitudExtensiones.cs → estados que cuentan como proceso cerrado
+EstadoSolicitudExtensiones.cs → estados cerrados y motivos de cierre permitidos por estado
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
 Traducciones.cs → diccionarios es/en/de y Texto (en Helpers, para que los helpers traduzcan)
@@ -179,7 +191,6 @@ TextoHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqued
 CsvExportador.cs → exportación CSV pura (cabecera + filas)
 EmbudoHelper.cs, EmbudoPeriodo.cs → lógica del embudo (máximo, periodos, rangos, conteos)
 EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
-ReglasSolicitud.cs → lo que queda fuera del modelo: la fecha de seguimiento propuesta al guardar
 Enlaces.cs → validación de los enlaces que se abren (solo http y https)
 
 ColumnaItem.cs, ColumnasViewModel.cs → columna ocultable y su preferencia guardada (namespace ViewModels)
@@ -232,9 +243,29 @@ aplican las validaciones y longitudes admitidas. `Solicitud.CrearCopia()` centra
 la parte reutilizable de una oferta. El plan completo y el estado de cada etapa están en
 [`02-DOCS/plan-refactor-edicion.md`](02-DOCS/plan-refactor-edicion.md).
 
-El cierre del modelo no implica todavía reglas para las transiciones de estado: por ahora,
-`CambiarEstado` asigna estado, motivo y fecha de cierre sin validar transiciones ni exigir motivo.
-La etapa R del plan abordará estados y reapertura antes de la etapa final de cierre y documentación.
+**Estados y reapertura.** Una candidatura cerrada solo vuelve a abrirse con `Solicitud.Reabrir`,
+nunca por el combo de estado. `CambiarEstado` rechaza el paso de cerrado a abierto, exige un motivo
+válido en los tres cierres negativos, lo limpia en el resto y fija hoy como fecha de cierre si
+falta. No se añaden estados nuevos: «Reabierta» es una acción, no un estado. Desde cualquier estado
+abierto se puede pasar a *Oferta aceptada* u *Oferta rechazada por mí*; una oferta ya cerrada se
+acepta reabriéndola antes a *Oferta recibida*. Las tablas de transiciones y las decisiones están en
+[`02-DOCS/decisiones/estados-y-reapertura.md`](02-DOCS/decisiones/estados-y-reapertura.md).
+
+**El motivo de cierre sigue llamándose `MotivoRechazo`.** El enum y la propiedad no se renombraron
+aunque ahora sirvan también a *Retirada por mí* y *Oferta rechazada por mí*; cambiarlo a
+`MotivoCierre` queda para otra refactorización.
+
+**`RespuestaEmpresa` y `Notas` son texto libre sin límite.** El resto de campos de texto tiene una
+constante `LongitudMaximaX` que comparten `[MaxLength]` y la validación del modelo.
+
+**Los hitos que crea el modelo están en castellano.** `Reapertura`, `Respuesta` y `Rechazo` guardan
+su descripción en castellano aunque la interfaz esté en inglés o alemán: el modelo no puede usar
+`Localizacion` (lo prohíbe la regla de capas), así que solo se traduce el tipo del hito. El prefijo
+del hito de reapertura es una constante compartida con la franja de *Seguimiento*. Queda pendiente
+otra refactorización: guardar valores únicos y traducirlos al mostrarlos.
+
+**Ningún modelo expone setters públicos.** Un test por reflexión lo vigila; `Solicitud` y `Evento`
+solo cambian mediante métodos de negocio y EF escribe por campo.
 
 **`EnsureCreated()` en lugar de migraciones.** Va bien para empezar, pero no versiona el esquema:
 si añades una propiedad nueva al modelo, la tabla existente no se actualiza sola. Cuando quieras
