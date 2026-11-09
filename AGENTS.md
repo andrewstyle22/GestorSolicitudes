@@ -25,6 +25,16 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 - **Añadir una propiedad a `Solicitud`**: no hay migraciones. Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`), añadirla al editor (`CargarDesde` y su `Aplicar…`), y darle test y traducción si se ve. Los enums se guardan como entero.
 - **XAML nuevo**: el csproj declara las páginas a mano (`EnableDefaultPageItems=false`): hay que añadir el `<Page>` al csproj o no se compila a BAML y la app falla buscando el recurso.
 
+## Decisiones vigentes (etapa R: estados y reapertura)
+
+Resumen de `02-DOCS/decisiones/estados-y-reapertura.md`:
+
+- Estados: no se añade ninguno. Abiertos: Enviada, En revisión, Prueba técnica, Entrevista RR. HH., Entrevista técnica, Entrevista final, Oferta recibida, Sin respuesta. Cerrados: Oferta aceptada, Oferta rechazada por mí, Descartado por la empresa, Retirada por mí. "Reabierta" es una acción, no un estado.
+- Transiciones: cerrado → abierto solo por `Solicitud.Reabrir` (nunca por el combo de estado). Hacia un cierre negativo (Descartado, Retirada, Oferta rechazada por mí): motivo obligatorio y permitido; `FechaCierre` = hoy si está vacía; al pasar a Descartado se añade hito `Rechazo`. Hacia Oferta aceptada: `FechaCierre` = hoy si está vacía, sin motivo. Cerrado → cerrado es corrección (motivo no permitido se reemplaza por `NoIndicado`). "Sin respuesta" → otro estado no es reapertura: se rellena `FechaPrimeraRespuesta` y se añade hito `Respuesta`. "Oferta rechazada por mí" → "Oferta aceptada" prohibida: reabrir a "Oferta recibida" y luego aceptar. Oferta aceptada → cualquier otro: confirmación reforzada.
+- Motivo de cierre: obligatorio en los tres cierres negativos. `MotivoRechazo` se amplía al final con `NoIndicado` (6), `AceptoOtraOferta` (7), `ModalidadOUbicacion` (8), `YaNoMeInteresa` (9); el nombre del enum y la propiedad no cambian. El desplegable se filtra por estado y el editor preselecciona `NoIndicado`; al salir de esos estados se limpia. Bases existentes: `EsquemaDb` rellena `MotivoRechazo = 6` donde falte (idempotente). `CambiarEstado` lanza `ArgumentException` si el motivo no es válido para el estado; fuera de los tres cierres negativos lo deja en `null`.
+- Reapertura: `Solicitud.Reabrir(nuevoEstado, nota, proximoSeguimiento)`. `FechaReapertura = hoy` (solo la última, sin contador), `FechaCierre = null`, `MotivoRechazo = null`, `FechaSolicitud` no cambia. `nota` obligatoria (máx. 300, campo `NotaReapertura` del editor, guardada solo en el hito `Reapertura`). `ProximoSeguimiento`: respeta lo editado en el mismo guardado; si no, `null` y la regla propone +7 días. `Reabrir` no admite "Sin respuesta". Si el guardado falla tras `Reabrir`, el editor se recarga desde la entidad.
+- `FechaReapertura` columna `TEXT NULL` + `[NotMapped] FueReabierta`. `DiasProceso` cuenta desde `FechaReapertura ?? FechaSolicitud`. Insignia ↻ y borde magenta `#DB2777` en la fila.
+
 ## UI y localización
 
 - Todo texto visible va por `Localizacion.Texto("Clave")`; la clave hay que añadirla en los tres idiomas (es/en/de) en `Traducciones.cs` (`Helpers`) o un test de paridad falla.
