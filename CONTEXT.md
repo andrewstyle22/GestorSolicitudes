@@ -8,10 +8,10 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ✅ 2: historial de eventos (2.1–2.10).
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ✅ R: estados y reapertura (R.1–R.22 completos; correcciones R.12a–R.12g tras la R.12); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
-- 🔄 4: `Evento` sin setters públicos (4.1), test por reflexión (4.2) y prefijo compartido del hito de reapertura (4.3); queda la documentación (4.4–4.8).
+- 🔄 4: `Evento` sin setters públicos (4.1), test por reflexión (4.2), prefijo compartido del hito de reapertura (4.3) y documentación (4.4–4.7); queda la pasada final de `sonarcloud-gate` (4.8).
 
 ## Siguiente paso concreto
-4.7 (`docs: alinear estados-y-reapertura.md con el código`); el resto es documentación. El detalle está en el plan.
+4.8 (`chore: pasada final de sonarcloud-gate`), antes de abrir el PR. El detalle está en el plan.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
@@ -24,7 +24,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - Longitudes: una constante por campo para `[MaxLength]` y la validación. `RespuestaEmpresa` y `Notas` son texto libre sin límite (decidido; se anota en el README).
 - El editor valida longitudes, rango salarial, motivo de cierre y nota de reapertura antes de `AplicarA`; el modelo lanzaría `ArgumentException`.
 - La nota de la reapertura es **obligatoria** y vive en `NotaReapertura` (300), no en `Notas`: solo se guarda en el texto del hito.
-- Al reabrir se respeta el `ProximoSeguimiento` editado; si no lo edita o lo deja vacío, se propone +7 días. Si el guardado falla tras `Reabrir`, el editor se recarga desde la entidad para no repetir la reapertura ni pisar datos.
+- Al reabrir se respeta el `ProximoSeguimiento` editado; si no lo edita o lo deja vacío, se propone +7 días desde la reapertura. Si el guardado falla tras `Reabrir`, el editor se recarga desde la entidad para no repetir la reapertura ni pisar datos.
 - "Oferta rechazada por mí" → "Oferta aceptada" está prohibida: se reabre a "Oferta recibida" y luego se acepta.
 - Salir de "Sin respuesta" rellena `FechaPrimeraRespuesta` y añade un hito `Respuesta`; `AplicarA` aplica la respuesta **antes** que el estado para que el editor no la pise.
 - Desde cualquier estado abierto se puede pasar a Oferta aceptada u Oferta rechazada por mí: no se exige pasar por «Oferta recibida».
