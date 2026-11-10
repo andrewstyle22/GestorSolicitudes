@@ -280,14 +280,20 @@ Mismas reglas de siempre: un commit por paso, con el mensaje indicado. **El orde
 
 ## Etapa 4. Cierre
 
+> **Revisión tras la Etapa R:** el commit «limpiar `ReglasSolicitud`» (antes 4.2) ya no hace falta: `ReglasSolicitud.cs` y sus tests desaparecieron durante la Etapa 3. En su lugar entran dos commits de código antes del test por reflexión (`Evento` aún tiene tres propiedades con `set` público) y uno de alineación del documento de decisión. La numeración de la etapa cambia en consecuencia.
+
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
-| 4.1 | `test: Models no expone setters públicos` | Test por reflexión en `ArquitecturaTests` (o en un test de modelo). Sin excepciones: tras 3.17 todo es privado. | S |
-| 4.2 | `refactor: limpiar ReglasSolicitud` | Eliminar lo que haya pasado al modelo. | S |
-| 4.3 | `docs: actualizar AGENTS.md` | Quitar "no lo arregles sin consultar"; describir el editor; el procedimiento de "añadir una propiedad" pasa a ser: modelo, editor, `EsquemaDb`, test y traducción. | S |
-| 4.4 | `docs: actualizar README` | Sección de decisiones y lecciones aprendidas. | S |
-| 4.5 | `docs: decisión sobre el editor con búfer` | `02-DOCS/decisiones/edicion-con-bufer.md`, con el mismo formato que `selector-columnas.md`. | S |
-| 4.6 | `chore: pasada final de sonarcloud-gate` | Verificar antes de abrir el PR. | S |
+| 4.1 | `refactor: Evento sin setters públicos` | `Id`, `SolicitudId` y `Solicitud` pasan a `private set`; EF las escribe por campo (`UsePropertyAccessMode(Field)`). Comprobar que ningún código ni test las asigna y mantener `Evento_TrasGuardarExponeIdSolicitudYPropiedadDeNavegacion` y los tests de ida y vuelta del historial. | S |
+| 4.2 | `test: Models no expone setters públicos` | Test por reflexión en `ArquitecturaTests` (o en un test de modelo) sobre las entidades del namespace `Models`. Sin excepciones: tras 4.1 todo es privado. | S |
+| 4.3 | `refactor: prefijo del hito de reapertura compartido` | Constante en `Solicitud` (por ejemplo `PrefijoHitoReapertura`, hoy `"Reabierta. "`) usada por `Reabrir` y por `ReaperturaResumen` del editor. Test que falla si el texto del hito y el prefijo que quita la franja divergen. | S |
+| 4.4 | `docs: actualizar AGENTS.md` | El procedimiento de «añadir una propiedad» incluye el método de negocio y la constante de longitud; los modelos no exponen setters públicos; decisiones nuevas (cualquier estado abierto puede pasar a Oferta aceptada u Oferta rechazada por mí, `RespuestaEmpresa` y `Notas` libres, hitos del modelo en castellano). | S |
+| 4.5 | `docs: actualizar README` | Motivo de cierre en los tres estados y con valores propios; reapertura (confirmación, nota, insignia, color, franja y filtro); `Días` desde la reapertura; aviso de candidatura repetida; quitar `ReglasSolicitud.cs` de la estructura; sustituir el párrafo que dice que `CambiarEstado` no valida; anotar las decisiones (texto libre en `RespuestaEmpresa` y `Notas`, hitos en castellano, enum `MotivoRechazo` sin renombrar). | M |
+| 4.6 | `docs: decisión sobre el editor con búfer` | `02-DOCS/decisiones/edicion-con-bufer.md`, con el mismo formato que `selector-columnas.md`. | S |
+| 4.7 | `docs: alinear estados-y-reapertura.md con el código` | Quitar «solo desde Oferta recibida» de la tabla de transiciones, precisar que el seguimiento propuesto cuenta desde la reapertura, y anotar los hitos en castellano como pendiente futuro. | S |
+| 4.8 | `chore: pasada final de sonarcloud-gate` | Verificar antes de abrir el PR. | S |
+
+Refactor aparte, fuera de esta etapa: guardar los hitos del modelo como valores únicos (estado anterior, fecha, motivo) y traducirlos al mostrarlos, en lugar de guardar el texto en castellano.
 
 ---
 
@@ -296,7 +302,7 @@ Mismas reglas de siempre: un commit por paso, con el mensaje indicado. **El orde
 - **Etapas 0 + 1 + 2** resuelven el problema real de edición (cancelar, validación, repintado, `PropertyDescriptor`) y dejan el historial protegido.
 - **La Etapa 3** aporta encapsulación completa del modelo. Es la más costosa; hazla si quieres que el repositorio demuestre arquitectura limpia de principio a fin.
 - **La Etapa R** (estados y reapertura) añade comportamiento nuevo, no refactor. Puede hacerse más adelante, pero siempre después de la Etapa 3.
-- Si te detienes tras la Etapa 2, actualiza igualmente `AGENTS.md` (4.3) para que cualquier agente sepa que la edición ya va por el editor.
+- Si te detienes tras la Etapa 2, actualiza igualmente `AGENTS.md` (4.4) para que cualquier agente sepa que la edición ya va por el editor.
 
 ## 5. Riesgos y puntos de control
 

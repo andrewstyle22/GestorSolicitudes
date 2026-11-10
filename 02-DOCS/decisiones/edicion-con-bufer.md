@@ -1,0 +1,50 @@
+# Edición con búfer y modelo encapsulado
+
+El panel de detalle bindeaba sus campos en dos direcciones directamente contra la entidad `Solicitud`:
+cualquier tecla modificaba el modelo sin pasar por ninguna regla, y *Cancelar* dependía de que EF
+descartara los cambios. Ahora la interfaz escribe en un búfer (`SolicitudEdicionViewModel`) y el
+modelo solo cambia al guardar, mediante métodos de negocio. Se hizo por etapas, grupo de campos a grupo
+de campos, para que la aplicación compilara y pasara los tests en cada commit.
+
+## Decisiones
+
+**Un búfer, no un wrapper por entidad.** El editor copia los datos al abrir (`CargarDesde`), los
+valida mientras se escriben (`ObservableValidator`) y los vuelca al guardar (`AplicarA`). *Cancelar* lo
+descarta. No se llama al modelo por cada tecla: escribir «35000» pasaría por estados intermedios
+inválidos.
+
+**La tabla no se envuelve.** Sus filas siguen siendo entidades de solo lectura y la lista se recarga
+tras cada guardado. El `TwoWay` de `SelectedItem` del `DataGrid` es legítimo.
+
+**El modelo se protege a sí mismo.** `Solicitud` y `Evento` no tienen setters públicos: se crean con los
+datos obligatorios, tienen un constructor privado para EF y cambian por métodos por intención
+(`ActualizarIdentificacion`, `ActualizarOferta`, `ActualizarCondiciones`, `CambiarEstado`, `Reabrir`,
+`AgregarEvento`…). Los métodos aplican las reglas y lanzan `ArgumentException` si algo no vale, de modo
+que el editor valida antes y el modelo es la última barrera.
+
+**EF accede por campo.** `Id` de `Solicitud` no tiene setter, `FechaReapertura` tiene campo de respaldo
+y `Evento` usa `UsePropertyAccessMode(Field)`. `Eventos` es un `IReadOnlyList` sobre un campo privado.
+
+**El historial sigue el mismo camino.** Los hitos editables son `EventoViewModel` y se emparejan con su
+entidad por `Original`, nunca por posición ni por `Id`. Al guardar se crean los nuevos, se actualizan los
+existentes y se borran los quitados; el búfer no conoce la base de datos.
+
+**El orden de `AplicarA` importa.** `AplicarRespuesta` va antes que `AplicarEstado`: al salir de «Sin
+respuesta» el modelo rellena `FechaPrimeraRespuesta`, y si el editor la escribiera después, la pisaría
+con el valor vacío.
+
+**Un guardado fallido no deja el editor desfasado.** Si `SaveChanges` falla después de `Reabrir`, la
+entidad ya tiene sus efectos; el editor se recarga desde ella para que el reintento no repita la
+reapertura ni pise las fechas con valores antiguos.
+
+**Los ficheros adjuntos solo se borran tras guardar bien.** Quitar o sustituir un adjunto no toca el
+disco hasta que el guardado funciona; *Cancelar* borra las copias que no se llegaron a guardar.
+
+## Consecuencias
+
+- Cada propiedad nueva se escribe en tres sitios: el modelo (con su método y su constante de longitud),
+  el editor (`CargarDesde`, `Aplicar…` y validación) y `EsquemaDb`. El procedimiento está en `AGENTS.md`.
+- Un test por reflexión vigila que ningún modelo exponga setters públicos.
+- Los hitos que crea el modelo guardan su texto en castellano (el modelo no puede usar `Localizacion`);
+  solo se traduce el tipo. Guardar valores únicos y traducirlos al mostrar queda para otra
+  refactorización.

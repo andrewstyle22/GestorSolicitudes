@@ -32,7 +32,7 @@ Ubicación: `02-DOCS/decisiones/estados-y-reapertura.md`. Todas las decisiones q
 | 7 | ¿`RespuestaEmpresa` y `Notas` sin límite? | Aplazada; siguen sin límite. |
 | 8 | ¿Nota en la reapertura? | **Sí, obligatoria**, en un campo propio del editor (`NotaReapertura`, máximo 300 caracteres) que aparece en Seguimiento, junto al estado, solo cuando hay una reapertura pendiente. Solo se guarda en el texto del hito, sin columna nueva. |
 | 9 | ¿"Oferta rechazada por mí" → "Oferta aceptada"? | **En dos pasos**: reabrir a "Oferta recibida" y después aceptar. No hay atajo. |
-| 10 | ¿Qué pasa con `ProximoSeguimiento` al reabrir? | **Se respeta lo que edite el usuario** en el mismo guardado (aunque sea una fecha pasada). Si no lo edita, o lo deja vacío, se propone +7 días. |
+| 10 | ¿Qué pasa con `ProximoSeguimiento` al reabrir? | **Se respeta lo que edite el usuario** en el mismo guardado (aunque sea una fecha pasada). Si no lo edita, o lo deja vacío, se propone +7 días desde la reapertura. |
 
 ---
 
@@ -106,7 +106,7 @@ Leyenda: ✅ libre · 🔁 solo con **Reabrir** · ⚠️ con reglas · ⛔ no p
 
 | Desde ↓ / Hacia → | Abierto (cualquiera) | Descartado | Retirada | Oferta rechazada por mí | Oferta aceptada |
 |---|---|---|---|---|---|
-| **Abierto** | ✅ (avanzar o corregir) | ⚠️ A | ⚠️ A | ⚠️ A (solo desde Oferta recibida) | ⚠️ B (solo desde Oferta recibida) |
+| **Abierto** | ✅ (avanzar o corregir) | ⚠️ A | ⚠️ A | ⚠️ A | ⚠️ B |
 | **Descartado** | 🔁 | ✅ (cambiar motivo) | ⚠️ C | ⚠️ C | ⛔ |
 | **Retirada** | 🔁 | ⚠️ C | ✅ | ⚠️ C | ⛔ |
 | **Oferta rechazada por mí** | 🔁 | ⚠️ C | ⚠️ C | ✅ | ⛔ (reabrir a «Oferta recibida» y luego aceptar) |
@@ -139,7 +139,7 @@ Método explícito del modelo, `Solicitud.Reabrir(nuevoEstado, nota, proximoSegu
 3. **`FechaReapertura = hoy`.** Si ya había una, se sustituye: solo se guarda la última, no hay contador. Las anteriores quedan en los hitos del historial.
 4. `FechaSolicitud` **no cambia**.
 5. Si `FechaPrimeraRespuesta` está vacía, se rellena con hoy.
-6. `ProximoSeguimiento`: si el usuario lo ha editado en el mismo guardado, se guarda su valor, aunque sea una fecha pasada. Si no lo ha editado, o lo ha dejado vacío, se pone a `null` y la regla existente propone uno nuevo (+7 días). El editor recuerda el valor con el que abrió la candidatura y solo pasa a `Reabrir` el que haya cambiado.
+6. `ProximoSeguimiento`: si el usuario lo ha editado en el mismo guardado, se guarda su valor, aunque sea una fecha pasada. Si no lo ha editado, o lo ha dejado vacío, se pone a `null` y la regla existente propone uno nuevo: +7 días contados desde `FechaReapertura` (hoy), no desde `FechaSolicitud`. El editor recuerda el valor con el que abrió la candidatura y solo pasa a `Reabrir` el que haya cambiado.
 7. Se añade un hito `TipoEvento.Reapertura` con texto del estilo *"Reabierta. Antes: Descartado por la empresa (10/10, perfil no adecuado). Nota: …"*, que incluye la nota obligatoria. Es la única copia del cierre anterior.
 
 La nota de la reapertura es **obligatoria** (decisión 8) y se escribe en un campo propio, `NotaReapertura`, que no es el campo `Notas` de la candidatura. Aparece en la pestaña Seguimiento, junto al estado, solo cuando hay una reapertura pendiente, con el error en línea. Antes de guardar, la confirmación muestra el estado, fecha y motivo del cierre, el nuevo estado y la nota; al reabrir una oferta aceptada, el mensaje advierte expresamente que ya se había aceptado.
@@ -201,6 +201,7 @@ Detalle completo en `02-DOCS/plan-refactor-edicion.md` (Etapa R, R.1 a R.22). Re
 
 - Versionado de adjuntos (CV anterior tras una reapertura): otra refactorización.
 - Renombrar `MotivoRechazo` a `MotivoCierre`.
+- Guardar los hitos que crea el modelo (`Reapertura`, `Respuesta`, `Rechazo`) como valores únicos (estado anterior, fecha, motivo) y traducirlos al mostrarlos. Hoy guardan su texto en castellano y solo se traduce el tipo.
 - Contador de reaperturas.
 - Estados "En pausa" y "Oferta en negociación": revisar si aparece un caso real.
 - Límite de longitud de `RespuestaEmpresa` y `Notas`.

@@ -561,6 +561,18 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void Reabrir_ElHitoEmpiezaPorElPrefijoCompartidoConLaFranja()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+
+        solicitud.Reabrir(EstadoSolicitud.Enviada, "Retomamos el proceso");
+
+        Assert.StartsWith(Solicitud.PrefijoHitoReapertura, solicitud.Eventos[^1].Descripcion);
+    }
+
+    [Fact]
     public void Reabrir_NotaDemasiadoLarga_Lanza()
     {
         var solicitud = new SolicitudBuilder()

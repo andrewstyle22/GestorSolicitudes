@@ -22,6 +22,9 @@ public class Solicitud
     public const int LongitudMaximaContactoTelefono = 40;
     public const int LongitudMaximaNotaReapertura = 300;
 
+    // Prefijo del hito de reapertura: el editor lo quita para la franja de Seguimiento.
+    public const string PrefijoHitoReapertura = "Reabierta. ";
+
     private const int LongitudMaximaRutaAdjunto = 500;
     private const int LongitudMaximaNombreOriginalAdjunto = 260;
 
@@ -321,7 +324,7 @@ public class Solicitud
         this.ProximoSeguimiento = proximoSeguimiento;
         this.ProponerSeguimiento();
 
-        string descripcion = $"Reabierta. Antes: {cierreAnterior}. {notaRecortada}";
+        string descripcion = $"{PrefijoHitoReapertura}Antes: {cierreAnterior}. {notaRecortada}";
 
         this.AgregarEvento(new Evento(hoy, TipoEvento.Reapertura, descripcion));
     }

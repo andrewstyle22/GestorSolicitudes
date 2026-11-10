@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.Loader;
+using GestorSolicitudes.Data;
 using GestorSolicitudes.ViewModels;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
@@ -94,4 +95,17 @@ public class ArquitecturaTests
         Verificar(
             Types().That().AreNot(CapaVistas).And().AreNot(Nucleo)
                 .Should().NotDependOnAny(CapaVistas));
+
+    [Fact]
+    public void LasEntidadesNoExponenSettersPublicos()
+    {
+        using var db = new AppDbContext(TestDb.NuevaRuta());
+        string[] infractoras = db.Model.GetEntityTypes()
+            .SelectMany(tipo => tipo.ClrType.GetProperties())
+            .Where(propiedad => propiedad.SetMethod?.IsPublic == true)
+            .Select(propiedad => $"{propiedad.DeclaringType!.Name}.{propiedad.Name}")
+            .ToArray();
+
+        Assert.True(infractoras.Length == 0, string.Join(Environment.NewLine, infractoras));
+    }
 }
