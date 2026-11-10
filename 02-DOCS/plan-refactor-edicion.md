@@ -297,6 +297,84 @@ Refactor aparte, fuera de esta etapa: guardar los hitos del modelo como valores 
 
 ---
 
+## Etapa 5. Correcciones tras la revisión final
+
+Nace de revisar el proyecto completo después de la Etapa 4: un fallo de reintento al guardar, un caso en el que se contaba como respuesta de la empresa algo que no lo era, cambios sin guardar que se perdían en silencio, el CSV (motivo de cierre, separador y fórmulas) y la fecha de solicitud. Va en una rama nueva a partir de `main`, después de fusionar el PR de la Etapa 4. Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
+
+Decisiones que condicionan la etapa:
+- Solo cuentan como respuesta de la empresa los estados abiertos distintos de «Enviada» y «Sin respuesta», y «Descartado por la empresa». «Retirada por mí» y «Oferta rechazada por mí» no cuentan. ☐ Falta confirmar «Oferta aceptada» desde «Sin respuesta»: recomendado que cuente, porque implica una oferta.
+- Los cambios sin guardar se avisan con tres botones (Guardar, Descartar, Cancelar). Si el usuario guarda, la acción pedida (abrir otra fila, *Nueva*, *Duplicar* o cerrar la ventana) se ejecuta solo si el guardado tuvo éxito.
+- El CSV deja elegir el separador (`;`, `,` o tabulador) en una ventana con Aceptar y Cancelar; la última elección se recuerda. Se añaden el motivo de cierre y la fecha de reapertura, y las celdas de texto que empiezan por `=`, `+`, `-` o `@` llevan un apóstrofo delante.
+- Cambiar `FechaSolicitud` mueve el hito «Solicitud enviada» y el seguimiento propuesto, solo si coincidían con la fecha anterior (y, en el seguimiento, solo si no hay reapertura).
+
+### 5-A. Guardado
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 5.1 | `fix: recargar el editor tras cualquier fallo de guardado` | Si `Persistir()` falla, el editor se recarga desde la entidad (hoy solo con reapertura). Sin esto, el reintento reescribe `FechaCierre` y `FechaPrimeraRespuesta` con los valores vacíos del búfer, porque `CambiarEstado` solo los rellena en la transición. Tests: Enviada → Descartado con fallo y reintento (queda `FechaCierre` y un solo hito `Rechazo`); salida de «Sin respuesta» con fallo y reintento (queda `FechaPrimeraRespuesta`). | M |
+| 5.2 | `refactor: Guardar devuelve si se guardó` | Se extrae `TryGuardar()`: `true` si se guardó y se cerró el panel; `false` si falta un dato, se cancela la confirmación de reapertura o el guardado falla. `Guardar` lo llama. Sin cambio de comportamiento; lo necesitan los avisos de la etapa siguiente. | S |
+
+### 5-B. Cambios sin guardar
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 5.3 | `feat: el editor sabe si tiene cambios` | `HayCambios` en `SolicitudEdicionViewModel`: se activa al cambiar cualquier campo editable o el historial (altas, bajas y ediciones de hitos) y se apaga en `CargarDesde`. Asignar el mismo valor no cuenta. Tests: abrir sin tocar, tocar, volver a cargar. | M |
+| 5.4 | `feat: aviso de cambios sin guardar` | `IDialogoService.PreguntarGuardar(mensaje, titulo)` devuelve Guardar, Descartar o Cancelar (`MessageBox` Sí/No/Cancelar en la implementación real, más `DialogoFalso` y `DialogosNulos`). En el ViewModel, `ResolverCambiosPendientes()` devuelve si se puede continuar: sin cambios, sí; Guardar, lo que devuelva `TryGuardar()`; Descartar, la misma limpieza que *Cancelar* (copias de adjuntos y `ChangeTracker`); Cancelar, no. Textos es/en/de. | M |
+| 5.5 | `feat: aviso al cambiar de fila` | `Seleccionar` pregunta si hay cambios y la fila elegida es otra. Si no se puede continuar, devuelve la selección a la fila anterior (WPF ya la ha cambiado cuando se ejecuta el manejador, así que hace falta una protección contra la reentrada). Tests con `DialogoFalso`. | M |
+| 5.6 | `feat: aviso al pulsar Nueva o Duplicar` | Los dos comandos llaman a `ResolverCambiosPendientes()` antes de abrir otra candidatura. | S |
+| 5.7 | `feat: aviso al cerrar la ventana` | En `MainWindow.Closing`, si `ResolverCambiosPendientes()` devuelve `false`, `e.Cancel = true`. | S |
+
+### 5-C. Respuesta de la empresa
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 5.8 | `fix: solo cuentan como respuesta los estados que lo son` | `EstadoSolicitudExtensiones.EsRespuestaDeLaEmpresa(estado)`. La salida de «Sin respuesta» en `CambiarEstado` solo rellena `FechaPrimeraRespuesta` y añade el hito `Respuesta` si el estado nuevo cumple. Tests: → Retirada por mí no cuenta; → En revisión y → Descartado sí. | M |
+
+### 5-D. Fecha de solicitud
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 5.9 | `feat: cambiar FechaSolicitud mueve el hito de envío y el seguimiento propuesto` | En `ActualizarFechas`: el hito `SolicitudEnviada` cuya fecha coincidía con la anterior pasa a la nueva (`Evento.Actualizar`); si no hay reapertura y el seguimiento recibido es el anterior más 7 días (el propuesto sin tocar), pasa a la nueva más 7. Tests de los dos casos y de los que no deben moverse (hito o seguimiento editados a mano, candidatura reabierta). | M |
+| 5.10 | `feat: el editor mueve el hito y el seguimiento al cambiar FechaSolicitud` | Las mismas reglas sobre el búfer (`EventoViewModel` y `ProximoSeguimiento`), para que el panel lo muestre al instante y `AplicarEventos` no lo devuelva a su valor anterior. Tests. | M |
+
+### 5-E. Exportación a CSV
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 5.11 | `feat: motivo de cierre y fecha de reapertura en el CSV` | Columnas `Csv.MotivoCierre` y `Csv.Reapertura` (es/en/de), tras `Csv.Cierre`. Tests de cabecera y fila alineadas. | S |
+| 5.12 | `fix: el CSV neutraliza las celdas que empiezan por = + - @` | `TextoHelper.Escapar` antepone `'` a los textos que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro. Fechas y números no se tocan. Tests con cada carácter, con comillas y vacío. | S |
+| 5.13 | `feat: separador configurable en el exportador de CSV` | `CsvExportador.Construir(solicitudes, separador)` admite `;`, `,` o tabulador; por defecto `;`. Tests con cada uno y con un valor que lo contiene. | S |
+| 5.14 | `feat: preferencia del separador del CSV` | `PreferenciaCsv` en `%APPDATA%\GestorSolicitudes\csv.txt`, con el patrón de `PreferenciaIdioma` (tolerante a fallos, `;` por defecto). Tests con ruta temporal. | S |
+| 5.15 | `feat: ventana para elegir el separador` | Ventana modal con tres opciones, la última elección marcada, y Aceptar y Cancelar. `IDialogoService.ElegirSeparadorCsv(actual)` devuelve `char?` (`null` si cancela), con `DialogoFalso` y `DialogosNulos`. XAML declarado en el csproj y textos es/en/de. | M |
+| 5.16 | `feat: exportar pregunta el separador` | `ExportarCsv` pide el separador antes del destino (cancelar = no exporta), lo guarda en la preferencia y construye el CSV con él. Tests con `DialogoFalso`. | S |
+
+### 5-F. Detalles menores
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 5.17 | `fix: el hito Rechazo usa la fecha de cierre` | El hito se fecha con la `FechaCierre` resultante y no con hoy. | S |
+| 5.18 | `feat: el editor valida la descripción de los eventos` | Límite de 500 en una constante de `Evento` compartida por `[MaxLength]` y la validación del búfer. | S |
+
+### 5-G. Cierre
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 5.19 | `docs: actualizar README, AGENTS.md y estados-y-reapertura.md` | README: separador, columnas y apóstrofo del CSV, aviso de cambios sin guardar y la fecha de solicitud que mueve el hito. `AGENTS.md`: decisiones nuevas. Documento de decisión: qué estados cuentan como respuesta de la empresa. | S |
+| 5.20 | `chore: pasada final de sonarcloud-gate` | Verificar antes de abrir el PR. | S |
+
+**Orden.** 5.2 antes de 5.4; 5.3 antes de 5.4 y 5.5; 5.9 antes de 5.10; 5.13 y 5.14 antes de 5.15 y 5.16; 5.15 antes de 5.16.
+
+**Mejoras futuras, fuera de esta etapa:**
+- Las copias de adjuntos que quedan en disco si se cambia de fila o se cierra la app antes de guardar o cancelar (con el aviso de 5.4 a 5.7 el caso se reduce mucho).
+- `BuscarCandidaturaRepetida` usa `db.Solicitudes.Local`: depende de que `Recargar` cargue todas las filas.
+- Si se vacía el seguimiento mucho después de reabrir, se propone `FechaReapertura + 7`, que puede estar ya en el pasado.
+- Guardar los hitos del modelo como valores únicos y traducirlos al mostrarlos.
+- Prueba manual del desplegable de motivos al cambiar de «Descartado» a «Retirada» (WPF puede vaciar `SelectedValue` al reemplazar `MotivosDelEstado`).
+
+---
+
+---
+
 ## 4. Orden mínimo viable
 
 - **Etapas 0 + 1 + 2** resuelven el problema real de edición (cancelar, validación, repintado, `PropertyDescriptor`) y dejan el historial protegido.
