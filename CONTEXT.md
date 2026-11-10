@@ -8,10 +8,10 @@ Plan: `02-DOCS/plan-refactor-edicion.md` (leer la sección en curso).
 - ✅ 2: historial de eventos (2.1–2.10).
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ✅ R: estados y reapertura (R.1–R.22 completos; correcciones R.12a–R.12g tras la R.12); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
-- 🔄 4: `Evento` sin setters públicos (4.1), test por reflexión (4.2), prefijo compartido del hito de reapertura (4.3) y documentación (4.4–4.7); queda la pasada final de `sonarcloud-gate` (4.8).
+- ✅ 4: `Evento` sin setters públicos (4.1), test por reflexión (4.2), prefijo compartido del hito de reapertura (4.3), documentación (4.4–4.7) y pasada final de `sonarcloud-gate` (4.8).
 
 ## Siguiente paso concreto
-4.8 (`chore: pasada final de sonarcloud-gate`), antes de abrir el PR. El detalle está en el plan.
+Abrir el PR de `andres/Plan-Refactor-4`. No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.

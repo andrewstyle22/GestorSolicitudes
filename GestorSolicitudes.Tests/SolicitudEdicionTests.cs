@@ -379,6 +379,22 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void ReaperturaResumen_SinPrefijo_UsaLaDescripcionEntera()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        solicitud.AgregarEvento(new Evento(new DateTime(2026, 10, 10), TipoEvento.Reapertura, "Retomamos el proceso"));
+
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.Equal(
+            string.Format(
+                Localizacion.Texto("Seguimiento.ReaperturaResumen"),
+                new DateTime(2026, 10, 10).ToString("d", Localizacion.CulturaActual),
+                "Retomamos el proceso"),
+            editor.ReaperturaResumen);
+    }
+
+    [Fact]
     public void EliminarEvento_Reapertura_DejaElResumenVacio()
     {
         var solicitud = new SolicitudBuilder()
