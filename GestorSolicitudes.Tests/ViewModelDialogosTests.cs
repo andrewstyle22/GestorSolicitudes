@@ -10,6 +10,54 @@ public class ViewModelDialogosTests
 {
     // ---------------- Comandos con diálogos ----------------
     [Fact]
+    public void TryGuardar_GuardadoCorrecto_DevuelveTrueYCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "Analista");
+
+        Assert.True(vm.TryGuardar());
+        Assert.Null(vm.Editor);
+        Assert.Single(db.Solicitudes);
+    }
+
+    [Fact]
+    public void TryGuardar_SinDatosObligatorios_DevuelveFalseYNoGuarda()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.Editor!.Empresa = "Initech"; // falta el puesto
+
+        Assert.False(vm.TryGuardar());
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void TryGuardar_CuandoFallaLaBase_DevuelveFalseYNoCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Umbrella", "Soporte");
+        db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
+
+        Assert.False(vm.TryGuardar());
+        Assert.NotNull(vm.Editor);
+    }
+
+    [Fact]
+    public void TryGuardar_SinPanelAbierto_DevuelveFalse()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+
+        Assert.False(vm.TryGuardar());
+    }
+
+    [Fact]
     public void Guardar_SinEmpresaOPuesto_AvisaYSigueEditando()
     {
         using var db = TestDb.NuevoContexto();

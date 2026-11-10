@@ -773,21 +773,27 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void LimpiarBusqueda() => this.TextoBusqueda = string.Empty;
 
     [RelayCommand]
-    private void Guardar()
+    private void Guardar() => this.TryGuardar();
+
+    /// <summary>
+    /// Guarda el panel abierto. Devuelve si se guardó y se cerró el panel; si falta un dato,
+    /// se cancela la confirmación de reapertura o falla el guardado, sigue abierto y devuelve false.
+    /// </summary>
+    internal bool TryGuardar()
     {
         if (this.solicitudAbierta is not Solicitud solicitud)
         {
-            return;
+            return false;
         }
 
         if (!this.Validar())
         {
-            return;
+            return false;
         }
 
         if (!this.AplicarCambiosDelEditor(solicitud))
         {
-            return;
+            return false;
         }
 
         bool esNueva = this.PrepararNueva(solicitud);
@@ -807,7 +813,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 recargado.CargarDesde(solicitud);
             }
 
-            return;
+            return false;
         }
 
         this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
@@ -828,6 +834,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.CerrarEdicion();
+        return true;
     }
 
     private bool AplicarCambiosDelEditor(Solicitud solicitud)
