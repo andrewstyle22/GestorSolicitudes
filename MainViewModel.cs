@@ -785,7 +785,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (!this.AplicarCambiosDelEditor(solicitud, out bool reaperturaPendiente))
+        if (!this.AplicarCambiosDelEditor(solicitud))
         {
             return;
         }
@@ -800,9 +800,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         if (!this.Persistir())
         {
-            // La entidad ya tiene los efectos de Reabrir: recargar el búfer evita que el
-            // reintento los repita o los pise con las fechas antiguas.
-            if (reaperturaPendiente && this.Editor is SolicitudEdicionViewModel recargado)
+            // La entidad ya tiene los efectos de CambiarEstado y Reabrir: recargar el búfer
+            // evita que el reintento los repita o los pise con los valores antiguos.
+            if (this.Editor is SolicitudEdicionViewModel recargado)
             {
                 recargado.CargarDesde(solicitud);
             }
@@ -830,9 +830,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.CerrarEdicion();
     }
 
-    private bool AplicarCambiosDelEditor(Solicitud solicitud, out bool reaperturaPendiente)
+    private bool AplicarCambiosDelEditor(Solicitud solicitud)
     {
-        reaperturaPendiente = false;
         if (this.Editor is not SolicitudEdicionViewModel edicionSolicitud)
         {
             return true;
@@ -840,7 +839,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
         // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
-        reaperturaPendiente = solicitud.Estado.EstaCerrada() && !edicionSolicitud.Estado.EstaCerrada();
+        bool reaperturaPendiente = solicitud.Estado.EstaCerrada() && !edicionSolicitud.Estado.EstaCerrada();
         if (reaperturaPendiente && !this.ConfirmarReapertura(solicitud, edicionSolicitud))
         {
             return false;

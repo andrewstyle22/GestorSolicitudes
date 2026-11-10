@@ -298,6 +298,71 @@ public class ViewModelDialogosTests
         Assert.Equal(TipoEvento.Reapertura, solicitud.Eventos[^1].Tipo);
     }
 
+    [Fact]
+    public void Guardar_CierreQueFallaAlGuardar_ElReintentoConservaLaFechaDeCierre()
+    {
+        string ruta = TestDb.NuevaRuta();
+        using var db = new ContextoQueFallaUnaVez(ruta);
+        db.Database.EnsureCreated();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Enviada)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.Rechazada;
+        vm.Editor.MotivoRechazo = MotivoRechazo.Salario;
+        db.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Editor);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+        Assert.Equal(1, solicitud.Eventos.Count(evento => evento.Tipo == TipoEvento.Rechazo));
+    }
+
+    [Fact]
+    public void Guardar_SalidaDeSinRespuestaQueFallaAlGuardar_ElReintentoConservaLaPrimeraRespuesta()
+    {
+        string ruta = TestDb.NuevaRuta();
+        using var db = new ContextoQueFallaUnaVez(ruta);
+        db.Database.EnsureCreated();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.SinRespuesta)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EnRevision;
+        db.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Editor);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(1, solicitud.Eventos.Count(evento => evento.Tipo == TipoEvento.Respuesta));
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
