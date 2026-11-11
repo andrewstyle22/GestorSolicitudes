@@ -760,6 +760,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Nueva()
     {
+        if (!this.ResolverCambiosPendientes())
+        {
+            return;
+        }
+
         this.SolicitudSeleccionada = null;
         this.Abrir(new Solicitud(string.Empty, string.Empty));
     }
@@ -773,12 +778,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Duplicar()
     {
-        if (this.solicitudAbierta is null || this.solicitudAbierta.Id == 0)
+        if (this.solicitudAbierta is not Solicitud origen || origen.Id == 0)
         {
             return;
         }
 
-        Solicitud origen = this.solicitudAbierta;
+        // Guardar cierra el panel; la copia sale de la entidad, que ya es la guardada.
+        if (!this.ResolverCambiosPendientes())
+        {
+            return;
+        }
+
         Solicitud copia = origen.CrearCopia();
         copia.ActualizarNotas(string.Format(
             Localizacion.Texto("Duplicar.Nota"),

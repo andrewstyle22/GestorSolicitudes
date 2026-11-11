@@ -242,6 +242,87 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void Nueva_ConCambiosYCancelar_ConservaLaCandidaturaAbierta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db);
+        using (vm)
+        {
+            vm.NuevaCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Same(primera, vm.SolicitudSeleccionada);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Equal("ACME", primera.Empresa);
+        }
+    }
+
+    [Fact]
+    public void Nueva_ConCambiosYGuardar_GuardaYAbreUnaCandidaturaVacia()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db, ResultadoGuardar.Guardar);
+        using (vm)
+        {
+            vm.NuevaCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Equal("Sin guardar", primera.Empresa);
+            Assert.Null(vm.SolicitudSeleccionada);
+            Assert.Equal(string.Empty, vm.Editor!.Empresa);
+        }
+    }
+
+    [Fact]
+    public void Duplicar_ConCambiosYCancelar_NoAbreLaCopia()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db);
+        using (vm)
+        {
+            vm.DuplicarCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Same(primera, vm.SolicitudSeleccionada);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Null(vm.Editor.Notas);
+        }
+    }
+
+    [Fact]
+    public void Duplicar_ConCambiosYGuardar_GuardaYDuplica()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db, ResultadoGuardar.Guardar);
+        using (vm)
+        {
+            vm.DuplicarCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Equal("Sin guardar", primera.Empresa);
+            Assert.Equal(2, db.Solicitudes.Count());
+            Assert.NotNull(vm.Editor);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Contains("Duplicada", vm.Editor.Notas!);
+        }
+    }
+
+    [Fact]
+    public void Duplicar_ConCambiosYDescartar_DuplicaLaVersionGuardada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db, ResultadoGuardar.Descartar);
+        using (vm)
+        {
+            vm.DuplicarCommand.Execute(null);
+
+            Assert.Equal("ACME", primera.Empresa);
+            Assert.Equal("ACME", vm.Editor!.Empresa); // el buffer descartado no viaja a la copia
+            Assert.Contains("Duplicada", vm.Editor.Notas!);
+        }
+    }
+
+    [Fact]
     public void Guardar_SinEmpresaOPuesto_AvisaYSigueEditando()
     {
         using var db = TestDb.NuevoContexto();
