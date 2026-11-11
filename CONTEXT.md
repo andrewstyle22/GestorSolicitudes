@@ -9,10 +9,10 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
 - ✅ R: estados y reapertura (R.1–R.22); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ✅ 4: cierre de la refactorización: modelos sin setters públicos, documentación al día y gate de Sonar en verde.
-- 🔄 5: correcciones tras la revisión final (5.1–5.6 hechos; 5.7–5.20 pendientes).
+- 🔄 5: correcciones tras la revisión final (5.1–5.7 hechos; 5.8–5.20 pendientes).
 
 ## Siguiente paso concreto
-5.7 (`feat: aviso al cerrar la ventana`), en `andres/Plan-Refactor-5`. No hacer push sin que se pida.
+5.8 (`fix: solo cuentan como respuesta los estados que lo son`), en `andres/Plan-Refactor-5`. No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
