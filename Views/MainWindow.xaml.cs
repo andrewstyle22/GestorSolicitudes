@@ -145,11 +145,7 @@ public partial class MainWindow : Window
 
     private void MenuComprobar_Click(object? sender, RoutedEventArgs e) => this.ComprobarSeguimientosVencidos();
 
-    private void MenuSalir_Click(object? sender, RoutedEventArgs e)
-    {
-        this.IconoBandeja.Visibility = Visibility.Hidden;
-        this.Close();
-    }
+    private void MenuSalir_Click(object? sender, RoutedEventArgs e) => this.Close();
 
     private void MostrarVentana()
     {
@@ -160,6 +156,17 @@ public partial class MainWindow : Window
         }
 
         this.Activate();
+    }
+
+    // El cierre pasa por el aviso de cambios sin guardar: cubre la X, Alt+F4 y el menú de la bandeja.
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        base.OnClosing(e);
+
+        if (!e.Cancel && !this.vm.ResolverCambiosPendientes())
+        {
+            e.Cancel = true;
+        }
     }
 
     protected override void OnClosed(System.EventArgs e)
