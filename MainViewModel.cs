@@ -1052,7 +1052,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void DescartarCambios()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel editor)
+        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel edicion)
         {
             return;
         }
@@ -1063,7 +1063,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             : this.RutasGuardadas(solicitud);
 
         this.adjuntos.DescartarNoGuardadas(
-            (editor.RutaCv, editor.RutaCarta),
+            (edicion.RutaCv, edicion.RutaCarta),
             (cvGuardado, cartaGuardada));
 
         this.db.ChangeTracker.Clear();
