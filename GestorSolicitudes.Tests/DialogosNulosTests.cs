@@ -14,6 +14,7 @@ public class DialogosNulosTests
         var dialogo = new DialogosNulos();
 
         Assert.False(dialogo.Confirmar("mensaje", "titulo"));
+        Assert.Equal(ResultadoGuardar.Cancelar, dialogo.PreguntarGuardar("mensaje", "titulo"));
         dialogo.Avisar("mensaje", "titulo");
         dialogo.Informar("mensaje", "titulo");
         dialogo.Error("mensaje", "titulo");

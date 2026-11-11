@@ -12,6 +12,8 @@ internal sealed class DialogosNulos : IDialogoService
 
     public bool Confirmar(string mensaje, string titulo) => false;
 
+    public ResultadoGuardar PreguntarGuardar(string mensaje, string titulo) => ResultadoGuardar.Cancelar;
+
     public void Avisar(string mensaje, string titulo)
     {
     }

@@ -1,5 +1,13 @@
 namespace GestorSolicitudes.ViewModels;
 
+/// <summary>Respuesta al aviso de cambios sin guardar.</summary>
+public enum ResultadoGuardar
+{
+    Guardar,
+    Descartar,
+    Cancelar,
+}
+
 /// <summary>
 /// Lo que el ViewModel necesita pedirle al usuario: avisos, confirmaciones, elegir ficheros y
 /// abrir enlaces. La implementación real vive en Views (WPF); los tests pasan un falso, así que
@@ -9,6 +17,9 @@ public interface IDialogoService
 {
     /// <summary>Pregunta de sí/no. Devuelve true solo si el usuario confirma.</summary>
     bool Confirmar(string mensaje, string titulo);
+
+    /// <summary>Qué hacer con los cambios sin guardar: guardarlos, descartarlos o seguir editando.</summary>
+    ResultadoGuardar PreguntarGuardar(string mensaje, string titulo);
 
     /// <summary>Advertencia: algo no es correcto, pero la app sigue.</summary>
     void Avisar(string mensaje, string titulo);

@@ -19,6 +19,14 @@ internal sealed class DialogoService : IDialogoService
     public bool Confirmar(string mensaje, string titulo) =>
         MessageBox.Show(mensaje, titulo, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
+    public ResultadoGuardar PreguntarGuardar(string mensaje, string titulo) =>
+        MessageBox.Show(mensaje, titulo, MessageBoxButton.YesNoCancel, MessageBoxImage.Question) switch
+        {
+            MessageBoxResult.Yes => ResultadoGuardar.Guardar,
+            MessageBoxResult.No => ResultadoGuardar.Descartar,
+            _ => ResultadoGuardar.Cancelar,
+        };
+
     public void Avisar(string mensaje, string titulo) =>
         MessageBox.Show(mensaje, titulo, MessageBoxButton.OK, MessageBoxImage.Warning);
 

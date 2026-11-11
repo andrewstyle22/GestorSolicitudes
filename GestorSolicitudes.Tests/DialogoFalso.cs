@@ -16,11 +16,15 @@ internal sealed class DialogoFalso : IDialogoService
 
     public List<string> Confirmaciones { get; } = [];
 
+    public List<string> PreguntasGuardar { get; } = [];
+
     public List<string> EnlacesAbiertos { get; } = [];
 
     public List<string> AdjuntosAbiertos { get; } = [];
 
     public bool RespuestaConfirmar { get; set; }
+
+    public ResultadoGuardar RespuestaPreguntarGuardar { get; set; } = ResultadoGuardar.Cancelar;
 
     public string? FicheroElegido { get; set; }
 
@@ -37,6 +41,12 @@ internal sealed class DialogoFalso : IDialogoService
     }
 
     public void Avisar(string mensaje, string titulo) => this.Avisos.Add(mensaje);
+
+    public ResultadoGuardar PreguntarGuardar(string mensaje, string titulo)
+    {
+        this.PreguntasGuardar.Add(mensaje);
+        return this.RespuestaPreguntarGuardar;
+    }
 
     public void Informar(string mensaje, string titulo) => this.Informes.Add(mensaje);
 

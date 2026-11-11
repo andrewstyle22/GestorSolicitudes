@@ -837,6 +837,32 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         return true;
     }
 
+    /// <summary>
+    /// Antes de salir de la candidatura abierta, resuelve los cambios sin guardar. Devuelve si se
+    /// puede continuar con la acción pedida: sin cambios o guardados, sí; descartados, sí tras la
+    /// misma limpieza que Cancelar; Cancelar, no.
+    /// </summary>
+    internal bool ResolverCambiosPendientes()
+    {
+        if (this.Editor?.HayCambios != true)
+        {
+            return true;
+        }
+
+        switch (this.dialogo.PreguntarGuardar(
+            Localizacion.Texto("Mensaje.CambiosSinGuardar"),
+            Localizacion.Texto("Titulo.CambiosSinGuardar")))
+        {
+            case ResultadoGuardar.Guardar:
+                return this.TryGuardar();
+            case ResultadoGuardar.Descartar:
+                this.DescartarCambios();
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private bool AplicarCambiosDelEditor(Solicitud solicitud)
     {
         if (this.Editor is not SolicitudEdicionViewModel edicionSolicitud)
@@ -972,7 +998,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Cancelar()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud)
+        if (this.solicitudAbierta is not Solicitud)
+        {
+            return;
+        }
+
+        this.DescartarCambios();
+
+        this.Abrir(null);
+        this.SolicitudSeleccionada = null;
+        this.Recargar();
+    }
+
+    /// <summary>
+    /// Tira los cambios del búfer: borra las copias de adjuntos que no llegaron a guardarse y
+    /// desengancha lo que EF tenía en seguimiento, para que la próxima consulta vuelva a leer disco.
+    /// </summary>
+    private void DescartarCambios()
+    {
+        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel editor)
         {
             return;
         }
@@ -983,16 +1027,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             : this.RutasGuardadas(solicitud);
 
         this.adjuntos.DescartarNoGuardadas(
-            (this.Editor!.RutaCv, this.Editor.RutaCarta),
+            (editor.RutaCv, editor.RutaCarta),
             (cvGuardado, cartaGuardada));
 
-        // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
-        // se pierden y la siguiente consulta vuelve a traer los datos de disco.
         this.db.ChangeTracker.Clear();
-
-        this.Abrir(null);
-        this.SolicitudSeleccionada = null;
-        this.Recargar();
     }
 
     [RelayCommand]

@@ -58,6 +58,103 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void ResolverCambiosPendientes_SinEditor_DevuelveTrueYNoPregunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Empty(dialogo.PreguntasGuardar);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_SinCambios_DevuelveTrueYNoPregunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Empty(dialogo.PreguntasGuardar);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_Guardar_PersisteYCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Guardar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "Analista");
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Single(dialogo.PreguntasGuardar);
+        Assert.Null(vm.Editor);
+        Assert.Equal("Globex", Assert.Single(db.Solicitudes).Empresa);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_GuardarConFallo_DevuelveFalseYNoCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Guardar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Umbrella", "Soporte");
+        db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
+
+        Assert.False(vm.ResolverCambiosPendientes());
+        Assert.NotNull(vm.Editor);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_Descartar_LimpiaAdjuntosYDesenganchaLaEntidad()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf"))
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        string viejo = solicitud.RutaCv!;
+        string nuevo = TestDb.CrearAdjuntoEn(carpeta, "cv-nuevo.pdf");
+        vm.Editor!.RutaCv = nuevo;
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Equal(EntityState.Detached, db.Entry(solicitud).State);
+        Assert.True(File.Exists(viejo));
+        Assert.False(File.Exists(nuevo));
+        Assert.Equal(viejo, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_Cancelar_DevuelveFalseYNoTocaNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Cancelar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Empresa = "SinGuardar";
+
+        Assert.False(vm.ResolverCambiosPendientes());
+        Assert.NotNull(vm.Editor);
+        Assert.Equal("ACME", db.Solicitudes.Single().Empresa);
+    }
+
+    [Fact]
     public void Guardar_SinEmpresaOPuesto_AvisaYSigueEditando()
     {
         using var db = TestDb.NuevoContexto();
