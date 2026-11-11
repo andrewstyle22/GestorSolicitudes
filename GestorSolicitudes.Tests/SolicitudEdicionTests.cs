@@ -79,6 +79,92 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void HayCambios_RecienAbierta_EsFalse()
+    {
+        var editor = new SolicitudEdicionViewModel(new SolicitudBuilder().ConEmpresa("ACME").Construir());
+
+        Assert.False(editor.HayCambios);
+    }
+
+    [Fact]
+    public void HayCambios_AlTocarUnCampo_EsTrue()
+    {
+        var editor = new SolicitudEdicionViewModel(new SolicitudBuilder().Construir());
+
+        editor.Notas = "Hablar el lunes";
+
+        Assert.True(editor.HayCambios);
+    }
+
+    [Fact]
+    public void HayCambios_AsignarElMismoValor_NoCuenta()
+    {
+        var editor = new SolicitudEdicionViewModel(new SolicitudBuilder().ConEmpresa("ACME").Construir());
+
+        editor.Empresa = "ACME";
+
+        Assert.False(editor.HayCambios);
+    }
+
+    [Fact]
+    public void HayCambios_AlEditarUnHito_EsTrue()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        solicitud.AgregarEvento(new Evento(new DateTime(2026, 3, 5), TipoEvento.Nota, "Primera nota"));
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        editor.EventosEdicion[0].Descripcion = "Otra nota";
+
+        Assert.True(editor.HayCambios);
+    }
+
+    [Fact]
+    public void HayCambios_AlAnadirUnHito_EsTrue()
+    {
+        var editor = new SolicitudEdicionViewModel(new SolicitudBuilder().Construir());
+
+        editor.EventosEdicion.Add(new EventoViewModel());
+
+        Assert.True(editor.HayCambios);
+    }
+
+    [Fact]
+    public void HayCambios_AlQuitarUnHito_EsTrue()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEventos(new Evento(new DateTime(2026, 3, 5), TipoEvento.Nota, "Primera nota"))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        editor.EliminarEvento(editor.EventosEdicion[0]);
+
+        Assert.True(editor.HayCambios);
+    }
+
+    [Fact]
+    public void HayCambios_AlVolverACargar_SeApaga()
+    {
+        var editor = new SolicitudEdicionViewModel(new SolicitudBuilder().Construir());
+        editor.Notas = "Hablar el lunes";
+
+        editor.CargarDesde(new SolicitudBuilder().Construir());
+
+        Assert.False(editor.HayCambios);
+    }
+
+    [Fact]
+    public void HayCambios_SeNotificaAlPasarAVerdadero()
+    {
+        var editor = new SolicitudEdicionViewModel(new SolicitudBuilder().Construir());
+        var notificados = new List<string?>();
+        editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
+
+        editor.Notas = "Hablar el lunes";
+
+        Assert.Single(notificados, n => n == nameof(editor.HayCambios));
+    }
+
+    [Fact]
     public void CargarDesde_CopiaIdentificacion()
     {
         Solicitud solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
