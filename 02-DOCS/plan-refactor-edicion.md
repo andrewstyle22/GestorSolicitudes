@@ -46,6 +46,7 @@ Antes de cada commit, en este orden:
 4. Si hay XAML nuevo: `<Page>` declarado en el csproj. Si hay texto de UI nuevo: clave en es/en/de en `Traducciones.cs`.
 5. Mensaje de commit en español. Un commit = una idea reversible con `git revert`.
 6. El push lo hace el autor tras cada commit, para que SonarCloud analice la rama remota. El agente no hace push.
+7. Al terminar cada paso se actualiza `CONTEXT.md` en el mismo commit: paso marcado como hecho, siguiente paso, y decisiones o puntos de control nuevos.
 
 Tamaño estimado: **S** (<50 líneas), **M** (50-200), **L** (>200, vigilar y dividir si crece).
 
@@ -176,7 +177,7 @@ Atención: 1.17 y 1.18 modifican comportamiento; los tests afectados se ajustan 
 | 3.10b | `refactor: Duplicar y PrepararNueva sin asignaciones directas` | `Solicitud.CrearCopia()` para Duplicar. `PrepararNueva` usa el constructor y los métodos de 3.4 a 3.8a, sin asignar campos sueltos. Cubre los inicializadores que sobreviven al constructor. | M |
 | 3.10c | `test: el editor no modifica la entidad hasta Guardar` | Abrir una solicitud, cambiar varios campos del editor y comprobar que la entidad conserva sus valores; cancelar y comprobar entidad y base de datos. Protege 3.11 a 3.13. | S |
 
-**Longitudes máximas.** Hoy hay constantes privadas (`LongitudMaximaX`) para identificación, enlace, portal, ubicación, tecnologías y requisitos. El resto de campos usa números literales en `[MaxLength]`: `ContactoNombre` 120, `ContactoEmail` 150, `ContactoTelefono` 40, `RutaCv` y `RutaCarta` 500, `NombreOriginalCv` y `NombreOriginalCarta` 260. `RespuestaEmpresa` y `Notas` no tienen límite. Seguir el patrón existente: una constante por campo, compartida por `[MaxLength]` y por la validación del método. Si el editor necesita reutilizarlas para `INotifyDataErrorInfo`, pasan a `public const`. ☐ Decidir si `RespuestaEmpresa` y `Notas` siguen siendo texto libre (recomendado: sí, porque añadir un límite cambiaría el comportamiento actual).
+**Longitudes máximas.** Hoy hay constantes privadas (`LongitudMaximaX`) para identificación, enlace, portal, ubicación, tecnologías y requisitos. El resto de campos usa números literales en `[MaxLength]`: `ContactoNombre` 120, `ContactoEmail` 150, `ContactoTelefono` 40, `RutaCv` y `RutaCarta` 500, `NombreOriginalCv` y `NombreOriginalCarta` 260. `RespuestaEmpresa` y `Notas` no tienen límite. Seguir el patrón existente: una constante por campo, compartida por `[MaxLength]` y por la validación del método. Si el editor necesita reutilizarlas para `INotifyDataErrorInfo`, pasan a `public const`. Decidido: `RespuestaEmpresa` y `Notas` siguen siendo texto libre sin límite, y así queda anotado en el README.
 
 ### 3C. El editor llama a los métodos
 
@@ -302,7 +303,7 @@ Refactor aparte, fuera de esta etapa: guardar los hitos del modelo como valores 
 Nace de revisar el proyecto completo después de la Etapa 4: un fallo de reintento al guardar, un caso en el que se contaba como respuesta de la empresa algo que no lo era, cambios sin guardar que se perdían en silencio, el CSV (motivo de cierre, separador y fórmulas) y la fecha de solicitud. Va en una rama nueva a partir de `main`, después de fusionar el PR de la Etapa 4. Mismas reglas de siempre: un commit por paso, con el mensaje indicado.
 
 Decisiones que condicionan la etapa:
-- Solo cuentan como respuesta de la empresa los estados abiertos distintos de «Enviada» y «Sin respuesta», y «Descartado por la empresa». «Retirada por mí» y «Oferta rechazada por mí» no cuentan. ☐ Falta confirmar «Oferta aceptada» desde «Sin respuesta»: recomendado que cuente, porque implica una oferta.
+- Cuentan como respuesta de la empresa los estados abiertos distintos de «Enviada» y «Sin respuesta», y además «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí» (las dos últimas implican que la empresa hizo una oferta). Solo «Retirada por mí» no cuenta, porque la decide el usuario.
 - Los cambios sin guardar se avisan con tres botones (Guardar, Descartar, Cancelar). Si el usuario guarda, la acción pedida (abrir otra fila, *Nueva*, *Duplicar* o cerrar la ventana) se ejecuta solo si el guardado tuvo éxito.
 - El CSV deja elegir el separador (`;`, `,` o tabulador) en una ventana con Aceptar y Cancelar; la última elección se recuerda. Se añaden el motivo de cierre y la fecha de reapertura, y las celdas de texto que empiezan por `=`, `+`, `-` o `@` llevan un apóstrofo delante.
 - Cambiar `FechaSolicitud` mueve el hito «Solicitud enviada» y el seguimiento propuesto, solo si coincidían con la fecha anterior (y, en el seguimiento, solo si no hay reapertura).
@@ -328,7 +329,7 @@ Decisiones que condicionan la etapa:
 
 | # | Commit | Qué cambia | Tam. |
 |---|--------|-----------|------|
-| 5.8 | `fix: solo cuentan como respuesta los estados que lo son` | `EstadoSolicitudExtensiones.EsRespuestaDeLaEmpresa(estado)`. La salida de «Sin respuesta» en `CambiarEstado` solo rellena `FechaPrimeraRespuesta` y añade el hito `Respuesta` si el estado nuevo cumple. Tests: → Retirada por mí no cuenta; → En revisión y → Descartado sí. | M |
+| 5.8 | `fix: solo cuentan como respuesta los estados que lo son` | `EstadoSolicitudExtensiones.EsRespuestaDeLaEmpresa(estado)`: verdadero para los abiertos distintos de «Enviada» y «Sin respuesta» y para «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». La salida de «Sin respuesta» en `CambiarEstado` solo rellena `FechaPrimeraRespuesta` y añade el hito `Respuesta` si el estado nuevo cumple. Tests: → Retirada por mí no cuenta; → En revisión, → Descartado, → Oferta aceptada y → Oferta rechazada por mí sí. No se corrigen automáticamente las candidaturas antiguas que pasaron de «Sin respuesta» a «Retirada por mí»; se revisan a mano. | M |
 
 ### 5-D. Fecha de solicitud
 
