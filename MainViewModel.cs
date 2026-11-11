@@ -290,11 +290,44 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void Seleccionar(Solicitud? value)
     {
-        // Ignoramos el null que manda el DataGrid al recargar la lista o al pulsar "Nueva".
-        if (value is not null)
+        // Ignoramos el null que manda el DataGrid al recargar la lista o al pulsar "Nueva", y la
+        // selección que reponemos abajo: si no, el setter volvería a entrar aquí.
+        if (value is null || this.reponiendoSeleccion)
         {
-            this.db.Entry(value).Collection(s => s.Eventos).Load();
-            this.Abrir(value);
+            return;
+        }
+
+        // El DataGrid ya ha cambiado la fila cuando llega el aviso: si se cancela, se repone.
+        if (!ReferenceEquals(value, this.solicitudAbierta) && !this.ResolverCambiosPendientes())
+        {
+            this.SeleccionarSinAviso(this.solicitudAbierta);
+            return;
+        }
+
+        // Descartar vacía el ChangeTracker: la fila elegida llega desenganchada.
+        if (this.db.Entry(value).State == EntityState.Detached)
+        {
+            this.db.Attach(value);
+        }
+
+        this.db.Entry(value).Collection(s => s.Eventos).Load();
+        this.Abrir(value);
+
+        // Guardar cerró el panel y dejó la selección en null; la fila pedida sigue siendo esta.
+        this.SeleccionarSinAviso(value);
+    }
+
+    /// <summary>Cambia la fila seleccionada sin pasar otra vez por el aviso de cambios.</summary>
+    private void SeleccionarSinAviso(Solicitud? value)
+    {
+        this.reponiendoSeleccion = true;
+        try
+        {
+            this.SolicitudSeleccionada = value;
+        }
+        finally
+        {
+            this.reponiendoSeleccion = false;
         }
     }
 
@@ -309,6 +342,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// La entidad solo se toca al guardar: mientras tanto, la edición vive en <see cref="Editor"/>.
     /// </summary>
     private Solicitud? solicitudAbierta;
+
+    // Mientras se repone la selección desde el propio manejador, el setter no debe repetir el aviso.
+    private bool reponiendoSeleccion;
 
     // El editor se recrea con cada solicitud abierta.
     private void Abrir(Solicitud? value)

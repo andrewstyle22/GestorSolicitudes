@@ -154,6 +154,93 @@ public class ViewModelDialogosTests
         Assert.Equal("ACME", db.Solicitudes.Single().Empresa);
     }
 
+    private static (MainViewModel Vm, DialogoFalso Dialogo, Solicitud Primera, Solicitud Segunda) DosFilas(
+        AppDbContext db,
+        ResultadoGuardar respuesta = ResultadoGuardar.Cancelar)
+    {
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = respuesta };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        var primera = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        var segunda = new SolicitudBuilder().ConEmpresa("Globex").ConPuesto("QA").Construir();
+        db.Solicitudes.AddRange(primera, segunda);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = primera;
+        vm.Editor!.Empresa = "Sin guardar";
+        return (vm, dialogo, primera, segunda);
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_SinCambios_NoPreguntaYAbreLaNueva()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var primera = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        var segunda = new SolicitudBuilder().ConEmpresa("Globex").ConPuesto("QA").Construir();
+        db.Solicitudes.AddRange(primera, segunda);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = primera;
+
+        vm.SolicitudSeleccionada = segunda;
+
+        Assert.Empty(dialogo.PreguntasGuardar);
+        Assert.Equal("Globex", vm.Editor!.Empresa);
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_ConCambiosYGuardar_GuardaYDejaAbiertaLaFilaPedida()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, segunda) = DosFilas(db, ResultadoGuardar.Guardar);
+        using (vm)
+        {
+            vm.SolicitudSeleccionada = segunda;
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Equal("Sin guardar", primera.Empresa);
+            Assert.Equal(segunda.Id, vm.SolicitudSeleccionada?.Id);
+            Assert.Equal("Globex", vm.Editor!.Empresa);
+        }
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_ConCambiosYCancelar_VuelveALaFilaAnteriorYConservaElBuffer()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, segunda) = DosFilas(db);
+        using (vm)
+        {
+            vm.SolicitudSeleccionada = segunda;
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Same(primera, vm.SolicitudSeleccionada);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Equal("ACME", primera.Empresa);
+        }
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_ConCambiosYDescartar_AbreLaNuevaYSePuedeGuardar()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, segunda) = DosFilas(db, ResultadoGuardar.Descartar);
+        using (vm)
+        {
+            vm.SolicitudSeleccionada = segunda;
+
+            // Descartar vacía el ChangeTracker: la fila nueva debe volver a quedar enganchada.
+            Assert.Equal("Globex", vm.Editor!.Empresa);
+            Assert.Equal(EntityState.Unchanged, db.Entry(segunda).State);
+            Assert.Equal("ACME", primera.Empresa);
+
+            vm.Editor.Puesto = "QA senior";
+            Assert.True(vm.TryGuardar());
+            Assert.Equal("QA senior", segunda.Puesto);
+        }
+    }
+
     [Fact]
     public void Guardar_SinEmpresaOPuesto_AvisaYSigueEditando()
     {
