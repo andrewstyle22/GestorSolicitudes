@@ -370,6 +370,146 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void CambiarFechaSolicitud_MueveElHitoDeEnvioEnElBuffer()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(anterior, TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+
+        editor.FechaSolicitud = nueva;
+
+        Assert.Equal(nueva, Assert.Single(editor.EventosEdicion).Fecha);
+        Assert.Equal(anterior, Assert.Single(solicitud.Eventos).Fecha);
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_NoMueveUnHitoEditadoAMano()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime editada = new(2026, 1, 12);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(editada, TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+
+        editor.FechaSolicitud = new DateTime(2026, 1, 15);
+
+        Assert.Equal(editada, Assert.Single(editor.EventosEdicion).Fecha);
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_MueveElSeguimientoPropuesto()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(anterior.AddDays(7))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+
+        editor.FechaSolicitud = nueva;
+
+        Assert.Equal(nueva.AddDays(7), editor.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_NoMueveUnSeguimientoEditadoAMano()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime seguimiento = new(2026, 1, 25);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(seguimiento)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+
+        editor.FechaSolicitud = new DateTime(2026, 1, 15);
+
+        Assert.Equal(seguimiento, editor.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_NoMueveElSeguimientoSiYaSeReabrio()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        DateTime seguimiento = anterior.AddDays(7);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(seguimiento)
+            .ConEventos(new Evento(anterior, TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+        MarcarReabierta(solicitud, anterior.AddDays(5));
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+
+        editor.FechaSolicitud = nueva;
+
+        Assert.Equal(seguimiento, editor.ProximoSeguimiento);
+        Assert.Equal(nueva, Assert.Single(editor.EventosEdicion).Fecha);
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_NoMueveElSeguimientoSiLaReaperturaEstaPendiente()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime seguimiento = anterior.AddDays(7);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(seguimiento)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+        editor.Estado = EstadoSolicitud.EntrevistaTecnica;
+
+        editor.FechaSolicitud = new DateTime(2026, 1, 15);
+
+        Assert.Equal(seguimiento, editor.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_AlGuardar_NoVuelveAlValorAnterior()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(anterior.AddDays(7))
+            .ConEventos(new Evento(anterior, TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+        editor.FechaSolicitud = nueva;
+
+        editor.AplicarA(solicitud);
+
+        Assert.Equal(nueva, Assert.Single(solicitud.Eventos).Fecha);
+        Assert.Equal(nueva.AddDays(7), solicitud.ProximoSeguimiento);
+    }
+
+    private static void MarcarReabierta(Solicitud solicitud, DateTime fecha)
+    {
+        // FechaReapertura no tiene setter público: se escribe como lo hará EF (por campo).
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(solicitud);
+        db.Entry(solicitud).Property(s => s.FechaReapertura).CurrentValue = fecha;
+    }
+
+    [Fact]
     public void AplicarRespuesta_VuelcaFechaYRespuestaDeLaEmpresa()
     {
         DateTime fecha = new(2026, 3, 1);

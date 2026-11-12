@@ -89,6 +89,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     [ObservableProperty]
     private DateTime fechaSolicitud = DateTime.Today;
 
+    private DateTime fechaSolicitudAnterior = DateTime.Today;
+
+    private bool fueReabierta;
+
     [ObservableProperty]
     private DateTime? fechaPrimeraRespuesta;
 
@@ -286,6 +290,35 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     partial void OnNotaReaperturaChanged(string? value) =>
         this.ValidateProperty(value, nameof(this.NotaReapertura));
 
+    /// <summary>
+    /// Al cambiar la fecha de envío, el hito «Solicitud enviada» y el seguimiento propuesto
+    /// la siguen en el búfer, con las mismas reglas que <see cref="Solicitud.ActualizarFechas"/>.
+    /// El seguimiento no se mueve si la candidatura ya se reabrió o va a reabrirse: sale de la reapertura.
+    /// </summary>
+    partial void OnFechaSolicitudChanged(DateTime value)
+    {
+        DateTime anterior = this.fechaSolicitudAnterior;
+        this.fechaSolicitudAnterior = value;
+
+        if (value == anterior)
+        {
+            return;
+        }
+
+        foreach (EventoViewModel evento in this.EventosEdicion.Where(
+            e => e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha == anterior))
+        {
+            evento.Fecha = value;
+        }
+
+        if (!this.fueReabierta
+            && !this.ReaperturaPendiente
+            && this.ProximoSeguimiento == anterior.AddDays(7))
+        {
+            this.ProximoSeguimiento = value.AddDays(7);
+        }
+    }
+
     /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
     partial void OnEstadoChanged(EstadoSolicitud value)
     {
@@ -340,6 +373,8 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.estadoOriginal = solicitud.Estado;
         this.Estado = solicitud.Estado;
         this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
+        this.fechaSolicitudAnterior = solicitud.FechaSolicitud;
+        this.fueReabierta = solicitud.FueReabierta;
         this.FechaSolicitud = solicitud.FechaSolicitud;
         this.FechaPrimeraRespuesta = solicitud.FechaPrimeraRespuesta;
         this.FechaEntrevista = solicitud.FechaEntrevista;
