@@ -742,7 +742,7 @@ public class ViewModelTests
     private static string DiasDeMedia(double dias) =>
         $"{dias.ToString("0.#", Localizacion.CulturaActual)} {Localizacion.Texto("Metrica.Dias")}";
 
-[Fact]
+    [Fact]
     public void AnadirEvento_SinEditorNoHaceNada()
     {
         using var db = TestDb.NuevoContexto();
