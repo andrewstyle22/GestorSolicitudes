@@ -39,6 +39,29 @@ public class EventoViewModelTests
     }
 
     [Fact]
+    public void DescripcionQueSuperaElMaximo_MarcaElCampo()
+    {
+        var editor = new EventoViewModel
+        {
+            Descripcion = new string('x', Evento.LongitudMaximaDescripcion + 1),
+        };
+
+        Assert.True(editor.HasErrors);
+        Assert.NotEmpty(editor.GetErrors(nameof(editor.Descripcion)));
+    }
+
+    [Fact]
+    public void DescripcionEnElMaximo_NoEsError()
+    {
+        var editor = new EventoViewModel
+        {
+            Descripcion = new string('x', Evento.LongitudMaximaDescripcion),
+        };
+
+        Assert.False(editor.HasErrors);
+    }
+
+    [Fact]
     public void AlCambiarLasPropiedades_NotificaCadaUna()
     {
         var editor = new EventoViewModel();

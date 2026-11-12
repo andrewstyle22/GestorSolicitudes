@@ -12,6 +12,8 @@ internal sealed class DialogosNulos : IDialogoService
 
     public bool Confirmar(string mensaje, string titulo) => false;
 
+    public ResultadoGuardar PreguntarGuardar(string mensaje, string titulo) => ResultadoGuardar.Cancelar;
+
     public void Avisar(string mensaje, string titulo)
     {
     }
@@ -27,6 +29,8 @@ internal sealed class DialogosNulos : IDialogoService
     public string? ElegirFichero(string titulo, string filtro) => null;
 
     public string? ElegirDestino(string titulo, string filtro, string nombrePropuesto) => null;
+
+    public char? ElegirSeparadorCsv(char actual) => null;
 
     public void AbrirEnlace(string url)
     {

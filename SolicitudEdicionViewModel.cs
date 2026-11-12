@@ -1,6 +1,8 @@
 namespace GestorSolicitudes.ViewModels;
 
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -86,6 +88,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     [ObservableProperty]
     private DateTime fechaSolicitud = DateTime.Today;
+
+    private DateTime fechaSolicitudAnterior = DateTime.Today;
+
+    private bool fueReabierta;
 
     [ObservableProperty]
     private DateTime? fechaPrimeraRespuesta;
@@ -184,9 +190,59 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Eventos guardados que se han quitado del búfer: el guardado los borra del modelo.</summary>
     public List<Evento> EventosEliminados { get; } = [];
 
-    public SolicitudEdicionViewModel() => this.CargarDesde(new Solicitud(string.Empty, string.Empty));
+    /// <summary>Gets si el búfer difiere de lo que se cargó desde la entidad.</summary>
+    public bool HayCambios => this.hayCambios;
 
-    public SolicitudEdicionViewModel(Solicitud solicitud) => this.CargarDesde(solicitud);
+    private bool hayCambios;
+
+    /// <summary>Propiedades calculadas: cambian solas y no son una edición del usuario.</summary>
+    private static readonly HashSet<string> PropiedadesCalculadas =
+    [
+        nameof(HayCambios),
+        nameof(ReaperturaPendiente),
+        nameof(AdmiteMotivo),
+        nameof(MotivosDelEstado),
+        nameof(ReaperturaResumen),
+        nameof(AdjuntoCv),
+        nameof(AdjuntoCarta),
+    ];
+
+    public SolicitudEdicionViewModel()
+        : this(new Solicitud(string.Empty, string.Empty))
+    {
+    }
+
+    public SolicitudEdicionViewModel(Solicitud solicitud)
+    {
+        this.EventosEdicion.CollectionChanged += this.OnEventosCambiados;
+        this.CargarDesde(solicitud);
+    }
+
+    /// <summary>Cualquier propiedad editable del búfer marca cambios; las calculadas no.</summary>
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (!PropiedadesCalculadas.Contains(e.PropertyName ?? string.Empty))
+        {
+            this.MarcarCambios();
+        }
+    }
+
+    private void OnEventosCambiados(object? sender, NotifyCollectionChangedEventArgs e) => this.MarcarCambios();
+
+    private void OnEventoCambiado(object? sender, PropertyChangedEventArgs e) => this.MarcarCambios();
+
+    private void MarcarCambios()
+    {
+        if (this.hayCambios)
+        {
+            return;
+        }
+
+        this.hayCambios = true;
+        this.OnPropertyChanged(nameof(this.HayCambios));
+    }
 
     /// <summary>Mensaje de campo obligatorio, el mismo que ya usaba el aviso al guardar.</summary>
     public static ValidationResult? ValidarObligatorio(string? valor) =>
@@ -234,6 +290,35 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     partial void OnNotaReaperturaChanged(string? value) =>
         this.ValidateProperty(value, nameof(this.NotaReapertura));
 
+    /// <summary>
+    /// Al cambiar la fecha de envío, el hito «Solicitud enviada» y el seguimiento propuesto
+    /// la siguen en el búfer, con las mismas reglas que <see cref="Solicitud.ActualizarFechas"/>.
+    /// El seguimiento no se mueve si la candidatura ya se reabrió o va a reabrirse: sale de la reapertura.
+    /// </summary>
+    partial void OnFechaSolicitudChanged(DateTime value)
+    {
+        DateTime anterior = this.fechaSolicitudAnterior;
+        this.fechaSolicitudAnterior = value;
+
+        if (value == anterior)
+        {
+            return;
+        }
+
+        foreach (EventoViewModel evento in this.EventosEdicion.Where(
+            e => e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha == anterior))
+        {
+            evento.Fecha = value;
+        }
+
+        if (!this.fueReabierta
+            && !this.ReaperturaPendiente
+            && this.ProximoSeguimiento == anterior.AddDays(7))
+        {
+            this.ProximoSeguimiento = value.AddDays(7);
+        }
+    }
+
     /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
     partial void OnEstadoChanged(EstadoSolicitud value)
     {
@@ -253,8 +338,18 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ValidateProperty(this.NotaReapertura, nameof(this.NotaReapertura));
     }
 
-    /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>
-    public void Validar() => this.ValidateAllProperties();
+    /// <summary>Revalida los campos del búfer y de los eventos; devuelve si no queda ningún error.</summary>
+    public bool Validar()
+    {
+        this.ValidateAllProperties();
+
+        foreach (EventoViewModel evento in this.EventosEdicion)
+        {
+            evento.Validar();
+        }
+
+        return !this.HasErrors && this.EventosEdicion.All(e => !e.HasErrors);
+    }
 
     /// <summary>Relee los textos de los motivos del estado tras un cambio de idioma.</summary>
     public void RefrescarMotivosDelEstado()
@@ -288,6 +383,8 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.estadoOriginal = solicitud.Estado;
         this.Estado = solicitud.Estado;
         this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
+        this.fechaSolicitudAnterior = solicitud.FechaSolicitud;
+        this.fueReabierta = solicitud.FueReabierta;
         this.FechaSolicitud = solicitud.FechaSolicitud;
         this.FechaPrimeraRespuesta = solicitud.FechaPrimeraRespuesta;
         this.FechaEntrevista = solicitud.FechaEntrevista;
@@ -307,6 +404,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.CargarEventos(solicitud);
         this.OnPropertyChanged(nameof(this.ReaperturaResumen));
         this.ValidateAllProperties();
+
+        // Lo cargado desde la entidad es el punto de partida: aquí no hay cambios que avisar.
+        this.hayCambios = false;
+        this.OnPropertyChanged(nameof(this.HayCambios));
     }
 
     private void CargarEventos(Solicitud solicitud)
@@ -318,6 +419,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         {
             var edicion = new EventoViewModel();
             edicion.CargarDesde(evento);
+            edicion.PropertyChanged += this.OnEventoCambiado;
             this.EventosEdicion.Add(edicion);
         }
     }

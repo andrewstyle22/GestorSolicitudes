@@ -127,10 +127,13 @@ public class PestanasTests
         // sus enlaces tienen que resolver. Un path mal escrito deja el campo vacío y el botón
         // sin comando, sin avisar en ningún sitio.
         using var db = TestDb.NuevoContexto();
+
+        // Cambiar de fila con el búfer tocado ya avisa: aquí se descarta para seguir probando el panel.
         using var vm = new MainViewModel(
             db,
             rutaColumnas: Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt"),
-            carpetaAdjuntos: TestDb.NuevaCarpeta());
+            carpetaAdjuntos: TestDb.NuevaCarpeta(),
+            dialogo: new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar });
         vm.SolicitudSeleccionada = new SolicitudBuilder()
             .ConEmpresa("ACME")
             .ConPuesto("Programador")

@@ -2,6 +2,7 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,335 @@ using Microsoft.EntityFrameworkCore;
 public class ViewModelDialogosTests
 {
     // ---------------- Comandos con diálogos ----------------
+    [Fact]
+    public void TryGuardar_GuardadoCorrecto_DevuelveTrueYCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "Analista");
+
+        Assert.True(vm.TryGuardar());
+        Assert.Null(vm.Editor);
+        Assert.Single(db.Solicitudes);
+    }
+
+    [Fact]
+    public void TryGuardar_SinDatosObligatorios_DevuelveFalseYNoGuarda()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.Editor!.Empresa = "Initech"; // falta el puesto
+
+        Assert.False(vm.TryGuardar());
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void TryGuardar_DescripcionDeEventoDemasiadoLarga_DevuelveFalseYNoGuarda()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "Analista");
+        vm.AnadirEventoCommand.Execute(null);
+        vm.Editor!.EventosEdicion.Single().Descripcion =
+            new string('x', Evento.LongitudMaximaDescripcion + 1);
+
+        Assert.False(vm.TryGuardar());
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
+    public void TryGuardar_CuandoFallaLaBase_DevuelveFalseYNoCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Umbrella", "Soporte");
+        db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
+
+        Assert.False(vm.TryGuardar());
+        Assert.NotNull(vm.Editor);
+    }
+
+    [Fact]
+    public void TryGuardar_SinPanelAbierto_DevuelveFalse()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+
+        Assert.False(vm.TryGuardar());
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_SinEditor_DevuelveTrueYNoPregunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Empty(dialogo.PreguntasGuardar);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_SinCambios_DevuelveTrueYNoPregunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Empty(dialogo.PreguntasGuardar);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_Guardar_PersisteYCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Guardar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "Analista");
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Single(dialogo.PreguntasGuardar);
+        Assert.Null(vm.Editor);
+        Assert.Equal("Globex", Assert.Single(db.Solicitudes).Empresa);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_GuardarConFallo_DevuelveFalseYNoCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Guardar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Umbrella", "Soporte");
+        db.Database.ExecuteSqlRaw("DROP TABLE Solicitudes");
+
+        Assert.False(vm.ResolverCambiosPendientes());
+        Assert.NotNull(vm.Editor);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_Descartar_LimpiaAdjuntosYDesenganchaLaEntidad()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConRutaCv(TestDb.CrearAdjuntoEn(carpeta, "cv.pdf"))
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        string viejo = solicitud.RutaCv!;
+        string nuevo = TestDb.CrearAdjuntoEn(carpeta, "cv-nuevo.pdf");
+        vm.Editor!.RutaCv = nuevo;
+
+        Assert.True(vm.ResolverCambiosPendientes());
+        Assert.Equal(EntityState.Detached, db.Entry(solicitud).State);
+        Assert.True(File.Exists(viejo));
+        Assert.False(File.Exists(nuevo));
+        Assert.Equal(viejo, db.Solicitudes.Single().RutaCv);
+    }
+
+    [Fact]
+    public void ResolverCambiosPendientes_Cancelar_DevuelveFalseYNoTocaNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Cancelar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Empresa = "SinGuardar";
+
+        Assert.False(vm.ResolverCambiosPendientes());
+        Assert.NotNull(vm.Editor);
+        Assert.Equal("ACME", db.Solicitudes.Single().Empresa);
+    }
+
+    private static (MainViewModel Vm, DialogoFalso Dialogo, Solicitud Primera, Solicitud Segunda) DosFilas(
+        AppDbContext db,
+        ResultadoGuardar respuesta = ResultadoGuardar.Cancelar)
+    {
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = respuesta };
+        var vm = new MainViewModel(db, dialogo: dialogo);
+        var primera = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        var segunda = new SolicitudBuilder().ConEmpresa("Globex").ConPuesto("QA").Construir();
+        db.Solicitudes.AddRange(primera, segunda);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = primera;
+        vm.Editor!.Empresa = "Sin guardar";
+        return (vm, dialogo, primera, segunda);
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_SinCambios_NoPreguntaYAbreLaNueva()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var primera = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        var segunda = new SolicitudBuilder().ConEmpresa("Globex").ConPuesto("QA").Construir();
+        db.Solicitudes.AddRange(primera, segunda);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = primera;
+
+        vm.SolicitudSeleccionada = segunda;
+
+        Assert.Empty(dialogo.PreguntasGuardar);
+        Assert.Equal("Globex", vm.Editor!.Empresa);
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_ConCambiosYGuardar_GuardaYDejaAbiertaLaFilaPedida()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, segunda) = DosFilas(db, ResultadoGuardar.Guardar);
+        using (vm)
+        {
+            vm.SolicitudSeleccionada = segunda;
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Equal("Sin guardar", primera.Empresa);
+            Assert.Equal(segunda.Id, vm.SolicitudSeleccionada?.Id);
+            Assert.Equal("Globex", vm.Editor!.Empresa);
+        }
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_ConCambiosYCancelar_VuelveALaFilaAnteriorYConservaElBuffer()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, segunda) = DosFilas(db);
+        using (vm)
+        {
+            vm.SolicitudSeleccionada = segunda;
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Same(primera, vm.SolicitudSeleccionada);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Equal("ACME", primera.Empresa);
+        }
+    }
+
+    [Fact]
+    public void SeleccionarOtraFila_ConCambiosYDescartar_AbreLaNuevaYSePuedeGuardar()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, segunda) = DosFilas(db, ResultadoGuardar.Descartar);
+        using (vm)
+        {
+            vm.SolicitudSeleccionada = segunda;
+
+            // Descartar vacía el ChangeTracker: la fila nueva debe volver a quedar enganchada.
+            Assert.Equal("Globex", vm.Editor!.Empresa);
+            Assert.Equal(EntityState.Unchanged, db.Entry(segunda).State);
+            Assert.Equal("ACME", primera.Empresa);
+
+            vm.Editor.Puesto = "QA senior";
+            Assert.True(vm.TryGuardar());
+            Assert.Equal("QA senior", segunda.Puesto);
+        }
+    }
+
+    [Fact]
+    public void Nueva_ConCambiosYCancelar_ConservaLaCandidaturaAbierta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db);
+        using (vm)
+        {
+            vm.NuevaCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Same(primera, vm.SolicitudSeleccionada);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Equal("ACME", primera.Empresa);
+        }
+    }
+
+    [Fact]
+    public void Nueva_ConCambiosYGuardar_GuardaYAbreUnaCandidaturaVacia()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db, ResultadoGuardar.Guardar);
+        using (vm)
+        {
+            vm.NuevaCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Equal("Sin guardar", primera.Empresa);
+            Assert.Null(vm.SolicitudSeleccionada);
+            Assert.Equal(string.Empty, vm.Editor!.Empresa);
+        }
+    }
+
+    [Fact]
+    public void Duplicar_ConCambiosYCancelar_NoAbreLaCopia()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db);
+        using (vm)
+        {
+            vm.DuplicarCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Same(primera, vm.SolicitudSeleccionada);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Null(vm.Editor.Notas);
+        }
+    }
+
+    [Fact]
+    public void Duplicar_ConCambiosYGuardar_GuardaYDuplica()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db, ResultadoGuardar.Guardar);
+        using (vm)
+        {
+            vm.DuplicarCommand.Execute(null);
+
+            Assert.Single(dialogo.PreguntasGuardar);
+            Assert.Equal("Sin guardar", primera.Empresa);
+            Assert.Equal(2, db.Solicitudes.Count());
+            Assert.NotNull(vm.Editor);
+            Assert.Equal("Sin guardar", vm.Editor!.Empresa);
+            Assert.Contains("Duplicada", vm.Editor.Notas!);
+        }
+    }
+
+    [Fact]
+    public void Duplicar_ConCambiosYDescartar_DuplicaLaVersionGuardada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var (vm, dialogo, primera, _) = DosFilas(db, ResultadoGuardar.Descartar);
+        using (vm)
+        {
+            vm.DuplicarCommand.Execute(null);
+
+            Assert.Equal("ACME", primera.Empresa);
+            Assert.Equal("ACME", vm.Editor!.Empresa); // el buffer descartado no viaja a la copia
+            Assert.Contains("Duplicada", vm.Editor.Notas!);
+        }
+    }
+
     [Fact]
     public void Guardar_SinEmpresaOPuesto_AvisaYSigueEditando()
     {
@@ -298,6 +628,71 @@ public class ViewModelDialogosTests
         Assert.Equal(TipoEvento.Reapertura, solicitud.Eventos[^1].Tipo);
     }
 
+    [Fact]
+    public void Guardar_CierreQueFallaAlGuardar_ElReintentoConservaLaFechaDeCierre()
+    {
+        string ruta = TestDb.NuevaRuta();
+        using var db = new ContextoQueFallaUnaVez(ruta);
+        db.Database.EnsureCreated();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Enviada)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.Rechazada;
+        vm.Editor.MotivoRechazo = MotivoRechazo.Salario;
+        db.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Editor);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+        Assert.Equal(1, solicitud.Eventos.Count(evento => evento.Tipo == TipoEvento.Rechazo));
+    }
+
+    [Fact]
+    public void Guardar_SalidaDeSinRespuestaQueFallaAlGuardar_ElReintentoConservaLaPrimeraRespuesta()
+    {
+        string ruta = TestDb.NuevaRuta();
+        using var db = new ContextoQueFallaUnaVez(ruta);
+        db.Database.EnsureCreated();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.SinRespuesta)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.EnRevision;
+        db.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Errores);
+        Assert.NotNull(vm.Editor);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(1, solicitud.Eventos.Count(evento => evento.Tipo == TipoEvento.Respuesta));
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -512,8 +907,12 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
-        var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var dialogo = new DialogoFalso
+        {
+            DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv"),
+            SeparadorCsvElegido = ';',
+        };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: RutaPreferenciaCsv());
 
         vm.ExportarCsvCommand.Execute(null);
 
@@ -523,11 +922,48 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void ExportarCsv_UsaElSeparadorElegidoYLoRecuerda()
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
+        db.SaveChanges();
+        string rutaPreferencia = RutaPreferenciaCsv();
+        PreferenciaCsv.GuardarEn(rutaPreferencia, '\t');
+        var dialogo = new DialogoFalso
+        {
+            DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv"),
+            SeparadorCsvElegido = ',',
+        };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: rutaPreferencia);
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        Assert.Equal('\t', Assert.Single(dialogo.SeparadoresCsvPedidos));
+        Assert.Contains(",", File.ReadAllLines(dialogo.DestinoElegido!)[0]);
+        Assert.Equal(',', PreferenciaCsv.LeerDe(rutaPreferencia));
+    }
+
+    [Fact]
+    public void ExportarCsv_CuandoSeCancelaElSeparador_NoPideDestinoNiEscribe()
+    {
+        using var db = TestDb.NuevoContexto();
+        string rutaPreferencia = RutaPreferenciaCsv();
+        var dialogo = new DialogoFalso { SeparadorCsvElegido = null };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: rutaPreferencia);
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        Assert.Empty(dialogo.DestinosCsvPedidos);
+        Assert.Empty(dialogo.Informes);
+        Assert.False(File.Exists(rutaPreferencia));
+    }
+
+    [Fact]
     public void ExportarCsv_CuandoSeCancela_NoEscribeNiInforma()
     {
         using var db = TestDb.NuevoContexto();
-        var dialogo = new DialogoFalso { DestinoElegido = null };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var dialogo = new DialogoFalso { DestinoElegido = null, SeparadorCsvElegido = ';' };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: RutaPreferenciaCsv());
 
         vm.ExportarCsvCommand.Execute(null);
 
@@ -542,14 +978,17 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso
         {
             DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "no", "existe", "salida.csv"),
+            SeparadorCsvElegido = ';',
         };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: RutaPreferenciaCsv());
 
         vm.ExportarCsvCommand.Execute(null);
 
         Assert.Single(dialogo.Errores);
         Assert.Empty(dialogo.Informes);
     }
+
+    private static string RutaPreferenciaCsv() => Path.Combine(TestDb.NuevaCarpeta(), "csv.txt");
 
     [Fact]
     public void AbrirEnlace_ConUrlLaAbreSinEspacios()

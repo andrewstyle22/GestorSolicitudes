@@ -22,6 +22,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
     private readonly GestorAdjuntos adjuntos;
+    private readonly string rutaPreferenciaCsv;
     private bool actualizandoIdioma;
 
     // Constructor con base de datos, preferencias y servicios propios: los tests usan una base
@@ -33,13 +34,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         string? rutaColumnas = null,
         string? carpetaAdjuntos = null,
         IDialogoService? dialogo = null,
-        Action<Idioma>? cambiarIdioma = null)
+        Action<Idioma>? cambiarIdioma = null,
+        string? rutaPreferenciaCsv = null)
     {
         this.db = db;
         this.ColumnasVm = new ColumnasViewModel(rutaColumnas);
         this.adjuntos = new GestorAdjuntos(carpetaAdjuntos ?? AdjuntosHelper.Carpeta);
         this.dialogo = dialogo ?? new DialogosNulos();
         this.cambiarIdioma = cambiarIdioma ?? (_ => { });
+        this.rutaPreferenciaCsv = rutaPreferenciaCsv ?? PreferenciaCsv.Ruta;
 
         this.CargarTextosLocalizados();
 
@@ -290,11 +293,44 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void Seleccionar(Solicitud? value)
     {
-        // Ignoramos el null que manda el DataGrid al recargar la lista o al pulsar "Nueva".
-        if (value is not null)
+        // Ignoramos el null que manda el DataGrid al recargar la lista o al pulsar "Nueva", y la
+        // selección que reponemos abajo: si no, el setter volvería a entrar aquí.
+        if (value is null || this.reponiendoSeleccion)
         {
-            this.db.Entry(value).Collection(s => s.Eventos).Load();
-            this.Abrir(value);
+            return;
+        }
+
+        // El DataGrid ya ha cambiado la fila cuando llega el aviso: si se cancela, se repone.
+        if (!ReferenceEquals(value, this.solicitudAbierta) && !this.ResolverCambiosPendientes())
+        {
+            this.SeleccionarSinAviso(this.solicitudAbierta);
+            return;
+        }
+
+        // Descartar vacía el ChangeTracker: la fila elegida llega desenganchada.
+        if (this.db.Entry(value).State == EntityState.Detached)
+        {
+            this.db.Attach(value);
+        }
+
+        this.db.Entry(value).Collection(s => s.Eventos).Load();
+        this.Abrir(value);
+
+        // Guardar cerró el panel y dejó la selección en null; la fila pedida sigue siendo esta.
+        this.SeleccionarSinAviso(value);
+    }
+
+    /// <summary>Cambia la fila seleccionada sin pasar otra vez por el aviso de cambios.</summary>
+    private void SeleccionarSinAviso(Solicitud? value)
+    {
+        this.reponiendoSeleccion = true;
+        try
+        {
+            this.SolicitudSeleccionada = value;
+        }
+        finally
+        {
+            this.reponiendoSeleccion = false;
         }
     }
 
@@ -309,6 +345,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// La entidad solo se toca al guardar: mientras tanto, la edición vive en <see cref="Editor"/>.
     /// </summary>
     private Solicitud? solicitudAbierta;
+
+    // Mientras se repone la selección desde el propio manejador, el setter no debe repetir el aviso.
+    private bool reponiendoSeleccion;
 
     // El editor se recrea con cada solicitud abierta.
     private void Abrir(Solicitud? value)
@@ -724,6 +763,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Nueva()
     {
+        if (!this.ResolverCambiosPendientes())
+        {
+            return;
+        }
+
         this.SolicitudSeleccionada = null;
         this.Abrir(new Solicitud(string.Empty, string.Empty));
     }
@@ -737,12 +781,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Duplicar()
     {
-        if (this.solicitudAbierta is null || this.solicitudAbierta.Id == 0)
+        if (this.solicitudAbierta is not Solicitud origen || origen.Id == 0)
         {
             return;
         }
 
-        Solicitud origen = this.solicitudAbierta;
+        // Guardar cierra el panel; la copia sale de la entidad, que ya es la guardada.
+        if (!this.ResolverCambiosPendientes())
+        {
+            return;
+        }
+
         Solicitud copia = origen.CrearCopia();
         copia.ActualizarNotas(string.Format(
             Localizacion.Texto("Duplicar.Nota"),
@@ -773,21 +822,27 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void LimpiarBusqueda() => this.TextoBusqueda = string.Empty;
 
     [RelayCommand]
-    private void Guardar()
+    private void Guardar() => this.TryGuardar();
+
+    /// <summary>
+    /// Guarda el panel abierto. Devuelve si se guardó y se cerró el panel; si falta un dato,
+    /// se cancela la confirmación de reapertura o falla el guardado, sigue abierto y devuelve false.
+    /// </summary>
+    internal bool TryGuardar()
     {
         if (this.solicitudAbierta is not Solicitud solicitud)
         {
-            return;
+            return false;
         }
 
         if (!this.Validar())
         {
-            return;
+            return false;
         }
 
-        if (!this.AplicarCambiosDelEditor(solicitud, out bool reaperturaPendiente))
+        if (!this.AplicarCambiosDelEditor(solicitud))
         {
-            return;
+            return false;
         }
 
         bool esNueva = this.PrepararNueva(solicitud);
@@ -800,14 +855,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         if (!this.Persistir())
         {
-            // La entidad ya tiene los efectos de Reabrir: recargar el búfer evita que el
-            // reintento los repita o los pise con las fechas antiguas.
-            if (reaperturaPendiente && this.Editor is SolicitudEdicionViewModel recargado)
+            // La entidad ya tiene los efectos de CambiarEstado y Reabrir: recargar el búfer
+            // evita que el reintento los repita o los pise con los valores antiguos.
+            if (this.Editor is SolicitudEdicionViewModel recargado)
             {
                 recargado.CargarDesde(solicitud);
             }
 
-            return;
+            return false;
         }
 
         this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
@@ -828,11 +883,37 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         this.CerrarEdicion();
+        return true;
     }
 
-    private bool AplicarCambiosDelEditor(Solicitud solicitud, out bool reaperturaPendiente)
+    /// <summary>
+    /// Antes de salir de la candidatura abierta, resuelve los cambios sin guardar. Devuelve si se
+    /// puede continuar con la acción pedida: sin cambios o guardados, sí; descartados, sí tras la
+    /// misma limpieza que Cancelar; Cancelar, no.
+    /// </summary>
+    internal bool ResolverCambiosPendientes()
     {
-        reaperturaPendiente = false;
+        if (this.Editor?.HayCambios != true)
+        {
+            return true;
+        }
+
+        switch (this.dialogo.PreguntarGuardar(
+            Localizacion.Texto("Mensaje.CambiosSinGuardar"),
+            Localizacion.Texto("Titulo.CambiosSinGuardar")))
+        {
+            case ResultadoGuardar.Guardar:
+                return this.TryGuardar();
+            case ResultadoGuardar.Descartar:
+                this.DescartarCambios();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private bool AplicarCambiosDelEditor(Solicitud solicitud)
+    {
         if (this.Editor is not SolicitudEdicionViewModel edicionSolicitud)
         {
             return true;
@@ -840,7 +921,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
         // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
-        reaperturaPendiente = solicitud.Estado.EstaCerrada() && !edicionSolicitud.Estado.EstaCerrada();
+        bool reaperturaPendiente = solicitud.Estado.EstaCerrada() && !edicionSolicitud.Estado.EstaCerrada();
         if (reaperturaPendiente && !this.ConfirmarReapertura(solicitud, edicionSolicitud))
         {
             return false;
@@ -889,9 +970,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
     private bool Validar()
     {
-        this.Editor?.Validar();
-
-        if (this.Editor?.HasErrors == false)
+        if (this.Editor?.Validar() == true)
         {
             return true;
         }
@@ -966,7 +1045,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Cancelar()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud)
+        if (this.solicitudAbierta is not Solicitud)
+        {
+            return;
+        }
+
+        this.DescartarCambios();
+
+        this.Abrir(null);
+        this.SolicitudSeleccionada = null;
+        this.Recargar();
+    }
+
+    /// <summary>
+    /// Tira los cambios del búfer: borra las copias de adjuntos que no llegaron a guardarse y
+    /// desengancha lo que EF tenía en seguimiento, para que la próxima consulta vuelva a leer disco.
+    /// </summary>
+    private void DescartarCambios()
+    {
+        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel edicion)
         {
             return;
         }
@@ -977,16 +1074,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             : this.RutasGuardadas(solicitud);
 
         this.adjuntos.DescartarNoGuardadas(
-            (this.Editor!.RutaCv, this.Editor.RutaCarta),
+            (edicion.RutaCv, edicion.RutaCarta),
             (cvGuardado, cartaGuardada));
 
-        // Desenganchamos lo que EF tenía en seguimiento: los cambios pendientes
-        // se pierden y la siguiente consulta vuelve a traer los datos de disco.
         this.db.ChangeTracker.Clear();
-
-        this.Abrir(null);
-        this.SolicitudSeleccionada = null;
-        this.Recargar();
     }
 
     [RelayCommand]
@@ -1105,6 +1196,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ExportarCsv()
     {
+        char actual = PreferenciaCsv.LeerDe(this.rutaPreferenciaCsv) ?? PreferenciaCsv.PorDefecto;
+        char? separador = this.dialogo.ElegirSeparadorCsv(actual);
+
+        if (separador is null)
+        {
+            return;
+        }
+
+        PreferenciaCsv.GuardarEn(this.rutaPreferenciaCsv, separador.Value);
+
         string? destino = this.dialogo.ElegirDestino(
             Localizacion.Texto("Dialogo.ExportarCandidaturas"),
             "CSV (*.csv)|*.csv",
@@ -1115,7 +1216,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (!this.TryEscribirCsv(destino, out Exception? error))
+        if (!this.TryEscribirCsv(destino, out Exception? error, separador.Value))
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error!.Message),
@@ -1132,11 +1233,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// Escribe el CSV. Devuelve <c>false</c> y el fallo en <paramref name="error"/> si no se pudo
     /// escribir, para que el comando avise sin lanzar.
     /// </summary>
-    internal bool TryEscribirCsv(string ruta, out Exception? error)
+    internal bool TryEscribirCsv(string ruta, out Exception? error, char separador = PreferenciaCsv.PorDefecto)
     {
         try
         {
-            File.WriteAllText(ruta, this.ConstruirCsv(), new UTF8Encoding(true));
+            File.WriteAllText(ruta, this.ConstruirCsv(separador), new UTF8Encoding(true));
             error = null;
             return true;
         }
@@ -1147,9 +1248,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    internal string ConstruirCsv() =>
-        CsvExportador.Construir(this.db.Solicitudes
-            .OrderByDescending(x => x.FechaSolicitud)
-            .ThenByDescending(x => x.Id)
-            .ToList());
+    internal string ConstruirCsv(char separador = PreferenciaCsv.PorDefecto) =>
+        CsvExportador.Construir(
+            this.db.Solicitudes
+                .OrderByDescending(x => x.FechaSolicitud)
+                .ThenByDescending(x => x.Id)
+                .ToList(),
+            separador);
 }

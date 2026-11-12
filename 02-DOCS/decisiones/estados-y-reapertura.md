@@ -117,10 +117,19 @@ Reglas:
 - **A. Hacia un cierre negativo:** motivo obligatorio y permitido (sección 4) y `FechaCierre` = hoy si está vacía. Para "Descartado" se añade además el hito `Rechazo`.
 - **B. Hacia Oferta aceptada:** `FechaCierre` = hoy si está vacía; sin motivo.
 - **C. Cerrado → cerrado:** es una corrección, no una reapertura. Si el motivo anterior no pertenece a la lista del nuevo estado, se preselecciona `NoIndicado`. No pide confirmación.
-- **"Sin respuesta" → otro estado** no es reapertura (ya estaba abierta). Si no hay `FechaPrimeraRespuesta`, se rellena con hoy y se añade un hito `Respuesta`. Se implementa en `CambiarEstado`, y `AplicarA` aplica la respuesta **antes** que el estado; si no, el editor (con la fecha vacía) pisaría la que acaba de rellenar el modelo.
+- **"Sin respuesta" → otro estado** no es reapertura (ya estaba abierta). Si el estado nuevo cuenta como respuesta de la empresa (sección 5.1) y no hay `FechaPrimeraRespuesta`, se rellena con hoy y se añade un hito `Respuesta`. Se implementa en `CambiarEstado`, y `AplicarA` aplica la respuesta **antes** que el estado; si no, el editor (con la fecha vacía) pisaría la que acaba de rellenar el modelo.
 - **Oferta rechazada por mí → Oferta aceptada** está prohibida: `Reabrir` solo va a estados abiertos, así que se reabre a "Oferta recibida" y después se acepta. Así queda el hito y `FechaReapertura`.
 - **Cerrado → abierto nunca va por el combo de estado.** Si el usuario lo intenta, la app lo redirige a la acción Reabrir.
 - **Oferta aceptada → cualquier otro:** confirmación reforzada ("Habías aceptado esta oferta. ¿Seguro?").
+
+### 5.1 Qué cuenta como respuesta de la empresa
+
+`EstadoSolicitudExtensiones.EsRespuestaDeLaEmpresa(estado)` centraliza la regla y la usa `CambiarEstado` al salir de «Sin respuesta». Cuentan como respuesta:
+
+- Todos los estados abiertos **excepto** «Enviada» y «Sin respuesta».
+- «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Las dos últimas implican que la empresa hizo una oferta.
+
+Solo «Retirada por mí» no cuenta, porque la decide el usuario. La tasa y la media de respuesta de la cabecera siguen leyendo `FechaPrimeraRespuesta`, así que la regla solo decide cuándo se rellena sola. Las candidaturas antiguas que pasaron de «Sin respuesta» a «Retirada por mí» no se corrigen automáticamente: se revisan a mano.
 
 ---
 

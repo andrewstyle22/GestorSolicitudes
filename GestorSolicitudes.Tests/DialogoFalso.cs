@@ -16,15 +16,25 @@ internal sealed class DialogoFalso : IDialogoService
 
     public List<string> Confirmaciones { get; } = [];
 
+    public List<string> PreguntasGuardar { get; } = [];
+
     public List<string> EnlacesAbiertos { get; } = [];
 
     public List<string> AdjuntosAbiertos { get; } = [];
 
+    public List<char> SeparadoresCsvPedidos { get; } = [];
+
+    public List<string> DestinosCsvPedidos { get; } = [];
+
     public bool RespuestaConfirmar { get; set; }
+
+    public ResultadoGuardar RespuestaPreguntarGuardar { get; set; } = ResultadoGuardar.Cancelar;
 
     public string? FicheroElegido { get; set; }
 
     public string? DestinoElegido { get; set; }
+
+    public char? SeparadorCsvElegido { get; set; }
 
     public bool AbrirEnlaceLanza { get; set; }
 
@@ -38,13 +48,29 @@ internal sealed class DialogoFalso : IDialogoService
 
     public void Avisar(string mensaje, string titulo) => this.Avisos.Add(mensaje);
 
+    public ResultadoGuardar PreguntarGuardar(string mensaje, string titulo)
+    {
+        this.PreguntasGuardar.Add(mensaje);
+        return this.RespuestaPreguntarGuardar;
+    }
+
     public void Informar(string mensaje, string titulo) => this.Informes.Add(mensaje);
 
     public void Error(string mensaje, string titulo) => this.Errores.Add(mensaje);
 
     public string? ElegirFichero(string titulo, string filtro) => this.FicheroElegido;
 
-    public string? ElegirDestino(string titulo, string filtro, string nombrePropuesto) => this.DestinoElegido;
+    public string? ElegirDestino(string titulo, string filtro, string nombrePropuesto)
+    {
+        this.DestinosCsvPedidos.Add(nombrePropuesto);
+        return this.DestinoElegido;
+    }
+
+    public char? ElegirSeparadorCsv(char actual)
+    {
+        this.SeparadoresCsvPedidos.Add(actual);
+        return this.SeparadorCsvElegido;
+    }
 
     public void AbrirEnlace(string url)
     {

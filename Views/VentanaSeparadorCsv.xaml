@@ -1,0 +1,46 @@
+<Window x:Class="GestorSolicitudes.Views.VentanaSeparadorCsv"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource SeparadorCsv.Titulo}"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Background="{StaticResource Fondo}"
+        FontFamily="Segoe UI"
+        Foreground="{StaticResource Texto}">
+
+    <StackPanel Margin="18" MinWidth="280">
+        <TextBlock Text="{DynamicResource SeparadorCsv.Pregunta}"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,10" />
+
+        <RadioButton x:Name="PuntoYComa"
+                     GroupName="SeparadorCsv"
+                     Content="{DynamicResource SeparadorCsv.PuntoYComa}"
+                     Margin="0,4" />
+        <RadioButton x:Name="Coma"
+                     GroupName="SeparadorCsv"
+                     Content="{DynamicResource SeparadorCsv.Coma}"
+                     Margin="0,4" />
+        <RadioButton x:Name="Tabulador"
+                     GroupName="SeparadorCsv"
+                     Content="{DynamicResource SeparadorCsv.Tabulador}"
+                     Margin="0,4" />
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="{DynamicResource Boton.Aceptar}"
+                    Style="{StaticResource BotonPrimario}"
+                    MinWidth="90"
+                    Margin="0,0,8,0"
+                    IsDefault="True"
+                    Click="Aceptar_Click" />
+            <Button Content="{DynamicResource Boton.Cancelar}"
+                    Style="{StaticResource BotonSecundario}"
+                    MinWidth="90"
+                    IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

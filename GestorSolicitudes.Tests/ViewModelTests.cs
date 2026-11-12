@@ -741,4 +741,40 @@ public class ViewModelTests
 
     private static string DiasDeMedia(double dias) =>
         $"{dias.ToString("0.#", Localizacion.CulturaActual)} {Localizacion.Texto("Metrica.Dias")}";
+
+    [Fact]
+    public void AnadirEvento_SinEditorNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        vm.AnadirEventoCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        Assert.Empty(vm.Solicitudes);
+    }
+
+    [Fact]
+    public void AdjuntarCv_SinPanelAbiertoNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        vm.AdjuntarCvCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        Assert.Empty(vm.Solicitudes);
+    }
+
+    [Fact]
+    public void AdjuntarCarta_SinPanelAbiertoNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        vm.AdjuntarCartaCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        Assert.Empty(vm.Solicitudes);
+    }
 }

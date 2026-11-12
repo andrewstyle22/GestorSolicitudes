@@ -162,6 +162,7 @@ public static class Traducciones
         ("Boton.Eliminar", "Eliminar"),
         ("Boton.Duplicar", "Duplicar"),
         ("Boton.Cancelar", "Cancelar"),
+        ("Boton.Aceptar", "Aceptar"),
         ("Boton.Guardar", "Guardar"),
         ("Boton.Cerrar", "Cerrar"),
         ("Boton.Descargar", "Descargar"),
@@ -181,6 +182,13 @@ public static class Traducciones
         ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Currículos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Todos los archivos (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Exportar candidaturas"),
 
+        // ----- Ventana del separador del CSV -----
+        ("SeparadorCsv.Titulo", "Separador del CSV"),
+        ("SeparadorCsv.Pregunta", "¿Qué separador quieres usar en el CSV?"),
+        ("SeparadorCsv.PuntoYComa", "Punto y coma (;)"),
+        ("SeparadorCsv.Coma", "Coma (,)"),
+        ("SeparadorCsv.Tabulador", "Tabulador"),
+
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
@@ -194,6 +202,7 @@ public static class Traducciones
         ("Mensaje.NoSePudoEliminar", "No se pudo eliminar: {0}"),
         ("Mensaje.NoSePudoExportar", "No se pudo exportar el CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "¿Eliminar la candidatura de {0} ({1})?"),
+        ("Mensaje.CambiosSinGuardar", "Hay cambios sin guardar. ¿Quieres guardarlos antes de continuar?"),
         ("Mensaje.ConfirmarReapertura", "Vas a reabrir la candidatura.\nEstado anterior: {0}\nFecha de cierre: {1}\nMotivo de cierre: {2}\nNuevo estado: {3}\nNota: {4}\n\n¿Quieres continuar?"),
         ("Mensaje.ConfirmarReaperturaOfertaAceptada", "Habías aceptado esta oferta. ¿Seguro que quieres reabrirla?\n\nEstado anterior: {0}\nFecha de cierre: {1}\nMotivo de cierre: {2}\nNuevo estado: {3}\nNota: {4}"),
         ("Mensaje.SinFechaCierre", "Sin fecha"),
@@ -206,6 +215,7 @@ public static class Traducciones
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Adjunto"),
         ("Titulo.Confirmar", "Confirmar"),
+        ("Titulo.CambiosSinGuardar", "Cambios sin guardar"),
         ("Titulo.ConfirmarReapertura", "Confirmar reapertura"),
         ("Titulo.FaltanDatos", "Faltan datos"),
         ("Titulo.CandidaturaRepetida", "Candidatura repetida"),
@@ -245,6 +255,8 @@ public static class Traducciones
         ("Csv.DiasHastaRespuesta", "Dias hasta respuesta"),
         ("Csv.Entrevista", "Entrevista"),
         ("Csv.Cierre", "Cierre"),
+        ("Csv.MotivoCierre", "Motivo cierre"),
+        ("Csv.Reapertura", "Reapertura"),
         ("Csv.ProximoSeguimiento", "Proximo seguimiento"),
         ("Csv.SalarioMin", "Salario min"),
         ("Csv.SalarioMax", "Salario max"),
@@ -439,6 +451,7 @@ public static class Traducciones
         ("Boton.Eliminar", "Delete"),
         ("Boton.Duplicar", "Duplicate"),
         ("Boton.Cancelar", "Cancel"),
+        ("Boton.Aceptar", "OK"),
         ("Boton.Guardar", "Save"),
         ("Boton.Cerrar", "Close"),
         ("Boton.Descargar", "Download"),
@@ -458,6 +471,13 @@ public static class Traducciones
         ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|CVs (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|All files (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Export applications"),
 
+        // ----- CSV separator window -----
+        ("SeparadorCsv.Titulo", "CSV separator"),
+        ("SeparadorCsv.Pregunta", "Which separator should the CSV use?"),
+        ("SeparadorCsv.PuntoYComa", "Semicolon (;)"),
+        ("SeparadorCsv.Coma", "Comma (,)"),
+        ("SeparadorCsv.Tabulador", "Tab"),
+
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
@@ -471,6 +491,7 @@ public static class Traducciones
         ("Mensaje.NoSePudoEliminar", "Could not delete: {0}"),
         ("Mensaje.NoSePudoExportar", "Could not export the CSV: {0}"),
         ("Mensaje.ConfirmarEliminar", "Delete the application for {0} ({1})?"),
+        ("Mensaje.CambiosSinGuardar", "There are unsaved changes. Do you want to save them before continuing?"),
         ("Mensaje.ConfirmarReapertura", "You are about to reopen this application.\nPrevious status: {0}\nClosing date: {1}\nReason for closing: {2}\nNew status: {3}\nNote: {4}\n\nDo you want to continue?"),
         ("Mensaje.ConfirmarReaperturaOfertaAceptada", "You had accepted this offer. Are you sure you want to reopen it?\n\nPrevious status: {0}\nClosing date: {1}\nReason for closing: {2}\nNew status: {3}\nNote: {4}"),
         ("Mensaje.SinFechaCierre", "No date"),
@@ -483,6 +504,7 @@ public static class Traducciones
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Attachment"),
         ("Titulo.Confirmar", "Confirm"),
+        ("Titulo.CambiosSinGuardar", "Unsaved changes"),
         ("Titulo.ConfirmarReapertura", "Confirm reopening"),
         ("Titulo.FaltanDatos", "Missing data"),
         ("Titulo.CandidaturaRepetida", "Duplicate application"),
@@ -522,6 +544,8 @@ public static class Traducciones
         ("Csv.DiasHastaRespuesta", "Days to response"),
         ("Csv.Entrevista", "Interview"),
         ("Csv.Cierre", "Closing"),
+        ("Csv.MotivoCierre", "Closing reason"),
+        ("Csv.Reapertura", "Reopened"),
         ("Csv.ProximoSeguimiento", "Next follow-up"),
         ("Csv.SalarioMin", "Min salary"),
         ("Csv.SalarioMax", "Max salary"),
@@ -716,6 +740,7 @@ public static class Traducciones
         ("Boton.Eliminar", "Löschen"),
         ("Boton.Duplicar", "Duplizieren"),
         ("Boton.Cancelar", "Abbrechen"),
+        ("Boton.Aceptar", "OK"),
         ("Boton.Guardar", "Speichern"),
         ("Boton.Cerrar", "Schließen"),
         ("Boton.Descargar", "Herunterladen"),
@@ -735,6 +760,13 @@ public static class Traducciones
         ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Lebensläufe (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Alle Dateien (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Bewerbungen exportieren"),
 
+        // ----- Fenster für das CSV-Trennzeichen -----
+        ("SeparadorCsv.Titulo", "CSV-Trennzeichen"),
+        ("SeparadorCsv.Pregunta", "Welches Trennzeichen soll die CSV-Datei verwenden?"),
+        ("SeparadorCsv.PuntoYComa", "Semikolon (;)"),
+        ("SeparadorCsv.Coma", "Komma (,)"),
+        ("SeparadorCsv.Tabulador", "Tabulator"),
+
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
         ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
@@ -748,6 +780,7 @@ public static class Traducciones
         ("Mensaje.NoSePudoEliminar", "Löschen fehlgeschlagen: {0}"),
         ("Mensaje.NoSePudoExportar", "CSV-Export fehlgeschlagen: {0}"),
         ("Mensaje.ConfirmarEliminar", "Bewerbung von {0} ({1}) löschen?"),
+        ("Mensaje.CambiosSinGuardar", "Es gibt ungespeicherte Änderungen. Möchtest du sie vor dem Fortfahren speichern?"),
         ("Mensaje.ConfirmarReapertura", "Diese Bewerbung wird wieder geöffnet.\nBisheriger Status: {0}\nAbschlussdatum: {1}\nAbschlussgrund: {2}\nNeuer Status: {3}\nNotiz: {4}\n\nMöchtest du fortfahren?"),
         ("Mensaje.ConfirmarReaperturaOfertaAceptada", "Du hattest dieses Angebot angenommen. Bist du sicher, dass du es wieder öffnen möchtest?\n\nBisheriger Status: {0}\nAbschlussdatum: {1}\nAbschlussgrund: {2}\nNeuer Status: {3}\nNotiz: {4}"),
         ("Mensaje.SinFechaCierre", "Kein Datum"),
@@ -760,6 +793,7 @@ public static class Traducciones
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Anlage"),
         ("Titulo.Confirmar", "Bestätigen"),
+        ("Titulo.CambiosSinGuardar", "Ungespeicherte Änderungen"),
         ("Titulo.ConfirmarReapertura", "Wiedereröffnung bestätigen"),
         ("Titulo.FaltanDatos", "Fehlende Angaben"),
         ("Titulo.CandidaturaRepetida", "Doppelte Bewerbung"),
@@ -799,6 +833,8 @@ public static class Traducciones
         ("Csv.DiasHastaRespuesta", "Tage bis Antwort"),
         ("Csv.Entrevista", "Interview"),
         ("Csv.Cierre", "Abschluss"),
+        ("Csv.MotivoCierre", "Abschlussgrund"),
+        ("Csv.Reapertura", "Wiedereröffnung"),
         ("Csv.ProximoSeguimiento", "Nächste Nachverfolgung"),
         ("Csv.SalarioMin", "Mindestgehalt"),
         ("Csv.SalarioMax", "Höchstgehalt"),
