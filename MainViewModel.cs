@@ -22,6 +22,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
     private readonly GestorAdjuntos adjuntos;
+    private readonly string rutaPreferenciaCsv;
     private bool actualizandoIdioma;
 
     // Constructor con base de datos, preferencias y servicios propios: los tests usan una base
@@ -33,13 +34,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         string? rutaColumnas = null,
         string? carpetaAdjuntos = null,
         IDialogoService? dialogo = null,
-        Action<Idioma>? cambiarIdioma = null)
+        Action<Idioma>? cambiarIdioma = null,
+        string? rutaPreferenciaCsv = null)
     {
         this.db = db;
         this.ColumnasVm = new ColumnasViewModel(rutaColumnas);
         this.adjuntos = new GestorAdjuntos(carpetaAdjuntos ?? AdjuntosHelper.Carpeta);
         this.dialogo = dialogo ?? new DialogosNulos();
         this.cambiarIdioma = cambiarIdioma ?? (_ => { });
+        this.rutaPreferenciaCsv = rutaPreferenciaCsv ?? PreferenciaCsv.Ruta;
 
         this.CargarTextosLocalizados();
 
@@ -1195,6 +1198,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ExportarCsv()
     {
+        char actual = PreferenciaCsv.LeerDe(this.rutaPreferenciaCsv) ?? PreferenciaCsv.PorDefecto;
+        char? separador = this.dialogo.ElegirSeparadorCsv(actual);
+
+        if (separador is null)
+        {
+            return;
+        }
+
+        PreferenciaCsv.GuardarEn(this.rutaPreferenciaCsv, separador.Value);
+
         string? destino = this.dialogo.ElegirDestino(
             Localizacion.Texto("Dialogo.ExportarCandidaturas"),
             "CSV (*.csv)|*.csv",
@@ -1205,7 +1218,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (!this.TryEscribirCsv(destino, out Exception? error))
+        if (!this.TryEscribirCsv(destino, out Exception? error, separador.Value))
         {
             this.dialogo.Error(
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoExportar"), error!.Message),
@@ -1222,11 +1235,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// Escribe el CSV. Devuelve <c>false</c> y el fallo en <paramref name="error"/> si no se pudo
     /// escribir, para que el comando avise sin lanzar.
     /// </summary>
-    internal bool TryEscribirCsv(string ruta, out Exception? error)
+    internal bool TryEscribirCsv(string ruta, out Exception? error, char separador = PreferenciaCsv.PorDefecto)
     {
         try
         {
-            File.WriteAllText(ruta, this.ConstruirCsv(), new UTF8Encoding(true));
+            File.WriteAllText(ruta, this.ConstruirCsv(separador), new UTF8Encoding(true));
             error = null;
             return true;
         }
@@ -1237,9 +1250,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    internal string ConstruirCsv() =>
-        CsvExportador.Construir(this.db.Solicitudes
-            .OrderByDescending(x => x.FechaSolicitud)
-            .ThenByDescending(x => x.Id)
-            .ToList());
+    internal string ConstruirCsv(char separador = PreferenciaCsv.PorDefecto) =>
+        CsvExportador.Construir(
+            this.db.Solicitudes
+                .OrderByDescending(x => x.FechaSolicitud)
+                .ThenByDescending(x => x.Id)
+                .ToList(),
+            separador);
 }

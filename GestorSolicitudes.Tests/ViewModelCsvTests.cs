@@ -57,8 +57,15 @@ public class ViewModelCsvTests
     public void ExportarCsv_InformaLasFilasEscritasAunqueLaCabeceraEsteDesfasada()
     {
         using var db = TestDb.NuevoContexto();
-        var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var dialogo = new DialogoFalso
+        {
+            DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv"),
+            SeparadorCsvElegido = ';',
+        };
+        using var vm = new MainViewModel(
+            db,
+            dialogo: dialogo,
+            rutaPreferenciaCsv: Path.Combine(TestDb.NuevaCarpeta(), "csv.txt"));
         db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();

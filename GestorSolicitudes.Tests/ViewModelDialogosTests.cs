@@ -2,6 +2,7 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -890,8 +891,12 @@ public class ViewModelDialogosTests
         using var db = TestDb.NuevoContexto();
         db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
         db.SaveChanges();
-        var dialogo = new DialogoFalso { DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv") };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var dialogo = new DialogoFalso
+        {
+            DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv"),
+            SeparadorCsvElegido = ';',
+        };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: RutaPreferenciaCsv());
 
         vm.ExportarCsvCommand.Execute(null);
 
@@ -901,11 +906,48 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void ExportarCsv_UsaElSeparadorElegidoYLoRecuerda()
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
+        db.SaveChanges();
+        string rutaPreferencia = RutaPreferenciaCsv();
+        PreferenciaCsv.GuardarEn(rutaPreferencia, '\t');
+        var dialogo = new DialogoFalso
+        {
+            DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "salida.csv"),
+            SeparadorCsvElegido = ',',
+        };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: rutaPreferencia);
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        Assert.Equal('\t', Assert.Single(dialogo.SeparadoresCsvPedidos));
+        Assert.Contains(",", File.ReadAllLines(dialogo.DestinoElegido!)[0]);
+        Assert.Equal(',', PreferenciaCsv.LeerDe(rutaPreferencia));
+    }
+
+    [Fact]
+    public void ExportarCsv_CuandoSeCancelaElSeparador_NoPideDestinoNiEscribe()
+    {
+        using var db = TestDb.NuevoContexto();
+        string rutaPreferencia = RutaPreferenciaCsv();
+        var dialogo = new DialogoFalso { SeparadorCsvElegido = null };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: rutaPreferencia);
+
+        vm.ExportarCsvCommand.Execute(null);
+
+        Assert.Empty(dialogo.DestinosCsvPedidos);
+        Assert.Empty(dialogo.Informes);
+        Assert.False(File.Exists(rutaPreferencia));
+    }
+
+    [Fact]
     public void ExportarCsv_CuandoSeCancela_NoEscribeNiInforma()
     {
         using var db = TestDb.NuevoContexto();
-        var dialogo = new DialogoFalso { DestinoElegido = null };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var dialogo = new DialogoFalso { DestinoElegido = null, SeparadorCsvElegido = ';' };
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: RutaPreferenciaCsv());
 
         vm.ExportarCsvCommand.Execute(null);
 
@@ -920,14 +962,17 @@ public class ViewModelDialogosTests
         var dialogo = new DialogoFalso
         {
             DestinoElegido = Path.Combine(TestDb.NuevaCarpeta(), "no", "existe", "salida.csv"),
+            SeparadorCsvElegido = ';',
         };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo, rutaPreferenciaCsv: RutaPreferenciaCsv());
 
         vm.ExportarCsvCommand.Execute(null);
 
         Assert.Single(dialogo.Errores);
         Assert.Empty(dialogo.Informes);
     }
+
+    private static string RutaPreferenciaCsv() => Path.Combine(TestDb.NuevaCarpeta(), "csv.txt");
 
     [Fact]
     public void AbrirEnlace_ConUrlLaAbreSinEspacios()

@@ -24,6 +24,8 @@ internal sealed class DialogoFalso : IDialogoService
 
     public List<char> SeparadoresCsvPedidos { get; } = [];
 
+    public List<string> DestinosCsvPedidos { get; } = [];
+
     public bool RespuestaConfirmar { get; set; }
 
     public ResultadoGuardar RespuestaPreguntarGuardar { get; set; } = ResultadoGuardar.Cancelar;
@@ -58,7 +60,11 @@ internal sealed class DialogoFalso : IDialogoService
 
     public string? ElegirFichero(string titulo, string filtro) => this.FicheroElegido;
 
-    public string? ElegirDestino(string titulo, string filtro, string nombrePropuesto) => this.DestinoElegido;
+    public string? ElegirDestino(string titulo, string filtro, string nombrePropuesto)
+    {
+        this.DestinosCsvPedidos.Add(nombrePropuesto);
+        return this.DestinoElegido;
+    }
 
     public char? ElegirSeparadorCsv(char actual)
     {
