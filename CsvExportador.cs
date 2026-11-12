@@ -28,6 +28,8 @@ public static class CsvExportador
         ("Csv.DiasHastaRespuesta", s => s.DiasHastaRespuesta?.ToString() ?? string.Empty),
         ("Csv.Entrevista", s => s.FechaEntrevista?.ToString(FormatoFecha) ?? string.Empty),
         ("Csv.Cierre", s => s.FechaCierre?.ToString(FormatoFecha) ?? string.Empty),
+        ("Csv.MotivoCierre", s => s.MotivoRechazo is MotivoRechazo motivo ? TextoHelper.Escapar(EnumHelper.Descripcion(motivo)) : string.Empty),
+        ("Csv.Reapertura", s => s.FechaReapertura?.ToString(FormatoFecha) ?? string.Empty),
         ("Csv.ProximoSeguimiento", s => s.ProximoSeguimiento?.ToString(FormatoFecha) ?? string.Empty),
         ("Csv.SalarioMin", s => s.SalarioMin?.ToString() ?? string.Empty),
         ("Csv.SalarioMax", s => s.SalarioMax?.ToString() ?? string.Empty),

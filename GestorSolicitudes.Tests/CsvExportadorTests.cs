@@ -26,6 +26,31 @@ public class CsvExportadorTests
     }
 
     [Fact]
+    public void Construir_MotivoDeCierreYFechaDeReaperturaVanTrasCierre()
+    {
+        var solicitud = new SolicitudBuilder()
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.SeleccionaronOtroCandidato)
+            .ConFechaCierre(new DateTime(2024, 6, 1))
+            .Construir();
+        solicitud.Reabrir(EstadoSolicitud.EnRevision, "Retomo el proceso");
+        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.CulturalFit, null);
+
+        string[] lineas = CsvExportador.Construir(new[] { solicitud })
+            .TrimEnd()
+            .Split(Environment.NewLine);
+        string[] cabecera = lineas[0].Split(';');
+        string[] fila = lineas[1].Split(';');
+
+        Assert.Equal(cabecera.Length, fila.Length);
+        int cierre = Array.IndexOf(cabecera, Localizacion.Texto("Csv.Cierre"));
+        Assert.Equal(Localizacion.Texto("Csv.MotivoCierre"), cabecera[cierre + 1]);
+        Assert.Equal(Localizacion.Texto("Csv.Reapertura"), cabecera[cierre + 2]);
+        Assert.Equal(TextoHelper.Escapar(EnumHelper.Descripcion(MotivoRechazo.CulturalFit)), fila[cierre + 1]);
+        Assert.Equal(DateTime.Today.ToString("yyyy-MM-dd"), fila[cierre + 2]);
+    }
+
+    [Fact]
     public void Construir_SinSolicitudesSoloDevuelveLaCabecera()
     {
         string csv = CsvExportador.Construir(Array.Empty<Solicitud>());
