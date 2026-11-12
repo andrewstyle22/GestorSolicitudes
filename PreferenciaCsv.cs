@@ -57,5 +57,6 @@ public static class PreferenciaCsv
         }
     }
 
-    private static bool EsValido(char separador) => separador is ';' or ',' or '\t';
+    /// <summary>Indica si el carácter es uno de los separadores admitidos.</summary>
+    public static bool EsValido(char separador) => separador is ';' or ',' or '\t';
 }

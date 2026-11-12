@@ -22,6 +22,8 @@ internal sealed class DialogoFalso : IDialogoService
 
     public List<string> AdjuntosAbiertos { get; } = [];
 
+    public List<char> SeparadoresCsvPedidos { get; } = [];
+
     public bool RespuestaConfirmar { get; set; }
 
     public ResultadoGuardar RespuestaPreguntarGuardar { get; set; } = ResultadoGuardar.Cancelar;
@@ -29,6 +31,8 @@ internal sealed class DialogoFalso : IDialogoService
     public string? FicheroElegido { get; set; }
 
     public string? DestinoElegido { get; set; }
+
+    public char? SeparadorCsvElegido { get; set; }
 
     public bool AbrirEnlaceLanza { get; set; }
 
@@ -55,6 +59,12 @@ internal sealed class DialogoFalso : IDialogoService
     public string? ElegirFichero(string titulo, string filtro) => this.FicheroElegido;
 
     public string? ElegirDestino(string titulo, string filtro, string nombrePropuesto) => this.DestinoElegido;
+
+    public char? ElegirSeparadorCsv(char actual)
+    {
+        this.SeparadoresCsvPedidos.Add(actual);
+        return this.SeparadorCsvElegido;
+    }
 
     public void AbrirEnlace(string url)
     {

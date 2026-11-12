@@ -30,6 +30,8 @@ internal sealed class DialogosNulos : IDialogoService
 
     public string? ElegirDestino(string titulo, string filtro, string nombrePropuesto) => null;
 
+    public char? ElegirSeparadorCsv(char actual) => null;
+
     public void AbrirEnlace(string url)
     {
     }

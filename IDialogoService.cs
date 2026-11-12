@@ -36,6 +36,9 @@ public interface IDialogoService
     /// <summary>Ruta donde guardar, o null si el usuario cancela.</summary>
     string? ElegirDestino(string titulo, string filtro, string nombrePropuesto);
 
+    /// <summary>Separador del CSV elegido, o null si el usuario cancela.</summary>
+    char? ElegirSeparadorCsv(char actual);
+
     /// <summary>Abre una URL en el navegador. Puede lanzar si el sistema no puede abrirla.</summary>
     void AbrirEnlace(string url);
 

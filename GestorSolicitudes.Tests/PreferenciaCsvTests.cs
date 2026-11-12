@@ -28,6 +28,20 @@ public class PreferenciaCsvTests
     }
 
     [Theory]
+    [InlineData(';')]
+    [InlineData(',')]
+    [InlineData('\t')]
+    public void EsValido_AceptaLosTresSeparadores(char separador) =>
+        Assert.True(PreferenciaCsv.EsValido(separador));
+
+    [Theory]
+    [InlineData('|')]
+    [InlineData(' ')]
+    [InlineData('a')]
+    public void EsValido_RechazaCualquierOtroCaracter(char separador) =>
+        Assert.False(PreferenciaCsv.EsValido(separador));
+
+    [Theory]
     [InlineData("|")]
     [InlineData(";;")]
     [InlineData("")]

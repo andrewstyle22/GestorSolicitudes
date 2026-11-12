@@ -20,6 +20,7 @@ public class DialogosNulosTests
         dialogo.Error("mensaje", "titulo");
         Assert.Null(dialogo.ElegirFichero("titulo", "filtro"));
         Assert.Null(dialogo.ElegirDestino("titulo", "filtro", "propuesto.csv"));
+        Assert.Null(dialogo.ElegirSeparadorCsv(';'));
         dialogo.AbrirEnlace("https://example.com");
         dialogo.VerAdjunto(@"C:\adjuntos\cv.pdf");
     }

@@ -60,6 +60,12 @@ internal sealed class DialogoService : IDialogoService
         return dialogo.ShowDialog() == true ? dialogo.FileName : null;
     }
 
+    public char? ElegirSeparadorCsv(char actual)
+    {
+        var ventana = new VentanaSeparadorCsv(actual) { Owner = Application.Current?.MainWindow };
+        return ventana.ShowDialog() == true ? ventana.SeparadorElegido : null;
+    }
+
     public void AbrirEnlace(string url)
     {
         if (!Enlaces.EsWeb(url))

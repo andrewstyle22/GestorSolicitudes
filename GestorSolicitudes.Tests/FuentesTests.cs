@@ -249,6 +249,46 @@ public partial class FuentesTests
         }
     }
 
+    [Fact]
+    public void TodosLosXamlDeViewsSeDeclaranComoPaginaEnElCsproj()
+    {
+        // Un XAML sin <Page> no se compila a BAML y la app revienta buscando el recurso.
+        string csproj = File.ReadAllText(Path.Combine(Raiz, "GestorSolicitudes.csproj"));
+
+        foreach (string xaml in Directory.EnumerateFiles(Path.Combine(Raiz, "Views"), "*.xaml"))
+        {
+            string nombre = Path.GetFileName(xaml);
+            Assert.Contains($"<Page Include=\"Views\\{nombre}\">", csproj);
+        }
+    }
+
+    [Fact]
+    public void LaVentanaDelSeparadorCsvOfreceLosTresSeparadoresYAceptarYCancelar()
+    {
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        List<XElement> elementos = XDocument
+            .Load(Path.Combine(Raiz, "Views", "VentanaSeparadorCsv.xaml"))
+            .Descendants()
+            .ToList();
+
+        foreach (string opcion in new[] { "PuntoYComa", "Coma", "Tabulador" })
+        {
+            XElement radio = elementos.Single(e =>
+                e.Name.LocalName == "RadioButton"
+                && (string?)e.Attribute(x + "Name") == opcion);
+            Assert.NotNull(radio.Attribute("Content"));
+        }
+
+        Assert.Contains(elementos, e =>
+            e.Name.LocalName == "Button"
+            && (string?)e.Attribute("IsDefault") == "True"
+            && ((string?)e.Attribute("Content"))?.Contains("Boton.Aceptar") == true);
+        Assert.Contains(elementos, e =>
+            e.Name.LocalName == "Button"
+            && (string?)e.Attribute("IsCancel") == "True"
+            && ((string?)e.Attribute("Content"))?.Contains("Boton.Cancelar") == true);
+    }
+
     private static List<string> ClavesUsadas()
     {
         List<string> deCodigo = FicherosDeCodigo()

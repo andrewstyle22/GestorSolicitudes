@@ -162,6 +162,7 @@ public static class Traducciones
         ("Boton.Eliminar", "Eliminar"),
         ("Boton.Duplicar", "Duplicar"),
         ("Boton.Cancelar", "Cancelar"),
+        ("Boton.Aceptar", "Aceptar"),
         ("Boton.Guardar", "Guardar"),
         ("Boton.Cerrar", "Cerrar"),
         ("Boton.Descargar", "Descargar"),
@@ -180,6 +181,13 @@ public static class Traducciones
         ("Dialogo.SeleccionaCarta", "Selecciona la carta de presentación"),
         ("Dialogo.FiltroAdjuntos", "Documentos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Currículos (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Todos los archivos (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Exportar candidaturas"),
+
+        // ----- Ventana del separador del CSV -----
+        ("SeparadorCsv.Titulo", "Separador del CSV"),
+        ("SeparadorCsv.Pregunta", "¿Qué separador quieres usar en el CSV?"),
+        ("SeparadorCsv.PuntoYComa", "Punto y coma (;)"),
+        ("SeparadorCsv.Coma", "Coma (,)"),
+        ("SeparadorCsv.Tabulador", "Tabulador"),
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
@@ -443,6 +451,7 @@ public static class Traducciones
         ("Boton.Eliminar", "Delete"),
         ("Boton.Duplicar", "Duplicate"),
         ("Boton.Cancelar", "Cancel"),
+        ("Boton.Aceptar", "OK"),
         ("Boton.Guardar", "Save"),
         ("Boton.Cerrar", "Close"),
         ("Boton.Descargar", "Download"),
@@ -461,6 +470,13 @@ public static class Traducciones
         ("Dialogo.SeleccionaCarta", "Select the cover letter"),
         ("Dialogo.FiltroAdjuntos", "Documents (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|CVs (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|All files (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Export applications"),
+
+        // ----- CSV separator window -----
+        ("SeparadorCsv.Titulo", "CSV separator"),
+        ("SeparadorCsv.Pregunta", "Which separator should the CSV use?"),
+        ("SeparadorCsv.PuntoYComa", "Semicolon (;)"),
+        ("SeparadorCsv.Coma", "Comma (,)"),
+        ("SeparadorCsv.Tabulador", "Tab"),
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
@@ -724,6 +740,7 @@ public static class Traducciones
         ("Boton.Eliminar", "Löschen"),
         ("Boton.Duplicar", "Duplizieren"),
         ("Boton.Cancelar", "Abbrechen"),
+        ("Boton.Aceptar", "OK"),
         ("Boton.Guardar", "Speichern"),
         ("Boton.Cerrar", "Schließen"),
         ("Boton.Descargar", "Herunterladen"),
@@ -742,6 +759,13 @@ public static class Traducciones
         ("Dialogo.SeleccionaCarta", "Wähle das Anschreiben"),
         ("Dialogo.FiltroAdjuntos", "Dokumente (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Lebensläufe (*.pdf;*.docx;*.doc;*.odt)|*.pdf;*.docx;*.doc;*.odt|Alle Dateien (*.*)|*.*"),
         ("Dialogo.ExportarCandidaturas", "Bewerbungen exportieren"),
+
+        // ----- Fenster für das CSV-Trennzeichen -----
+        ("SeparadorCsv.Titulo", "CSV-Trennzeichen"),
+        ("SeparadorCsv.Pregunta", "Welches Trennzeichen soll die CSV-Datei verwenden?"),
+        ("SeparadorCsv.PuntoYComa", "Semikolon (;)"),
+        ("SeparadorCsv.Coma", "Komma (,)"),
+        ("SeparadorCsv.Tabulador", "Tabulator"),
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
