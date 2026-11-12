@@ -12,7 +12,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - 🔄 5: correcciones tras la revisión final (5.1–5.20); detalle en el plan.
 
 ## Siguiente paso concreto
-5.14 (`feat: preferencia del separador del CSV`): `PreferenciaCsv` en `%APPDATA%\GestorSolicitudes\csv.txt` con el patrón de `PreferenciaIdioma`. No hacer push sin que se pida.
+5.15 (`feat: ventana para elegir el separador`): ventana modal con tres opciones, la última elección marcada, y Aceptar y Cancelar; `IDialogoService.ElegirSeparadorCsv(actual)` devuelve `char?`. No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
@@ -24,7 +24,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - Los hitos del modelo guardan su texto en castellano con el prefijo `Reabierta. ` compartido; traducirlos al mostrar queda para otra refactorización.
 - Respuesta de la empresa (5.8): cuentan los estados abiertos distintos de «Enviada» y «Sin respuesta», y además «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Solo «Retirada por mí» no cuenta. Los datos antiguos no se corrigen automáticamente.
 - Cambios sin guardar: aviso con Guardar, Descartar y Cancelar al cambiar de fila, pulsar *Nueva* o *Duplicar* y cerrar la ventana; tras Guardar, la acción pedida solo sigue si el guardado fue bien (5.2 a 5.7).
-- CSV: separador a elegir (`;`, `,` o tabulador; `CsvExportador.Construir` usa `;` por defecto) en una ventana con Aceptar y Cancelar, recordado en `%APPDATA%`; columnas de motivo de cierre (traducido, no el entero) y fecha de reapertura; apóstrofo delante de los textos que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro; se comprueba el primer carácter original, antes de sustituir saltos de línea, y las fechas y números no pasan por `Escapar` (5.11 a 5.16).
+- CSV: separador a elegir (`;`, `,` o tabulador; `CsvExportador.Construir` usa `;` por defecto) en una ventana con Aceptar y Cancelar, recordado en `%APPDATA%\GestorSolicitudes\csv.txt` (`PreferenciaCsv`, patrón de `PreferenciaIdioma`: tolerante a fallos y solo acepta esos tres; al leer no se hace `Trim` porque el tabulador es válido); columnas de motivo de cierre (traducido, no el entero) y fecha de reapertura; apóstrofo delante de los textos que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro; se comprueba el primer carácter original, antes de sustituir saltos de línea, y las fechas y números no pasan por `Escapar` (5.11 a 5.16).
 - Cambiar `FechaSolicitud` mueve el hito de envío y el seguimiento propuesto solo si coincidían con la fecha anterior; el seguimiento no se mueve si hay reapertura. Se aplica en el modelo (`ActualizarFechas`) y en el búfer (`OnFechaSolicitudChanged`), que recuerda la fecha anterior y si la candidatura se reabrió (5.9 y 5.10).
 
 ## Reglas de cada commit
