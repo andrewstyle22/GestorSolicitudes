@@ -8,6 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 /// </summary>
 public class Evento
 {
+    public const int LongitudMaximaDescripcion = 500;
+
     private const string JustificacionEf = "EF Core escribe esta propiedad por campo";
 
     public Evento(DateTime fecha, TipoEvento tipo, string descripcion)
@@ -34,7 +36,7 @@ public class Evento
 
     public TipoEvento Tipo { get; private set; }
 
-    [MaxLength(500)]
+    [MaxLength(LongitudMaximaDescripcion)]
     public string Descripcion { get; private set; } = string.Empty;
 
     public void Actualizar(DateTime fecha, TipoEvento tipo, string descripcion)

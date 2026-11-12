@@ -60,6 +60,23 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void Validacion_DescripcionDeEventoQueSuperaElMaximo_EsError()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEventos(new Evento(
+                DateTime.Today,
+                TipoEvento.Nota,
+                new string('x', Evento.LongitudMaximaDescripcion + 1)))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.False(editor.Validar());
+        Assert.NotEmpty(editor.EventosEdicion.Single().GetErrors(nameof(EventoViewModel.Descripcion)));
+    }
+
+    [Fact]
     public void Validacion_SalarioMinimoMayorQueElMaximo_MarcaElCampo()
     {
         var editor = new SolicitudEdicionViewModel

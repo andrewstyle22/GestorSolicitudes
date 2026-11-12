@@ -37,6 +37,22 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void TryGuardar_DescripcionDeEventoDemasiadoLarga_DevuelveFalseYNoGuarda()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db, dialogo: new DialogoFalso());
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "Analista");
+        vm.AnadirEventoCommand.Execute(null);
+        vm.Editor!.EventosEdicion.Single().Descripcion =
+            new string('x', Evento.LongitudMaximaDescripcion + 1);
+
+        Assert.False(vm.TryGuardar());
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(db.Solicitudes);
+    }
+
+    [Fact]
     public void TryGuardar_CuandoFallaLaBase_DevuelveFalseYNoCierraElPanel()
     {
         using var db = TestDb.NuevoContexto();

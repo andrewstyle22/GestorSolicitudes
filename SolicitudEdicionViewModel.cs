@@ -338,8 +338,18 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ValidateProperty(this.NotaReapertura, nameof(this.NotaReapertura));
     }
 
-    /// <summary>Revalida todos los campos del búfer, incluidas las longitudes, antes de guardar.</summary>
-    public void Validar() => this.ValidateAllProperties();
+    /// <summary>Revalida los campos del búfer y de los eventos; devuelve si no queda ningún error.</summary>
+    public bool Validar()
+    {
+        this.ValidateAllProperties();
+
+        foreach (EventoViewModel evento in this.EventosEdicion)
+        {
+            evento.Validar();
+        }
+
+        return !this.HasErrors && this.EventosEdicion.All(e => !e.HasErrors);
+    }
 
     /// <summary>Relee los textos de los motivos del estado tras un cambio de idioma.</summary>
     public void RefrescarMotivosDelEstado()
