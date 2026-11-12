@@ -12,7 +12,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - 🔄 5: correcciones tras la revisión final (5.1–5.20); detalle en el plan.
 
 ## Siguiente paso concreto
-5.1 (`fix: recargar el editor tras cualquier fallo de guardado`), en una rama nueva a partir de `main` cuando el PR de la Etapa 4 esté fusionado. No hacer push sin que se pida.
+5.9 (`feat: cambiar FechaSolicitud mueve el hito de envío y el seguimiento propuesto`). No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.

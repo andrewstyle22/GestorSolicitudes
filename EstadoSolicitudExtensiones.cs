@@ -54,6 +54,13 @@ public static class EstadoSolicitudExtensiones
         or EstadoSolicitud.OfertaAceptada
         or EstadoSolicitud.OfertaRechazada;
 
+    /// <summary>
+    /// Indica si el paso a este estado implica que la empresa respondió. «Retirada por mí»
+    /// no cuenta: la decide el usuario.
+    /// </summary>
+    public static bool EsRespuestaDeLaEmpresa(this EstadoSolicitud estado) =>
+        estado is not (EstadoSolicitud.Enviada or EstadoSolicitud.SinRespuesta or EstadoSolicitud.Retirada);
+
     /// <summary>Indica si el estado exige motivo de cierre.</summary>
     public static bool AdmiteMotivo(this EstadoSolicitud estado) => estado.MotivosPermitidos().Count > 0;
 

@@ -266,7 +266,7 @@ public class Solicitud
             fechaCierre ??= hoy;
         }
 
-        if (esTransicion && this.Estado == EstadoSolicitud.SinRespuesta)
+        if (esTransicion && this.Estado == EstadoSolicitud.SinRespuesta && estado.EsRespuestaDeLaEmpresa())
         {
             this.FechaPrimeraRespuesta ??= hoy;
             this.AgregarEvento(new Evento(

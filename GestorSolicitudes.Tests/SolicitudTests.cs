@@ -438,16 +438,33 @@ public class SolicitudTests
         Assert.Single(solicitud.Eventos);
     }
 
+    [Theory]
+    [InlineData(EstadoSolicitud.EnRevision)]
+    [InlineData(EstadoSolicitud.EntrevistaTecnica)]
+    [InlineData(EstadoSolicitud.Rechazada)]
+    [InlineData(EstadoSolicitud.OfertaAceptada)]
+    [InlineData(EstadoSolicitud.OfertaRechazada)]
+    public void CambiarEstado_SalirDeSinRespuestaAUnEstadoDeRespuesta_RellenaLaPrimeraRespuestaYAnadeElHito(
+        EstadoSolicitud estado)
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.SinRespuesta).Construir();
+        MotivoRechazo? motivo = estado.AdmiteMotivo() ? MotivoRechazo.NoIndicado : null;
+
+        solicitud.CambiarEstado(estado, motivo, null);
+
+        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
+        Assert.Contains(solicitud.Eventos, e => e.Tipo == TipoEvento.Respuesta);
+    }
+
     [Fact]
-    public void CambiarEstado_SalirDeSinRespuesta_RellenaLaPrimeraRespuestaYAnadeElHito()
+    public void CambiarEstado_DesdeSinRespuestaARetirada_NoCuentaComoRespuesta()
     {
         var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.SinRespuesta).Construir();
 
-        solicitud.CambiarEstado(EstadoSolicitud.EntrevistaTecnica, null, null);
+        solicitud.CambiarEstado(EstadoSolicitud.Retirada, MotivoRechazo.NoIndicado, null);
 
-        Assert.Equal(DateTime.Today, solicitud.FechaPrimeraRespuesta);
-        Evento evento = Assert.Single(solicitud.Eventos);
-        Assert.Equal(TipoEvento.Respuesta, evento.Tipo);
+        Assert.Null(solicitud.FechaPrimeraRespuesta);
+        Assert.DoesNotContain(solicitud.Eventos, e => e.Tipo == TipoEvento.Respuesta);
     }
 
     [Fact]
@@ -854,6 +871,25 @@ public class SolicitudTests
     public void EsOferta_SoloIncluyeLosEstadosDeOferta(EstadoSolicitud estado, bool esperado)
     {
         Assert.Equal(esperado, estado.EsOferta());
+    }
+
+    [Theory]
+    [InlineData(EstadoSolicitud.Enviada, false)]
+    [InlineData(EstadoSolicitud.EnRevision, true)]
+    [InlineData(EstadoSolicitud.PruebaTecnica, true)]
+    [InlineData(EstadoSolicitud.EntrevistaRrhh, true)]
+    [InlineData(EstadoSolicitud.EntrevistaTecnica, true)]
+    [InlineData(EstadoSolicitud.EntrevistaFinal, true)]
+    [InlineData(EstadoSolicitud.OfertaRecibida, true)]
+    [InlineData(EstadoSolicitud.OfertaAceptada, true)]
+    [InlineData(EstadoSolicitud.OfertaRechazada, true)]
+    [InlineData(EstadoSolicitud.Rechazada, true)]
+    [InlineData(EstadoSolicitud.Retirada, false)]
+    [InlineData(EstadoSolicitud.SinRespuesta, false)]
+    public void EsRespuestaDeLaEmpresa_SoloExcluyeEnviadaSinRespuestaYRetirada(
+        EstadoSolicitud estado, bool esperado)
+    {
+        Assert.Equal(esperado, estado.EsRespuestaDeLaEmpresa());
     }
 
     [Theory]
