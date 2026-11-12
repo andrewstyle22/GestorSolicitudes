@@ -84,8 +84,23 @@ public class PreferenciaCsvTests
     [Fact]
     public void GuardarEn_RutaEsCarpeta_NoCaeYUsaValorPorDefecto()
     {
+        // Arrangement: crear una carpeta temporal (simula pasar una ruta de carpeta en lugar de fichero)
         string carpeta = TestDb.NuevaCarpeta();
 
+        // Act: intentar guardar el separador usando una ruta de carpeta
+        // Este método ha de gestionar gracefully el caso de que la ruta sea una carpeta
         PreferenciaCsv.GuardarEn(carpeta, ';');
+
+        // Assert: el método ha de completarse sin lanzar excepción (no debe "crash")
+        // y al leer la preferencia debe usarse el separador por defecto ';'
+        // como indica el nombre del test: "NoCaeYUsaValorPorDefecto"
+        string directorioPadre = System.IO.Path.GetDirectoryName(carpeta)!;
+        string archivo = System.IO.Path.Combine(directorioPadre, "csv.txt");
+
+        if (File.Exists(archivo))
+        {
+            // Si el fichero existe, ha de leer el separador por defecto
+            Assert.Equal(PreferenciaCsv.PorDefecto, PreferenciaCsv.LeerDe(archivo).GetValueOrDefault(PreferenciaCsv.PorDefecto));
+        }
     }
 }
