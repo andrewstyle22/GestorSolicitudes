@@ -415,14 +415,15 @@ public class SolicitudTests
     }
 
     [Fact]
-    public void CambiarEstado_Descartado_AnadeElHitoDeRechazo()
+    public void CambiarEstado_Descartado_AnadeElHitoDeRechazoConLaFechaDeCierre()
     {
         var solicitud = new SolicitudBuilder().Construir();
+        var fecha = new DateTime(2026, 2, 3);
 
-        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.Salario, null);
+        solicitud.CambiarEstado(EstadoSolicitud.Rechazada, MotivoRechazo.Salario, fecha);
 
         Evento evento = Assert.Single(solicitud.Eventos);
-        Assert.Equal(DateTime.Today, evento.Fecha);
+        Assert.Equal(fecha, evento.Fecha);
         Assert.Equal(TipoEvento.Rechazo, evento.Tipo);
         Assert.Contains("Salario / pretensión", evento.Descripcion);
     }

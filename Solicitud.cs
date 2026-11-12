@@ -296,7 +296,7 @@ public class Solicitud
         if (esTransicion && estado == EstadoSolicitud.Rechazada && motivo is MotivoRechazo motivoCierre)
         {
             this.AgregarEvento(new Evento(
-                hoy,
+                fechaCierre ?? hoy,
                 TipoEvento.Rechazo,
                 $"{Texto(estado)}: {Texto(motivoCierre)}"));
         }

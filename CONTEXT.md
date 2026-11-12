@@ -12,7 +12,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - 🔄 5: correcciones tras la revisión final (5.1–5.20); detalle en el plan.
 
 ## Siguiente paso concreto
-5.17 (`fix: el hito Rechazo usa la fecha de cierre`): el hito se fecha con la `FechaCierre` resultante y no con hoy. No hacer push sin que se pida.
+5.18 (`feat: el editor valida la descripción de los eventos`): límite de 500 en una constante de `Evento` compartida por `[MaxLength]` y la validación del búfer. No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
