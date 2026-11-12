@@ -1091,4 +1091,68 @@ public class SolicitudEdicionTests
 
         Assert.Empty(editor.GetErrors(nameof(editor.NotaReapertura)));
     }
+
+    [Fact]
+    public void CambiarFechaSolicitud_NoMueveUnHitoConFechaDistinta()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(anterior.AddDays(1), TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+
+        editor.FechaSolicitud = nueva;
+
+        Assert.Equal(anterior.AddDays(1), Assert.Single(editor.EventosEdicion).Fecha);
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_NoMueveUnHitoDeTipoDistinto()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(anterior, TipoEvento.Respuesta, "Respondió"))
+            .Construir();
+        var editor = new SolicitudEdicionViewModel();
+        editor.CargarDesde(solicitud);
+
+        editor.FechaSolicitud = nueva;
+
+        Assert.Equal(anterior, Assert.Single(editor.EventosEdicion).Fecha);
+    }
+
+    [Fact]
+    public void ActualizarFechas_NoMueveElHitoConFechaDistinta()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(anterior.AddDays(1), TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+
+        solicitud.ActualizarFechas(nueva, null, null);
+
+        Assert.Equal(anterior.AddDays(1), Assert.Single(solicitud.Eventos).Fecha);
+    }
+
+    [Fact]
+    public void ActualizarFechas_NoMueveElHitoDeTipoDistinto()
+    {
+        DateTime anterior = new(2026, 1, 10);
+        DateTime nueva = new(2026, 1, 15);
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(anterior, TipoEvento.Respuesta, "Respondió"))
+            .Construir();
+
+        solicitud.ActualizarFechas(nueva, null, null);
+
+        Assert.Equal(anterior, Assert.Single(solicitud.Eventos).Fecha);
+    }
 }

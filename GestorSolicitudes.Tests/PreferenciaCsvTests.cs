@@ -62,4 +62,30 @@ public class PreferenciaCsvTests
 
         Assert.True(File.Exists(ruta));
     }
+
+    [Fact]
+    public void LeerDe_RutaEsCarpeta_NoCaeYDevuelveNull()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+
+        Assert.Null(PreferenciaCsv.LeerDe(carpeta));
+    }
+
+    [Fact]
+    public void LeerDe_FicheroBloqueado_CaeEnCatchYDevuelveNull()
+    {
+        string ruta = RutaTemporal();
+        File.WriteAllText(ruta, "x");
+        using var bloqueo = new FileStream(ruta, FileMode.Open, FileAccess.Read, FileShare.None);
+
+        Assert.Null(PreferenciaCsv.LeerDe(ruta));
+    }
+
+    [Fact]
+    public void GuardarEn_RutaEsCarpeta_NoCaeYUsaValorPorDefecto()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+
+        PreferenciaCsv.GuardarEn(carpeta, ';');
+    }
 }
