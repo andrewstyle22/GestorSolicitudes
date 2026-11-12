@@ -32,6 +32,24 @@ public class TextoYCsvTests
         Assert.Equal("\"dos líneas\"", TextoHelper.Escapar("dos\nlíneas"));
     }
 
+    [Theory]
+    [InlineData("=1+1", "\"'=1+1\"")]
+    [InlineData("+34 600", "\"'+34 600\"")]
+    [InlineData("-100", "\"'-100\"")]
+    [InlineData("@usuario", "\"'@usuario\"")]
+    [InlineData("\ttexto", "\"'\ttexto\"")]
+    [InlineData("\rtexto", "\"' texto\"")]
+    public void Escapar_NeutralizaLasCeldasQueEmpiezanPorFormula(string valor, string esperado)
+    {
+        Assert.Equal(esperado, TextoHelper.Escapar(valor));
+    }
+
+    [Fact]
+    public void Escapar_NeutralizaLasComillasQueEmpiezanPorFormula()
+    {
+        Assert.Equal("\"'=\"\"hola\"\"\"", TextoHelper.Escapar("=\"hola\""));
+    }
+
     [Fact]
     public void Escapar_NuloOVacioDevuelveCadenaVacia()
     {
