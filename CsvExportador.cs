@@ -44,14 +44,14 @@ public static class CsvExportador
     ];
 
     /// <summary>CSV completo (cabecera + filas), en el orden en que lleguen las solicitudes.</summary>
-    public static string Construir(IEnumerable<Solicitud> solicitudes)
+    public static string Construir(IEnumerable<Solicitud> solicitudes, char separador = ';')
     {
         var sb = new StringBuilder();
-        sb.AppendLine(string.Join(';', Columnas.Select(c => Traducciones.Texto(c.Clave))));
+        sb.AppendLine(string.Join(separador, Columnas.Select(c => Traducciones.Texto(c.Clave))));
 
         foreach (Solicitud s in solicitudes)
         {
-            sb.AppendLine(string.Join(';', Columnas.Select(c => c.Valor(s))));
+            sb.AppendLine(string.Join(separador, Columnas.Select(c => c.Valor(s))));
         }
 
         return sb.ToString();

@@ -59,6 +59,35 @@ public class CsvExportadorTests
         Assert.StartsWith(Localizacion.Texto("Csv.Empresa"), csv);
     }
 
+    [Theory]
+    [InlineData(';')]
+    [InlineData(',')]
+    [InlineData('\t')]
+    public void Construir_UsaElSeparadorEnCabeceraYFilas(char separador)
+    {
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").Construir();
+        int columnas = CsvExportador.Construir(Array.Empty<Solicitud>())
+            .TrimEnd()
+            .Split(';')
+            .Length;
+
+        string[] lineas = CsvExportador.Construir(new[] { solicitud }, separador)
+            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.Equal(columnas, lineas[0].Split(separador).Length);
+        Assert.Equal(columnas, lineas[1].Split(separador).Length);
+    }
+
+    [Fact]
+    public void Construir_UnValorConElSeparadorSigueEntreComillas()
+    {
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME, S.L.").Construir();
+
+        string csv = CsvExportador.Construir(new[] { solicitud }, ',');
+
+        Assert.Contains("\"ACME, S.L.\"", csv);
+    }
+
     [Fact]
     public void Construir_TodasLasCabecerasEstanTraducidas()
     {
