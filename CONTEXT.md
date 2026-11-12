@@ -12,7 +12,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - 🔄 5: correcciones tras la revisión final (5.1–5.20); detalle en el plan.
 
 ## Siguiente paso concreto
-5.19 (`docs: actualizar README, AGENTS.md y estados-y-reapertura.md`): CSV (separador, columnas y apóstrofo), aviso de cambios sin guardar, la fecha de solicitud que mueve el hito y qué estados cuentan como respuesta de la empresa. No hacer push sin que se pida.
+5.20 (`chore: pasada final de sonarcloud-gate`): verificar antes de abrir el PR. No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.

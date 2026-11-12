@@ -115,6 +115,12 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
   aceptada* la confirmación es reforzada, y no se puede reabrir a *Sin respuesta*. Las reabiertas
   llevan la insignia ↻ junto al estado, un borde magenta en la fila, una franja informativa en
   *Seguimiento* y un filtro *Reabiertas*.
+- **Cambios sin guardar**: si cambias de fila, pulsas *Nueva* o *Duplicar* o cierras la ventana con
+  el editor abierto, la app pregunta si quieres guardar, descartar o cancelar. Si eliges *Guardar*,
+  la acción pedida sigue solo cuando el guardado termina bien.
+- **Cambiar la fecha de envío** mueve con ella el hito *Solicitud enviada* y el seguimiento
+  propuesto, pero solo si seguían en la fecha anterior; lo que hayas editado a mano no se toca. El
+  seguimiento no se mueve si la candidatura se reabrió.
 - Al guardar una candidatura nueva a una empresa y puesto que ya existen, la app avisa del estado y
   el motivo de la anterior, sin impedir el guardado.
 - La tabla muestra además **Seguimiento** (la próxima fecha de contacto) e **Interés** en estrellas,
@@ -125,9 +131,13 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
   para no tener que hacer scroll de quince bloques seguidos: *Empresa* y *Puesto* quedan siempre a la
   vista arriba y los botones de *Eliminar/Duplicar/Cancelar/Guardar* abajo. La pestaña activa se
   conserva mientras la app sigue abierta; al arrancar se abre en *Oferta*.
-- **Exportar CSV** saca todas las filas con `;` y UTF-8 con BOM, así que Excel en español lo abre en
-  columnas directamente sin el asistente de importación. No incluye todos los campos: faltan
-  `Requisitos`, `Origen`, `MotivoRechazo`, `ContactoTelefono` y las rutas y nombres de los adjuntos.
+- **Exportar CSV** pregunta el separador (`;`, `,` o tabulador) y lo recuerda en
+  `%APPDATA%\GestorSolicitudes\csv.txt`; escribe UTF-8 con BOM, así que Excel en español abre el
+  fichero en columnas directamente sin el asistente de importación. Incluye el motivo de cierre
+  (traducido) y la fecha de reapertura. Los textos que empiezan por `=`, `+`, `-`, `@`, tabulador o
+  retorno de carro llevan un apóstrofo delante para que la hoja de cálculo no los trate como
+  fórmulas. No incluye todos los campos: faltan `Requisitos`, `Origen`, `ContactoTelefono` y las
+  rutas y nombres de los adjuntos.
 - La fila de filtros lleva el **buscador** a la izquierda, con el texto *Buscar...* mientras está
   vacío, y el grupo *Columnas*, *Estados* y las dos casillas pegado al borde derecho. El botón
   *Columnas* abre una lista con casillas para mostrar u ocultar *Días*, *1ª respuesta*, *Entrevista*,
@@ -179,6 +189,7 @@ Traducciones.cs → diccionarios es/en/de y Texto (en Helpers, para que los help
 Localizacion.cs → fachada del idioma: idioma activo, textos y cambio de idioma
 CulturaApp.cs → cultura del hilo, lenguaje de WPF y recursos de texto al aplicar un idioma
 PreferenciaIdioma.cs → idioma guardado en %APPDATA%\...\idioma.txt (o el del sistema)
+PreferenciaCsv.cs → separador del CSV guardado en %APPDATA%\...\csv.txt
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
 Convertidores.cs, ColoresEstado.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 
@@ -207,6 +218,7 @@ Views/CabeceraMetricas.xaml(.cs) → cabecera de métricas
 Views/PestanaOferta.xaml(.cs), PestanaSeguimiento.xaml(.cs), PestanaAdjuntos.xaml(.cs) → pestañas del detalle
 Views/FilaAdjunto.xaml(.cs) → fila de un adjunto (CV o carta): etiqueta, nombre y botones
 Views/VentanaRequisitos.xaml(.cs) → ventana de lectura de los requisitos
+Views/VentanaSeparadorCsv.xaml(.cs) → ventana modal para elegir el separador del CSV
 Views/VisorAdjuntoWindow.xaml(.cs) → visor de PDF/DOCX/ODT sin abrir el programa externo
 Resources/appicon.ico → icono de la ventana, del ejecutable y de la bandeja
 GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQLite, estilos de las
