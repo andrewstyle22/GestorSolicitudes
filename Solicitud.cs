@@ -198,9 +198,27 @@ public class Solicitud
 
     /// <summary>
     /// Actualiza las fechas que se editan a mano: envío, entrevista y próximo seguimiento.
+    /// Al cambiar la fecha de envío, el hito <see cref="TipoEvento.SolicitudEnviada"/> y el
+    /// seguimiento propuesto la siguen si conservaban la fecha anterior.
     /// </summary>
     public void ActualizarFechas(DateTime fechaSolicitud, DateTime? fechaEntrevista, DateTime? proximoSeguimiento)
     {
+        DateTime fechaAnterior = this.FechaSolicitud;
+
+        if (fechaSolicitud != fechaAnterior)
+        {
+            foreach (Evento evento in this.eventos.Where(
+                e => e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha == fechaAnterior))
+            {
+                evento.Actualizar(fechaSolicitud, evento.Tipo, evento.Descripcion);
+            }
+
+            if (this.FechaReapertura is null && proximoSeguimiento == fechaAnterior.AddDays(7))
+            {
+                proximoSeguimiento = fechaSolicitud.AddDays(7);
+            }
+        }
+
         this.FechaSolicitud = fechaSolicitud;
         this.FechaEntrevista = fechaEntrevista;
         this.ProximoSeguimiento = proximoSeguimiento;

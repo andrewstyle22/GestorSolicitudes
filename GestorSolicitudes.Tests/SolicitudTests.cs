@@ -765,6 +765,85 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void ActualizarFechas_CambiaElEnvio_MueveElHitoDeSolicitudEnviada()
+    {
+        var anterior = new DateTime(2026, 1, 10);
+        var nueva = new DateTime(2026, 1, 15);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(anterior, TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+
+        solicitud.ActualizarFechas(nueva, null, null);
+
+        Evento hito = Assert.Single(solicitud.Eventos);
+        Assert.Equal(nueva, hito.Fecha);
+        Assert.Equal(TipoEvento.SolicitudEnviada, hito.Tipo);
+        Assert.Equal("Enviada", hito.Descripcion);
+    }
+
+    [Fact]
+    public void ActualizarFechas_CambiaElEnvio_NoMueveUnHitoEditadoAMano()
+    {
+        var anterior = new DateTime(2026, 1, 10);
+        var editada = new DateTime(2026, 1, 12);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConEventos(new Evento(editada, TipoEvento.SolicitudEnviada, "Enviada"))
+            .Construir();
+
+        solicitud.ActualizarFechas(new DateTime(2026, 1, 15), null, null);
+
+        Assert.Equal(editada, Assert.Single(solicitud.Eventos).Fecha);
+    }
+
+    [Fact]
+    public void ActualizarFechas_CambiaElEnvio_MueveElSeguimientoPropuesto()
+    {
+        var anterior = new DateTime(2026, 1, 10);
+        var nueva = new DateTime(2026, 1, 15);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(anterior.AddDays(7))
+            .Construir();
+
+        solicitud.ActualizarFechas(nueva, null, anterior.AddDays(7));
+
+        Assert.Equal(nueva.AddDays(7), solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ActualizarFechas_CambiaElEnvio_NoMueveUnSeguimientoEditadoAMano()
+    {
+        var anterior = new DateTime(2026, 1, 10);
+        var seguimiento = new DateTime(2026, 1, 25);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(seguimiento)
+            .Construir();
+
+        solicitud.ActualizarFechas(new DateTime(2026, 1, 15), null, seguimiento);
+
+        Assert.Equal(seguimiento, solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
+    public void ActualizarFechas_CambiaElEnvio_NoMueveElSeguimientoSiHuboReapertura()
+    {
+        var anterior = new DateTime(2026, 1, 10);
+        var seguimiento = anterior.AddDays(7);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaSolicitud(anterior)
+            .ConProximoSeguimiento(seguimiento)
+            .Construir();
+        MarcarReabierta(solicitud, new DateTime(2026, 1, 20));
+
+        solicitud.ActualizarFechas(new DateTime(2026, 1, 15), null, seguimiento);
+
+        Assert.Equal(seguimiento, solicitud.ProximoSeguimiento);
+    }
+
+    [Fact]
     public void ProponerSeguimiento_AbiertaSinFecha_ProponeSieteDiasDespues()
     {
         var solicitud = new SolicitudBuilder()
