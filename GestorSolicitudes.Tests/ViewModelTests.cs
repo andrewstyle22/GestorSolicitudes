@@ -235,6 +235,63 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void Guardar_NuevaTrasDescartar_SigueAvisandoDeLaCandidaturaRepetida()
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Desarrollador").Construir());
+        db.SaveChanges();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single();
+        vm.Editor!.Puesto = "Otro puesto";
+
+        // Descartar vacía el ChangeTracker sin recargar: el aviso no puede depender de Local.
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("acme", "Desarrollador");
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Equal(2, db.Solicitudes.Count());
+    }
+
+    [Fact]
+    public void Duplicar_TrasDescartar_SigueAvisandoDeLaCandidaturaRepetida()
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Desarrollador").Construir());
+        db.SaveChanges();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single();
+        vm.Editor!.Puesto = "Otro puesto";
+
+        vm.DuplicarCommand.Execute(null);
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Equal(2, db.Solicitudes.Count());
+    }
+
+    [Fact]
+    public void Guardar_NuevaTrasDescartarSinRepetidas_NoAvisa()
+    {
+        using var db = TestDb.NuevoContexto();
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Desarrollador").Construir());
+        db.SaveChanges();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single();
+        vm.Editor!.Puesto = "Otro puesto";
+
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "Analista");
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Empty(dialogo.Avisos);
+        Assert.Equal(2, db.Solicitudes.Count());
+    }
+
+    [Fact]
     public void Cancelar_BorradorSinGuardar_DescartaEdicion()
     {
         using var db = TestDb.NuevoContexto();

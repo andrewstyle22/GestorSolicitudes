@@ -10,10 +10,10 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - ✅ R: estados y reapertura (R.1–R.22); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ✅ 4: cierre de la refactorización: modelos sin setters públicos, documentación al día y gate de Sonar en verde.
 - ✅ 5: correcciones tras la revisión final (5.1–5.20): guardado, cambios sin guardar, respuesta de la empresa, fecha de solicitud y CSV.
-- ⬜ 6: dos fallos hallados al revisar la Etapa 5. 6.1 hecho; queda 6.2.
+- ✅ 6: dos fallos hallados al revisar la Etapa 5 (6.1 y 6.2).
 
 ## Siguiente paso concreto
-6.2 (`fix: la candidatura repetida se busca en la base de datos`). No hacer push sin que se pida.
+Nada pendiente del plan. Queda, cuando se pida, el push y la revisión del gate de SonarCloud del PR.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
@@ -27,6 +27,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - Cambios sin guardar: aviso con Guardar, Descartar y Cancelar al cambiar de fila, pulsar *Nueva* o *Duplicar* y cerrar la ventana; tras Guardar, la acción pedida solo sigue si el guardado fue bien (5.2 a 5.7).
 - CSV: separador a elegir (`;`, `,` o tabulador) en una ventana con Aceptar y Cancelar, recordado en `%APPDATA%`; columnas de motivo de cierre y fecha de reapertura; apóstrofo delante de los textos que empiezan por `=`, `+`, `-` o `@` (5.11 a 5.16).
 - Cambiar `FechaSolicitud` mueve el hito de envío y el seguimiento propuesto solo si coincidían con la fecha anterior; el seguimiento no se mueve si hay reapertura (5.9 y 5.10).
+- El aviso de candidatura repetida consulta la base sin seguimiento (`AsNoTracking`), después de guardar y descartando por `Id` la propia candidatura: no depende de lo que `Recargar` haya dejado en `Local` ni se dispara en guardados con la base rota (6.2).
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
