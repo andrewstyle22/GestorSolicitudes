@@ -13,7 +13,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - ⬜ 6 (propuesta): dos fallos hallados al revisar la Etapa 5 (6.1 y 6.2); pendiente de confirmar.
 
 ## Siguiente paso concreto
-Etapas 0 a 5 completadas en la rama `andres/Plan-Refactor-5`: abrir el PR y revisar el gate de SonarCloud. Si se acepta la Etapa 6: 6.1 (`fix: el editor conserva HayCambios tras un guardado fallido`) y 6.2 (`fix: la candidatura repetida se busca en la base de datos`). No hacer push sin que se pida.
+6.1 (`fix: el editor conserva HayCambios tras un guardado fallido`) y 6.2 (`fix: la candidatura repetida se busca en la base de datos`). No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
