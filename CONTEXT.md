@@ -10,10 +10,10 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - ✅ R: estados y reapertura (R.1–R.22); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
 - ✅ 4: cierre de la refactorización: modelos sin setters públicos, documentación al día y gate de Sonar en verde.
 - ✅ 5: correcciones tras la revisión final (5.1–5.20): guardado, cambios sin guardar, respuesta de la empresa, fecha de solicitud y CSV.
-- ⬜ 6 (propuesta): dos fallos hallados al revisar la Etapa 5 (6.1 y 6.2); pendiente de confirmar.
+- ⬜ 6: dos fallos hallados al revisar la Etapa 5. 6.1 hecho; queda 6.2.
 
 ## Siguiente paso concreto
-6.1 (`fix: el editor conserva HayCambios tras un guardado fallido`) y 6.2 (`fix: la candidatura repetida se busca en la base de datos`). No hacer push sin que se pida.
+6.2 (`fix: la candidatura repetida se busca en la base de datos`). No hacer push sin que se pida.
 
 ## Decisiones vigentes
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
@@ -21,7 +21,7 @@ Plan: `02-DOCS/plan-refactor-edicion.md`.
 - `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
 - EF escribe por campo: `Eventos` es `IReadOnlyList` sobre campo privado y ningún modelo expone setters públicos.
 - La nota de reapertura vive en `NotaReapertura` (300), no en `Notas`: solo se guarda en el hito.
-- Si el guardado falla, el editor se recarga desde la entidad (que ya tiene los efectos de `CambiarEstado` y `Reabrir`) para que el reintento no los repita ni los pise. Hoy esa recarga deja `HayCambios` en falso; se corrige en 6.1.
+- Si el guardado falla, el editor se recarga desde la entidad (que ya tiene los efectos de `CambiarEstado` y `Reabrir`) para que el reintento no los repita ni los pise. La recarga conserva `HayCambios` (`ConservarCambios`), porque la entidad sigue modificada en el contexto y salir de la candidatura debe avisar (6.1).
 - Los hitos del modelo guardan su texto en castellano con el prefijo `Reabierta. ` compartido; traducirlos al mostrar queda para otra refactorización.
 - Respuesta de la empresa (5.8): cuentan los estados abiertos distintos de «Enviada» y «Sin respuesta», y además «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Solo «Retirada por mí» no cuenta. Los datos antiguos no se corrigen automáticamente.
 - Cambios sin guardar: aviso con Guardar, Descartar y Cancelar al cambiar de fila, pulsar *Nueva* o *Duplicar* y cerrar la ventana; tras Guardar, la acción pedida solo sigue si el guardado fue bien (5.2 a 5.7).

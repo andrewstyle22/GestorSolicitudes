@@ -860,6 +860,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             if (this.Editor is SolicitudEdicionViewModel recargado)
             {
                 recargado.CargarDesde(solicitud);
+
+                // La entidad sigue modificada en el contexto: el búfer recargado también tiene
+                // cambios pendientes y salir de la candidatura debe avisar.
+                recargado.ConservarCambios();
             }
 
             return false;
