@@ -121,6 +121,10 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
 - **Cambiar la fecha de envío** mueve con ella el hito *Solicitud enviada* y el seguimiento
   propuesto, pero solo si seguían en la fecha anterior; lo que hayas editado a mano no se toca. El
   seguimiento no se mueve si la candidatura se reabrió.
+- **Salir de *Sin respuesta***: si el estado nuevo es una respuesta de la empresa (cualquier estado
+  abierto salvo *Enviada* y *Sin respuesta*, y también *Descartado por la empresa*, *Oferta aceptada*
+  y *Oferta rechazada por mí*), la app rellena con hoy la fecha de la primera contestación, si falta,
+  y añade un hito *Respuesta*. *Retirada por mí* no cuenta, porque la decides tú.
 - Al guardar una candidatura nueva a una empresa y puesto que ya existen, la app avisa del estado y
   el motivo de la anterior, sin impedir el guardado.
 - La tabla muestra además **Seguimiento** (la próxima fecha de contacto) e **Interés** en estrellas,
