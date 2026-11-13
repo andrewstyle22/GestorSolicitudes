@@ -28,6 +28,7 @@ Nada pendiente del plan. Queda, cuando se pida, el push y la revisión del gate 
 - CSV: separador a elegir (`;`, `,` o tabulador) en una ventana con Aceptar y Cancelar, recordado en `%APPDATA%`; columnas de motivo de cierre y fecha de reapertura; apóstrofo delante de los textos que empiezan por `=`, `+`, `-` o `@` (5.11 a 5.16).
 - Cambiar `FechaSolicitud` mueve el hito de envío y el seguimiento propuesto solo si coincidían con la fecha anterior; el seguimiento no se mueve si hay reapertura (5.9 y 5.10).
 - El aviso de candidatura repetida consulta la base sin seguimiento (`AsNoTracking`), después de guardar y descartando por `Id` la propia candidatura: no depende de lo que `Recargar` haya dejado en `Local` ni se dispara en guardados con la base rota (6.2).
+- `Editor` y `solicitudAbierta` solo se asignan juntos en `Abrir`. Los métodos internos asumen que ambos están puestos: los `?.` defensivos eran ramas muertas que Sonar marcaba como no cubiertas.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.

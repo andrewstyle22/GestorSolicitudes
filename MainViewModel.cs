@@ -856,14 +856,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             // La entidad ya tiene los efectos de CambiarEstado y Reabrir: recargar el búfer
             // evita que el reintento los repita o los pise con los valores antiguos.
-            if (this.Editor is SolicitudEdicionViewModel recargado)
-            {
-                recargado.CargarDesde(solicitud);
+            // Validar ya comprobó que el panel abierto tiene editor: no puede ser nulo.
+            SolicitudEdicionViewModel recargado = this.Editor!;
+            recargado.CargarDesde(solicitud);
 
-                // La entidad sigue modificada en el contexto: el búfer recargado también tiene
-                // cambios pendientes y salir de la candidatura debe avisar.
-                recargado.ConservarCambios();
-            }
+            // La entidad sigue modificada en el contexto: el búfer recargado también tiene
+            // cambios pendientes y salir de la candidatura debe avisar.
+            recargado.ConservarCambios();
 
             return false;
         }
@@ -920,10 +919,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private bool AplicarCambiosDelEditor(Solicitud solicitud)
     {
-        if (this.Editor is not SolicitudEdicionViewModel edicionSolicitud)
-        {
-            return true;
-        }
+        // TryGuardar llega aquí tras Validar, que solo pasa con el panel abierto.
+        SolicitudEdicionViewModel edicionSolicitud = this.Editor!;
 
         // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
         // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
@@ -958,7 +955,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         string motivoCierre = solicitud.MotivoRechazo is MotivoRechazo motivo
             ? EnumHelper.Descripcion(motivo)
             : Localizacion.Texto("Mensaje.SinMotivoCierre");
-        string nota = edicion.NotaReapertura?.Trim() ?? string.Empty;
+        // Validar exige nota cuando hay reapertura pendiente: aquí no puede ser nula.
+        string nota = edicion.NotaReapertura!.Trim();
         string claveMensaje = solicitud.Estado == EstadoSolicitud.OfertaAceptada
             ? "Mensaje.ConfirmarReaperturaOfertaAceptada"
             : "Mensaje.ConfirmarReapertura";
@@ -976,7 +974,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
     private bool Validar()
     {
-        if (this.Editor?.Validar() == true)
+        // TryGuardar solo llama aquí con la solicitud abierta, y Abrir asigna también el editor.
+        if (this.Editor!.Validar())
         {
             return true;
         }
@@ -1074,10 +1073,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void DescartarCambios()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel edicion)
-        {
-            return;
-        }
+        // Solo se llama con el panel abierto: Abrir asigna la solicitud y el editor a la vez.
+        Solicitud solicitud = this.solicitudAbierta!;
+        SolicitudEdicionViewModel edicion = this.Editor!;
 
         // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
         (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0

@@ -529,6 +529,35 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void Guardar_ReaperturaSinFechaDeCierre_UsaElTextoPorDefecto()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaConfirmar = true };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+
+        // Base antigua: cerrada sin fecha de cierre.
+        db.Database.ExecuteSqlRaw("UPDATE Solicitudes SET FechaCierre = NULL");
+        db.ChangeTracker.Clear();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = Assert.Single(vm.Solicitudes);
+        vm.Editor!.Estado = EstadoSolicitud.Enviada;
+        vm.Editor.NotaReapertura = "Retomamos el proceso";
+
+        vm.GuardarCommand.Execute(null);
+
+        string confirmacion = Assert.Single(dialogo.Confirmaciones);
+        Assert.Contains(Localizacion.Texto("Mensaje.SinFechaCierre"), confirmacion);
+    }
+
+    [Fact]
     public void Guardar_ReaperturaCancelada_ConservaElCierreYLaEdicion()
     {
         using var db = TestDb.NuevoContexto();
@@ -1053,6 +1082,19 @@ public class ViewModelDialogosTests
     }
 
     private static string RutaPreferenciaCsv() => Path.Combine(TestDb.NuevaCarpeta(), "csv.txt");
+
+    [Fact]
+    public void AbrirEnlace_SinPanelAbiertoNoHaceNada()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+
+        vm.AbrirEnlaceCommand.Execute(null);
+
+        Assert.Empty(dialogo.EnlacesAbiertos);
+        Assert.Empty(dialogo.Avisos);
+    }
 
     [Fact]
     public void AbrirEnlace_ConUrlLaAbreSinEspacios()
