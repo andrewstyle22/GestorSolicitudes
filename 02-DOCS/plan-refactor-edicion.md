@@ -367,12 +367,32 @@ Decisiones que condicionan la etapa:
 
 **Mejoras futuras, fuera de esta etapa:**
 - Las copias de adjuntos que quedan en disco si se cambia de fila o se cierra la app antes de guardar o cancelar (con el aviso de 5.4 a 5.7 el caso se reduce mucho).
-- `BuscarCandidaturaRepetida` usa `db.Solicitudes.Local`: depende de que `Recargar` cargue todas las filas.
+- `BuscarCandidaturaRepetida` usa `db.Solicitudes.Local`: depende de que `Recargar` cargue todas las filas. Se corrige en la Etapa 6 (6.2).
 - Si se vacía el seguimiento mucho después de reabrir, se propone `FechaReapertura + 7`, que puede estar ya en el pasado.
 - Guardar los hitos del modelo como valores únicos y traducirlos al mostrarlos.
 - Prueba manual del desplegable de motivos al cambiar de «Descartado» a «Retirada» (WPF puede vaciar `SelectedValue` al reemplazar `MotivosDelEstado`).
 
 ---
+
+---
+
+## Etapa 6. Fallos hallados al revisar la Etapa 5
+
+Nace de revisar el proyecto completo tras la Etapa 5: dos fallos que los avisos de cambios sin guardar dejaron al descubierto. Va en una rama nueva, después de fusionar el PR de la Etapa 5. Mismas reglas de siempre: un commit por paso, con el mensaje indicado, y `CONTEXT.md` actualizado en el mismo commit.
+
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| 6.1 | `fix: el editor conserva HayCambios tras un guardado fallido` | Tras un fallo de `SaveChanges`, `TryGuardar` recarga el editor desde la entidad (5.1) y `CargarDesde` deja `HayCambios` en falso. Pero la entidad sigue modificada en el contexto y sin guardar: cambiar de fila o cerrar la ventana no avisa, y esos cambios pueden acabar guardándose junto con otra candidatura. Tras la recarga, el editor vuelve a marcar que hay cambios (por ejemplo con un método interno `ConservarCambios()`). Tests: tras un fallo de guardado `HayCambios` es verdadero; cambiar de fila pregunta; Descartar deja el seguimiento de EF limpio; un reintento correcto cierra el panel. | M |
+| 6.2 | `fix: la candidatura repetida se busca en la base de datos` | `BuscarCandidaturaRepetida` usa `db.Solicitudes.Local`, que solo contiene lo que `Recargar` haya cargado. `Descartar` vacía el seguimiento de EF sin recargar, así que después de *Descartar* y *Nueva* o *Duplicar* el aviso dejaba de salir. Pasa a consultar `db.Solicitudes` sin seguimiento: SQLite no ignora acentos, así que se traen las filas necesarias y la comparación normalizada de empresa y puesto se sigue haciendo en memoria. La candidatura nueva, aunque ya esté añadida al contexto, no está en la base y no se encuentra a sí misma. Tests: nueva tras Descartar avisa; Duplicar tras Descartar avisa; nueva sin repetidas no avisa. | M |
+
+**Orden.** Los dos commits son independientes.
+
+**Mejoras futuras, fuera de esta etapa:**
+- Las copias de adjuntos que quedan en disco si se cierra la app antes de guardar o cancelar.
+- Si se vacía el seguimiento mucho después de reabrir, se propone `FechaReapertura + 7`, que puede estar ya en el pasado.
+- Guardar los hitos del modelo como valores únicos y traducirlos al mostrarlos.
+- Prueba manual del desplegable de motivos al cambiar de «Descartado» a «Retirada».
+- La preferencia del separador del CSV se guarda aunque luego se cancele la elección del destino.
 
 ---
 
@@ -400,3 +420,5 @@ Decisiones que condicionan la etapa:
 | Un test fija el `Id` a mano y deja de compilar | 3.17 | Revisarlo en la auditoría y usar la base para asignarlo. |
 | Las longitudes de `[MaxLength]` y las del modelo divergen | 3.9, 3.10 | Una constante por campo compartida por el atributo y la validación. |
 | `CambiarEstado` queda sin reglas hasta la Etapa R | 3.7 a R.13 | Es temporal y conserva el comportamiento actual; los tests de caracterización de 3.7 lo fijan. |
+| Tras un guardado fallido, el editor dice que no hay cambios y se pierden o se mezclan con otra candidatura | 6.1 | `CargarDesde` apaga `HayCambios`; hay que volver a marcarlo tras la recarga y probar el cambio de fila. |
+| El aviso de candidatura repetida depende de lo que EF tenga cargado | 6.2 | Consultar la base de datos en lugar de `Local`, con tests tras *Descartar*. |

@@ -846,7 +846,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         bool esNueva = this.PrepararNueva(solicitud);
-        Solicitud? candidaturaRepetida = esNueva ? this.BuscarCandidaturaRepetida(solicitud) : null;
 
         // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
         (string? cvAnterior, string? cartaAnterior) = esNueva
@@ -857,15 +856,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             // La entidad ya tiene los efectos de CambiarEstado y Reabrir: recargar el búfer
             // evita que el reintento los repita o los pise con los valores antiguos.
-            if (this.Editor is SolicitudEdicionViewModel recargado)
-            {
-                recargado.CargarDesde(solicitud);
-            }
+            // Validar ya comprobó que el panel abierto tiene editor: no puede ser nulo.
+            SolicitudEdicionViewModel recargado = this.Editor!;
+            recargado.CargarDesde(solicitud);
+
+            // La entidad sigue modificada en el contexto: el búfer recargado también tiene
+            // cambios pendientes y salir de la candidatura debe avisar.
+            recargado.ConservarCambios();
 
             return false;
         }
 
         this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
+
+        // Se busca después de guardar: si la base no responde, el error ya lo ha contado Persistir.
+        Solicitud? candidaturaRepetida = esNueva ? this.BuscarCandidaturaRepetida(solicitud) : null;
         if (candidaturaRepetida is not null)
         {
             string motivo = candidaturaRepetida.MotivoRechazo is MotivoRechazo motivoRechazo
@@ -914,10 +919,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private bool AplicarCambiosDelEditor(Solicitud solicitud)
     {
-        if (this.Editor is not SolicitudEdicionViewModel edicionSolicitud)
-        {
-            return true;
-        }
+        // TryGuardar llega aquí tras Validar, que solo pasa con el panel abierto.
+        SolicitudEdicionViewModel edicionSolicitud = this.Editor!;
 
         // La entidad manda: tras un guardado fallido ya está reabierta y el reintento
         // no debe repetir Reabrir ni pisar sus efectos con el búfer antiguo.
@@ -952,7 +955,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         string motivoCierre = solicitud.MotivoRechazo is MotivoRechazo motivo
             ? EnumHelper.Descripcion(motivo)
             : Localizacion.Texto("Mensaje.SinMotivoCierre");
-        string nota = edicion.NotaReapertura?.Trim() ?? string.Empty;
+        // Validar exige nota cuando hay reapertura pendiente: aquí no puede ser nula.
+        string nota = edicion.NotaReapertura!.Trim();
         string claveMensaje = solicitud.Estado == EstadoSolicitud.OfertaAceptada
             ? "Mensaje.ConfirmarReaperturaOfertaAceptada"
             : "Mensaje.ConfirmarReapertura";
@@ -970,7 +974,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Comprueba lo mínimo para guardar; si falta algo, avisa y deja el panel abierto.</summary>
     private bool Validar()
     {
-        if (this.Editor?.Validar() == true)
+        // TryGuardar solo llama aquí con la solicitud abierta, y Abrir asigna también el editor.
+        if (this.Editor!.Validar())
         {
             return true;
         }
@@ -1007,13 +1012,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         string empresa = TextoHelper.NormalizarBusqueda(solicitud.Empresa.Trim());
         string puesto = TextoHelper.NormalizarBusqueda(solicitud.Puesto.Trim());
 
-        return this.db.Solicitudes.Local
-            .Where(anterior => !ReferenceEquals(anterior, solicitud)
-                && TextoHelper.NormalizarBusqueda(anterior.Empresa.Trim()) == empresa
-                && TextoHelper.NormalizarBusqueda(anterior.Puesto.Trim()) == puesto)
+        // SQLite no ignora tildes, así que la comparación normalizada va en memoria. Se consulta sin
+        // seguimiento porque el aviso no puede depender de lo que Recargar haya dejado cargado, y se
+        // descarta la propia candidatura, que ya está en la base cuando se llama a este método.
+        return this.db.Solicitudes
+            .AsNoTracking()
             .OrderByDescending(anterior => anterior.FechaSolicitud)
             .ThenByDescending(anterior => anterior.Id)
-            .FirstOrDefault();
+            .AsEnumerable()
+            .FirstOrDefault(anterior =>
+                anterior.Id != solicitud.Id
+                && TextoHelper.NormalizarBusqueda(anterior.Empresa.Trim()) == empresa
+                && TextoHelper.NormalizarBusqueda(anterior.Puesto.Trim()) == puesto);
     }
 
     /// <summary>Escribe los cambios; si la base falla, avisa y deja el panel abierto.</summary>
@@ -1063,10 +1073,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void DescartarCambios()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel edicion)
-        {
-            return;
-        }
+        // Solo se llama con el panel abierto: Abrir asigna la solicitud y el editor a la vez.
+        Solicitud solicitud = this.solicitudAbierta!;
+        SolicitudEdicionViewModel edicion = this.Editor!;
 
         // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
         (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
