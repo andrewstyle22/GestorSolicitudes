@@ -218,6 +218,30 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void DescartarUnaFilaNuevaTrasGuardadoFallido_NoDejaFilasFantasmaAlGuardarOtra()
+    {
+        string ruta = TestDb.NuevaRuta();
+        using var db = new ContextoQueFallaUnaVez(ruta);
+        db.Database.EnsureCreated();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar };
+        var existente = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(existente);
+        db.SaveChanges();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("Globex", "QA");
+        db.Fallar = true;
+        Assert.False(vm.TryGuardar());
+
+        vm.SolicitudSeleccionada = existente;
+        vm.Editor!.Puesto = "Dev senior";
+        Assert.True(vm.TryGuardar());
+
+        Assert.Equal(1, db.Solicitudes.Count());
+        Assert.Equal("Dev senior", db.Solicitudes.Single().Puesto);
+    }
+
+    [Fact]
     public void ResolverCambiosPendientes_Cancelar_DevuelveFalseYNoTocaNada()
     {
         using var db = TestDb.NuevoContexto();
