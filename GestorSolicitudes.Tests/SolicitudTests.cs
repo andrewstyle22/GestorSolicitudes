@@ -415,6 +415,17 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void CambiarEstado_OfertaAceptadaAOtroCierre_SePermite()
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.OfertaAceptada).Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Retirada, MotivoRechazo.YaNoMeInteresa, null);
+
+        Assert.Equal(EstadoSolicitud.Retirada, solicitud.Estado);
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+    }
+
+    [Fact]
     public void CambiarEstado_Descartado_AnadeElHitoDeRechazoConLaFechaDeCierre()
     {
         var solicitud = new SolicitudBuilder().Construir();
@@ -982,6 +993,29 @@ public class SolicitudTests
     public void EstaCerrada_SoloIncluyeLosEstadosTerminales(EstadoSolicitud estado, bool esperado)
     {
         Assert.Equal(esperado, estado.EstaCerrada());
+    }
+
+    [Fact]
+    public void AdmiteTransicion_SoloProhibeLlegarAOfertaAceptadaDesdeOtroCierre()
+    {
+        var prohibidas = new HashSet<(EstadoSolicitud Origen, EstadoSolicitud Destino)>
+        {
+            (EstadoSolicitud.OfertaRechazada, EstadoSolicitud.OfertaAceptada),
+            (EstadoSolicitud.Rechazada, EstadoSolicitud.OfertaAceptada),
+            (EstadoSolicitud.Retirada, EstadoSolicitud.OfertaAceptada),
+        };
+
+        foreach (EstadoSolicitud origen in Enum.GetValues<EstadoSolicitud>())
+        {
+            foreach (EstadoSolicitud destino in Enum.GetValues<EstadoSolicitud>())
+            {
+                bool esperado = !prohibidas.Contains((origen, destino));
+
+                Assert.True(
+                    esperado == origen.AdmiteTransicion(destino),
+                    $"Transición {origen} -> {destino}: se esperaba {esperado}.");
+            }
+        }
     }
 
     [Theory]

@@ -258,7 +258,7 @@ public class Solicitud
                 "Una candidatura cerrada solo se reabre con Reabrir.");
         }
 
-        if (esTransicion && estado == EstadoSolicitud.OfertaAceptada && this.Estado.EstaCerrada())
+        if (esTransicion && !this.Estado.AdmiteTransicion(estado))
         {
             throw new InvalidOperationException(
                 "Una oferta cerrada no se puede aceptar sin reabrirla a \"Oferta recibida\".");
