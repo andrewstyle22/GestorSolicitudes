@@ -22,6 +22,37 @@ public partial class FuentesTests
 {
     private static readonly string Raiz = RaizDelProyecto();
 
+    private static readonly string[] CamposNumericos =
+    [
+        "Editor.SalarioMin",
+        "Editor.SalarioMax",
+        "Editor.PretensionSalarial",
+    ];
+
+    [Fact]
+    public void LosCamposDeTextoEscribenEnElBuferConCadaPulsacion()
+    {
+        // El texto se vuelca al búfer sin esperar a perder el foco: si no, Ctrl+S y cerrar
+        // se llevan lo último escrito. Los salarios siguen en LostFocus para no validar
+        // números a medio escribir.
+        List<XElement> cajas = new[] { "MainWindow.xaml", "PestanaOferta.xaml", "PestanaSeguimiento.xaml" }
+            .SelectMany(nombre => XDocument.Load(Path.Combine(Raiz, "Views", nombre)).Descendants())
+            .Where(e => e.Name.LocalName == "TextBox"
+                && ((string?)e.Attribute("Text"))?.StartsWith("{Binding Editor.", StringComparison.Ordinal) == true)
+            .ToList();
+
+        bool EsSalario(XElement caja) => CamposNumericos.Any(campo =>
+            ((string?)caja.Attribute("Text"))!.StartsWith("{Binding " + campo, StringComparison.Ordinal));
+
+        Assert.NotEmpty(cajas);
+        Assert.All(
+            cajas.Where(caja => !EsSalario(caja)),
+            caja => Assert.Contains("UpdateSourceTrigger=PropertyChanged", (string?)caja.Attribute("Text")));
+        Assert.All(
+            cajas.Where(EsSalario),
+            caja => Assert.DoesNotContain("UpdateSourceTrigger", (string?)caja.Attribute("Text")));
+    }
+
     [Fact]
     public void LasClavesDeTextoUsadasEstanDefinidas()
     {
