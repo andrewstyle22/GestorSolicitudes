@@ -212,6 +212,7 @@ public static class Traducciones
         ("Mensaje.MotivoCierreNoValido", "Elige un motivo de cierre válido para este estado."),
         ("Mensaje.TransicionNoPermitida", "No se puede aceptar la oferta desde un proceso cerrado: reabre la candidatura a «Oferta recibida» y vuelve a intentarlo."),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
+        ("Mensaje.ErrorInesperado", "Se ha producido un error inesperado:\n\n{0}\n\nEl detalle se ha guardado en:\n{1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Adjunto"),
@@ -222,6 +223,7 @@ public static class Traducciones
         ("Titulo.CandidaturaRepetida", "Candidatura repetida"),
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
+        ("Titulo.ErrorInesperado", "Error inesperado"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Candidatura enviada"),
@@ -502,6 +504,7 @@ public static class Traducciones
         ("Mensaje.MotivoCierreNoValido", "Choose a valid closing reason for this status."),
         ("Mensaje.TransicionNoPermitida", "You cannot accept the offer from a closed application: reopen it to \"Offer received\" and try again."),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
+        ("Mensaje.ErrorInesperado", "An unexpected error occurred:\n\n{0}\n\nThe details have been saved to:\n{1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Attachment"),
@@ -512,6 +515,7 @@ public static class Traducciones
         ("Titulo.CandidaturaRepetida", "Duplicate application"),
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
+        ("Titulo.ErrorInesperado", "Unexpected error"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Application sent"),
@@ -792,6 +796,7 @@ public static class Traducciones
         ("Mensaje.MotivoCierreNoValido", "Wähle einen gültigen Abschlussgrund für diesen Status."),
         ("Mensaje.TransicionNoPermitida", "Eine Zusage ist aus einer abgeschlossenen Bewerbung nicht möglich: Öffne sie zu \"Angebot erhalten\" wieder und versuche es erneut."),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
+        ("Mensaje.ErrorInesperado", "Ein unerwarteter Fehler ist aufgetreten:\n\n{0}\n\nDie Einzelheiten wurden gespeichert in:\n{1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Anlage"),
@@ -802,6 +807,7 @@ public static class Traducciones
         ("Titulo.CandidaturaRepetida", "Doppelte Bewerbung"),
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),
+        ("Titulo.ErrorInesperado", "Unerwarteter Fehler"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Bewerbung gesendet"),

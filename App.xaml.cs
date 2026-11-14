@@ -3,6 +3,7 @@ namespace GestorSolicitudes;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.ViewModels;
 using GestorSolicitudes.Views;
 
@@ -10,6 +11,7 @@ public partial class App : Application
 {
     // La sesión completa vive aquí: la ventana solo recibe lo que necesita y no decide
     // qué base se abre ni cuándo se libera.
+    private readonly DialogoService dialogo = new();
     private AppDbContext? db;
     private MainViewModel? viewModel;
 
@@ -23,6 +25,10 @@ public partial class App : Application
         // Idioma de la interfaz: preferencia guardada (o el idioma del sistema la primera vez),
         // cultura de fechas/números e inyección de los textos como recursos de aplicación.
         Localizacion.Inicializar();
+
+        // Los manejadores se instalan antes de tocar nada más para que ningún fallo
+        // del arranque se quede sin registro ni aviso.
+        this.RegistrarManejadoresDeErrores();
 
         AppDbContext contexto = new();
         try
@@ -48,8 +54,7 @@ public partial class App : Application
         }
 
         this.db = contexto;
-        var dialogo = new DialogoService();
-        this.viewModel = new MainViewModel(contexto, dialogo: dialogo, cambiarIdioma: Localizacion.Cambiar);
+        this.viewModel = new MainViewModel(contexto, dialogo: this.dialogo, cambiarIdioma: Localizacion.Cambiar);
 
         // Creamos la ventana aquí en lugar de con StartupUri: así el fallo de arriba
         // aborta de verdad el arranque y no dependemos de resolver una URI de recurso.
@@ -58,6 +63,25 @@ public partial class App : Application
         var ventana = new MainWindow(this.viewModel);
         this.MainWindow = ventana;
         ventana.Show();
+    }
+
+    // Red de seguridad: un fallo en la interfaz se registra, se avisa con la ruta del
+    // fichero y se marca como controlado para que la aplicación siga abierta.
+    [ExcludeFromCodeCoverage]
+    private void RegistrarManejadoresDeErrores()
+    {
+        this.DispatcherUnhandledException += (_, e) =>
+        {
+            ManejadorErrores.Avisar(e.Exception, "excepción no controlada en la interfaz", RegistroErrores.Ruta, this.dialogo);
+            e.Handled = true;
+        };
+
+        // Sin interfaz que avisar: solo queda dejar rastro antes de que el proceso muera.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            RegistroErrores.Registrar((Exception)e.ExceptionObject, "excepción no controlada en segundo plano");
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+            RegistroErrores.Registrar(e.Exception, "excepción no observada en una tarea");
     }
 
     // El ViewModel se suelta antes que la base: Dispose se desengancha del evento
