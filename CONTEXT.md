@@ -7,7 +7,7 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ 0 a 5: red de seguridad, editor con búfer, historial, modelo cerrado, estados y reapertura (R), cierre y correcciones finales.
 
 ## Etapas de la refactorización Ponytail
-- 🟨 A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hechos A.0 a A.3; siguiente, A.4.
+- 🟨 A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hechos A.0 a A.4; siguiente, A.5.
 - ⬜ B: límite de 2 MB para CV y carta, B.1.
 - ⬜ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5.
 - ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3.
@@ -15,7 +15,7 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-A.4 (`fix: ResolverCambiosPendientes cuenta el seguimiento de EF`): con un editor abierto, preguntar también cuando `db.ChangeTracker.HasChanges()` es verdadero aunque el búfer no tenga cambios; test de una entidad modificada sin tocar el editor. No hacer push sin que se pida.
+A.5 (`refactor: las reglas de transición en un solo sitio`): `EstadoSolicitudExtensiones.AdmiteTransicion(origen, destino)` (falso solo para cerrado → «Oferta aceptada»), usada por `CambiarEstado`, con tests por cada celda de la tabla. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.

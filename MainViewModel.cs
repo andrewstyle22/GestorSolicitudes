@@ -899,7 +899,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     internal bool ResolverCambiosPendientes()
     {
-        if (this.Editor?.HayCambios != true)
+        // Un guardado fallido deja la entidad modificada en EF aunque el búfer se haya recargado.
+        if (this.Editor is null || (this.Editor.HayCambios != true && !this.db.ChangeTracker.HasChanges()))
         {
             return true;
         }

@@ -98,6 +98,25 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void ResolverCambiosPendientes_EntidadModificadaSinTocarElBuffer_PreguntaYDescarta()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar };
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.SolicitudSeleccionada = solicitud;
+        solicitud.ActualizarNotas("cambio fuera del búfer");
+        Assert.False(vm.Editor!.HayCambios);
+
+        Assert.True(vm.ResolverCambiosPendientes());
+
+        Assert.Single(dialogo.PreguntasGuardar);
+        Assert.False(db.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
     public void ResolverCambiosPendientes_Guardar_PersisteYCierraElPanel()
     {
         using var db = TestDb.NuevoContexto();
