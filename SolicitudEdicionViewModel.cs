@@ -244,6 +244,12 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.OnPropertyChanged(nameof(this.HayCambios));
     }
 
+    /// <summary>
+    /// Vuelve a marcar cambios tras recargar el búfer desde una entidad que la base no guardó:
+    /// lo cargado no está en disco y salir de la candidatura debe seguir avisando.
+    /// </summary>
+    internal void ConservarCambios() => this.MarcarCambios();
+
     /// <summary>Mensaje de campo obligatorio, el mismo que ya usaba el aviso al guardar.</summary>
     public static ValidationResult? ValidarObligatorio(string? valor) =>
         string.IsNullOrWhiteSpace(valor)

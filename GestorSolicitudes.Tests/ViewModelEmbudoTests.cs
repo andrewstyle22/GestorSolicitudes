@@ -148,6 +148,60 @@ public class ViewModelEmbudoTests
     }
 
     [Fact]
+    public void CuandoCambiaIdioma_ConPanelYGraficaAbiertos_YFiltroNulo_RefrescaTodo()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.NuevaCommand.Execute(null);
+        vm.VerGrafica = true;
+        // El ComboBox manda null mientras se reconstruye la lista: el filtro debe quedar en "Todos".
+        vm.EstadoFiltroItem = null;
+
+        vm.CuandoCambiaIdioma(null, Idioma.Castellano);
+
+        Assert.NotNull(vm.Editor);
+        Assert.True(vm.VerGrafica);
+        Assert.Equal(12, vm.PeriodosEmbudo.Count);
+        Assert.Same(vm.EstadosFiltro[0], vm.EstadoFiltroItem);
+    }
+
+    [Fact]
+    public void CuandoCambiaIdioma_ConUnFiltroQueYaNoExiste_VuelveATodosLosEstados()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.EstadoFiltroItem = new EnumItem((EstadoSolicitud)999, "Desconocido");
+
+        vm.CuandoCambiaIdioma(null, Idioma.Castellano);
+
+        Assert.Same(vm.EstadosFiltro[0], vm.EstadoFiltroItem);
+    }
+
+    [Fact]
+    public void RefrescarItemGranularidad_SiLaListaNoTieneElValor_UsaElPrimero()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        vm.GranularidadesEmbudo = [new EnumItem(GranularidadEmbudo.Dia, "Día")];
+
+        vm.RefrescarItemGranularidad();
+
+        Assert.Same(vm.GranularidadesEmbudo[0], vm.GranularidadEmbudoItem);
+    }
+
+    [Fact]
+    public void ConfigurarGrafica_DosVeces_OcultaElEmbudo()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        vm.ConfigurarGraficaCommand.Execute(null);
+        vm.ConfigurarGraficaCommand.Execute(null);
+
+        Assert.False(vm.VerGrafica);
+    }
+
+    [Fact]
     public void IdiomaActual_UsaElCambioInyectadoSinTocarElIdiomaGlobal()
     {
         using var db = TestDb.NuevoContexto();

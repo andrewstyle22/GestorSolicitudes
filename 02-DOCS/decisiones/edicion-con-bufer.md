@@ -33,9 +33,20 @@ existentes y se borran los quitados; el búfer no conoce la base de datos.
 respuesta» el modelo rellena `FechaPrimeraRespuesta`, y si el editor la escribiera después, la pisaría
 con el valor vacío.
 
-**Un guardado fallido no deja el editor desfasado.** Si `SaveChanges` falla después de `Reabrir`, la
-entidad ya tiene sus efectos; el editor se recarga desde ella para que el reintento no repita la
-reapertura ni pise las fechas con valores antiguos.
+**Un guardado fallido no deja el editor desfasado.** Si `SaveChanges` falla, la entidad ya tiene los
+efectos de `CambiarEstado` y de `Reabrir` (por ejemplo `FechaCierre` o `FechaPrimeraRespuesta`, que el
+modelo solo rellena en la transición); el editor se recarga desde ella para que el reintento no los
+repita ni los pise con los valores antiguos del búfer.
+
+**El editor sabe si hay cambios.** `HayCambios` se activa al tocar cualquier campo editable o el
+historial y se apaga al cargar desde la entidad. Con él, `ResolverCambiosPendientes()` pregunta
+Guardar, Descartar o Cancelar antes de cambiar de fila, abrir *Nueva* o *Duplicar* y cerrar la
+ventana. Con Guardar, la acción pedida sigue solo si `TryGuardar()` terminó bien.
+
+**Cambiar `FechaSolicitud` arrastra su hito y el seguimiento propuesto.** El modelo mueve el hito
+«Solicitud enviada» y el seguimiento (fecha anterior más 7 días) solo si seguían en la fecha anterior
+y no hay reapertura; el editor hace lo mismo sobre el búfer para que el panel lo muestre al instante
+y `AplicarEventos` no lo devuelva a su valor anterior.
 
 **Los ficheros adjuntos solo se borran tras guardar bien.** Quitar o sustituir un adjunto no toca el
 disco hasta que el guardado funciona; *Cancelar* borra las copias que no se llegaron a guardar.

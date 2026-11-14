@@ -532,6 +532,33 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
+    public void AbrirAdjunto_SinAdjuntoInformaYNoLlamaAlVisor()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+
+        vm.AbrirAdjuntoCommand.Execute(null);
+
+        Assert.Single(dialogo.Informes);
+        Assert.Empty(dialogo.AdjuntosAbiertos);
+    }
+
+    [Fact]
+    public void AbrirAdjunto_ConRutaQueYaNoExiste_InformaYNoLlamaAlVisor()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        string ruta = Path.Combine(TestDb.NuevaCarpeta(), "borrado.pdf");
+
+        vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
+
+        Assert.Single(dialogo.Informes);
+        Assert.Empty(dialogo.AdjuntosAbiertos);
+    }
+
+    [Fact]
     public void AbrirAdjunto_CuandoElVisorFalla_Avisa()
     {
         using var db = TestDb.NuevoContexto();

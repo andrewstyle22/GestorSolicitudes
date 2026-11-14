@@ -378,8 +378,6 @@ Decisiones que condicionan la etapa:
 
 ## Etapa 6. Fallos hallados al revisar la Etapa 5
 
-> **Sustituida** por `plan-refactor-ponytail.md` (Etapa A, commits A.1 a A.4): los dos fallos se comprueban primero con tests y solo se arreglan los que fallen, además del arreglo de la auditoría.
-
 Nace de revisar el proyecto completo tras la Etapa 5: dos fallos que los avisos de cambios sin guardar dejaron al descubierto. Va en una rama nueva, después de fusionar el PR de la Etapa 5. Mismas reglas de siempre: un commit por paso, con el mensaje indicado, y `CONTEXT.md` actualizado en el mismo commit.
 
 | # | Commit | Qué cambia | Tam. |
