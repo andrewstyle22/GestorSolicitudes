@@ -953,6 +953,23 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void Validar_OfertaAceptadaDesdeOtroCierre_EsError()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud) { Estado = EstadoSolicitud.OfertaAceptada };
+
+        editor.Validar();
+
+        Assert.Contains(
+            editor.GetErrors(nameof(editor.Estado)),
+            error => error.ErrorMessage == Localizacion.Texto("Mensaje.TransicionNoPermitida"));
+    }
+
+    [Fact]
     public void CambiarEstado_RevalidaElMotivo()
     {
         var editor = new SolicitudEdicionViewModel

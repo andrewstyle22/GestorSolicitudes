@@ -7,7 +7,7 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ 0 a 5: red de seguridad, editor con búfer, historial, modelo cerrado, estados y reapertura (R), cierre y correcciones finales.
 
 ## Etapas de la refactorización Ponytail
-- 🟨 A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hechos A.0 a A.5; siguiente, A.6.
+- 🟨 A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hechos A.0 a A.6; siguiente, A.7.
 - ⬜ B: límite de 2 MB para CV y carta, B.1.
 - ⬜ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5.
 - ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3.
@@ -15,7 +15,7 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-A.6 (`fix: el editor valida la transición antes de guardar`): `Validar()` añade el error `Mensaje.TransicionNoPermitida` (es/en/de) cuando `estadoOriginal` y el estado elegido no admiten la transición, y guardar cerrado → «Oferta aceptada» deja el panel abierto y avisa. No hacer push sin que se pida.
+A.7 (`feat: el desplegable de estado solo ofrece destinos válidos`): `SolicitudEdicionViewModel.EstadosDisponibles` sale de `estadoOriginal` y `AdmiteTransicion`, se refresca al cambiar de idioma y la pestaña Seguimiento enlaza ahí en lugar de a `Estados`; los estados abiertos siguen disponibles para reabrir. Tests. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.

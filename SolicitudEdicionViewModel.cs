@@ -65,6 +65,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     [ObservableProperty]
     [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarReaperturaSinRespuesta))]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarTransicion))]
     [NotifyPropertyChangedFor(nameof(AdmiteMotivo))]
     [NotifyPropertyChangedFor(nameof(MotivosDelEstado))]
     private EstadoSolicitud estado = EstadoSolicitud.Enviada;
@@ -268,6 +269,13 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         && editor.ReaperturaPendiente
         && valor == EstadoSolicitud.SinRespuesta
             ? new ValidationResult(Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"))
+            : ValidationResult.Success;
+
+    /// <summary>El estado elegido tiene que ser un destino válido desde el estado guardado.</summary>
+    public static ValidationResult? ValidarTransicion(EstadoSolicitud valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && !editor.estadoOriginal.AdmiteTransicion(valor)
+            ? new ValidationResult(Localizacion.Texto("Mensaje.TransicionNoPermitida"))
             : ValidationResult.Success;
 
     /// <summary>Una reapertura exige una nota.</summary>

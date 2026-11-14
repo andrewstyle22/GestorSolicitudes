@@ -692,6 +692,35 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
+    public void Guardar_OfertaAceptadaDesdeOtroCierre_AvisaYNoCierraElPanel()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .ConMotivoRechazo(MotivoRechazo.Salario)
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        vm.Editor!.Estado = EstadoSolicitud.OfertaAceptada;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Single(dialogo.Avisos);
+        Assert.Empty(dialogo.Confirmaciones);
+        Assert.NotNull(vm.Editor);
+        Assert.Equal(EstadoSolicitud.Rechazada, solicitud.Estado);
+        Assert.Contains(
+            vm.Editor.GetErrors(nameof(vm.Editor.Estado)),
+            error => error.ErrorMessage == Localizacion.Texto("Mensaje.TransicionNoPermitida"));
+    }
+
+    [Fact]
     public void Guardar_ReaperturaQueFallaAlGuardar_ElReintentoNoLaRepite()
     {
         string ruta = TestDb.NuevaRuta();

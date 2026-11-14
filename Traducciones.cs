@@ -210,6 +210,7 @@ public static class Traducciones
         ("Mensaje.ReaperturaSinRespuesta", "No se puede reabrir a «Sin respuesta»: indica el estado al que vuelve la candidatura."),
         ("Mensaje.NotaReaperturaObligatoria", "La nota de la reapertura es obligatoria."),
         ("Mensaje.MotivoCierreNoValido", "Elige un motivo de cierre válido para este estado."),
+        ("Mensaje.TransicionNoPermitida", "No se puede aceptar la oferta desde un proceso cerrado: reabre la candidatura a «Oferta recibida» y vuelve a intentarlo."),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
 
         // ----- Títulos de avisos -----
@@ -499,6 +500,7 @@ public static class Traducciones
         ("Mensaje.ReaperturaSinRespuesta", "Cannot reopen to \"No response\": choose the status the application returns to."),
         ("Mensaje.NotaReaperturaObligatoria", "The reopening note is required."),
         ("Mensaje.MotivoCierreNoValido", "Choose a valid closing reason for this status."),
+        ("Mensaje.TransicionNoPermitida", "You cannot accept the offer from a closed application: reopen it to \"Offer received\" and try again."),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
 
         // ----- Títulos de avisos -----
@@ -788,6 +790,7 @@ public static class Traducciones
         ("Mensaje.ReaperturaSinRespuesta", "Eine Wiedereröffnung zu \"Keine Antwort\" ist nicht möglich: Wähle den Status, zu dem die Bewerbung zurückkehrt."),
         ("Mensaje.NotaReaperturaObligatoria", "Die Notiz zur Wiedereröffnung ist erforderlich."),
         ("Mensaje.MotivoCierreNoValido", "Wähle einen gültigen Abschlussgrund für diesen Status."),
+        ("Mensaje.TransicionNoPermitida", "Eine Zusage ist aus einer abgeschlossenen Bewerbung nicht möglich: Öffne sie zu \"Angebot erhalten\" wieder und versuche es erneut."),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
 
         // ----- Títulos de avisos -----
