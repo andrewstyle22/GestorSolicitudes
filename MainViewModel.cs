@@ -122,8 +122,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // se releen al cambiar de idioma.
         this.ColumnasVm.RefrescarNombres();
 
-        // El editor arma su lista de motivos al vuelo; hay que avisarle del cambio de idioma.
-        this.Editor?.RefrescarMotivosDelEstado();
+        // El editor arma sus listas de estado al vuelo; hay que avisarle del cambio de idioma.
+        this.Editor?.RefrescarListasDelEstado();
     }
 
     // ---------------------------------------------------------------- Columnas

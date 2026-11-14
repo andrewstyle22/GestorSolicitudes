@@ -7,7 +7,7 @@
 
             <TextBlock Text="{DynamicResource Seguimiento.EstadoActual}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
             <ComboBox Style="{StaticResource CampoCombo}"
-                      ItemsSource="{Binding Estados}"
+                      ItemsSource="{Binding Editor.EstadosDisponibles}"
                       DisplayMemberPath="Descripcion"
                       SelectedValuePath="Valor"
                       SelectedValue="{Binding Editor.Estado}" Margin="9,0,9,0" />

@@ -87,6 +87,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Gets los motivos válidos para el estado actual, sin la entrada vacía del filtro.</summary>
     public IReadOnlyList<EnumItem> MotivosDelEstado => this.motivosDelEstado;
 
+    private IReadOnlyList<EnumItem> estadosDisponibles = [];
+
+    /// <summary>
+    /// Gets los destinos válidos desde el estado guardado. Los cerrados siguen ofreciendo
+    /// los estados abiertos: reabrir es una acción permitida.
+    /// </summary>
+    public IReadOnlyList<EnumItem> EstadosDisponibles => this.estadosDisponibles;
+
     [ObservableProperty]
     private DateTime fechaSolicitud = DateTime.Today;
 
@@ -203,6 +211,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         nameof(ReaperturaPendiente),
         nameof(AdmiteMotivo),
         nameof(MotivosDelEstado),
+        nameof(EstadosDisponibles),
         nameof(ReaperturaResumen),
         nameof(AdjuntoCv),
         nameof(AdjuntoCarta),
@@ -365,11 +374,20 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         return !this.HasErrors && this.EventosEdicion.All(e => !e.HasErrors);
     }
 
-    /// <summary>Relee los textos de los motivos del estado tras un cambio de idioma.</summary>
-    public void RefrescarMotivosDelEstado()
+    /// <summary>Relee los textos de los desplegables del estado tras un cambio de idioma.</summary>
+    public void RefrescarListasDelEstado()
     {
         this.motivosDelEstado = CrearMotivos(this.Estado);
         this.OnPropertyChanged(nameof(this.MotivosDelEstado));
+        this.RefrescarEstadosDisponibles();
+    }
+
+    private void RefrescarEstadosDisponibles()
+    {
+        this.estadosDisponibles = EnumHelper.Valores<EstadoSolicitud>()
+            .Where(item => this.estadoOriginal.AdmiteTransicion((EstadoSolicitud)item.Valor!))
+            .ToList();
+        this.OnPropertyChanged(nameof(this.EstadosDisponibles));
     }
 
     private static List<EnumItem> CrearMotivos(EstadoSolicitud estado) =>
@@ -396,6 +414,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.MotivoRechazo = solicitud.MotivoRechazo;
         this.estadoOriginal = solicitud.Estado;
         this.Estado = solicitud.Estado;
+        this.RefrescarEstadosDisponibles();
         this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
         this.fechaSolicitudAnterior = solicitud.FechaSolicitud;
         this.fueReabierta = solicitud.FueReabierta;

@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.ComponentModel.DataAnnotations;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
@@ -865,15 +866,46 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void RefrescarMotivosDelEstado_NotificaLaLista()
+    public void RefrescarListasDelEstado_NotificaAmbasListas()
     {
         var editor = new SolicitudEdicionViewModel { Estado = EstadoSolicitud.Rechazada };
         var notificados = new List<string?>();
         editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
 
-        editor.RefrescarMotivosDelEstado();
+        editor.RefrescarListasDelEstado();
 
         Assert.Contains(nameof(editor.MotivosDelEstado), notificados);
+        Assert.Contains(nameof(editor.EstadosDisponibles), notificados);
+    }
+
+    [Fact]
+    public void EstadosDisponibles_DesdeUnCierre_NoOfreceOfertaAceptada()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.DoesNotContain(editor.EstadosDisponibles, i => i.Valor is EstadoSolicitud.OfertaAceptada);
+        Assert.Equal(EstadoSolicitud.Rechazada, editor.Estado);
+    }
+
+    [Fact]
+    public void EstadosDisponibles_DesdeOfertaAceptada_OfreceLosDemasCierres()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.OfertaAceptada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.Contains(editor.EstadosDisponibles, i => i.Valor is EstadoSolicitud.OfertaRechazada);
+        Assert.Contains(editor.EstadosDisponibles, i => i.Valor is EstadoSolicitud.Retirada);
+    }
+
+    [Fact]
+    public void EstadosDisponibles_DesdeUnEstadoAbierto_OfreceTodos()
+    {
+        var editor = new SolicitudEdicionViewModel();
+
+        Assert.Equal(
+            EnumHelper.Valores<EstadoSolicitud>().Select(i => i.Valor),
+            editor.EstadosDisponibles.Select(i => i.Valor));
     }
 
     [Theory]

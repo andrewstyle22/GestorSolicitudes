@@ -7,7 +7,7 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ 0 a 5: red de seguridad, editor con búfer, historial, modelo cerrado, estados y reapertura (R), cierre y correcciones finales.
 
 ## Etapas de la refactorización Ponytail
-- 🟨 A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hechos A.0 a A.6; siguiente, A.7.
+- 🟨 A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hechos A.0 a A.7; siguiente, A.8.
 - ⬜ B: límite de 2 MB para CV y carta, B.1.
 - ⬜ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5.
 - ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3.
@@ -15,12 +15,12 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-A.7 (`feat: el desplegable de estado solo ofrece destinos válidos`): `SolicitudEdicionViewModel.EstadosDisponibles` sale de `estadoOriginal` y `AdmiteTransicion`, se refresca al cambiar de idioma y la pestaña Seguimiento enlaza ahí en lugar de a `Estados`; los estados abiertos siguen disponibles para reabrir. Tests. No hacer push sin que se pida.
+A.8 (`feat: registro de errores en fichero`): `RegistroErrores.Registrar(excepcion, contexto)` escribe en `%APPDATA%\GestorSolicitudes\errores.log` (añade al final; si pasa de 1 MB, conserva solo la parte reciente) y nunca lanza. Tests con ruta temporal. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
 - `ResolverCambiosPendientes` pregunta también si `db.ChangeTracker.HasChanges()` es verdadero con un editor abierto (A.4).
-- Estados: **Oferta aceptada → otros cierres se permite** (corrección cerrado → cerrado). Solo cerrado → «Oferta aceptada» lanza en el modelo; el editor lo valida (A.6) y el desplegable no lo ofrece (A.7). Las reglas de transición viven en `EstadoSolicitudExtensiones.AdmiteTransicion` (A.5).
+- Estados: **Oferta aceptada → otros cierres se permite** (corrección cerrado → cerrado). Solo cerrado → «Oferta aceptada» lanza en el modelo; el editor lo valida (A.6) y el desplegable no lo ofrece (A.7). Las reglas de transición viven en `EstadoSolicitudExtensiones.AdmiteTransicion` (A.5). `EstadosDisponibles` se arma desde `estadoOriginal` y se recalcula en `RefrescarListasDelEstado` al cambiar de idioma (A.7).
 - Manejador global de excepciones: registra en `%APPDATA%\GestorSolicitudes\errores.log`, avisa y no cierra (A.8 y A.9).
 - Atajos: `UpdateSourceTrigger=PropertyChanged` en los `TextBox` de texto (A.10) y confirmación del control con el foco antes de Ctrl+S, Ctrl+N y cerrar (A.11).
 - Documentos: máximo 2 MB (2 × 1024 × 1024 bytes); más grande, aviso «El documento no puede ser mayor a 2 megabytes» y no se adjunta (B.1).
