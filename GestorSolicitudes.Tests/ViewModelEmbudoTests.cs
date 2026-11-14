@@ -148,6 +148,24 @@ public class ViewModelEmbudoTests
     }
 
     [Fact]
+    public void CuandoCambiaIdioma_ConEditorAbierto_RefrescaSusListasDeEstado()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+        var notificados = new List<string?>();
+        vm.Editor!.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
+
+        vm.CuandoCambiaIdioma(null, Idioma.Castellano);
+
+        Assert.Contains(nameof(SolicitudEdicionViewModel.EstadosDisponibles), notificados);
+    }
+
+    [Fact]
     public void IdiomaActual_UsaElCambioInyectadoSinTocarElIdiomaGlobal()
     {
         using var db = TestDb.NuevoContexto();

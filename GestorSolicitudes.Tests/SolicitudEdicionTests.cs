@@ -1002,6 +1002,16 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void ValidarTransicion_SinEditorEnElContexto_NoEsError()
+    {
+        ValidationResult? resultado = SolicitudEdicionViewModel.ValidarTransicion(
+            EstadoSolicitud.OfertaAceptada,
+            new ValidationContext(new object()));
+
+        Assert.Equal(ValidationResult.Success, resultado);
+    }
+
+    [Fact]
     public void CambiarEstado_RevalidaElMotivo()
     {
         var editor = new SolicitudEdicionViewModel
