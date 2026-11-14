@@ -110,13 +110,13 @@ Leyenda: ✅ libre · 🔁 solo con **Reabrir** · ⚠️ con reglas · ⛔ no p
 | **Descartado** | 🔁 | ✅ (cambiar motivo) | ⚠️ C | ⚠️ C | ⛔ |
 | **Retirada** | 🔁 | ⚠️ C | ✅ | ⚠️ C | ⛔ |
 | **Oferta rechazada por mí** | 🔁 | ⚠️ C | ⚠️ C | ✅ | ⛔ (reabrir a «Oferta recibida» y luego aceptar) |
-| **Oferta aceptada** | 🔁 (confirmación reforzada) | ⛔ | ⛔ | ⛔ | ✅ |
+| **Oferta aceptada** | 🔁 (confirmación reforzada) | ⚠️ C | ⚠️ C | ⚠️ C | ✅ |
 
 Reglas:
 
 - **A. Hacia un cierre negativo:** motivo obligatorio y permitido (sección 4) y `FechaCierre` = hoy si está vacía. Para "Descartado" se añade además el hito `Rechazo`.
 - **B. Hacia Oferta aceptada:** `FechaCierre` = hoy si está vacía; sin motivo.
-- **C. Cerrado → cerrado:** es una corrección, no una reapertura. Si el motivo anterior no pertenece a la lista del nuevo estado, se preselecciona `NoIndicado`. No pide confirmación.
+- **C. Cerrado → cerrado:** es una corrección, no una reapertura. Si el motivo anterior no pertenece a la lista del nuevo estado, se preselecciona `NoIndicado`. No pide confirmación. Incluye pasar de *Oferta aceptada* a un cierre negativo (te descartan o retiras la oferta después de aceptarla): el porqué se anota en las notas. Lo único que no se permite es llegar a *Oferta aceptada* desde otro cierre; se reabre antes a *Oferta recibida*.
 - **"Sin respuesta" → otro estado** no es reapertura (ya estaba abierta). Si el estado nuevo cuenta como respuesta de la empresa (sección 5.1) y no hay `FechaPrimeraRespuesta`, se rellena con hoy y se añade un hito `Respuesta`. Se implementa en `CambiarEstado`, y `AplicarA` aplica la respuesta **antes** que el estado; si no, el editor (con la fecha vacía) pisaría la que acaba de rellenar el modelo.
 - **Oferta rechazada por mí → Oferta aceptada** está prohibida: `Reabrir` solo va a estados abiertos, así que se reabre a "Oferta recibida" y después se acepta. Así queda el hito y `FechaReapertura`.
 - **Cerrado → abierto nunca va por el combo de estado.** Si el usuario lo intenta, la app lo redirige a la acción Reabrir.
@@ -188,6 +188,7 @@ Al guardar una candidatura nueva con la misma empresa y puesto, la app avisa sin
 | 5 | **Columna "Días"** con el contador reiniciado y tooltip con el total desde el envío | Siempre | Primera versión |
 | 6 | **Franja informativa** en Seguimiento: *"↻ Reabierta el 03/11. Antes: Descartado el 10/10 · Motivo: …"* (se lee del último hito `Reapertura`, ya cargado al abrir el detalle) | Si hay reapertura | Después |
 | 7 | **Filtro "Reabiertas"** | Siempre disponible | Opcional |
+| 13 | ¿Oferta aceptada → otros cierres? | **Se permite** como corrección (cerrado → cerrado). El desplegable solo deja de ofrecer cerrado → *Oferta aceptada*, que sigue lanzando una excepción en el modelo. |
 
 Todos los textos nuevos necesitan clave en es/en/de en `Traducciones.cs` (el test de paridad lo exige).
 
