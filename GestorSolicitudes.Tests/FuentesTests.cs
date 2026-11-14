@@ -29,13 +29,20 @@ public partial class FuentesTests
         "Editor.PretensionSalarial",
     ];
 
+    private static readonly string[] FicherosDelEditor =
+    [
+        "MainWindow.xaml",
+        "PestanaOferta.xaml",
+        "PestanaSeguimiento.xaml",
+    ];
+
     [Fact]
     public void LosCamposDeTextoEscribenEnElBuferConCadaPulsacion()
     {
         // El texto se vuelca al búfer sin esperar a perder el foco: si no, Ctrl+S y cerrar
         // se llevan lo último escrito. Los salarios siguen en LostFocus para no validar
         // números a medio escribir.
-        List<XElement> cajas = new[] { "MainWindow.xaml", "PestanaOferta.xaml", "PestanaSeguimiento.xaml" }
+        List<XElement> cajas = FicherosDelEditor
             .SelectMany(nombre => XDocument.Load(Path.Combine(Raiz, "Views", nombre)).Descendants())
             .Where(e => e.Name.LocalName == "TextBox"
                 && ((string?)e.Attribute("Text"))?.StartsWith("{Binding Editor.", StringComparison.Ordinal) == true)
