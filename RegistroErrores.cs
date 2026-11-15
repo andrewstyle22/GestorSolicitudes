@@ -22,9 +22,6 @@ public static class RegistroErrores
         "errores.log");
 
     /// <summary>Anota una excepción junto al contexto en el que ocurrió. Nunca lanza.</summary>
-    public static void Registrar(Exception excepcion, string contexto) => RegistrarEn(Ruta, excepcion, contexto);
-
-    /// <summary>Igual que <see cref="Registrar"/>, sobre una ruta concreta (tests).</summary>
     internal static void RegistrarEn(string ruta, Exception excepcion, string contexto)
     {
         try
@@ -59,7 +56,7 @@ public static class RegistroErrores
         // una entrada partida por la mitad.
         byte[] contenido = File.ReadAllBytes(ruta);
         int corte = contenido.Length - (int)(LimiteBytes / 2);
-        int salto = Array.IndexOf(contenido, (byte)'\n', corte);
-        File.WriteAllBytes(ruta, salto >= 0 ? contenido[(salto + 1)..] : contenido[corte..]);
+        int salto = Array.IndexOf(contenido, (byte)'\n', corte) + 1;
+        File.WriteAllBytes(ruta, contenido[Math.Max(salto, corte)..]);
     }
 }

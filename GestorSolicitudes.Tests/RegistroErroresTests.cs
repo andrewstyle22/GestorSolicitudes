@@ -72,4 +72,12 @@ public class RegistroErroresTests
 
         Assert.Null(error);
     }
+
+    [Fact]
+    public void Ruta_ApuntaAlRegistroDeLaAplicacion()
+    {
+        Assert.EndsWith(
+            Path.Combine("GestorSolicitudes", "errores.log"),
+            RegistroErrores.Ruta);
+    }
 }

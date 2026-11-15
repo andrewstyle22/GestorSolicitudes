@@ -58,4 +58,13 @@ public class TextoYCsvTests
         Assert.Equal(string.Empty, TextoHelper.Escapar(null));
         Assert.Equal(string.Empty, TextoHelper.Escapar(string.Empty));
     }
+
+    [Theory]
+    [InlineData("   ")]
+    [InlineData(" texto")]
+    [InlineData("1+1")]
+    public void Escapar_SinFormulaNoAnteponeApostrofo(string valor)
+    {
+        Assert.Equal($"\"{valor}\"", TextoHelper.Escapar(valor));
+    }
 }

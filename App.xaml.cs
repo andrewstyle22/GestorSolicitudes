@@ -120,10 +120,16 @@ public partial class App : Application
 
         // Sin interfaz que avisar: solo queda dejar rastro antes de que el proceso muera.
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-            RegistroErrores.Registrar((Exception)e.ExceptionObject, "excepción no controlada en segundo plano");
+            RegistroErrores.RegistrarEn(
+                RegistroErrores.Ruta,
+                (Exception)e.ExceptionObject,
+                "excepción no controlada en segundo plano");
 
         TaskScheduler.UnobservedTaskException += (_, e) =>
-            RegistroErrores.Registrar(e.Exception, "excepción no observada en una tarea");
+            RegistroErrores.RegistrarEn(
+                RegistroErrores.Ruta,
+                e.Exception,
+                "excepción no observada en una tarea");
     }
 
     // El ViewModel se suelta antes que la base: Dispose se desengancha del evento

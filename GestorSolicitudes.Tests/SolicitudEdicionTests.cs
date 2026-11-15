@@ -1115,6 +1115,19 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
+    public void ValidarFechaPosteriorALaSolicitud_SinEditorOSinFecha_NoEsError()
+    {
+        var editor = EditorConFechaSolicitud(new DateTime(2026, 2, 10));
+
+        Assert.Equal(
+            ValidationResult.Success,
+            SolicitudEdicionViewModel.ValidarFechaPosteriorALaSolicitud(null, new ValidationContext(new object())));
+        Assert.Equal(
+            ValidationResult.Success,
+            SolicitudEdicionViewModel.ValidarFechaPosteriorALaSolicitud(null, new ValidationContext(editor)));
+    }
+
+    [Fact]
     public void CambiarEstado_RevalidaElMotivo()
     {
         var editor = new SolicitudEdicionViewModel

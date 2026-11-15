@@ -35,8 +35,10 @@ public sealed class InstanciaUnica : IDisposable
     {
         try
         {
-            while (this.aviso.WaitOne())
+            while (true)
             {
+                this.aviso.WaitOne();
+
                 // Dispose también despierta la espera: entonces no se ejecuta la acción.
                 if (this.cerrada)
                 {
