@@ -244,6 +244,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         this.Solicitudes = new ObservableCollection<Solicitud>(this.Pagina.Elementos);
 
+        // La colección nueva hace que el DataGrid pierda la fila: se repone si sigue en la página,
+        // para que el panel abierto y la selección no se contradigan.
+        if (this.solicitudAbierta is Solicitud abierta && this.Pagina.Elementos.Contains(abierta))
+        {
+            this.SeleccionarSinAviso(abierta);
+        }
+
         // El rango es texto traducido: se recalcula aunque la página sea la misma (cambio de idioma).
         this.OnPropertyChanged(nameof(this.RangoPagina));
     }

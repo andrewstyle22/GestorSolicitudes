@@ -467,6 +467,31 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void Recargar_ReponeLaFilaSeleccionadaSiSigueEnLaPagina()
+    {
+        using var db = TestDb.NuevoContexto();
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        using var vm = new MainViewModel(db);
+        vm.Recargar();
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single();
+
+        // El DataGrid escribe null al recibir una colección nueva; aquí se simula ese paso.
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.Solicitudes))
+            {
+                vm.SolicitudSeleccionada = null;
+            }
+        };
+        vm.Recargar();
+
+        Assert.Same(vm.Solicitudes.Single(), vm.SolicitudSeleccionada);
+        Assert.NotNull(vm.Editor); // el panel de detalle no se cierra al repaginar
+    }
+
+    [Fact]
     public void Recargar_RecalculaElSueloDelEmbudo()
     {
         using var db = TestDb.NuevoContexto();
