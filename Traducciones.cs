@@ -191,6 +191,7 @@ public static class Traducciones
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
+        ("Mensaje.AdjuntoDemasiadoGrande", "El documento no puede ser mayor a 2 megabytes."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
         ("Mensaje.NoSePudoAbrirFichero", "No se pudo abrir el fichero: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "No se puede previsualizar este formato. Usa Descargar para guardar una copia."),
@@ -483,6 +484,7 @@ public static class Traducciones
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
+        ("Mensaje.AdjuntoDemasiadoGrande", "The document cannot be larger than 2 megabytes."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
         ("Mensaje.NoSePudoAbrirFichero", "Could not open the file: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "This format cannot be previewed. Use Download to save a copy."),
@@ -775,6 +777,7 @@ public static class Traducciones
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
+        ("Mensaje.AdjuntoDemasiadoGrande", "Das Dokument darf nicht größer als 2 Megabyte sein."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
         ("Mensaje.NoSePudoAbrirFichero", "Die Datei konnte nicht geöffnet werden: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "Dieses Format kann nicht angezeigt werden. Nutze Herunterladen, um eine Kopie zu speichern."),

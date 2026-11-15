@@ -2,6 +2,7 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -256,6 +257,78 @@ public class ViewModelAdjuntosTests
         Assert.Equal(rutaCv, db.Solicitudes.Single().RutaCv);
         Assert.Equal("mi-cv.pdf", db.Solicitudes.Single().NombreOriginalCv);
         Assert.True(File.Exists(rutaCv));
+    }
+
+    [Fact]
+    public void AdjuntarCv_ConDosMegasExactos_SeAdjunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes) };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCvCommand.Execute(null);
+
+        Assert.NotNull(vm.Editor!.RutaCv);
+        Assert.True(File.Exists(vm.Editor.RutaCv));
+        Assert.Empty(dialogo.Avisos);
+    }
+
+    [Fact]
+    public void AdjuntarCv_ConUnByteDeMas_AvisaYNoAdjunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes + 1) };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCvCommand.Execute(null);
+
+        Assert.Null(vm.Editor!.RutaCv);
+        Assert.Empty(Directory.GetFiles(carpeta));
+        Assert.Equal(Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"), Assert.Single(dialogo.Avisos));
+    }
+
+    [Fact]
+    public void AdjuntarCarta_ConDosMegasExactos_SeAdjunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes) };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCartaCommand.Execute(null);
+
+        Assert.NotNull(vm.Editor!.RutaCarta);
+        Assert.True(File.Exists(vm.Editor.RutaCarta));
+        Assert.Empty(dialogo.Avisos);
+    }
+
+    [Fact]
+    public void AdjuntarCarta_ConUnByteDeMas_AvisaYNoAdjunta()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes + 1) };
+        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+
+        vm.AdjuntarCartaCommand.Execute(null);
+
+        Assert.Null(vm.Editor!.RutaCarta);
+        Assert.Empty(Directory.GetFiles(carpeta));
+        Assert.Equal(Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"), Assert.Single(dialogo.Avisos));
+    }
+
+    private static string CrearFicheroDeBytes(int bytes)
+    {
+        string ruta = Path.Combine(TestDb.NuevaCarpeta(), "documento.pdf");
+        using FileStream fichero = File.Create(ruta);
+        fichero.SetLength(bytes);
+        return ruta;
     }
 
     [Fact]

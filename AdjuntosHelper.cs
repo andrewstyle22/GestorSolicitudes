@@ -12,6 +12,9 @@ using System.IO;
 /// </summary>
 public static class AdjuntosHelper
 {
+    /// <summary>Peso máximo de un adjunto (2 MB). El editor lo comprueba antes de copiar.</summary>
+    public const int TamanoMaximoBytes = 2 * 1024 * 1024;
+
     public static string Carpeta { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "GestorSolicitudes",

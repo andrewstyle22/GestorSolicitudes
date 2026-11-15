@@ -689,6 +689,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
+            if (new FileInfo(origen).Length > AdjuntosHelper.TamanoMaximoBytes)
+            {
+                this.dialogo.Avisar(
+                    Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"),
+                    Localizacion.Texto("Titulo.Adjunto"));
+                return;
+            }
+
             string nuevaRuta = this.adjuntos.Copiar(origen, adjunto.Etiqueta);
             adjunto.Asignar(editar, nuevaRuta, Path.GetFileName(origen));
         }
