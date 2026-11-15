@@ -18,7 +18,7 @@ internal static class EsquemaDb
         Justification = "ALTER TABLE de SQLite no admite parámetros y tanto el nombre como la definición de la columna salen de un array fijo del código, nunca de entrada del usuario.")]
     internal static void VerificarColumnasFaltantes(string ruta)
     {
-        using var conexion = new SqliteConnection($"Data Source={ruta}");
+        using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(ruta));
         conexion.Open();
 
         var columnas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -69,7 +69,7 @@ internal static class EsquemaDb
     /// </summary>
     internal static void NormalizarMotivosDeCierre(string ruta)
     {
-        using var conexion = new SqliteConnection($"Data Source={ruta}");
+        using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(ruta));
         conexion.Open();
 
         using var command = conexion.CreateCommand();

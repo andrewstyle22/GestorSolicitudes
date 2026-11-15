@@ -10,12 +10,12 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hecho entero; pendiente la prueba manual de la sección 4.
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
-- ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3.
+- ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. D.1 hecho.
 - ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-D.1 (`refactor: cadena de conexión de SQLite en un solo sitio`): extraer `CadenaConexion(ruta)` junto a `RutaBaseDatos` en `AppDbContext.cs` (o donde viva `RutaBaseDatos`), y usarla en el propio `AppDbContext` y en los dos puntos de `EsquemaDb` que hoy montan la cadena. Sin cambio de comportamiento. Test si alguno de esos puntos no está cubierto. No hacer push sin que se pida.
+D.2 (`fix: la tabla repone la fila seleccionada tras recargar`): en `Paginar`, volver a seleccionar `solicitudAbierta` si sigue en la página, con el mecanismo de `SeleccionarSinAviso`, para que el temporizador de recordatorios no dispare el aviso de cambios sin guardar. Tests. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.

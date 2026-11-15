@@ -206,6 +206,16 @@ public class AppDbContextTests
     }
 
     [Fact]
+    public void CadenaConexion_EscapaPuntoYComaDeLaRuta()
+    {
+        string ruta = Path.Combine("datos;viejos", "solicitudes.db");
+
+        var constructor = new SqliteConnectionStringBuilder(AppDbContext.CadenaConexion(ruta));
+
+        Assert.Equal(ruta, constructor.DataSource);
+    }
+
+    [Fact]
     public void OnConfiguring_RutaSinCarpeta_OmitelaCreacionDelDirectorio()
     {
         // Una ruta sin carpeta (solo nombre) entra por la rama false del if de OnConfiguring.
