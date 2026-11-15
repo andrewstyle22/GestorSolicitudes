@@ -7,15 +7,15 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ 0 a 5: red de seguridad, editor con búfer, historial, modelo cerrado, estados y reapertura (R), cierre y correcciones finales.
 
 ## Etapas de la refactorización Ponytail
-- 🟨 A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hechos A.0 a A.10; siguiente, A.11.
-- ⬜ B: límite de 2 MB para CV y carta, B.1.
+- ✅ A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hecho entero; pendiente la prueba manual de la sección 4.
+- 🟨 B: límite de 2 MB para CV y carta, B.1. Siguiente, B.1.
 - ⬜ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5.
 - ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3.
 - ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-A.11 (`fix: confirmar la edición pendiente antes de Ctrl+S, Ctrl+N y cerrar`): un método que mueve el foco a la ventana para que el control activo vuelque su valor (salarios y fechas incluidos). Lo llaman los atajos, que pasan de `KeyBinding` a un manejador de teclado, y `OnClosing`, antes de `ResolverCambiosPendientes()`. Se comprueba a mano (sección 4). No hacer push sin que se pida.
+B.1 (`feat: límite de 2 MB al adjuntar CV y carta`): constante `AdjuntosHelper.TamanoMaximoBytes` (2 × 1024 × 1024); `AdjuntarAdjunto` mide el fichero antes de copiarlo, avisa con `Mensaje.AdjuntoDemasiadoGrande` («El documento no puede ser mayor a 2 megabytes.» en es/en/de) y no adjunta nada. Exactamente 2 MB sí se admite. Tests con `DialogoFalso` en el límite y un byte por encima, para CV y carta. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.

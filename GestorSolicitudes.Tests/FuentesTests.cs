@@ -61,6 +61,28 @@ public partial class FuentesTests
     }
 
     [Fact]
+    public void LosAtajosYElCierreConfirmanLaEdicionPendiente()
+    {
+        // Salarios y fechas se vuelcan al búfer al perder el foco: los atajos y el cierre
+        // tienen que llevarlo antes a la ventana. Un KeyBinding guardaría sin ese valor.
+        string codeBehind = File.ReadAllText(Path.Combine(Raiz, "Views", "MainWindow.xaml.cs"));
+
+        Assert.DoesNotContain("new KeyBinding", codeBehind);
+
+        string atajos = codeBehind[codeBehind.IndexOf("private void Atajos_PreviewKeyDown", StringComparison.Ordinal)..];
+        Assert.True(
+            atajos.IndexOf("this.VolcarEdicionPendiente();", StringComparison.Ordinal)
+                < atajos.IndexOf("comando.Execute(null);", StringComparison.Ordinal),
+            "El atajo debe volcar la edición pendiente antes de ejecutar el comando.");
+
+        string cierre = codeBehind[codeBehind.IndexOf("protected override void OnClosing", StringComparison.Ordinal)..];
+        Assert.True(
+            cierre.IndexOf("this.VolcarEdicionPendiente();", StringComparison.Ordinal)
+                < cierre.IndexOf("this.vm.ResolverCambiosPendientes()", StringComparison.Ordinal),
+            "OnClosing debe volcar la edición pendiente antes de preguntar.");
+    }
+
+    [Fact]
     public void LasClavesDeTextoUsadasEstanDefinidas()
     {
         List<string> usadas = ClavesUsadas();
