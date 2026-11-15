@@ -103,12 +103,15 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private bool fueReabierta;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? fechaPrimeraRespuesta;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? fechaEntrevista;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? proximoSeguimiento;
 
     private DateTime? proximoSeguimientoOriginal;
@@ -118,6 +121,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ProximoSeguimiento != this.proximoSeguimientoOriginal ? this.ProximoSeguimiento : null;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? fechaCierre;
 
     [ObservableProperty]
@@ -303,6 +307,24 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             ? new ValidationResult(Localizacion.Texto("Mensaje.MotivoCierreNoValido"))
             : ValidationResult.Success;
 
+    /// <summary>Las fechas del seguimiento no pueden ser anteriores a la fecha de solicitud.</summary>
+    public static ValidationResult? ValidarFechaPosteriorALaSolicitud(DateTime? valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && valor is DateTime fecha
+        && fecha < editor.FechaSolicitud
+            ? new ValidationResult(string.Format(
+                Localizacion.Texto("Mensaje.FechaAnteriorASolicitud"),
+                Localizacion.Texto(ClaveDelCampoDeFecha(contexto.MemberName))))
+            : ValidationResult.Success;
+
+    private static string ClaveDelCampoDeFecha(string? miembro) => miembro switch
+    {
+        nameof(FechaPrimeraRespuesta) => "Seguimiento.PrimeraContestacion",
+        nameof(FechaEntrevista) => "Seguimiento.DiaEntrevista",
+        nameof(FechaCierre) => "Seguimiento.FechaCierre",
+        _ => "Seguimiento.ProximoSeguimiento",
+    };
+
     partial void OnEmpresaChanged(string value) => this.ValidateProperty(value, nameof(this.Empresa));
 
     partial void OnPuestoChanged(string value) => this.ValidateProperty(value, nameof(this.Puesto));
@@ -312,6 +334,18 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     partial void OnNotaReaperturaChanged(string? value) =>
         this.ValidateProperty(value, nameof(this.NotaReapertura));
+
+    partial void OnFechaPrimeraRespuestaChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.FechaPrimeraRespuesta));
+
+    partial void OnFechaEntrevistaChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.FechaEntrevista));
+
+    partial void OnProximoSeguimientoChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.ProximoSeguimiento));
+
+    partial void OnFechaCierreChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.FechaCierre));
 
     /// <summary>
     /// Al cambiar la fecha de envío, el hito «Solicitud enviada» y el seguimiento propuesto
@@ -340,6 +374,11 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         {
             this.ProximoSeguimiento = value.AddDays(7);
         }
+
+        this.ValidateProperty(this.FechaPrimeraRespuesta, nameof(this.FechaPrimeraRespuesta));
+        this.ValidateProperty(this.FechaEntrevista, nameof(this.FechaEntrevista));
+        this.ValidateProperty(this.ProximoSeguimiento, nameof(this.ProximoSeguimiento));
+        this.ValidateProperty(this.FechaCierre, nameof(this.FechaCierre));
     }
 
     /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>

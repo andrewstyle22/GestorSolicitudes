@@ -96,6 +96,77 @@ public class SolicitudEdicionTests
             Assert.Single(editor.GetErrors(nameof(editor.SalarioMax)).Cast<ValidationResult>()).ErrorMessage);
     }
 
+    public static TheoryData<string, string> FechasDelSeguimiento => new()
+    {
+        { nameof(SolicitudEdicionViewModel.FechaPrimeraRespuesta), "Seguimiento.PrimeraContestacion" },
+        { nameof(SolicitudEdicionViewModel.FechaEntrevista), "Seguimiento.DiaEntrevista" },
+        { nameof(SolicitudEdicionViewModel.FechaCierre), "Seguimiento.FechaCierre" },
+        { nameof(SolicitudEdicionViewModel.ProximoSeguimiento), "Seguimiento.ProximoSeguimiento" },
+    };
+
+    [Theory]
+    [MemberData(nameof(FechasDelSeguimiento))]
+    public void Validacion_FechaDelSeguimiento_SeComparaConLaFechaDeSolicitud(string propiedad, string clave)
+    {
+        DateTime fecha = new(2026, 2, 10);
+        var editor = EditorConFechaSolicitud(fecha);
+
+        PonerFecha(editor, propiedad, fecha.AddDays(-1));
+        editor.Validar();
+
+        Assert.Equal(
+            string.Format(Localizacion.Texto("Mensaje.FechaAnteriorASolicitud"), Localizacion.Texto(clave)),
+            Assert.Single(editor.GetErrors(propiedad).Cast<ValidationResult>()).ErrorMessage);
+
+        PonerFecha(editor, propiedad, fecha);
+        Assert.Empty(editor.GetErrors(propiedad));
+
+        PonerFecha(editor, propiedad, null);
+        Assert.Empty(editor.GetErrors(propiedad));
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_RevalidaLasFechasDelSeguimiento()
+    {
+        DateTime fecha = new(2026, 2, 10);
+        var editor = EditorConFechaSolicitud(fecha);
+        editor.FechaEntrevista = fecha.AddDays(3);
+        Assert.Empty(editor.GetErrors(nameof(editor.FechaEntrevista)));
+
+        editor.FechaSolicitud = fecha.AddDays(5);
+        Assert.NotEmpty(editor.GetErrors(nameof(editor.FechaEntrevista)));
+
+        editor.FechaSolicitud = fecha.AddDays(1);
+        Assert.Empty(editor.GetErrors(nameof(editor.FechaEntrevista)));
+    }
+
+    private static SolicitudEdicionViewModel EditorConFechaSolicitud(DateTime fecha) =>
+        new()
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            FechaSolicitud = fecha,
+        };
+
+    private static void PonerFecha(SolicitudEdicionViewModel editor, string propiedad, DateTime? fecha)
+    {
+        switch (propiedad)
+        {
+            case nameof(SolicitudEdicionViewModel.FechaPrimeraRespuesta):
+                editor.FechaPrimeraRespuesta = fecha;
+                break;
+            case nameof(SolicitudEdicionViewModel.FechaEntrevista):
+                editor.FechaEntrevista = fecha;
+                break;
+            case nameof(SolicitudEdicionViewModel.FechaCierre):
+                editor.FechaCierre = fecha;
+                break;
+            default:
+                editor.ProximoSeguimiento = fecha;
+                break;
+        }
+    }
+
     [Fact]
     public void HayCambios_RecienAbierta_EsFalse()
     {

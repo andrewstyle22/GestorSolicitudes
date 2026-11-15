@@ -544,6 +544,7 @@ public class ViewModelDialogosTests
             .ConPuesto("Dev")
             .ConEstado(EstadoSolicitud.OfertaRechazada)
             .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaSolicitud(new DateTime(2026, 10, 1))
             .ConFechaCierre(fechaCierre)
             .Construir();
         db.Solicitudes.Add(solicitud);
@@ -583,6 +584,7 @@ public class ViewModelDialogosTests
             .ConPuesto("Dev")
             .ConEstado(EstadoSolicitud.Rechazada)
             .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaSolicitud(new DateTime(2026, 10, 1))
             .ConFechaCierre(fechaCierre)
             .Construir();
         db.Solicitudes.Add(solicitud);
@@ -845,6 +847,7 @@ public class ViewModelDialogosTests
             .ConPuesto("Puesto R.12g")
             .ConEstado(EstadoSolicitud.Rechazada)
             .ConMotivoRechazo(MotivoRechazo.Salario)
+            .ConFechaSolicitud(new DateTime(2026, 9, 30))
             .ConProximoSeguimiento(seguimientoOriginal)
             .Construir();
         db.Solicitudes.Add(solicitud);
