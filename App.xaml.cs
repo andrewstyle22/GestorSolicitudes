@@ -14,6 +14,7 @@ public partial class App : Application
     private readonly DialogoService dialogo = new();
     private AppDbContext? db;
     private MainViewModel? viewModel;
+    private InstanciaUnica? instancia;
 
     // Arranque de la app: ventanas, bandeja y MessageBox del fallo de base de datos.
     // Requiere el ciclo de vida completo de WPF y no se puede probar con los tests.
@@ -29,6 +30,18 @@ public partial class App : Application
         // Los manejadores se instalan antes de tocar nada más para que ningún fallo
         // del arranque se quede sin registro ni aviso.
         this.RegistrarManejadoresDeErrores();
+
+        // Una sola copia abierta: dos contextos sobre la misma base se pisan sin avisar.
+        // La segunda avisa a la primera (que mostrará su ventana) y se cierra sin abrir nada.
+        this.instancia = new InstanciaUnica();
+        if (!this.instancia.EsPrimera)
+        {
+            this.instancia.AvisarALaPrimera();
+            this.instancia.Dispose();
+            this.instancia = null;
+            this.Shutdown();
+            return;
+        }
 
         AppDbContext contexto = new();
         try
@@ -91,6 +104,7 @@ public partial class App : Application
     {
         this.viewModel?.Dispose();
         this.db?.Dispose();
+        this.instancia?.Dispose();
         base.OnExit(e);
     }
 }
