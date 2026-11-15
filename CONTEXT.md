@@ -10,12 +10,12 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hecho entero; pendiente la prueba manual de la sección 4.
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
-- ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. D.1 y D.2 hechos.
+- ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
 - ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-D.3 (`fix: el CSV neutraliza fórmulas precedidas de espacios`): `TextoHelper.Escapar` busca el primer carácter que no sea un espacio antes de decidir si antepone el apóstrofo. Tests con `" =2+2"` y tabuladores. No hacer push sin que se pida.
+E.1 (`feat: tabla DocumentosSolicitud`): entidad `DocumentosSolicitud` con `SolicitudId`, `Cv` y `Carta` (`byte[]?`), mapeo 1:1 con borrado en cascada y `CREATE TABLE IF NOT EXISTS` en `EsquemaDb`. Tests de ida y vuelta, borrado en cascada y que cargar `Solicitudes` no lee la tabla. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -41,7 +41,7 @@ D.3 (`fix: el CSV neutraliza fórmulas precedidas de espacios`): `TextoHelper.Es
 - Motivo de cierre obligatorio en Descartado, Retirada y Oferta rechazada por mí, filtrado por estado, con `NoIndicado` preseleccionado. `RespuestaEmpresa` y `Notas` son texto libre sin límite.
 - Respuesta de la empresa (5.8): cuentan los estados abiertos salvo «Enviada» y «Sin respuesta», más «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Solo «Retirada por mí» no cuenta.
 - Cambios sin guardar: aviso con Guardar, Descartar y Cancelar al cambiar de fila, *Nueva*, *Duplicar* y cerrar la ventana; tras Guardar, la acción solo sigue si el guardado fue bien.
-- CSV: separador a elegir (`;`, `,` o tabulador) y recordado; columnas de motivo de cierre y fecha de reapertura; apóstrofo delante de los textos que empiezan por `=`, `+`, `-` o `@`.
+- CSV: separador a elegir (`;`, `,` o tabulador) y recordado; columnas de motivo de cierre y fecha de reapertura; apóstrofo delante de los textos cuyo primer carácter visible es `=`, `+`, `-`, `@`, tabulador o retorno de carro; los espacios iniciales se ignoran al decidirlo (D.3) y el apóstrofo se antepone a la celda completa.
 - Cambiar `FechaSolicitud` mueve el hito de envío y el seguimiento propuesto solo si coincidían con la fecha anterior.
 - Los hitos que crea el modelo guardan su texto en castellano con el prefijo `Reabierta. ` compartido; traducirlos al mostrar queda para otra refactorización.
 

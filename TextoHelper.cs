@@ -37,8 +37,9 @@ public static class TextoHelper
 
         string limpio = valor.Replace("\"", "\"\"").Replace("\r", " ").Replace("\n", " ");
 
-        // Una hoja de cálculo interpreta estos primeros caracteres como fórmula: el apóstrofo la neutraliza.
-        if (valor[0] is '=' or '+' or '-' or '@' or '\t' or '\r')
+        // Una hoja de cálculo ignora los espacios iniciales e interpreta el primer carácter visible
+        // como fórmula: el apóstrofo la neutraliza.
+        if (valor.AsSpan().TrimStart(' ') is [var primero, ..] && primero is '=' or '+' or '-' or '@' or '\t' or '\r')
         {
             limpio = "'" + limpio;
         }
