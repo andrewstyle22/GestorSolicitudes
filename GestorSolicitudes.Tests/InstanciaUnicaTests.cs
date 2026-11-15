@@ -45,8 +45,13 @@ public class InstanciaUnicaTests
         var primera = new InstanciaUnica(nombre);
         using var segunda = new InstanciaUnica(nombre);
         var avisada = new TaskCompletionSource();
+        int avisos = 0;
 
-        Task espera = Task.Run(() => primera.EsperarAviso(avisada.SetResult));
+        Task espera = Task.Run(() => primera.EsperarAviso(() =>
+        {
+            Interlocked.Increment(ref avisos);
+            avisada.SetResult();
+        }));
         try
         {
             segunda.AvisarALaPrimera();
@@ -59,6 +64,8 @@ public class InstanciaUnicaTests
         }
 
         await espera.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(1, Volatile.Read(ref avisos));
     }
 
     [Fact]
@@ -71,5 +78,7 @@ public class InstanciaUnicaTests
         instancia.Dispose();
 
         await espera.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.True(espera.IsCompletedSuccessfully);
     }
 }
