@@ -185,7 +185,7 @@ public partial class MainWindow : Window
 
     private void MenuSalir_Click(object? sender, RoutedEventArgs e) => this.Close();
 
-    private void MostrarVentana()
+    internal void MostrarVentana()
     {
         this.Show();
         if (this.WindowState == WindowState.Minimized)

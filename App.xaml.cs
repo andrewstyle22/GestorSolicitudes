@@ -76,6 +76,35 @@ public partial class App : Application
         var ventana = new MainWindow(this.viewModel);
         this.MainWindow = ventana;
         ventana.Show();
+
+        this.EscucharAvisosDeOtrasCopias(ventana);
+    }
+
+    // Otra copia lanzada avisa aquí: la ventana se muestra desde el hilo de la interfaz,
+    // tanto si estaba minimizada como si solo había quedado el icono de la bandeja.
+    [ExcludeFromCodeCoverage]
+    private void EscucharAvisosDeOtrasCopias(MainWindow ventana)
+    {
+        _ = Task.Run(() => this.instancia?.EsperarAviso(() =>
+        {
+            if (this.Dispatcher.HasShutdownStarted)
+            {
+                return;
+            }
+
+            try
+            {
+                this.Dispatcher.Invoke(() => ventana.MostrarVentana());
+            }
+            catch (InvalidOperationException)
+            {
+                // La aplicación se está cerrando y el despachador ya no acepta trabajo.
+            }
+            catch (TaskCanceledException)
+            {
+                // El despachador se cerró entre la comprobación y el Invoke.
+            }
+        }));
     }
 
     // Red de seguridad: un fallo en la interfaz se registra, se avisa con la ruta del

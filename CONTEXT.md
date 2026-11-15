@@ -9,13 +9,13 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 ## Etapas de la refactorización Ponytail
 - ✅ A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hecho entero; pendiente la prueba manual de la sección 4.
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
-- 🟨 C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. C.1 y C.2 hechos; siguiente, C.3.
+- 🟨 C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. C.1 a C.3 hechos; siguiente, C.4.
 - ⬜ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3.
 - ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-C.3 (`feat: la primera copia muestra su ventana al recibir el aviso`): la primera espera el aviso en segundo plano y, en el hilo de la interfaz, restaura la ventana (también si estaba en la bandeja), reutilizando la acción «Mostrar» del icono. Los manejadores ya se liberan en `App.OnExit`. No hacer push sin que se pida.
+C.4 (`feat: el editor valida que las fechas no sean anteriores a FechaSolicitud`): primera respuesta, entrevista, cierre y próximo seguimiento no pueden ser anteriores a `FechaSolicitud`. Mensaje `Mensaje.FechaAnteriorASolicitud` en es/en/de, que nombra el campo. Se revalida al cambiar `FechaSolicitud`. Tests por campo, con el límite exacto y con nulos. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -25,7 +25,7 @@ C.3 (`feat: la primera copia muestra su ventana al recibir el aviso`): la primer
 - `RegistroErrores` (A.8): añade al final del fichero y, pasado 1 MB, se queda con la mitad reciente (desde el siguiente salto de línea). Nunca lanza; si no puede escribir, solo deja un `Debug.WriteLine`. Los tests usan `RegistrarEn(ruta, …)`.
 - Atajos: `UpdateSourceTrigger=PropertyChanged` en los `TextBox` de texto (A.10) y confirmación del control con el foco antes de Ctrl+S, Ctrl+N y cerrar (A.11).
 - Documentos: máximo 2 MB (2 × 1024 × 1024 bytes); más grande, aviso «El documento no puede ser mayor a 2 megabytes» y no se adjunta (B.1).
-- Instancia única: la segunda copia avisa a la primera y se cierra sin abrir la base ni crear ventana; la primera muestra su ventana al recibir el aviso (C.1 a C.3). `InstanciaUnica` (Helpers) usa un `Mutex` con nombre (`EsPrimera` sale de `createdNew`) y un `EventWaitHandle` con nombre para el aviso; el constructor acepta nombre para los tests. `Dispose` no llama a `ReleaseMutex` (es del hilo que lo creó), solo cierra los manejadores; `EsperarAviso` sale al liberarse (bandera + `Set`). `App.OnStartup` crea la instancia tras instalar los manejadores de errores y antes de la base; `App.OnExit` la libera.
+- Instancia única: la segunda copia avisa a la primera y se cierra sin abrir la base ni crear ventana; la primera muestra su ventana al recibir el aviso (C.1 a C.3). `InstanciaUnica` (Helpers) usa un `Mutex` con nombre (`EsPrimera` sale de `createdNew`) y un `EventWaitHandle` con nombre para el aviso; el constructor acepta nombre para los tests. `Dispose` no llama a `ReleaseMutex` (es del hilo que lo creó), solo cierra los manejadores; `EsperarAviso` sale al liberarse (bandera + `Set`). `App.OnStartup` crea la instancia tras instalar los manejadores de errores y antes de la base; `App.OnExit` la libera. La primera copia escucha el aviso en una tarea de fondo (C.3) y, en el hilo de la interfaz, llama a `MainWindow.MostrarVentana` (internal), que ya usan el doble clic y el menú de la bandeja; si el despachador está cerrado, el aviso se ignora.
 - Fechas: primera respuesta, entrevista, cierre y próximo seguimiento no pueden ser anteriores a `FechaSolicitud`. Regla en el modelo (`ActualizarFechas`, C.5) y mensaje en el editor (C.4). `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`.
 - Documentos en la base de datos: tabla aparte `DocumentosSolicitud` (`SolicitudId`, `Cv` y `Carta` BLOB anulables, borrado en cascada), sin navegación desde `Solicitud`, leída solo al pulsar «abrir». `Solicitud` conserva `NombreOriginalCv` y `NombreOriginalCarta`; `TieneCv` y `TieneCarta` salen de ellos. El contenido nuevo vive en el editor hasta guardar. Abrir escribe un temporal en `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al cerrar y al arrancar. No ahorra espacio; aporta copia de seguridad en un solo fichero.
 - Migración al arrancar: con SQL, transacción, comprobación de tamaño, y borrado de los ficheros antiguos tras confirmar. Se mejorará más adelante.
