@@ -437,8 +437,8 @@ public class SolicitudEdicionTests
     {
         DateTime fecha = new(2026, 2, 1);
         Solicitud solicitud = new SolicitudBuilder()
-            .ConFechaPrimeraRespuesta(fecha.AddDays(-1))
-            .ConFechaCierre(fecha.AddDays(-2))
+            .ConFechaPrimeraRespuesta(fecha)
+            .ConFechaCierre(fecha.AddDays(1))
             .Construir();
         var editor = new SolicitudEdicionViewModel
         {
@@ -454,8 +454,40 @@ public class SolicitudEdicionTests
         Assert.Equal(fecha, solicitud.FechaSolicitud);
         Assert.Equal(fecha.AddDays(2), solicitud.FechaEntrevista);
         Assert.Equal(fecha.AddDays(3), solicitud.ProximoSeguimiento);
-        Assert.Equal(fecha.AddDays(-1), solicitud.FechaPrimeraRespuesta);
-        Assert.Equal(fecha.AddDays(-2), solicitud.FechaCierre);
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(fecha.AddDays(1), solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void AplicarA_FechaDeSolicitudPosteriorALaRespuesta_Lanza()
+    {
+        DateTime fecha = new(2026, 2, 1);
+        var solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            FechaSolicitud = fecha,
+            FechaPrimeraRespuesta = fecha.AddDays(-1),
+        };
+
+        // AplicarRespuesta va antes que AplicarFechas: si el orden se invierte,
+        // la validación mira la respuesta antigua (nula) y no lanza.
+        Assert.Throws<ArgumentException>(() => editor.AplicarA(solicitud));
+    }
+
+    [Fact]
+    public void AplicarA_FechaDeSolicitudPosteriorAlCierre_Lanza()
+    {
+        DateTime fecha = new(2026, 2, 1);
+        var solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            Estado = EstadoSolicitud.Rechazada,
+            MotivoRechazo = MotivoRechazo.NoIndicado,
+            FechaSolicitud = fecha,
+            FechaCierre = fecha.AddDays(-1),
+        };
+
+        Assert.Throws<ArgumentException>(() => editor.AplicarA(solicitud));
     }
 
     [Fact]

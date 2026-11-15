@@ -777,6 +777,74 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorALaEntrevista_Lanza()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var envio = new DateTime(2026, 1, 10);
+
+        Assert.Throws<ArgumentException>(() =>
+            solicitud.ActualizarFechas(envio, envio.AddDays(-1), null));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorAlSeguimiento_Lanza()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var envio = new DateTime(2026, 1, 10);
+
+        Assert.Throws<ArgumentException>(() =>
+            solicitud.ActualizarFechas(envio, null, envio.AddDays(-1)));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorALaPrimeraRespuestaGuardada_Lanza()
+    {
+        var envio = new DateTime(2026, 1, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(envio.AddDays(-1))
+            .Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarFechas(envio, null, null));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorAlCierreGuardado_Lanza()
+    {
+        var envio = new DateTime(2026, 1, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaCierre(envio.AddDays(-1))
+            .Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarFechas(envio, null, null));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudIgualALosLimites_NoLanza()
+    {
+        var envio = new DateTime(2026, 1, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(envio)
+            .ConFechaCierre(envio)
+            .Construir();
+
+        solicitud.ActualizarFechas(envio, envio, envio);
+
+        Assert.Equal(envio, solicitud.FechaSolicitud);
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechasQueRellenaElModeloConHoy_NoLanza()
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var manana = DateTime.Today.AddDays(1);
+
+        solicitud.ActualizarFechas(manana, null, null);
+
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+        Assert.Equal(manana, solicitud.FechaSolicitud);
+    }
+
+    [Fact]
     public void ActualizarFechas_CambiaElEnvio_MueveElHitoDeSolicitudEnviada()
     {
         var anterior = new DateTime(2026, 1, 10);
@@ -1097,6 +1165,7 @@ public class SolicitudTests
     {
         var solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir();
         Assert.True(solicitud.SeguimientoPendiente);
@@ -1117,6 +1186,7 @@ public class SolicitudTests
     {
         var solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir();
         Assert.False(solicitud.SeguimientoPendiente);

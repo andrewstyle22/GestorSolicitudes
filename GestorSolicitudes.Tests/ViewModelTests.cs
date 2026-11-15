@@ -364,6 +364,7 @@ public class ViewModelTests
         db.Solicitudes.Add(new SolicitudBuilder()
             .ConEmpresa("Vencida")
             .ConPuesto("A")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir());
         db.Solicitudes.Add(new SolicitudBuilder()
@@ -574,12 +575,14 @@ public class ViewModelTests
         db.Solicitudes.Add(new SolicitudBuilder()
             .ConEmpresa("Vencida abierta")
             .ConPuesto("A")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir());
         db.Solicitudes.Add(new SolicitudBuilder()
             .ConEmpresa("Cerrada vencida")
             .ConPuesto("B")
             .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-2))
             .Construir());
         db.Solicitudes.Add(new SolicitudBuilder()

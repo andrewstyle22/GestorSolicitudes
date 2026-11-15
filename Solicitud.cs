@@ -199,29 +199,53 @@ public class Solicitud
     /// <summary>
     /// Actualiza las fechas que se editan a mano: envío, entrevista y próximo seguimiento.
     /// Al cambiar la fecha de envío, el hito <see cref="TipoEvento.SolicitudEnviada"/> y el
-    /// seguimiento propuesto la siguen si conservaban la fecha anterior.
+    /// seguimiento propuesto la siguen si conservaban la fecha anterior. Exige que la fecha
+    /// de envío no sea posterior a la entrevista, al seguimiento, a la primera respuesta
+    /// ni al cierre.
     /// </summary>
     public void ActualizarFechas(DateTime fechaSolicitud, DateTime? fechaEntrevista, DateTime? proximoSeguimiento)
     {
         DateTime fechaAnterior = this.FechaSolicitud;
+        bool cambiaEnvio = fechaSolicitud != fechaAnterior;
 
-        if (fechaSolicitud != fechaAnterior)
+        if (cambiaEnvio && this.FechaReapertura is null && proximoSeguimiento == fechaAnterior.AddDays(7))
+        {
+            proximoSeguimiento = fechaSolicitud.AddDays(7);
+        }
+
+        this.ExigirFechasPosteriores(fechaSolicitud, fechaEntrevista, proximoSeguimiento);
+
+        if (cambiaEnvio)
         {
             foreach (Evento evento in this.eventos.Where(
                 e => e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha == fechaAnterior))
             {
                 evento.Actualizar(fechaSolicitud, evento.Tipo, evento.Descripcion);
             }
-
-            if (this.FechaReapertura is null && proximoSeguimiento == fechaAnterior.AddDays(7))
-            {
-                proximoSeguimiento = fechaSolicitud.AddDays(7);
-            }
         }
 
         this.FechaSolicitud = fechaSolicitud;
         this.FechaEntrevista = fechaEntrevista;
         this.ProximoSeguimiento = proximoSeguimiento;
+    }
+
+    private void ExigirFechasPosteriores(DateTime fechaSolicitud, DateTime? fechaEntrevista, DateTime? proximoSeguimiento)
+    {
+        DateTime hoy = DateTime.Today;
+        bool incoherente = fechaEntrevista < fechaSolicitud
+            || proximoSeguimiento < fechaSolicitud
+
+            // El modelo rellena la primera respuesta y el cierre con hoy: no delatan
+            // una fecha de envío incoherente.
+            || (this.FechaPrimeraRespuesta is DateTime respuesta && respuesta != hoy && respuesta < fechaSolicitud)
+            || (this.FechaCierre is DateTime cierre && cierre != hoy && cierre < fechaSolicitud);
+
+        if (incoherente)
+        {
+            throw new ArgumentException(
+                "La fecha de solicitud no puede ser posterior a la primera respuesta, la entrevista, el cierre ni el seguimiento.",
+                nameof(fechaSolicitud));
+        }
     }
 
     /// <summary>
