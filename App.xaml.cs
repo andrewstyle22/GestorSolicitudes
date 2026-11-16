@@ -55,6 +55,19 @@ public partial class App : Application
             // El motivo de cierre pasa a ser obligatorio en los cierres negativos:
             // las filas antiguas se normalizan antes de que el editor lo exija.
             EsquemaDb.NormalizarMotivosDeCierre(AppDbContext.RutaBaseDatos);
+
+            // Los adjuntos de versiones anteriores viven en disco: se copian a la base
+            // antes de crear el ViewModel, que ya no los busca en ficheros.
+            try
+            {
+                MigradorAdjuntos.Migrar(AppDbContext.RutaBaseDatos, RegistroErrores.Ruta);
+            }
+            catch (Exception ex)
+            {
+                // La aplicación sigue arrancando: las rutas quedan intactas y la migración
+                // se reintenta en el siguiente inicio.
+                RegistroErrores.RegistrarEn(RegistroErrores.Ruta, ex, "no se pudieron migrar los adjuntos");
+            }
         }
         catch (Exception ex)
         {

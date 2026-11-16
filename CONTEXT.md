@@ -11,11 +11,11 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
 - ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.5 hechos; quedan E.6–E.16.
+- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.6 hechos; quedan E.7–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-E.6 (`feat: migrar al arrancar`): `App.OnStartup` ejecuta la migración después de `EsquemaDb`; los errores van a `RegistroErrores`. Prueba manual con una base antigua (sección 4). No hacer push sin que se pida.
+E.7 (`feat: TieneCv y TieneCarta en el modelo`): `TieneCv` y `TieneCarta` según el nombre guardado, y sus métodos `Asignar…`/`Quitar…`, conviviendo con los de ruta (E-D). No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -33,7 +33,7 @@ E.6 (`feat: migrar al arrancar`): `App.OnStartup` ejecuta la migración después
 - Fechas: primera respuesta, entrevista, cierre y próximo seguimiento no pueden ser anteriores a `FechaSolicitud`. Regla en el modelo (`ActualizarFechas`, C.5) y mensaje en el editor (C.4). El modelo exime los `hoy` que rellena él mismo (primera respuesta y cierre). `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`; hay test del orden. En el editor, `ValidarFechaPosteriorALaSolicitud` se aplica a las cuatro fechas, formatea `Mensaje.FechaAnteriorASolicitud` con la etiqueta `Seguimiento.*` del campo y se revalida al cambiar `FechaSolicitud`; las filas antiguas incoherentes se pueden cargar pero no guardar hasta corregirlas (los tests con esas fechas se ajustaron en C.4 y C.5).
 - Selección y recarga: tras repaginar, `Paginar` repone `solicitudAbierta` con `SeleccionarSinAviso` si sigue en la página (D.2); el panel abierto y la fila resaltada no se contradicen.
 - Documentos en la base de datos: tabla aparte `DocumentosSolicitud` (`SolicitudId`, `Cv` y `Carta` BLOB anulables, borrado en cascada), sin navegación desde `Solicitud`, leída solo al pulsar «abrir». `Solicitud` conserva `NombreOriginalCv` y `NombreOriginalCarta`; `TieneCv` y `TieneCarta` salen de ellos. El contenido nuevo vive en el editor hasta guardar. Abrir escribe un temporal en `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al cerrar y al arrancar. No ahorra espacio; aporta copia de seguridad en un solo fichero.
-- Migración al arrancar: con SQL, transacción, comprobación de tamaño, y borrado de los ficheros antiguos tras confirmar. Se mejorará más adelante.
+- Migración al arrancar (E.6): `App.OnStartup` la ejecuta con SQL, transacción, comprobación de tamaño y borrado de los ficheros antiguos tras confirmar, después de `EsquemaDb` y antes de crear el ViewModel. Un fallo se registra en `RegistroErrores` y no impide arrancar; las rutas quedan intactas y se reintenta en el siguiente inicio.
 - `RutaCv` y `RutaCarta` no se eliminan del modelo (E.14) hasta que todo use el contenido de la base de datos; las columnas quedan sin usar en las bases antiguas.
 - El visor no vuelca tipos desconocidos como texto y acota DOCX y ODT (E.13).
 
