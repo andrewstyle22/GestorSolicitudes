@@ -655,23 +655,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     // ---------------------------------------------------------------- Adjuntos
 
-    /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian la etiqueta del fichero y las propiedades.</summary>
-    private sealed record DescriptorAdjunto(string Etiqueta, Action<SolicitudEdicionViewModel, string?, string?> Asignar);
+    /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian el contenido y el nombre.</summary>
+    private sealed record DescriptorAdjunto(Action<SolicitudEdicionViewModel, byte[]?, string?> Asignar);
 
     private static readonly DescriptorAdjunto DescriptorCv = new(
-        "cv",
-        (editor, ruta, nombre) =>
+        (editor, contenido, nombre) =>
         {
-            editor.RutaCv = ruta;
+            editor.CvContenido = contenido;
             editor.NombreOriginalCv = nombre;
+            editor.RutaCv = null;
         });
 
     private static readonly DescriptorAdjunto DescriptorCarta = new(
-        "carta",
-        (editor, ruta, nombre) =>
+        (editor, contenido, nombre) =>
         {
-            editor.RutaCarta = ruta;
+            editor.CartaContenido = contenido;
             editor.NombreOriginalCarta = nombre;
+            editor.RutaCarta = null;
         });
 
     [RelayCommand]
@@ -696,16 +696,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            if (new FileInfo(origen).Length > AdjuntosHelper.TamanoMaximoBytes)
-            {
-                this.dialogo.Avisar(
-                    Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"),
-                    Localizacion.Texto("Titulo.Adjunto"));
-                return;
-            }
-
-            string nuevaRuta = this.adjuntos.Copiar(origen, adjunto.Etiqueta);
-            adjunto.Asignar(editar, nuevaRuta, Path.GetFileName(origen));
+            adjunto.Asignar(editar, LectorAdjuntos.Leer(origen), Path.GetFileName(origen));
+        }
+        catch (DocumentoDemasiadoGrandeException)
+        {
+            this.dialogo.Avisar(
+                Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"),
+                Localizacion.Texto("Titulo.Adjunto"));
         }
         catch (Exception ex)
         {
@@ -722,8 +719,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void QuitarCarta() => this.QuitarAdjunto(DescriptorCarta);
 
     /// <summary>
-    /// Quita la ruta del adjunto, pero no el fichero: si el usuario cancela, el que
-    /// había en disco sigue siendo el que apunta la base de datos.
+    /// Quita el documento del editor. El cambio solo llega a la base al guardar; el
+    /// contenido anterior, si estaba en disco, se borra entonces.
     /// </summary>
     private void QuitarAdjunto(DescriptorAdjunto adjunto)
     {

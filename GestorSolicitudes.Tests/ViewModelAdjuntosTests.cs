@@ -239,7 +239,7 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
-    public void AdjuntarCv_YGuardar_PersisteLaRutaEnLaEntidad()
+    public void AdjuntarCv_YGuardar_PersisteElNombreSinRuta()
     {
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
@@ -251,12 +251,16 @@ public class ViewModelAdjuntosTests
         vm.RellenarObligatorios("ACME", "Dev");
 
         vm.AdjuntarCvCommand.Execute(null);
-        string rutaCv = vm.Editor!.RutaCv!;
+
+        Assert.Equal(File.ReadAllBytes(origen), vm.Editor!.CvContenido);
+        Assert.Equal("mi-cv.pdf", vm.Editor.NombreOriginalCv);
+        Assert.Null(vm.Editor.RutaCv);
+
         vm.GuardarCommand.Execute(null);
 
-        Assert.Equal(rutaCv, db.Solicitudes.Single().RutaCv);
         Assert.Equal("mi-cv.pdf", db.Solicitudes.Single().NombreOriginalCv);
-        Assert.True(File.Exists(rutaCv));
+        Assert.Null(db.Solicitudes.Single().RutaCv);
+        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]
@@ -270,8 +274,9 @@ public class ViewModelAdjuntosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.NotNull(vm.Editor!.RutaCv);
-        Assert.True(File.Exists(vm.Editor.RutaCv));
+        Assert.Equal(AdjuntosHelper.TamanoMaximoBytes, vm.Editor!.CvContenido!.Length);
+        Assert.Null(vm.Editor.RutaCv);
+        Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Empty(dialogo.Avisos);
     }
 
@@ -286,7 +291,9 @@ public class ViewModelAdjuntosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.Null(vm.Editor!.RutaCv);
+        Assert.Null(vm.Editor!.CvContenido);
+        Assert.Null(vm.Editor.NombreOriginalCv);
+        Assert.Null(vm.Editor.RutaCv);
         Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Equal(Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"), Assert.Single(dialogo.Avisos));
     }
@@ -302,8 +309,9 @@ public class ViewModelAdjuntosTests
 
         vm.AdjuntarCartaCommand.Execute(null);
 
-        Assert.NotNull(vm.Editor!.RutaCarta);
-        Assert.True(File.Exists(vm.Editor.RutaCarta));
+        Assert.Equal(AdjuntosHelper.TamanoMaximoBytes, vm.Editor!.CartaContenido!.Length);
+        Assert.Null(vm.Editor.RutaCarta);
+        Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Empty(dialogo.Avisos);
     }
 
@@ -318,7 +326,9 @@ public class ViewModelAdjuntosTests
 
         vm.AdjuntarCartaCommand.Execute(null);
 
-        Assert.Null(vm.Editor!.RutaCarta);
+        Assert.Null(vm.Editor!.CartaContenido);
+        Assert.Null(vm.Editor.NombreOriginalCarta);
+        Assert.Null(vm.Editor.RutaCarta);
         Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Equal(Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"), Assert.Single(dialogo.Avisos));
     }
@@ -460,7 +470,7 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
-    public void Eliminar_ConElCvSustituidoSinGuardar_BorraElAnteriorYLaCopia()
+    public void Eliminar_ConElCvSustituidoSinGuardar_BorraElAnterior()
     {
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
@@ -477,17 +487,15 @@ public class ViewModelAdjuntosTests
         File.WriteAllText(origenNuevo, "nuevo");
         dialogo.FicheroElegido = origenNuevo;
         vm.AdjuntarCvCommand.Execute(null);
-        string rutaNueva = vm.Editor!.RutaCv!;
 
         vm.EliminarCommand.Execute(null);
 
         Assert.Empty(db.Solicitudes);
         Assert.False(File.Exists(rutaAnterior));
-        Assert.False(File.Exists(rutaNueva));
     }
 
     [Fact]
-    public void AdjuntarCv_DosVecesAntesDeGuardar_BorraLaCopiaIntermedia()
+    public void AdjuntarCv_DosVecesAntesDeGuardar_ConservaSoloElUltimoYNoCopiaNada()
     {
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
@@ -501,42 +509,30 @@ public class ViewModelAdjuntosTests
         vm.RellenarObligatorios("ACME", "Dev");
 
         vm.AdjuntarCvCommand.Execute(null);
-        string intermedio = vm.Editor!.RutaCv!;
         dialogo.FicheroElegido = segundo;
         vm.AdjuntarCvCommand.Execute(null);
-        string final = vm.Editor!.RutaCv!;
 
-        vm.GuardarCommand.Execute(null);
-
-        Assert.False(File.Exists(intermedio));
-        Assert.True(File.Exists(final));
+        Assert.Equal(File.ReadAllBytes(segundo), vm.Editor!.CvContenido);
+        Assert.Equal("cv-2.pdf", vm.Editor.NombreOriginalCv);
+        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]
-    public void Cancelar_ConDosCopiasDelCv_BorraLasDos()
+    public void QuitarCv_TrasAdjuntar_LimpiaElContenidoYElNombre()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
-        string primero = Path.Combine(TestDb.NuevaCarpeta(), "cv-1.pdf");
-        string segundo = Path.Combine(TestDb.NuevaCarpeta(), "cv-2.pdf");
-        File.WriteAllText(primero, "uno");
-        File.WriteAllText(segundo, "dos");
-        var dialogo = new DialogoFalso { FicheroElegido = primero };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "cv.pdf");
+        File.WriteAllText(origen, "cv");
+        var dialogo = new DialogoFalso { FicheroElegido = origen };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
-        vm.RellenarObligatorios("ACME", "Dev");
-
         vm.AdjuntarCvCommand.Execute(null);
-        string intermedio = vm.Editor!.RutaCv!;
-        dialogo.FicheroElegido = segundo;
-        vm.AdjuntarCvCommand.Execute(null);
-        string final = vm.Editor!.RutaCv!;
 
-        vm.CancelarCommand.Execute(null);
+        vm.QuitarCvCommand.Execute(null);
 
-        Assert.False(File.Exists(intermedio));
-        Assert.False(File.Exists(final));
-        Assert.Null(vm.Editor);
+        Assert.Null(vm.Editor!.CvContenido);
+        Assert.Null(vm.Editor.NombreOriginalCv);
+        Assert.Null(vm.Editor.RutaCv);
     }
 
     [Fact]

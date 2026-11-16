@@ -891,7 +891,7 @@ public class ViewModelDialogosTests
     }
 
     [Fact]
-    public void AdjuntarCv_CopiaElFicheroYPoneElNombreOriginal()
+    public void AdjuntarCv_LeeElFicheroYPoneElNombreOriginal()
     {
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
@@ -903,14 +903,14 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.NotNull(vm.Editor!.RutaCv);
-        Assert.StartsWith(carpeta, vm.Editor.RutaCv!);
-        Assert.True(File.Exists(vm.Editor.RutaCv));
+        Assert.Equal(File.ReadAllBytes(origen), vm.Editor!.CvContenido);
         Assert.Equal("mi-cv.pdf", vm.Editor.NombreOriginalCv);
+        Assert.Null(vm.Editor.RutaCv);
+        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]
-    public void AdjuntarCarta_CopiaElFicheroYPoneElNombreOriginal()
+    public void AdjuntarCarta_LeeElFicheroYPoneElNombreOriginal()
     {
         using var db = TestDb.NuevoContexto();
         string carpeta = TestDb.NuevaCarpeta();
@@ -922,8 +922,10 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCartaCommand.Execute(null);
 
-        Assert.NotNull(vm.Editor!.RutaCarta);
+        Assert.Equal(File.ReadAllBytes(origen), vm.Editor!.CartaContenido);
         Assert.Equal("carta.docx", vm.Editor.NombreOriginalCarta);
+        Assert.Null(vm.Editor.RutaCarta);
+        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]
@@ -936,11 +938,12 @@ public class ViewModelDialogosTests
 
         vm.AdjuntarCvCommand.Execute(null);
 
-        Assert.Null(vm.Editor!.RutaCv);
+        Assert.Null(vm.Editor!.CvContenido);
+        Assert.Null(vm.Editor.NombreOriginalCv);
     }
 
     [Fact]
-    public void AdjuntarCv_CuandoNoSePuedeCopiar_AvisaDeError()
+    public void AdjuntarCv_CuandoNoSePuedeLeer_AvisaDeError()
     {
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso
@@ -955,11 +958,11 @@ public class ViewModelDialogosTests
         Assert.Contains(
             Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
             Assert.Single(dialogo.Errores));
-        Assert.Null(vm.Editor!.RutaCv);
+        Assert.Null(vm.Editor!.CvContenido);
     }
 
     [Fact]
-    public void AdjuntarCarta_CuandoNoSePuedeCopiar_AvisaDeError()
+    public void AdjuntarCarta_CuandoNoSePuedeLeer_AvisaDeError()
     {
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso
@@ -974,7 +977,7 @@ public class ViewModelDialogosTests
         Assert.Contains(
             Localizacion.Texto("Mensaje.NoSePudoAdjuntar").Replace("{0}", string.Empty),
             Assert.Single(dialogo.Errores));
-        Assert.Null(vm.Editor!.RutaCarta);
+        Assert.Null(vm.Editor!.CartaContenido);
     }
 
     [Fact]
