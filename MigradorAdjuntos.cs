@@ -166,10 +166,15 @@ internal static class MigradorAdjuntos
         }
     }
 
-    private static string? Nombre(byte[]? contenido, string ruta, string? nombreActual) =>
-        contenido is null
-            ? null
-            : string.IsNullOrWhiteSpace(nombreActual) ? Path.GetFileName(ruta) : nombreActual;
+    private static string? Nombre(byte[]? contenido, string ruta, string? nombreActual)
+    {
+        if (contenido is null)
+        {
+            return null;
+        }
+
+        return string.IsNullOrWhiteSpace(nombreActual) ? Path.GetFileName(ruta) : nombreActual;
+    }
 
     private static void ActualizarSolicitud(
         SqliteConnection conexion,

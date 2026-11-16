@@ -743,14 +743,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AbrirAdjunto(TipoAdjunto? tipo)
     {
-        if (this.Editor is not SolicitudEdicionViewModel editor || tipo is not TipoAdjunto documento)
+        if (this.Editor is not SolicitudEdicionViewModel edicion || tipo is not TipoAdjunto documento)
         {
             return;
         }
 
         bool esCv = documento == TipoAdjunto.Cv;
-        byte[]? contenido = esCv ? editor.CvContenido : editor.CartaContenido;
-        string? nombre = esCv ? editor.NombreOriginalCv : editor.NombreOriginalCarta;
+        byte[]? contenido = esCv ? edicion.CvContenido : edicion.CartaContenido;
+        string? nombre = esCv ? edicion.NombreOriginalCv : edicion.NombreOriginalCarta;
 
         try
         {

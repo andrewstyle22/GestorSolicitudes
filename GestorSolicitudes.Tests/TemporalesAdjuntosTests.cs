@@ -75,6 +75,10 @@ public class TemporalesAdjuntosTests
     [Fact]
     public void Limpiar_SinCarpeta_NoLanza()
     {
-        TemporalesAdjuntos.Limpiar(Path.Combine(TestDb.NuevaCarpeta(), "no-existe"));
+        string carpeta = Path.Combine(TestDb.NuevaCarpeta(), "no-existe");
+
+        TemporalesAdjuntos.Limpiar(carpeta);
+
+        Assert.False(Directory.Exists(carpeta));
     }
 }

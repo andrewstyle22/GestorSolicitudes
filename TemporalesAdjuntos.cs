@@ -28,7 +28,7 @@ public static class TemporalesAdjuntos
         return ruta;
     }
 
-    /// <summary>Borra la carpeta de temporales con todo lo que contenga. Un fallo no rompe el cierre.</summary>
+    /// <summary>Borra la carpeta de temporales con su contenido. Un fallo no rompe el cierre.</summary>
     public static void Limpiar(string? carpeta = null)
     {
         string destino = carpeta ?? Carpeta;
