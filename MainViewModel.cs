@@ -955,6 +955,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 edicionSolicitud.SeguimientoParaReapertura);
         }
 
+        this.AplicarDocumentos(solicitud, edicionSolicitud);
+
         // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
         foreach (Evento eliminado in edicionSolicitud.EventosEliminados)
         {
@@ -962,6 +964,50 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Vuelca a <c>DocumentosSolicitud</c> el contenido pendiente del editor. La fila se busca
+    /// ahora y se crea si hace falta; sin contenido nuevo y sin nombre, el documento se quita.
+    /// La candidatura nueva aún no tiene <c>Id</c>: la escribe <see cref="PrepararNueva"/> (E.11).
+    /// </summary>
+    private void AplicarDocumentos(Solicitud solicitud, SolicitudEdicionViewModel edicion)
+    {
+        if (solicitud.Id == 0)
+        {
+            return;
+        }
+
+        DocumentosSolicitud? documentos = this.db.Set<DocumentosSolicitud>().Find(solicitud.Id);
+        if (documentos is null)
+        {
+            // Sin fila, solo hay algo que escribir si llega contenido nuevo.
+            if (edicion.CvContenido is null && edicion.CartaContenido is null)
+            {
+                return;
+            }
+
+            documentos = new DocumentosSolicitud(solicitud.Id);
+            this.db.Set<DocumentosSolicitud>().Add(documentos);
+        }
+
+        if (edicion.CvContenido is byte[] cv)
+        {
+            documentos.AsignarCv(cv);
+        }
+        else if (string.IsNullOrEmpty(edicion.NombreOriginalCv))
+        {
+            documentos.QuitarCv();
+        }
+
+        if (edicion.CartaContenido is byte[] carta)
+        {
+            documentos.AsignarCarta(carta);
+        }
+        else if (string.IsNullOrEmpty(edicion.NombreOriginalCarta))
+        {
+            documentos.QuitarCarta();
+        }
     }
 
     private bool ConfirmarReapertura(Solicitud solicitud, SolicitudEdicionViewModel edicion)
