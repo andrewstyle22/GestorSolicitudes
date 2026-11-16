@@ -71,6 +71,17 @@ public class AppDbContext : DbContext
                    .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // Documentos en tabla aparte, sin navegación desde Solicitud: nada los carga al
+        // leer candidaturas. La clave es la propia clave foránea y se borran en cascada.
+        modelBuilder.Entity<DocumentosSolicitud>(entidad =>
+        {
+            entidad.HasKey(d => d.SolicitudId);
+            entidad.HasOne<Solicitud>()
+                   .WithOne()
+                   .HasForeignKey<DocumentosSolicitud>(d => d.SolicitudId)
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Evento se muta por Actualizar, no por setter público: EF lee y escribe sus
         // propiedades por el campo de respaldo, no por la propiedad.
         modelBuilder.Entity<Evento>().UsePropertyAccessMode(PropertyAccessMode.Field);

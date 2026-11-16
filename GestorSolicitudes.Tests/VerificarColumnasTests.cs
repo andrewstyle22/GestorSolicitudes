@@ -94,6 +94,30 @@ public class VerificarColumnasTests
         }
     }
 
+    [Fact]
+    public void VerificarColumnas_CreaLaTablaDeDocumentosEnUnaBaseVieja()
+    {
+        string ruta = CrearTablaSolicitudesVieja();
+
+        EsquemaDb.VerificarColumnasFaltantes(ruta);
+
+        using var conexion = new SqliteConnection($"Data Source={ruta}");
+        conexion.Open();
+
+        using (var crear = conexion.CreateCommand())
+        {
+            crear.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'DocumentosSolicitud';";
+            Assert.Equal("DocumentosSolicitud", crear.ExecuteScalar());
+        }
+
+        using var claves = conexion.CreateCommand();
+        claves.CommandText = "PRAGMA foreign_key_list(DocumentosSolicitud);";
+        using var lector = claves.ExecuteReader();
+        Assert.True(lector.Read());
+        Assert.Equal("Solicitudes", lector["table"]);
+        Assert.Equal("CASCADE", lector["on_delete"]);
+    }
+
     /// <summary>
     /// Base de la primera versión (sin las columnas que añade <see cref="EsquemaDb"/>) con
     /// las columnas extra que pida el test, para simular una base que ya las tenía.

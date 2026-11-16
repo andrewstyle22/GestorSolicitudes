@@ -11,8 +11,9 @@ using Microsoft.Data.Sqlite;
 internal static class EsquemaDb
 {
     /// <summary>
-    /// Añade las columnas nuevas del modelo a bases de datos creadas por versiones anteriores.
-    /// Más adelante, si el esquema crece, lo natural es pasar a migraciones.
+    /// Añade a bases de datos creadas por versiones anteriores las columnas nuevas del
+    /// modelo y la tabla de documentos. Más adelante, si el esquema crece, lo natural es
+    /// pasar a migraciones.
     /// </summary>
     [SuppressMessage("SonarAnalyzer.CSharp", "S2077",
         Justification = "ALTER TABLE de SQLite no admite parámetros y tanto el nombre como la definición de la columna salen de un array fijo del código, nunca de entrada del usuario.")]
@@ -60,6 +61,28 @@ internal static class EsquemaDb
             command.CommandText = $"ALTER TABLE Solicitudes ADD COLUMN \"{columna}\" {definicion};";
             command.ExecuteNonQuery();
         }
+
+        CrearTablaDocumentos(conexion);
+    }
+
+    /// <summary>
+    /// Crea la tabla de documentos si no existe: EnsureCreated no versiona el esquema y
+    /// las bases anteriores a la Etapa E no la tienen. El borrado en cascada depende de
+    /// que la conexión tenga activadas las claves foráneas.
+    /// </summary>
+    private static void CrearTablaDocumentos(SqliteConnection conexion)
+    {
+        using var command = conexion.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE IF NOT EXISTS "DocumentosSolicitud" (
+                "SolicitudId" INTEGER NOT NULL CONSTRAINT "PK_DocumentosSolicitud" PRIMARY KEY,
+                "Cv" BLOB NULL,
+                "Carta" BLOB NULL,
+                CONSTRAINT "FK_DocumentosSolicitud_Solicitudes_SolicitudId"
+                    FOREIGN KEY ("SolicitudId") REFERENCES "Solicitudes" ("Id") ON DELETE CASCADE
+            );
+            """;
+        command.ExecuteNonQuery();
     }
 
     /// <summary>
