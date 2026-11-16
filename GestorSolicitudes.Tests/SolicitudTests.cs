@@ -1309,6 +1309,62 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void TieneCv_SigueAlNombreGuardado()
+    {
+        var solicitud = new SolicitudBuilder().ConNombreOriginalCv("mi-cv.pdf").Construir();
+
+        Assert.True(solicitud.TieneCv);
+        Assert.False(solicitud.TieneCarta);
+
+        solicitud.QuitarCv();
+
+        Assert.False(solicitud.TieneCv);
+    }
+
+    [Fact]
+    public void TieneCv_SinNombreEsFalsoAunqueQuedeRuta()
+    {
+        var solicitud = new SolicitudBuilder().ConRutaCv(@"C:\adjuntos\abc.pdf").Construir();
+
+        Assert.False(solicitud.TieneCv);
+    }
+
+    [Fact]
+    public void AsignarCv_ConSoloNombreNoTocaLaRuta()
+    {
+        var solicitud = new SolicitudBuilder().ConRutaCv(@"C:\adjuntos\abc.pdf").Construir();
+
+        solicitud.AsignarCv("mi-cv.pdf");
+
+        Assert.True(solicitud.TieneCv);
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+    }
+
+    [Fact]
+    public void TieneCarta_SigueAlNombreGuardado()
+    {
+        var solicitud = new SolicitudBuilder().ConNombreOriginalCarta("mi-carta.pdf").Construir();
+
+        Assert.True(solicitud.TieneCarta);
+        Assert.False(solicitud.TieneCv);
+
+        solicitud.QuitarCarta();
+
+        Assert.False(solicitud.TieneCarta);
+    }
+
+    [Fact]
+    public void AsignarCarta_ConSoloNombreNoTocaLaRuta()
+    {
+        var solicitud = new SolicitudBuilder().ConRutaCarta(@"C:\adjuntos\abc.pdf").Construir();
+
+        solicitud.AsignarCarta("mi-carta.pdf");
+
+        Assert.True(solicitud.TieneCarta);
+        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCarta);
+    }
+
+    [Fact]
     public void ToString_DevuelveEmpresaYPuesto()
     {
         var solicitud = new Solicitud("ACME", "Dev");

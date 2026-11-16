@@ -454,8 +454,12 @@ public class Solicitud
     public void AsignarCv(string? ruta, string? nombreOriginal)
     {
         this.RutaCv = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta del CV");
-        this.NombreOriginalCv = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original del CV");
+        this.AsignarCv(nombreOriginal);
     }
+
+    /// <summary>Asigna el nombre del CV; su contenido vive aparte, en DocumentosSolicitud.</summary>
+    public void AsignarCv(string? nombreOriginal) =>
+        this.NombreOriginalCv = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original del CV");
 
     /// <summary>Quita el CV: borra a la vez su ruta y su nombre original.</summary>
     public void QuitarCv()
@@ -471,8 +475,12 @@ public class Solicitud
     public void AsignarCarta(string? ruta, string? nombreOriginal)
     {
         this.RutaCarta = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta de la carta");
-        this.NombreOriginalCarta = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original de la carta");
+        this.AsignarCarta(nombreOriginal);
     }
+
+    /// <summary>Asigna el nombre de la carta; su contenido vive aparte, en DocumentosSolicitud.</summary>
+    public void AsignarCarta(string? nombreOriginal) =>
+        this.NombreOriginalCarta = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original de la carta");
 
     /// <summary>Quita la carta: borra a la vez su ruta y su nombre original.</summary>
     public void QuitarCarta()
@@ -546,6 +554,14 @@ public class Solicitud
     /// <summary>Gets nombre a mostrar del CV: el original si se conserva, o el del disco si no.</summary>
     [NotMapped]
     public string? NombreCv => this.NombreOriginalCv ?? Archivo(this.RutaCv);
+
+    /// <summary>Gets si hay CV guardado, según su nombre; el contenido se lee de la base al abrir.</summary>
+    [NotMapped]
+    public bool TieneCv => !string.IsNullOrWhiteSpace(this.NombreOriginalCv);
+
+    /// <summary>Gets si hay carta guardada, según su nombre; el contenido se lee de la base al abrir.</summary>
+    [NotMapped]
+    public bool TieneCarta => !string.IsNullOrWhiteSpace(this.NombreOriginalCarta);
 
     /// <summary>Gets nombre a mostrar de la carta: el original si se conserva, o el del disco si no.</summary>
     [NotMapped]
