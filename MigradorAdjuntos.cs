@@ -16,9 +16,10 @@ internal static class MigradorAdjuntos
     /// <summary>
     /// Migra las filas con ruta pendiente dentro de una transacción. Un fichero que ya no existe
     /// deja su documento vacío y se registra, sin impedir que se migre el resto. Es idempotente:
-    /// una fila migrada queda sin ruta y no se vuelve a tocar.
+    /// una fila migrada queda sin ruta y no se vuelve a tocar. Tras confirmar la transacción,
+    /// borra los ficheros migrados de la carpeta de adjuntos y la carpeta si queda vacía.
     /// </summary>
-    public static void Migrar(string ruta, string rutaRegistro)
+    public static void Migrar(string ruta, string rutaRegistro, string? carpeta = null)
     {
         using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(ruta));
         conexion.Open();
@@ -29,6 +30,7 @@ internal static class MigradorAdjuntos
             return;
         }
 
+        var migradas = new List<string>();
         using var transaccion = conexion.BeginTransaction();
         foreach (FilaPendiente fila in pendientes)
         {
@@ -41,12 +43,20 @@ internal static class MigradorAdjuntos
             {
                 cv = LeerFichero(fila.RutaCv, $"el CV de la candidatura {fila.Id}", rutaRegistro);
                 nombreCv = Nombre(cv, fila.RutaCv, fila.NombreCv);
+                if (cv is not null)
+                {
+                    migradas.Add(fila.RutaCv);
+                }
             }
 
             if (fila.RutaCarta is not null)
             {
                 carta = LeerFichero(fila.RutaCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro);
                 nombreCarta = Nombre(carta, fila.RutaCarta, fila.NombreCarta);
+                if (carta is not null)
+                {
+                    migradas.Add(fila.RutaCarta);
+                }
             }
 
             ActualizarSolicitud(conexion, transaccion, fila.Id, nombreCv, nombreCarta);
@@ -58,6 +68,53 @@ internal static class MigradorAdjuntos
         }
 
         transaccion.Commit();
+
+        BorrarMigrados(migradas, carpeta ?? AdjuntosHelper.Carpeta, rutaRegistro);
+    }
+
+    /// <summary>
+    /// Borra los ficheros ya copiados. Solo toca los que están dentro de la carpeta de adjuntos,
+    /// igual que la limpieza normal: nunca un fichero arbitrario de la base. Un fallo al borrar
+    /// se registra y no interrumpe el resto.
+    /// </summary>
+    private static void BorrarMigrados(
+        IEnumerable<string> rutas,
+        string carpeta,
+        string rutaRegistro)
+    {
+        foreach (string ruta in rutas)
+        {
+            try
+            {
+                if (EstaDentro(ruta, carpeta) && File.Exists(ruta))
+                {
+                    File.Delete(ruta);
+                }
+            }
+            catch (Exception ex)
+            {
+                RegistroErrores.RegistrarEn(rutaRegistro, ex, $"no se pudo borrar el adjunto '{ruta}'");
+            }
+        }
+
+        try
+        {
+            if (Directory.Exists(carpeta) && !Directory.EnumerateFileSystemEntries(carpeta).Any())
+            {
+                Directory.Delete(carpeta);
+            }
+        }
+        catch (Exception ex)
+        {
+            RegistroErrores.RegistrarEn(rutaRegistro, ex, $"no se pudo borrar la carpeta '{carpeta}'");
+        }
+    }
+
+    private static bool EstaDentro(string ruta, string carpeta)
+    {
+        string carpetaCompleta = Path.GetFullPath(carpeta) + Path.DirectorySeparatorChar;
+        string rutaCompleta = Path.GetFullPath(ruta);
+        return rutaCompleta.StartsWith(carpetaCompleta, StringComparison.OrdinalIgnoreCase);
     }
 
     private static List<FilaPendiente> LeerPendientes(SqliteConnection conexion)
