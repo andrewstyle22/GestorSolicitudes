@@ -172,11 +172,13 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
     public Adjunto AdjuntoCv => new(
+        TipoAdjunto.Cv,
         this.RutaCv,
         this.NombreOriginalCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
 
     /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
     public Adjunto AdjuntoCarta => new(
+        TipoAdjunto.Carta,
         this.RutaCarta,
         this.NombreOriginalCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 

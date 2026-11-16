@@ -23,6 +23,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly Action<Idioma> cambiarIdioma;
     private readonly GestorAdjuntos adjuntos;
     private readonly string rutaPreferenciaCsv;
+    private readonly string carpetaTemporales;
     private bool actualizandoIdioma;
 
     // Constructor con base de datos, preferencias y servicios propios: los tests usan una base
@@ -35,7 +36,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         string? carpetaAdjuntos = null,
         IDialogoService? dialogo = null,
         Action<Idioma>? cambiarIdioma = null,
-        string? rutaPreferenciaCsv = null)
+        string? rutaPreferenciaCsv = null,
+        string? carpetaTemporales = null)
     {
         this.db = db;
         this.ColumnasVm = new ColumnasViewModel(rutaColumnas);
@@ -43,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.dialogo = dialogo ?? new DialogosNulos();
         this.cambiarIdioma = cambiarIdioma ?? (_ => { });
         this.rutaPreferenciaCsv = rutaPreferenciaCsv ?? PreferenciaCsv.Ruta;
+        this.carpetaTemporales = carpetaTemporales ?? TemporalesAdjuntos.Carpeta;
 
         this.CargarTextosLocalizados();
 
@@ -733,24 +736,34 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Abre el CV o la carta en el visor. Avisa si el fichero ya no existe en disco.
-    /// Es un comando con parámetro: las dos filas de adjuntos usan el mismo.
+    /// Abre el CV o la carta en el visor. Usa el contenido pendiente del editor y, si no lo hay,
+    /// el guardado en la base; lo escribe en un temporal porque el visor abre ficheros. Avisa si
+    /// la candidatura no tiene ese documento.
     /// </summary>
     [RelayCommand]
-    private void AbrirAdjunto(Adjunto? adjunto)
+    private void AbrirAdjunto(TipoAdjunto? tipo)
     {
-        string? ruta = adjunto?.Ruta;
-        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
+        if (this.Editor is not SolicitudEdicionViewModel editor || tipo is not TipoAdjunto documento)
         {
-            this.dialogo.Informar(
-                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
-                Localizacion.Texto("Titulo.Adjunto"));
             return;
         }
 
+        bool esCv = documento == TipoAdjunto.Cv;
+        byte[]? contenido = esCv ? editor.CvContenido : editor.CartaContenido;
+        string? nombre = esCv ? editor.NombreOriginalCv : editor.NombreOriginalCarta;
+
         try
         {
-            this.dialogo.VerAdjunto(ruta.Trim());
+            contenido ??= this.DocumentoGuardado(documento);
+            if (contenido is null || string.IsNullOrWhiteSpace(nombre))
+            {
+                this.dialogo.Informar(
+                    Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
+                    Localizacion.Texto("Titulo.Adjunto"));
+                return;
+            }
+
+            this.dialogo.VerAdjunto(TemporalesAdjuntos.Escribir(nombre, contenido, this.carpetaTemporales));
         }
         catch (Exception ex)
         {
@@ -758,6 +771,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 string.Format(Localizacion.Texto("Mensaje.NoSePudoAbrirFichero"), ex.Message),
                 Localizacion.Texto(Traducciones.ClaveError));
         }
+    }
+
+    /// <summary>
+    /// Contenido guardado del documento, proyectando solo esa columna y sin seguimiento: la fila
+    /// no se necesita después y no debe quedar en el contexto.
+    /// </summary>
+    private byte[]? DocumentoGuardado(TipoAdjunto tipo)
+    {
+        if (this.solicitudAbierta is not Solicitud solicitud || solicitud.Id == 0)
+        {
+            return null;
+        }
+
+        IQueryable<DocumentosSolicitud> fila = this.db.Set<DocumentosSolicitud>()
+            .AsNoTracking()
+            .Where(d => d.SolicitudId == solicitud.Id);
+        return tipo == TipoAdjunto.Cv
+            ? fila.Select(d => d.Cv).FirstOrDefault()
+            : fila.Select(d => d.Carta).FirstOrDefault();
     }
 
     /// <summary>

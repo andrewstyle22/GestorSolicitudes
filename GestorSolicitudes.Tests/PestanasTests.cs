@@ -83,7 +83,7 @@ public class PestanasTests
         var fila = new FilaAdjunto
         {
             Etiqueta = "Currículum",
-            Adjunto = new Adjunto(@"C:\mi-cv.pdf", "mi-cv.pdf"),
+            Adjunto = new Adjunto(TipoAdjunto.Cv, @"C:\mi-cv.pdf", "mi-cv.pdf"),
         };
         fila.Measure(new Size(500, 30));
         fila.Arrange(new Rect(0, 0, 500, 30));

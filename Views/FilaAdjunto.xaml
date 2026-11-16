@@ -29,6 +29,6 @@
         <Button Grid.Column="4" Content="{DynamicResource Boton.Abrir}" Padding="10,4" FontSize="12"
                 Style="{StaticResource BotonSecundario}"
                 Command="{Binding ComandoAbrir, ElementName=raiz}"
-                CommandParameter="{Binding Adjunto, ElementName=raiz}" />
+                CommandParameter="{Binding Adjunto.Tipo, ElementName=raiz}" />
     </Grid>
 </UserControl>

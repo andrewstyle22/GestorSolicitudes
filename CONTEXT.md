@@ -11,11 +11,11 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
 - ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.11 hechos; quedan E.12–E.16.
+- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.12 hechos; quedan E.13–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-E.12 (`feat: abrir el documento desde la base de datos`): `AbrirAdjunto(TipoAdjunto)` usa los bytes pendientes del editor o los lee de la base (consulta sin seguimiento que proyecta solo esa columna), los deja en un temporal y llama al visor. El botón de abrir de `FilaAdjunto` pasa el tipo en lugar de la ruta. Tests con `DialogoFalso`. No hacer push sin que se pida.
+E.13 (`fix: el visor no muestra como texto los tipos desconocidos y acota DOCX y ODT`): la rama por defecto del visor muestra el aviso de «no se puede previsualizar» en lugar de leer el fichero como texto; `ExtraerTextoZip` lee con un límite (10 MB de texto) y avisa si se supera. Tests. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -36,10 +36,11 @@ E.12 (`feat: abrir el documento desde la base de datos`): `AbrirAdjunto(TipoAdju
 - Migración al arrancar (E.6): `App.OnStartup` la ejecuta con SQL, transacción, comprobación de tamaño y borrado de los ficheros antiguos tras confirmar, después de `EsquemaDb` y antes de crear el ViewModel. Un fallo se registra en `RegistroErrores` y no impide arrancar; las rutas quedan intactas y se reintenta en el siguiente inicio.
 - `RutaCv` y `RutaCarta` no se eliminan del modelo (E.14) hasta que todo use el contenido de la base de datos; las columnas quedan sin usar en las bases antiguas.
 - `TieneCv` y `TieneCarta` (E.7) miran que `NombreOriginalCv`/`NombreOriginalCarta` no esté vacío, no la ruta. `AsignarCv(nombre)` y `AsignarCarta(nombre)` solo escriben el nombre y no tocan la ruta; la sobrecarga `(ruta, nombre)` delega en ellos.
-- Editor y documentos (E.8): `CvContenido` y `CartaContenido` (`byte[]?`) guardan el contenido pendiente y marcan `HayCambios`; `CargarDesde` los deja nulos porque la base no se lee al abrir. `AdjuntoCv` y `AdjuntoCarta` toman el nombre de `NombreOriginal…`, sin caer al nombre del fichero; la ruta sigue ahí hasta E.12.
+- Editor y documentos (E.8): `CvContenido` y `CartaContenido` (`byte[]?`) guardan el contenido pendiente y marcan `HayCambios`; `CargarDesde` los deja nulos porque la base no se lee al abrir. `AdjuntoCv` y `AdjuntoCarta` toman el nombre de `NombreOriginal…`, sin caer al nombre del fichero; la ruta sigue ahí hasta E.14.
 - Adjuntar (E.9): `LectorAdjuntos.Leer` deja los bytes y el nombre en el editor; no se copia nada a disco y `RutaCv`/`RutaCarta` quedan a nulo. El aviso de 2 MB sale de `DocumentoDemasiadoGrandeException`. `QuitarAdjunto` limpia contenido, nombre y ruta.
 - Guardar con candidatura existente (E.10): antes del `SaveChanges`, `AplicarDocumentos` busca la fila y la crea si llega contenido; con contenido pendiente lo escribe y, sin contenido ni nombre, vacía la columna. La fila en seguimiento conserva los bytes si el guardado falla, así que el reintento los escribe. La candidatura nueva queda para E.11.
 - Guardar con candidatura nueva (E.11): el primer `SaveChanges` asigna el `Id`; si hay contenido pendiente, `Persistir` llama después a `AplicarDocumentos` y guarda otra vez. Un fallo recarga el editor desde la entidad, pero conserva `CvContenido` y `CartaContenido` en el búfer: el reintento los escribe.
+- Abrir (E.12): `AbrirAdjunto(TipoAdjunto)` usa `CvContenido`/`CartaContenido` y, si están nulos, `DocumentoGuardado` (consulta `AsNoTracking` que proyecta solo la columna de `solicitudAbierta.Id`). Sin bytes o sin nombre, informa; si no, escribe el temporal con `TemporalesAdjuntos.Escribir` en `carpetaTemporales` (constructor, por defecto la de `%TEMP%`) y llama al visor. `FilaAdjunto` pasa `Adjunto.Tipo`; el enum `TipoAdjunto` vive en `Models`.
 - El visor no vuelca tipos desconocidos como texto y acota DOCX y ODT (E.13).
 
 ## Decisiones vigentes heredadas

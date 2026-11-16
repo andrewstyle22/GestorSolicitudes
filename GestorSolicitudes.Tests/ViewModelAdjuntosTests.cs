@@ -693,26 +693,68 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
-    public void AbrirAdjunto_ConFicheroExistente_LoPasaAlVisor()
+    public void AbrirAdjunto_ConLosDocumentosGuardados_LosEscribeEnUnTemporalYLosPasaAlVisor()
     {
         using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso();
-        using var vm = new MainViewModel(db, dialogo: dialogo);
-        string ruta = TestDb.CrearAdjuntoEn(TestDb.NuevaCarpeta(), "cv.pdf");
+        using var vm = new MainViewModel(db, dialogo: dialogo, carpetaTemporales: carpeta);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConNombreOriginalCv("mi-cv.pdf")
+            .ConNombreOriginalCarta("mi-carta.pdf")
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        GuardarDocumentos(db, solicitud.Id, [1, 2, 3], [4, 5]);
 
-        vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
+        // Sin la fila en seguimiento se prueba que se lee de la base, no del contexto.
+        db.ChangeTracker.Clear();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single(s => s.Id == solicitud.Id);
 
-        Assert.Equal(ruta, Assert.Single(dialogo.AdjuntosAbiertos));
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Carta);
+
+        string cv = dialogo.AdjuntosAbiertos[0];
+        string carta = dialogo.AdjuntosAbiertos[1];
+        Assert.Equal("mi-cv.pdf", Path.GetFileName(cv));
+        Assert.Equal([1, 2, 3], File.ReadAllBytes(cv));
+        Assert.Equal("mi-carta.pdf", Path.GetFileName(carta));
+        Assert.Equal([4, 5], File.ReadAllBytes(carta));
+        Assert.StartsWith(carpeta, cv, StringComparison.Ordinal);
+        Assert.Empty(db.ChangeTracker.Entries<DocumentosSolicitud>());
     }
 
     [Fact]
-    public void AbrirAdjunto_SinFicheroInformaYNoLlamaAlVisor()
+    public void AbrirAdjunto_ConContenidoPendiente_LoAbreSinGuardar()
+    {
+        using var db = TestDb.NuevoContexto();
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "mi-cv.pdf");
+        File.WriteAllText(origen, "cv pendiente");
+        var dialogo = new DialogoFalso { FicheroElegido = origen };
+        using var vm = new MainViewModel(db, dialogo: dialogo, carpetaTemporales: TestDb.NuevaCarpeta());
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("ACME", "Dev");
+        vm.AdjuntarCvCommand.Execute(null);
+
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
+
+        string ruta = Assert.Single(dialogo.AdjuntosAbiertos);
+        Assert.Equal("mi-cv.pdf", Path.GetFileName(ruta));
+        Assert.Equal(File.ReadAllBytes(origen), File.ReadAllBytes(ruta));
+    }
+
+    [Fact]
+    public void AbrirAdjunto_SinDocumentoInformaYNoLlamaAlVisor()
     {
         using var db = TestDb.NuevoContexto();
         var dialogo = new DialogoFalso();
         using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
 
-        vm.AbrirAdjuntoCommand.Execute(new Adjunto(null, "Currículum sin adjuntar"));
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
 
         Assert.Single(dialogo.Informes);
         Assert.Empty(dialogo.AdjuntosAbiertos);
@@ -722,11 +764,14 @@ public class ViewModelAdjuntosTests
     public void AbrirAdjunto_CuandoElVisorFalla_Avisa()
     {
         using var db = TestDb.NuevoContexto();
-        var dialogo = new DialogoFalso { VerAdjuntoLanza = true };
-        using var vm = new MainViewModel(db, dialogo: dialogo);
-        string ruta = TestDb.CrearAdjuntoEn(TestDb.NuevaCarpeta(), "cv.pdf");
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "cv.pdf");
+        File.WriteAllText(origen, "cv");
+        var dialogo = new DialogoFalso { VerAdjuntoLanza = true, FicheroElegido = origen };
+        using var vm = new MainViewModel(db, dialogo: dialogo, carpetaTemporales: TestDb.NuevaCarpeta());
+        vm.NuevaCommand.Execute(null);
+        vm.AdjuntarCvCommand.Execute(null);
 
-        vm.AbrirAdjuntoCommand.Execute(new Adjunto(ruta, "cv.pdf"));
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
 
         Assert.Single(dialogo.Avisos);
     }
