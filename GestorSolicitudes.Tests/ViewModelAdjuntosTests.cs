@@ -387,6 +387,56 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
+    public void Guardar_ConElCvAdjuntadoEnUnaCandidaturaNueva_GuardaElContenidoEnLaBase()
+    {
+        using var db = TestDb.NuevoContexto();
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "mi-cv.pdf");
+        File.WriteAllText(origen, "cv nuevo");
+        var dialogo = new DialogoFalso { FicheroElegido = origen };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("ACME", "Dev");
+        vm.AdjuntarCvCommand.Execute(null);
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        DocumentosSolicitud documentos = db.Set<DocumentosSolicitud>().Single();
+        Assert.Equal(File.ReadAllBytes(origen), documentos.Cv);
+        Assert.Equal("mi-cv.pdf", db.Solicitudes.Single().NombreOriginalCv);
+    }
+
+    [Fact]
+    public void Guardar_ConUnaCandidaturaNuevaSiSaveChangesFalla_ConservaElDocumentoYPermiteReintentar()
+    {
+        string ruta = TestDb.NuevaRuta();
+        var interceptor = new FalloSaveChangesUnaVez();
+        using var db = new AppDbContextConFallo(ruta, interceptor);
+        db.Database.EnsureCreated();
+        string origen = Path.Combine(TestDb.NuevaCarpeta(), "mi-cv.pdf");
+        File.WriteAllText(origen, "cv pendiente");
+        var dialogo = new DialogoFalso { FicheroElegido = origen };
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.RellenarObligatorios("ACME", "Dev");
+        vm.AdjuntarCvCommand.Execute(null);
+        interceptor.Fallar = true;
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.NotNull(vm.Editor);
+        Assert.Empty(db.Solicitudes.AsNoTracking());
+        Assert.Empty(db.Set<DocumentosSolicitud>().AsNoTracking());
+
+        vm.GuardarCommand.Execute(null);
+
+        Assert.Null(vm.Editor);
+        DocumentosSolicitud documentos = db.Set<DocumentosSolicitud>().Single();
+        Assert.Equal(File.ReadAllBytes(origen), documentos.Cv);
+        Assert.Equal("mi-cv.pdf", db.Solicitudes.AsNoTracking().Single().NombreOriginalCv);
+    }
+
+    [Fact]
     public void Guardar_ConElCvSustituido_ActualizaElContenidoEnLaBase()
     {
         using var db = TestDb.NuevoContexto();

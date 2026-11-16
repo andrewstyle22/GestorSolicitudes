@@ -864,13 +864,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ? (null, null)
             : this.RutasGuardadas(solicitud);
 
-        if (!this.Persistir())
+        if (!this.Persistir(esNueva ? solicitud : null, esNueva ? this.Editor : null))
         {
             // La entidad ya tiene los efectos de CambiarEstado y Reabrir: recargar el búfer
             // evita que el reintento los repita o los pise con los valores antiguos.
             if (this.Editor is SolicitudEdicionViewModel recargado)
             {
+                // El contenido de un documento solo llega a la base al guardar, y una
+                // candidatura nueva no tiene fila donde esperar: sin conservarlo, el
+                // reintento guardaría el nombre sin el fichero.
+                byte[]? cvPendiente = recargado.CvContenido;
+                byte[]? cartaPendiente = recargado.CartaContenido;
                 recargado.CargarDesde(solicitud);
+                recargado.CvContenido = cvPendiente;
+                recargado.CartaContenido = cartaPendiente;
 
                 // La entidad sigue modificada en el contexto: el búfer recargado también tiene
                 // cambios pendientes y salir de la candidatura debe avisar.
@@ -969,7 +976,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Vuelca a <c>DocumentosSolicitud</c> el contenido pendiente del editor. La fila se busca
     /// ahora y se crea si hace falta; sin contenido nuevo y sin nombre, el documento se quita.
-    /// La candidatura nueva aún no tiene <c>Id</c>: la escribe <see cref="PrepararNueva"/> (E.11).
+    /// La candidatura nueva aún no tiene <c>Id</c> al aplicar el editor: su fila se escribe
+    /// al guardar, ya con la clave asignada.
     /// </summary>
     private void AplicarDocumentos(Solicitud solicitud, SolicitudEdicionViewModel edicion)
     {
@@ -1087,11 +1095,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>Escribe los cambios; si la base falla, avisa y deja el panel abierto.</summary>
-    private bool Persistir()
+    private bool Persistir(Solicitud? candidaturaNueva = null, SolicitudEdicionViewModel? edicion = null)
     {
         try
         {
             this.db.SaveChanges();
+
+            // La candidatura nueva recibe su Id en este primer guardado: sus documentos
+            // se escriben justo después, ya con la clave a la que apuntar.
+            if (candidaturaNueva is not null
+                && edicion is not null
+                && (edicion.CvContenido is not null || edicion.CartaContenido is not null))
+            {
+                this.AplicarDocumentos(candidaturaNueva, edicion);
+                this.db.SaveChanges();
+            }
+
             return true;
         }
         catch (Exception ex)
