@@ -11,11 +11,11 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
 - ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.7 hechos; quedan E.8–E.16.
+- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.8 hechos; quedan E.9–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-E.8 (`feat: el editor guarda el contenido pendiente del documento`): `CvContenido` y `CartaContenido` (`byte[]?`) en el editor, que activan `HayCambios`; `CargarDesde` los deja nulos (no se leen de la base), y `AdjuntoCv`/`AdjuntoCarta` se calculan con el nombre. No hacer push sin que se pida.
+E.9 (`refactor: adjuntar lee el fichero en memoria`): `AdjuntarAdjunto` usa `LectorAdjuntos` y deja bytes y nombre en el editor, sin copia en disco; `QuitarAdjunto` los limpia. El aviso de B.1 se mantiene. Tests. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -36,6 +36,7 @@ E.8 (`feat: el editor guarda el contenido pendiente del documento`): `CvContenid
 - Migración al arrancar (E.6): `App.OnStartup` la ejecuta con SQL, transacción, comprobación de tamaño y borrado de los ficheros antiguos tras confirmar, después de `EsquemaDb` y antes de crear el ViewModel. Un fallo se registra en `RegistroErrores` y no impide arrancar; las rutas quedan intactas y se reintenta en el siguiente inicio.
 - `RutaCv` y `RutaCarta` no se eliminan del modelo (E.14) hasta que todo use el contenido de la base de datos; las columnas quedan sin usar en las bases antiguas.
 - `TieneCv` y `TieneCarta` (E.7) miran que `NombreOriginalCv`/`NombreOriginalCarta` no esté vacío, no la ruta. `AsignarCv(nombre)` y `AsignarCarta(nombre)` solo escriben el nombre y no tocan la ruta; la sobrecarga `(ruta, nombre)` delega en ellos.
+- Editor y documentos (E.8): `CvContenido` y `CartaContenido` (`byte[]?`) guardan el contenido pendiente y marcan `HayCambios`; `CargarDesde` los deja nulos porque la base no se lee al abrir. `AdjuntoCv` y `AdjuntoCarta` toman el nombre de `NombreOriginal…`, sin caer al nombre del fichero; la ruta sigue ahí hasta E.12.
 - El visor no vuelca tipos desconocidos como texto y acota DOCX y ODT (E.13).
 
 ## Decisiones vigentes heredadas

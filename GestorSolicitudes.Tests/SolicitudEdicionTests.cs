@@ -836,16 +836,53 @@ public class SolicitudEdicionTests
 
         Assert.Null(editor.AdjuntoCv.Ruta);
         Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), editor.AdjuntoCv.Nombre);
+        Assert.Equal(Localizacion.Texto("Adjuntos.CartaSinAdjuntar"), editor.AdjuntoCarta.Nombre);
     }
 
     [Fact]
-    public void AdjuntoCv_UsaElNombreOriginalYSinNoHayElDelFichero()
+    public void AdjuntoCv_UsaElNombreOriginalYNoElDelFichero()
     {
         var editor = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf", NombreOriginalCv = "mi-cv.pdf" };
         var sinNombre = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf" };
 
-        Assert.Equal("mi-cv.pdf", editor.AdjuntoCv!.Nombre);
-        Assert.Equal("abc.pdf", sinNombre.AdjuntoCv!.Nombre);
+        Assert.Equal("mi-cv.pdf", editor.AdjuntoCv.Nombre);
+        Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), sinNombre.AdjuntoCv.Nombre);
+    }
+
+    [Fact]
+    public void AdjuntoCarta_UsaElNombreOriginalYNoElDelFichero()
+    {
+        var editor = new SolicitudEdicionViewModel { RutaCarta = @"C:\adjuntos\def.pdf", NombreOriginalCarta = "mi-carta.pdf" };
+        var sinNombre = new SolicitudEdicionViewModel { RutaCarta = @"C:\adjuntos\def.pdf" };
+
+        Assert.Equal("mi-carta.pdf", editor.AdjuntoCarta.Nombre);
+        Assert.Equal(Localizacion.Texto("Adjuntos.CartaSinAdjuntar"), sinNombre.AdjuntoCarta.Nombre);
+    }
+
+    [Fact]
+    public void CargarDesde_DejaVacioElContenidoPendienteDeLosAdjuntos()
+    {
+        var editor = new SolicitudEdicionViewModel { CvContenido = [1], CartaContenido = [2] };
+
+        editor.CargarDesde(new SolicitudBuilder().ConNombreOriginalCv("mi-cv.pdf").Construir());
+
+        Assert.Null(editor.CvContenido);
+        Assert.Null(editor.CartaContenido);
+    }
+
+    [Fact]
+    public void HayCambios_AlAdjuntarElContenido_EsTrue()
+    {
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CvContenido = [1];
+        Assert.True(editor.HayCambios);
+
+        editor.CargarDesde(new SolicitudBuilder().Construir());
+        Assert.False(editor.HayCambios);
+
+        editor.CartaContenido = [2];
+        Assert.True(editor.HayCambios);
     }
 
     [Fact]

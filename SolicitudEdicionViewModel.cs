@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
@@ -155,6 +154,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
     private string? nombreOriginalCv;
 
+    /// <summary>CV pendiente de guardar: se escribe en DocumentosSolicitud al pulsar Guardar.</summary>
+    [ObservableProperty]
+    private byte[]? cvContenido;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
     private string? rutaCarta;
@@ -163,15 +166,19 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
     private string? nombreOriginalCarta;
 
-    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    /// <summary>Carta pendiente de guardar: se escribe en DocumentosSolicitud al pulsar Guardar.</summary>
+    [ObservableProperty]
+    private byte[]? cartaContenido;
+
+    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
     public Adjunto AdjuntoCv => new(
         this.RutaCv,
-        this.NombreOriginalCv ?? Path.GetFileName(this.RutaCv) ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
+        this.NombreOriginalCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
 
-    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
     public Adjunto AdjuntoCarta => new(
         this.RutaCarta,
-        this.NombreOriginalCarta ?? Path.GetFileName(this.RutaCarta) ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
+        this.NombreOriginalCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
     public ObservableCollection<EventoViewModel> EventosEdicion { get; } = [];
@@ -471,8 +478,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.NotaReapertura = null;
         this.RutaCv = solicitud.RutaCv;
         this.NombreOriginalCv = solicitud.NombreOriginalCv;
+        this.CvContenido = null;
         this.RutaCarta = solicitud.RutaCarta;
         this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
+        this.CartaContenido = null;
         this.CargarEventos(solicitud);
         this.OnPropertyChanged(nameof(this.ReaperturaResumen));
         this.ValidateAllProperties();
