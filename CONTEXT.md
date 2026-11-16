@@ -11,11 +11,11 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
 - ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 hecho; quedan E.2–E.16.
+- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 y E.2 hechos; quedan E.3–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-E.2 (`feat: lector de adjuntos con límite`): `LectorAdjuntos.Leer(ruta)` devuelve los bytes y rechaza lo que supere 2 MB (comparte la constante de B.1). Tests. No hacer push sin que se pida.
+E.3 (`feat: carpeta temporal para abrir documentos`): `TemporalesAdjuntos.Escribir(nombre, bytes)` guarda en `%TEMP%\GestorSolicitudes\adjuntos\<guid>\` con el nombre saneado y devuelve la ruta; `Limpiar()` borra la carpeta. Tests con carpeta base temporal. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -26,6 +26,7 @@ E.2 (`feat: lector de adjuntos con límite`): `LectorAdjuntos.Leer(ruta)` devuel
 - Atajos: `UpdateSourceTrigger=PropertyChanged` en los `TextBox` de texto (A.10) y confirmación del control con el foco antes de Ctrl+S, Ctrl+N y cerrar (A.11).
 - Documentos: máximo 2 MB (2 × 1024 × 1024 bytes); más grande, aviso «El documento no puede ser mayor a 2 megabytes» y no se adjunta (B.1).
 - Tabla `DocumentosSolicitud` (E.1): entidad sin navegación desde `Solicitud`; `SolicitudId` es PK y FK con borrado en cascada; `Cv` y `Carta` son `byte[]?` y solo cambian por `Asignar…`/`Quitar…`. `EsquemaDb.VerificarColumnasFaltantes` la crea con `CREATE TABLE IF NOT EXISTS` en bases antiguas. La conexión de EF activa `foreign_keys` (lo comprueba un test).
+- `LectorAdjuntos` (E.2): `Leer(ruta)` abre el fichero y comprueba el tamaño antes de reservar memoria; si supera `AdjuntosHelper.TamanoMaximoBytes` lanza `DocumentoDemasiadoGrandeException` (el aviso al usuario lo pone el ViewModel). Un fichero de exactamente 2 MB se admite.
 - Instancia única: la segunda copia avisa a la primera y se cierra sin abrir la base ni crear ventana; la primera muestra su ventana al recibir el aviso (C.1 a C.3). `InstanciaUnica` (Helpers) usa un `Mutex` con nombre (`EsPrimera` sale de `createdNew`) y un `EventWaitHandle` con nombre para el aviso; el constructor acepta nombre para los tests. `Dispose` no llama a `ReleaseMutex` (es del hilo que lo creó), solo cierra los manejadores; `EsperarAviso` sale al liberarse (bandera + `Set`). `App.OnStartup` crea la instancia tras instalar los manejadores de errores y antes de la base; `App.OnExit` la libera. La primera copia escucha el aviso en una tarea de fondo (C.3) y, en el hilo de la interfaz, llama a `MainWindow.MostrarVentana` (internal), que ya usan el doble clic y el menú de la bandeja; si el despachador está cerrado, el aviso se ignora.
 - Fechas: primera respuesta, entrevista, cierre y próximo seguimiento no pueden ser anteriores a `FechaSolicitud`. Regla en el modelo (`ActualizarFechas`, C.5) y mensaje en el editor (C.4). El modelo exime los `hoy` que rellena él mismo (primera respuesta y cierre). `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`; hay test del orden. En el editor, `ValidarFechaPosteriorALaSolicitud` se aplica a las cuatro fechas, formatea `Mensaje.FechaAnteriorASolicitud` con la etiqueta `Seguimiento.*` del campo y se revalida al cambiar `FechaSolicitud`; las filas antiguas incoherentes se pueden cargar pero no guardar hasta corregirlas (los tests con esas fechas se ajustaron en C.4 y C.5).
 - Selección y recarga: tras repaginar, `Paginar` repone `solicitudAbierta` con `SeleccionarSinAviso` si sigue en la página (D.2); el panel abierto y la fila resaltada no se contradicen.
