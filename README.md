@@ -33,6 +33,14 @@ Ese fichero `.db` es todo tu histórico, así que cópialo de vez en cuando a On
 En el arranque, la app añade con un `ALTER TABLE` las columnas nuevas que no existan en una base
 ya creada por una versión anterior (porque `EnsureCreated()` no versiona el esquema).
 
+Solo puede haber **una copia abierta** a la vez: si lanzas la aplicación otra vez, la segunda copia
+avisa a la primera, que se trae al frente (aunque esté minimizada o solo en la bandeja), y se cierra
+sin abrir la base.
+
+Si algo falla de forma inesperada en la interfaz, la app **no se cierra**: muestra un aviso con el
+mensaje y la ruta del registro, y apunta el detalle en `%APPDATA%\GestorSolicitudes\errores.log`. El
+fichero se recorta a 1 MB, así que no crece sin límite.
+
 ## Tests
 
 ```bash
@@ -81,12 +89,15 @@ dependa de que te acuerdes de rellenarlo a mano.
 rechazo...). Esto es lo que hace que funcione cuando un proceso tiene tres entrevistas en vez de una:
 el campo "día de la entrevista" te da la próxima de un vistazo y el historial guarda todas.
 
-**Los adjuntos**: el CV y la carta de presentación concretos que enviaste a cada oferta. Al pulsar
-*Adjuntar* se **copian** a `%APPDATA%\GestorSolicitudes\adjuntos` con un nombre interno único (no se
-enlaza el original, así que sobreviven aunque muevas o borres el fichero de origen); el nombre que
-ves en pantalla es el original tal como lo elegiste, no el nombre interno. Se borran junto con la
-candidatura, o si cancelas una candidatura nueva sin llegar a guardarla. Al sustituir o quitar uno, el
-fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigue teniendo su adjunto.
+**Los documentos**: el CV y la carta de presentación concretos que enviaste a cada oferta. Al pulsar
+*Adjuntar* se guardan **dentro de la base de datos**, no como ficheros sueltos, con el nombre original
+que elegiste y un máximo de **2 MB** por documento; el original ya no hace falta, así que puedes
+moverlo o borrarlo. El contenido se lee solo al abrir el documento y se copia a
+`%TEMP%\GestorSolicitudes\adjuntos` para el visor; esa carpeta se vacía al arrancar y al cerrar. Se
+borran junto con la candidatura, o si cancelas una candidatura nueva sin llegar a guardarla. Al
+sustituir o quitar uno, el cambio no se aplica hasta que guardas: si cancelas, la candidatura sigue
+teniendo su documento. Las bases de versiones anteriores, que guardaban ficheros en
+`%APPDATA%\GestorSolicitudes\adjuntos`, se migran solas en el primer arranque.
 
 ## Detalles que quizá no se vean a simple vista
 
@@ -100,10 +111,14 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
   cambio es inmediato —textos, fechas y números incluidos— y no hace falta reiniciar. La preferencia
   se guarda en `%APPDATA%\GestorSolicitudes\idioma.txt`; en el primer arranque, si no hay
   preferencia, se detecta el idioma del sistema y todo lo que no sea inglés o alemán cae a español.
+- Los **estados** abiertos son *Enviada*, *En revisión*, *Prueba técnica*, *Entrevista RR. HH.*,
+  *Entrevista técnica*, *Entrevista final*, *Oferta recibida* y *Sin respuesta*; los cerrados,
+  *Oferta aceptada*, *Oferta rechazada por mí*, *Descartado por la empresa* y *Retirada por mí*.
+  *Reabierta* no es un estado: es la acción de devolver un proceso cerrado a uno abierto.
 - Las candidaturas cerradas se muestran en gris, y el filtro *Solo abiertas* las esconde.
 - **Duplicar** (en el panel de detalle de una candidatura ya guardada) crea una candidatura nueva con
   los mismos datos de la oferta —empresa, puesto, ubicación, tecnologías, salario, interés— pero sin
-  fechas de proceso, contacto ni adjuntos. La copia queda enlazada a la candidatura de origen para
+  fechas de proceso, contacto ni documentos. La copia queda enlazada a la candidatura de origen para
   rastrear reaplicaciones: pensado para volver a la misma empresa en otro puesto o a una oferta calcada.
 - La columna **Días** de la tabla cuenta desde el envío mientras el proceso sigue abierto; en cuanto
   lo cierras se congela y muestra cuánto duró en total hasta la fecha de cierre. Si la candidatura
@@ -121,6 +136,9 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
 - **Cambiar la fecha de envío** mueve con ella el hito *Solicitud enviada* y el seguimiento
   propuesto, pero solo si seguían en la fecha anterior; lo que hayas editado a mano no se toca. El
   seguimiento no se mueve si la candidatura se reabrió.
+- **Las fechas tienen que ser coherentes**: la primera respuesta, la entrevista, el cierre y el
+  próximo seguimiento no pueden ser anteriores a la fecha de envío. Si lo son, el aviso de guardado
+  nombra el campo que hay que corregir.
 - **Salir de *Sin respuesta***: si el estado nuevo es una respuesta de la empresa (cualquier estado
   abierto salvo *Enviada* y *Sin respuesta*, y también *Descartado por la empresa*, *Oferta aceptada*
   y *Oferta rechazada por mí*), la app rellena con hoy la fecha de la primera contestación, si falta,
@@ -140,8 +158,8 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
   fichero en columnas directamente sin el asistente de importación. Incluye el motivo de cierre
   (traducido) y la fecha de reapertura. Los textos que empiezan por `=`, `+`, `-`, `@`, tabulador o
   retorno de carro llevan un apóstrofo delante para que la hoja de cálculo no los trate como
-  fórmulas. No incluye todos los campos: faltan `Requisitos`, `Origen`, `ContactoTelefono` y las
-  rutas y nombres de los adjuntos.
+  fórmulas. No incluye todos los campos: faltan `Requisitos`, `Origen`, `ContactoTelefono` y los
+  nombres de los documentos.
 - La fila de filtros lleva el **buscador** a la izquierda, con el texto *Buscar...* mientras está
   vacío, y el grupo *Columnas*, *Estados* y las dos casillas pegado al borde derecho. El botón
   *Columnas* abre una lista con casillas para mostrar u ocultar *Días*, *1ª respuesta*, *Entrevista*,
@@ -167,7 +185,8 @@ fichero anterior no se borra hasta que guardas: si cancelas, la candidatura sigu
   para volver al periodo actual de un clic. El rango va de la primera solicitud a hoy: no se puede
   avanzar al futuro (no hay datos) ni retroceder más allá de la primera candidatura. Se refresca
   sola si guardas o borras candidaturas mientras está abierta.
-- Atajos: `Ctrl+N` nueva candidatura, `Ctrl+S` guardar.
+- Atajos: `Ctrl+N` nueva candidatura, `Ctrl+S` guardar. Funcionan aunque el cursor siga dentro de un
+  campo: no hace falta salir de él para que el texto llegue al borrador.
 
 ## Qué no hacer una vez (lección aprendida)
 
@@ -186,9 +205,12 @@ un `using` a `Views` dentro de un ViewModel tumba el CI.
 
 ```
 Solicitud.cs, Evento.cs, DatosOferta.cs, Adjunto.cs, Enumeraciones.cs → modelo, datos de oferta, enums con [Description] y el adjunto que pinta la vista
+DocumentosSolicitud.cs → CV y carta de cada candidatura en la base de datos (una fila por candidatura)
 EstadoSolicitudExtensiones.cs → estados cerrados y motivos de cierre permitidos por estado
 AppDbContext.cs → SQLite: EnsureCreated, DbSets y mapeo del modelo
 EsquemaDb.cs → ALTER TABLE de las columnas nuevas en bases creadas por versiones antiguas
+InstanciaUnica.cs → mutex de copia única y aviso a la ventana ya abierta
+RegistroErrores.cs → registro de errores no controlados en %APPDATA%\...\errores.log, recortado a 1 MB
 Traducciones.cs → diccionarios es/en/de y Texto (en Helpers, para que los helpers traduzcan)
 Localizacion.cs → fachada del idioma: idioma activo, textos y cambio de idioma
 CulturaApp.cs → cultura del hilo, lenguaje de WPF y recursos de texto al aplicar un idioma
@@ -198,6 +220,9 @@ EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clav
 Convertidores.cs, ColoresEstado.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 
 AdjuntosHelper.cs → límite de 2 MB y carpeta de los adjuntos antiguos que usa la migración
+LectorAdjuntos.cs → lee un documento respetando el límite de 2 MB antes de reservar memoria
+DocumentoDemasiadoGrandeException.cs → error del documento que supera el límite
+TemporalesAdjuntos.cs → copia los documentos a %TEMP% para el visor y limpia la carpeta al arrancar y al cerrar
 DocumentoHelper.cs → extrae el texto de DOCX/ODT para el visor de adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
 Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)
@@ -216,6 +241,8 @@ MainViewModel.cs → filtros, CRUD, métricas, embudo, adjuntos, historial, dupl
 
 DialogoService.cs, DialogosNulos.cs → implementación WPF y versión silenciosa de IDialogoService
 App.xaml, App.xaml.cs → tema, estilos compartidos, arranque, cultura y preferencias
+MigradorAdjuntos.cs → pasa al arranque los adjuntos en disco de versiones anteriores a la base de datos
+ManejadorErrores.cs → registra la excepción y avisa al usuario con la ruta del registro
 Views/MainWindow.xaml(.cs) → lista maestra + panel de detalle + gráfica + bandeja
 Views/CabeceraMetricas.xaml(.cs) → cabecera de métricas
 Views/PestanaOferta.xaml(.cs), PestanaSeguimiento.xaml(.cs), PestanaAdjuntos.xaml(.cs) → pestañas del detalle
@@ -237,6 +264,13 @@ change tracking de EF: el panel de detalle edita un búfer y *Guardar* lo vuelca
 ya está en seguimiento, con un `SaveChanges()` limpio. *Cancelar* descarta el búfer, desengancha
 todo el `ChangeTracker` y recarga de disco. Si algún día esto se convierte en multiusuario o
 multiventana, el patrón correcto pasa a ser un contexto por operación con `IDbContextFactory`.
+
+**Los documentos viven en la base de datos.** `DocumentosSolicitud` guarda el CV y la carta como
+BLOB, en una fila por candidatura y sin navegación desde `Solicitud`; `Solicitud` solo conserva el
+nombre original, y `TieneCv`/`TieneCarta` salen de él. La fila se lee solo al abrir el documento y el
+contenido pendiente vive en el editor hasta que *Guardar* lo escribe. El límite de 2 MB mantiene la
+base y sus copias manejables; `MigradorAdjuntos` pasa al arranque los ficheros de versiones anteriores
+y el visor trabaja sobre una copia temporal que se borra al cerrar.
 
 **La edición va por un búfer, no por la entidad.** `SolicitudEdicionViewModel` (`Editor`) copia los
 datos al abrir y los valida mientras se escriben. La entidad no cambia hasta *Guardar*; *Cancelar*
