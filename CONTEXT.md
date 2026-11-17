@@ -8,10 +8,10 @@ Plan: `02-DOCS/plan-refactor-ponytail.md` (leer solo la etapa en curso; nace de 
 - ✅ C: instancia única y fechas (C.1–C.5).
 - ✅ D: detalles menores (D.1–D.3).
 - ✅ E: documentos en la base de datos (E.1–E.16). Faltan pruebas manuales E.6, E.12 y E.16.
-- 🔄 F: documentación y cierre (F.1–F.4). F.1 hecho; faltan F.2–F.4.
+- 🔄 F: documentación y cierre (F.1–F.4). F.1 y F.2 hechos; faltan F.3–F.4.
 
 ## Siguiente paso concreto
-F.2 `docs: actualizar AGENTS.md`: estructura nueva (`InstanciaUnica`, `RegistroErrores`, `MigradorAdjuntos`, `TemporalesAdjuntos`, `DocumentosSolicitud`) y decisiones.
+F.3 `docs: alinear edicion-con-bufer.md y adjuntos-en-base-de-datos.md con el código`.
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
