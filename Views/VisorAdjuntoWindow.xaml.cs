@@ -67,11 +67,8 @@ public partial class VisorAdjuntoWindow : Window
                 case ".odt":
                     this.MostrarTexto(DocumentoHelper.ExtraerTextoOdt(this.ruta));
                     break;
-                case ".doc":
-                    this.MostrarAviso(Localizacion.Texto(ClaveNoSePuedePrevisualizar));
-                    break;
                 default:
-                    this.MostrarTexto(await File.ReadAllTextAsync(this.ruta, token));
+                    this.MostrarAviso(Localizacion.Texto(ClaveNoSePuedePrevisualizar));
                     break;
             }
         }

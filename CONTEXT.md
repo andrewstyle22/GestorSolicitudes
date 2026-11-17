@@ -11,11 +11,11 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
 - ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.12 hechos; quedan E.13–E.16.
+- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.13 hechos; quedan E.14–E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-E.13 (`fix: el visor no muestra como texto los tipos desconocidos y acota DOCX y ODT`): la rama por defecto del visor muestra el aviso de «no se puede previsualizar» en lugar de leer el fichero como texto; `ExtraerTextoZip` lee con un límite (10 MB de texto) y avisa si se supera. Tests. No hacer push sin que se pida.
+E.14 (`refactor: quitar RutaCv y RutaCarta del modelo`): se eliminan las dos propiedades, los métodos de ruta, el nombre de reserva `Archivo(ruta)` y su mapeo; `EsquemaDb` deja de verificarlas. En las bases antiguas las columnas quedan sin usar. Se adaptan los tests y el `SolicitudBuilder`. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -41,7 +41,7 @@ E.13 (`fix: el visor no muestra como texto los tipos desconocidos y acota DOCX y
 - Guardar con candidatura existente (E.10): antes del `SaveChanges`, `AplicarDocumentos` busca la fila y la crea si llega contenido; con contenido pendiente lo escribe y, sin contenido ni nombre, vacía la columna. La fila en seguimiento conserva los bytes si el guardado falla, así que el reintento los escribe. La candidatura nueva queda para E.11.
 - Guardar con candidatura nueva (E.11): el primer `SaveChanges` asigna el `Id`; si hay contenido pendiente, `Persistir` llama después a `AplicarDocumentos` y guarda otra vez. Un fallo recarga el editor desde la entidad, pero conserva `CvContenido` y `CartaContenido` en el búfer: el reintento los escribe.
 - Abrir (E.12): `AbrirAdjunto(TipoAdjunto)` usa `CvContenido`/`CartaContenido` y, si están nulos, `DocumentoGuardado` (consulta `AsNoTracking` que proyecta solo la columna de `solicitudAbierta.Id`). Sin bytes o sin nombre, informa; si no, escribe el temporal con `TemporalesAdjuntos.Escribir` en `carpetaTemporales` (constructor, por defecto la de `%TEMP%`) y llama al visor. `FilaAdjunto` pasa `Adjunto.Tipo`; el enum `TipoAdjunto` vive en `Models`.
-- El visor no vuelca tipos desconocidos como texto y acota DOCX y ODT (E.13).
+- El visor no vuelca tipos desconocidos como texto: la rama por defecto muestra el aviso de `Mensaje.NoSePuedePrevisualizar` (que ya propone Descargar). `DocumentoHelper.LimiteTexto` (10 MB de XML descomprimido, internal) acota DOCX y ODT; al superarlo `ExtraerTextoZip` lanza `DocumentoDemasiadoGrandeException` y el visor muestra el mismo aviso (E.13).
 
 ## Decisiones vigentes heredadas
 - Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.

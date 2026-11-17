@@ -43,6 +43,15 @@ public class DocumentoHelperTests
         Assert.Equal(string.Empty, DocumentoHelper.ExtraerTextoDocx(ruta));
     }
 
+    [Fact]
+    public void ExtraerTextoDocx_CuandoElTextoSuperaElLimiteLanza()
+    {
+        string xml = "<w:p>" + new string('a', DocumentoHelper.LimiteTexto) + "</w:p>";
+        string ruta = EscribirZip("enorme.docx", "word/document.xml", xml);
+
+        Assert.Throws<DocumentoDemasiadoGrandeException>(() => DocumentoHelper.ExtraerTextoDocx(ruta));
+    }
+
     private static string EscribirZip(string nombre, string entrada, string contenido)
     {
         string ruta = Path.Combine(TestDb.NuevaCarpeta(), nombre);
