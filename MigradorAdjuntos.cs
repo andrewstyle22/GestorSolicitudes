@@ -40,42 +40,57 @@ internal static class MigradorAdjuntos
         using var transaccion = conexion.BeginTransaction();
         foreach (FilaPendiente fila in pendientes)
         {
-            byte[]? cv = null;
-            byte[]? carta = null;
-            string? nombreCv = fila.NombreCv;
-            string? nombreCarta = fila.NombreCarta;
-
-            if (fila.RutaCv is not null)
-            {
-                cv = LeerFichero(fila.RutaCv, $"el CV de la candidatura {fila.Id}", rutaRegistro);
-                nombreCv = Nombre(cv, fila.RutaCv, fila.NombreCv);
-                if (cv is not null)
-                {
-                    migradas.Add(fila.RutaCv);
-                }
-            }
-
-            if (fila.RutaCarta is not null)
-            {
-                carta = LeerFichero(fila.RutaCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro);
-                nombreCarta = Nombre(carta, fila.RutaCarta, fila.NombreCarta);
-                if (carta is not null)
-                {
-                    migradas.Add(fila.RutaCarta);
-                }
-            }
-
-            ActualizarSolicitud(conexion, transaccion, fila.Id, nombreCv, nombreCarta);
-
-            if (cv is not null || carta is not null)
-            {
-                GuardarDocumentos(conexion, transaccion, fila.Id, cv, carta);
-            }
+            MigrarFila(conexion, transaccion, fila, rutaRegistro, migradas);
         }
 
         transaccion.Commit();
 
         BorrarMigrados(migradas, carpeta ?? AdjuntosHelper.Carpeta, rutaRegistro);
+    }
+
+    private static void MigrarFila(
+        SqliteConnection conexion,
+        SqliteTransaction transaccion,
+        FilaPendiente fila,
+        string rutaRegistro,
+        List<string> migradas)
+    {
+        (byte[]? cv, string? nombreCv) = LeerAdjunto(
+            fila.RutaCv, fila.NombreCv, $"el CV de la candidatura {fila.Id}", rutaRegistro, migradas);
+        (byte[]? carta, string? nombreCarta) = LeerAdjunto(
+            fila.RutaCarta, fila.NombreCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro, migradas);
+
+        ActualizarSolicitud(conexion, transaccion, fila.Id, nombreCv, nombreCarta);
+
+        if (cv is not null || carta is not null)
+        {
+            GuardarDocumentos(conexion, transaccion, fila.Id, cv, carta);
+        }
+    }
+
+    /// <summary>
+    /// Lee un adjunto de la fila y deja apuntada su ruta si se pudo copiar. Sin ruta conserva el
+    /// nombre que ya tuviera; un fichero ilegible deja contenido y nombre vacíos.
+    /// </summary>
+    private static (byte[]? Contenido, string? Nombre) LeerAdjunto(
+        string? ruta,
+        string? nombreActual,
+        string contexto,
+        string rutaRegistro,
+        List<string> migradas)
+    {
+        if (ruta is null)
+        {
+            return (null, nombreActual);
+        }
+
+        byte[]? contenido = LeerFichero(ruta, contexto, rutaRegistro);
+        if (contenido is not null)
+        {
+            migradas.Add(ruta);
+        }
+
+        return (contenido, Nombre(contenido, ruta, nombreActual));
     }
 
     /// <summary>
