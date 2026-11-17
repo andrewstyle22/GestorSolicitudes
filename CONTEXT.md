@@ -1,77 +1,54 @@
 # Estado del proyecto
 
-Plan en curso: `02-DOCS/plan-refactor-ponytail.md` (leer solo la sección en curso). Nace de la auditoría `02-DOCS/auditoria-ponytail.md`.
-Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; su Etapa 6 queda sustituida por la Etapa A del plan actual).
+Plan: `02-DOCS/plan-refactor-ponytail.md` (leer solo la etapa en curso; nace de `02-DOCS/auditoria-ponytail.md`). Anterior: `plan-refactor-edicion.md` (0–5; su 6 la sustituye A).
 
-## Etapas del plan anterior
-- ✅ 0 a 5: red de seguridad, editor con búfer, historial, modelo cerrado, estados y reapertura (R), cierre y correcciones finales.
-
-## Etapas de la refactorización Ponytail
-- ✅ A: guardado y navegación (hallazgos 1, 2 y 3, y manejador global de excepciones), A.0–A.11. Hecho entero; pendiente la prueba manual de la sección 4.
-- ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
-- ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
-- ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ✅ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1–E.16. Hecho; pendiente la prueba manual de la sección 4 (E.12 y E.16).
-- ⬜ F: documentación y cierre, F.1–F.4.
+## Etapas Ponytail
+- ✅ A: guardado, navegación, errores y atajos (A.0–A.11). Falta prueba manual.
+- ✅ B: límite de 2 MB (B.1). Falta prueba manual.
+- ✅ C: instancia única y fechas (C.1–C.5).
+- ✅ D: detalles menores (D.1–D.3).
+- ✅ E: documentos en la base de datos (E.1–E.16). Faltan pruebas manuales E.6, E.12 y E.16.
+- 🔄 F: documentación y cierre (F.1–F.4).
 
 ## Siguiente paso concreto
-F.1 (`docs: actualizar el README`): documentos en la base de datos con el límite de 2 MB, instancia única, manejador de errores y fichero de registro, fechas coherentes, atajos y estados. No hacer push sin que se pida.
+F.1 `docs: actualizar el README`: documentos con límite de 2 MB, instancia única, errores, fechas, atajos y estados.
 
-## Decisiones vigentes de esta refactorización
-- Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
-- `ResolverCambiosPendientes` pregunta también si `db.ChangeTracker.HasChanges()` es verdadero con un editor abierto (A.4).
-- Estados: **Oferta aceptada → otros cierres se permite** (corrección cerrado → cerrado). Solo cerrado → «Oferta aceptada» lanza en el modelo; el editor lo valida (A.6) y el desplegable no lo ofrece (A.7). Las reglas de transición viven en `EstadoSolicitudExtensiones.AdmiteTransicion` (A.5). `EstadosDisponibles` se arma desde `estadoOriginal` y se recalcula en `RefrescarListasDelEstado` al cambiar de idioma (A.7).
-- Manejador global de excepciones: registra en `%APPDATA%\GestorSolicitudes\errores.log`, avisa y no cierra (A.8 y A.9). `ManejadorErrores.Avisar` (Núcleo) es la parte con test; los enganches de `App` son de ciclo de vida y van excluidos de cobertura.
-- `RegistroErrores` (A.8): añade al final del fichero y, pasado 1 MB, se queda con la mitad reciente (desde el siguiente salto de línea). Nunca lanza; si no puede escribir, solo deja un `Debug.WriteLine`. Los tests usan `RegistrarEn(ruta, …)`.
-- Atajos: `UpdateSourceTrigger=PropertyChanged` en los `TextBox` de texto (A.10) y confirmación del control con el foco antes de Ctrl+S, Ctrl+N y cerrar (A.11).
-- Documentos: máximo 2 MB (2 × 1024 × 1024 bytes); más grande, aviso «El documento no puede ser mayor a 2 megabytes» y no se adjunta (B.1).
-- Tabla `DocumentosSolicitud` (E.1): entidad sin navegación desde `Solicitud`; `SolicitudId` es PK y FK con borrado en cascada; `Cv` y `Carta` son `byte[]?` y solo cambian por `Asignar…`/`Quitar…`. `EsquemaDb.VerificarColumnasFaltantes` la crea con `CREATE TABLE IF NOT EXISTS` en bases antiguas. La conexión de EF activa `foreign_keys` (lo comprueba un test).
-- `LectorAdjuntos` (E.2): `Leer(ruta)` abre el fichero y comprueba el tamaño antes de reservar memoria; si supera `AdjuntosHelper.TamanoMaximoBytes` lanza `DocumentoDemasiadoGrandeException` (el aviso al usuario lo pone el ViewModel). Un fichero de exactamente 2 MB se admite.
-- `TemporalesAdjuntos` (E.3, Helpers): `Escribir(nombre, contenido, carpeta = null)` escribe en una subcarpeta nueva `<carpeta>\<guid>\` con el nombre saneado (`Path.GetFileName`, caracteres inválidos a `_`, sustituido por `documento` si queda vacío, `.` o `..`) y devuelve la ruta. `Limpiar(carpeta = null)` borra la carpeta y no lanza: los fallos al cerrar solo dejan `Debug.WriteLine`. La carpeta por defecto es `%TEMP%\GestorSolicitudes\adjuntos`; los tests pasan una de `TestDb.NuevaCarpeta()`.
-- `MigradorAdjuntos` (E.4 y E.5, Núcleo): `Migrar(ruta, rutaRegistro, carpeta = null)` lee con SQL las filas con `RutaCv` o `RutaCarta`, copia los bytes a `DocumentosSolicitud` en una transacción, comprueba el tamaño leído y deja las rutas a `NULL`. El nombre original se conserva si ya existía; si no, se toma del fichero. Un fichero ausente o ilegible deja su documento y su nombre vacíos y se registra en `rutaRegistro`; el resto se migra igual. Es idempotente. Si la base no tiene las dos columnas de ruta (las creadas desde E.14), no hace nada (E.14): sin esa guarda, el `SELECT` fallaría en cada arranque. Tras confirmar la transacción borra los ficheros copiados y la carpeta si queda vacía; solo borra rutas dentro de `carpeta` (por defecto `AdjuntosHelper.Carpeta`, los tests pasan una temporal) y un fallo al borrar se registra sin interrumpir. Vive en el Núcleo porque usa SQL y `RegistroErrores`, como `ManejadorErrores`.
-- Instancia única: la segunda copia avisa a la primera y se cierra sin abrir la base ni crear ventana; la primera muestra su ventana al recibir el aviso (C.1 a C.3). `InstanciaUnica` (Helpers) usa un `Mutex` con nombre (`EsPrimera` sale de `createdNew`) y un `EventWaitHandle` con nombre para el aviso; el constructor acepta nombre para los tests. `Dispose` no llama a `ReleaseMutex` (es del hilo que lo creó), solo cierra los manejadores; `EsperarAviso` sale al liberarse (bandera + `Set`). `App.OnStartup` crea la instancia tras instalar los manejadores de errores y antes de la base; `App.OnExit` la libera. La primera copia escucha el aviso en una tarea de fondo (C.3) y, en el hilo de la interfaz, llama a `MainWindow.MostrarVentana` (internal), que ya usan el doble clic y el menú de la bandeja; si el despachador está cerrado, el aviso se ignora.
-- Fechas: primera respuesta, entrevista, cierre y próximo seguimiento no pueden ser anteriores a `FechaSolicitud`. Regla en el modelo (`ActualizarFechas`, C.5) y mensaje en el editor (C.4). El modelo exime los `hoy` que rellena él mismo (primera respuesta y cierre). `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`; hay test del orden. En el editor, `ValidarFechaPosteriorALaSolicitud` se aplica a las cuatro fechas, formatea `Mensaje.FechaAnteriorASolicitud` con la etiqueta `Seguimiento.*` del campo y se revalida al cambiar `FechaSolicitud`; las filas antiguas incoherentes se pueden cargar pero no guardar hasta corregirlas (los tests con esas fechas se ajustaron en C.4 y C.5).
-- Selección y recarga: tras repaginar, `Paginar` repone `solicitudAbierta` con `SeleccionarSinAviso` si sigue en la página (D.2); el panel abierto y la fila resaltada no se contradicen.
-- Documentos en la base de datos: tabla aparte `DocumentosSolicitud` (`SolicitudId`, `Cv` y `Carta` BLOB anulables, borrado en cascada), sin navegación desde `Solicitud`, leída solo al pulsar «abrir». `Solicitud` conserva `NombreOriginalCv` y `NombreOriginalCarta`; `TieneCv` y `TieneCarta` salen de ellos. El contenido nuevo vive en el editor hasta guardar. Abrir escribe un temporal en `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al cerrar y al arrancar. No ahorra espacio; aporta copia de seguridad en un solo fichero.
-- Migración al arrancar (E.6): `App.OnStartup` la ejecuta con SQL, transacción, comprobación de tamaño y borrado de los ficheros antiguos tras confirmar, después de `EsquemaDb` y antes de crear el ViewModel. Un fallo se registra en `RegistroErrores` y no impide arrancar; las rutas quedan intactas y se reintenta en el siguiente inicio.
-- `RutaCv`, `RutaCarta`, la sobrecarga `AsignarCv(ruta, nombre)` y el respaldo `Archivo(ruta)` de `NombreCv` ya no existen (E.14). `EsquemaDb` deja de crear las columnas en bases nuevas; en las antiguas quedan sin usar. `Adjunto` ya no lleva `Ruta` y el editor ya no tiene `RutaCv`/`RutaCarta`.
-- `GestorAdjuntos` y las copias en disco ya no existen (E.15): `Eliminar`, `Cancelar` y *Descartar* solo limpian el búfer y el change tracker. `AdjuntosHelper` conserva `TamanoMaximoBytes` y `Carpeta` (esta solo la usa la migración).
-- `TieneCv` y `TieneCarta` (E.7) miran que `NombreOriginalCv`/`NombreOriginalCarta` no esté vacío. `AsignarCv(nombre)` y `AsignarCarta(nombre)` solo escriben el nombre (E.14).
-- Editor y documentos (E.8): `CvContenido` y `CartaContenido` (`byte[]?`) guardan el contenido pendiente y marcan `HayCambios`; `CargarDesde` los deja nulos porque la base no se lee al abrir. `AdjuntoCv` y `AdjuntoCarta` toman el nombre de `NombreOriginal…`, sin ruta (E.14).
-- Adjuntar (E.9): `LectorAdjuntos.Leer` deja los bytes y el nombre en el editor; no se copia nada a disco. El aviso de 2 MB sale de `DocumentoDemasiadoGrandeException`. `QuitarAdjunto` limpia contenido y nombre.
-- Guardar con candidatura existente (E.10): antes del `SaveChanges`, `AplicarDocumentos` busca la fila y la crea si llega contenido; con contenido pendiente lo escribe y, sin contenido ni nombre, vacía la columna. La fila en seguimiento conserva los bytes si el guardado falla, así que el reintento los escribe. La candidatura nueva queda para E.11.
-- Guardar con candidatura nueva (E.11): el primer `SaveChanges` asigna el `Id`; si hay contenido pendiente, `Persistir` llama después a `AplicarDocumentos` y guarda otra vez. Un fallo recarga el editor desde la entidad, pero conserva `CvContenido` y `CartaContenido` en el búfer: el reintento los escribe.
-- Abrir (E.12): `AbrirAdjunto(TipoAdjunto)` usa `CvContenido`/`CartaContenido` y, si están nulos, `DocumentoGuardado` (consulta `AsNoTracking` que proyecta solo la columna de `solicitudAbierta.Id`). Sin bytes o sin nombre, informa; si no, escribe el temporal con `TemporalesAdjuntos.Escribir` en `carpetaTemporales` (constructor, por defecto la de `%TEMP%`) y llama al visor. `FilaAdjunto` pasa `Adjunto.Tipo`; el enum `TipoAdjunto` vive en `Models`.
-- El visor no vuelca tipos desconocidos como texto: la rama por defecto muestra el aviso de `Mensaje.NoSePuedePrevisualizar` (que ya propone Descargar). `DocumentoHelper.LimiteTexto` (10 MB de XML descomprimido, internal) acota DOCX y ODT; al superarlo `ExtraerTextoZip` lanza `DocumentoDemasiadoGrandeException` y el visor muestra el mismo aviso (E.13).
-
-## Decisiones vigentes heredadas
-- Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
-- `AplicarEventos` empareja por `EventoViewModel.Original` (nulo = nuevo), nunca por posición ni `Id`. `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
-- Ningún modelo expone setters públicos; EF escribe por campo. `AplicarRespuesta` va antes que `AplicarEstado`.
-- Reapertura: solo con `Solicitud.Reabrir`, con nota obligatoria `NotaReapertura` (300 caracteres) que solo se guarda en el hito, no a «Sin respuesta», y respetando el seguimiento editado. `FechaReapertura` (solo la última) alimenta `DiasProceso`, la insignia ↻ y el borde magenta.
-- Motivo de cierre obligatorio en Descartado, Retirada y Oferta rechazada por mí, filtrado por estado, con `NoIndicado` preseleccionado. `RespuestaEmpresa` y `Notas` son texto libre sin límite.
-- Respuesta de la empresa (5.8): cuentan los estados abiertos salvo «Enviada» y «Sin respuesta», más «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Solo «Retirada por mí» no cuenta.
-- Cambios sin guardar: aviso con Guardar, Descartar y Cancelar al cambiar de fila, *Nueva*, *Duplicar* y cerrar la ventana; tras Guardar, la acción solo sigue si el guardado fue bien.
-- CSV: separador a elegir (`;`, `,` o tabulador) y recordado; columnas de motivo de cierre y fecha de reapertura; apóstrofo delante de los textos cuyo primer carácter visible es `=`, `+`, `-`, `@`, tabulador o retorno de carro; los espacios iniciales se ignoran al decidirlo (D.3) y el apóstrofo se antepone a la celda completa.
-- Cambiar `FechaSolicitud` mueve el hito de envío y el seguimiento propuesto solo si coincidían con la fecha anterior.
-- Los hitos que crea el modelo guardan su texto en castellano con el prefijo `Reabierta. ` compartido; traducirlos al mostrar queda para otra refactorización.
+## Decisiones vigentes
+- Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
+- `AplicarEventos` empareja por `Original`, nunca por posición ni `Id`; `Guardar` borra los `EventosEliminados`.
+- Solo se prohíbe cerrado → «Oferta aceptada» (`AdmiteTransicion`); `EstadosDisponibles` sale de `estadoOriginal` y se recalcula al cambiar de idioma.
+- `ResolverCambiosPendientes` también mira `ChangeTracker.HasChanges()`: un guardado fallido deja la entidad sucia.
+- `RegistroErrores` nunca lanza y se recorta a 1 MB; solo `ManejadorErrores.Avisar` tiene test y los enganches de `App` van excluidos de cobertura.
+- Documentos: máximo 2 MB y `LectorAdjuntos` mide antes de reservar; el aviso lo pone el ViewModel.
+- `DocumentosSolicitud` (BLOB, sin navegación) se lee solo al abrir; `Solicitud` guarda el nombre y `TieneCv`/`TieneCarta` salen de él; el contenido pendiente vive en el editor y `Guardar` lo escribe tras el primer `SaveChanges`, conservándolo si falla.
+- Abrir usa `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al arrancar y al cerrar; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
+- `MigradorAdjuntos` corre al arrancar, es idempotente, ignora bases sin columnas de ruta, registra los fallos y borra los ficheros solo tras confirmar.
+- `InstanciaUnica`: la segunda copia avisa y se cierra sin abrir base ni ventana; `App` la crea antes de la base y la libera en `OnExit`.
+- Ninguna fecha anterior a `FechaSolicitud`; `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`.
+- `Paginar` repone la selección con `SeleccionarSinAviso` para no contradecir la fila resaltada.
+- Reapertura solo con `Reabrir`, con nota obligatoria y respetando el seguimiento editado; motivo de cierre obligatorio y filtrado en los tres cierres negativos.
+- Respuesta de la empresa: cuentan los abiertos salvo Enviada y Sin respuesta, más Descartado por la empresa y las dos ofertas.
+- Cambios sin guardar: Guardar/Descartar/Cancelar al cambiar de fila, Nueva, Duplicar y cerrar; tras Guardar la acción sigue solo si guardó.
+- CSV: separador recordado, motivo y reapertura, apóstrofo ante `= + - @`, tabulador o retorno, aun tras espacios.
+- `FechaSolicitud` mueve el hito de envío y el seguimiento solo si coincidían.
+- Atajos: `PropertyChanged` solo en texto; se confirma el control con el foco antes de Ctrl+S/N y cerrar.
+- Los hitos que crea el modelo guardan texto en castellano; traducirlos al mostrar queda pendiente.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
-- Antes de commitear: `sonarcloud-gate` local; el gate llega tras el push.
+- `sonarcloud-gate` local antes de commitear; el gate llega tras el push.
 - XAML nuevo: `<Page>` en el csproj; todo texto visible con clave es/en/de.
-- Mensaje en español; un commit, una idea reversible. No hacer push salvo que se pida.
-- Cada paso del plan, su commit con el mensaje del plan; no fusiones pasos.
-- Los tests de reproducción se commitean junto con su arreglo.
-- Al terminar cada paso, actualiza este fichero en el mismo commit: marca el paso como hecho, deja el siguiente en «Siguiente paso concreto» y anota las decisiones o puntos de control nuevos; quita lo que ya no aplique.
+- Un commit, una idea reversible, mensaje en español; sin push salvo que se pida.
+- Cada paso del plan, su commit con su mensaje y su test; no fusiones pasos.
+- Al terminar cada paso, este fichero se actualiza en el mismo commit.
 
 ## Puntos de control
-- Pruebas manuales (sección 4 del plan): A.7, A.9, A.10 y A.11, C.3, E.6, E.12 y E.16.
+- Pruebas manuales (sección 4): A.7, A.9–A.11, C.3, E.6, E.12 y E.16.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
 
 ## Fuera del plan
-- Hallazgo 6 de la auditoría (CI duplicado): se revisará después. Si hay protección de rama con una comprobación obligatoria, habrá que cambiarla en GitHub a mano.
-- Mejora de la migración de adjuntos y vista previa de imágenes.
-- Si se vacía el seguimiento mucho después de reabrir, se propone `FechaReapertura + 7`, que puede estar en el pasado.
-- Guardar los hitos del modelo como valores únicos y traducirlos al mostrarlos.
-- La preferencia del separador del CSV se guarda aunque luego se cancele el destino.
+- Hallazgo 6 (CI duplicado) y protección de rama en GitHub.
+- Migración de adjuntos y vista previa de imágenes.
+- Seguimiento `FechaReapertura + 7` puede caer en el pasado.
+- Hitos como valores únicos traducidos al mostrar.
+- La preferencia del separador CSV se guarda aunque se cancele.
