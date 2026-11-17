@@ -569,6 +569,22 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
+    public void AbrirAdjunto_SinEditor_NoLlamaAlVisor()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo);
+        vm.NuevaCommand.Execute(null);
+        vm.Editor = null;
+
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
+
+        // Al no haber editor, el comando retorna temprano sin mostrar informe ni adjunto
+        Assert.Empty(dialogo.Informes);
+        Assert.Empty(dialogo.AdjuntosAbiertos);
+    }
+
+    [Fact]
     public void AbrirAdjunto_CuandoElVisorFalla_Avisa()
     {
         using var db = TestDb.NuevoContexto();
@@ -582,6 +598,28 @@ public class ViewModelAdjuntosTests
         vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
 
         Assert.Single(dialogo.Avisos);
+    }
+
+    [Fact]
+    public void AplicarDocumentos_CConCartaContenido_AsignaCarta()
+    {
+        using var db = TestDb.NuevoContexto(out string ruta);
+        using var vm = new MainViewModel(db);
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = solicitud;
+
+        // Simular que el editor tiene contenido de carta
+        vm.Editor!.CartaContenido = [1, 2, 3];
+        vm.Editor.NombreOriginalCarta = "carta.pdf";
+
+        vm.GuardarCommand.Execute(null);
+
+        using var otro = new AppDbContext(ruta);
+        DocumentosSolicitud documentos = db.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == solicitud.Id);
+        Assert.Equal([1, 2, 3], documentos.Carta);
     }
 
     private static void GuardarDocumentos(AppDbContext db, int solicitudId, byte[]? cv, byte[]? carta)
