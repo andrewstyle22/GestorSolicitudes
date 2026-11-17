@@ -40,8 +40,6 @@ internal static class EsquemaDb
 
         (string Columna, string Definicion)[] nuevas =
         {
-            ("RutaCv", TextoNulo),
-            ("RutaCarta", TextoNulo),
             ("NombreOriginalCv", TextoNulo),
             ("NombreOriginalCarta", TextoNulo),
             ("Requisitos", TextoNulo),

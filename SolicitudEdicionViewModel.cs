@@ -148,19 +148,11 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
-    private string? rutaCv;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
     private string? nombreOriginalCv;
 
     /// <summary>CV pendiente de guardar: se escribe en DocumentosSolicitud al pulsar Guardar.</summary>
     [ObservableProperty]
     private byte[]? cvContenido;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
-    private string? rutaCarta;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
@@ -173,13 +165,11 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
     public Adjunto AdjuntoCv => new(
         TipoAdjunto.Cv,
-        this.RutaCv,
         this.NombreOriginalCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
 
     /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
     public Adjunto AdjuntoCarta => new(
         TipoAdjunto.Carta,
-        this.RutaCarta,
         this.NombreOriginalCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
@@ -478,10 +468,8 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ContactoTelefono = solicitud.ContactoTelefono;
         this.Notas = solicitud.Notas;
         this.NotaReapertura = null;
-        this.RutaCv = solicitud.RutaCv;
         this.NombreOriginalCv = solicitud.NombreOriginalCv;
         this.CvContenido = null;
-        this.RutaCarta = solicitud.RutaCarta;
         this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
         this.CartaContenido = null;
         this.CargarEventos(solicitud);
@@ -555,8 +543,8 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     public void AplicarAdjuntos(Solicitud solicitud)
     {
-        solicitud.AsignarCv(this.RutaCv, this.NombreOriginalCv);
-        solicitud.AsignarCarta(this.RutaCarta, this.NombreOriginalCarta);
+        solicitud.AsignarCv(this.NombreOriginalCv);
+        solicitud.AsignarCarta(this.NombreOriginalCarta);
     }
 
     /// <summary>

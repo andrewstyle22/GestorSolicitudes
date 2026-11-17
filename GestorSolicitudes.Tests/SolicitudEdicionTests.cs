@@ -815,48 +815,40 @@ public class SolicitudEdicionTests
     public void CargarDesde_CopiaLosAdjuntos()
     {
         Solicitud solicitud = new SolicitudBuilder()
-            .ConRutaCv(@"C:\adjuntos\abc.pdf")
             .ConNombreOriginalCv("mi-cv.pdf")
-            .ConRutaCarta(@"C:\adjuntos\def.pdf")
+            .ConNombreOriginalCarta("mi-carta.pdf")
             .Construir();
         var editor = new SolicitudEdicionViewModel();
 
         editor.CargarDesde(solicitud);
 
-        Assert.Equal(@"C:\adjuntos\abc.pdf", editor.RutaCv);
         Assert.Equal("mi-cv.pdf", editor.NombreOriginalCv);
-        Assert.Equal(@"C:\adjuntos\def.pdf", editor.RutaCarta);
-        Assert.Null(editor.NombreOriginalCarta);
+        Assert.Equal("mi-carta.pdf", editor.NombreOriginalCarta);
     }
 
     [Fact]
-    public void AdjuntoCv_SinRuta_MuestraElTextoDeSinAdjuntar()
+    public void AdjuntoCv_SinNombre_MuestraElTextoDeSinAdjuntar()
     {
         var editor = new SolicitudEdicionViewModel();
 
-        Assert.Null(editor.AdjuntoCv.Ruta);
         Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), editor.AdjuntoCv.Nombre);
         Assert.Equal(Localizacion.Texto("Adjuntos.CartaSinAdjuntar"), editor.AdjuntoCarta.Nombre);
     }
 
     [Fact]
-    public void AdjuntoCv_UsaElNombreOriginalYNoElDelFichero()
+    public void AdjuntoCv_UsaElNombreOriginal()
     {
-        var editor = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf", NombreOriginalCv = "mi-cv.pdf" };
-        var sinNombre = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf" };
+        var editor = new SolicitudEdicionViewModel { NombreOriginalCv = "mi-cv.pdf" };
 
         Assert.Equal("mi-cv.pdf", editor.AdjuntoCv.Nombre);
-        Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), sinNombre.AdjuntoCv.Nombre);
     }
 
     [Fact]
-    public void AdjuntoCarta_UsaElNombreOriginalYNoElDelFichero()
+    public void AdjuntoCarta_UsaElNombreOriginal()
     {
-        var editor = new SolicitudEdicionViewModel { RutaCarta = @"C:\adjuntos\def.pdf", NombreOriginalCarta = "mi-carta.pdf" };
-        var sinNombre = new SolicitudEdicionViewModel { RutaCarta = @"C:\adjuntos\def.pdf" };
+        var editor = new SolicitudEdicionViewModel { NombreOriginalCarta = "mi-carta.pdf" };
 
         Assert.Equal("mi-carta.pdf", editor.AdjuntoCarta.Nombre);
-        Assert.Equal(Localizacion.Texto("Adjuntos.CartaSinAdjuntar"), sinNombre.AdjuntoCarta.Nombre);
     }
 
     [Fact]
@@ -886,35 +878,30 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void AdjuntoCv_NotificaAlCambiarLaRutaONombre()
+    public void AdjuntoCv_NotificaAlCambiarElNombre()
     {
         var editor = new SolicitudEdicionViewModel();
         var notificados = new List<string?>();
         editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
 
-        editor.RutaCv = @"C:\adjuntos\abc.pdf";
         editor.NombreOriginalCv = "mi-cv.pdf";
 
-        Assert.Equal(2, notificados.Count(nombre => nombre == nameof(editor.AdjuntoCv)));
+        Assert.Equal(1, notificados.Count(nombre => nombre == nameof(editor.AdjuntoCv)));
     }
 
     [Fact]
-    public void AplicarAdjuntos_VuelcaRutasYNombres()
+    public void AplicarAdjuntos_VuelcaNombres()
     {
         Solicitud solicitud = new SolicitudBuilder().Construir();
         var editor = new SolicitudEdicionViewModel
         {
-            RutaCv = @"C:\adjuntos\abc.pdf",
             NombreOriginalCv = "mi-cv.pdf",
-            RutaCarta = @"C:\adjuntos\def.pdf",
             NombreOriginalCarta = "mi-carta.pdf",
         };
 
         editor.AplicarAdjuntos(solicitud);
 
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
         Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
-        Assert.Equal(@"C:\adjuntos\def.pdf", solicitud.RutaCarta);
         Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
     }
 
@@ -924,17 +911,13 @@ public class SolicitudEdicionTests
         Solicitud solicitud = new SolicitudBuilder().Construir();
         var editor = new SolicitudEdicionViewModel
         {
-            RutaCv = @"  C:\adjuntos\abc.pdf  ",
             NombreOriginalCv = "  mi-cv.pdf  ",
-            RutaCarta = @"  C:\adjuntos\def.pdf  ",
             NombreOriginalCarta = "  mi-carta.pdf  ",
         };
 
         editor.AplicarAdjuntos(solicitud);
 
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
         Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
-        Assert.Equal(@"C:\adjuntos\def.pdf", solicitud.RutaCarta);
         Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
     }
 
@@ -952,7 +935,7 @@ public class SolicitudEdicionTests
             FechaSolicitud = fecha,
             RespuestaEmpresa = "Oferta enviada",
             ContactoNombre = "Ana",
-            RutaCv = @"C:\adjuntos\abc.pdf",
+            NombreOriginalCv = "mi-cv.pdf",
         };
 
         editor.AplicarA(solicitud);
@@ -964,7 +947,7 @@ public class SolicitudEdicionTests
         Assert.Equal(fecha, solicitud.FechaSolicitud);
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
         Assert.Equal("Ana", solicitud.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
     }
 
     [Theory]

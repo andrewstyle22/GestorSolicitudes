@@ -44,8 +44,6 @@ public class SolicitudBuilderTests
             .ConTecnologias("C#, .NET")
             .ConEnlaceOferta("https://ejemplo.test/oferta")
             .ConNotas("nota")
-            .ConRutaCv(@"C:\cv.pdf")
-            .ConRutaCarta(@"C:\carta.pdf")
             .ConNombreOriginalCv("mi-cv.pdf")
             .ConFechaPrimeraRespuesta(fecha.AddDays(1))
             .ConFechaCierre(fecha.AddDays(2))
@@ -61,8 +59,6 @@ public class SolicitudBuilderTests
         Assert.Equal("C#, .NET", solicitud.Tecnologias);
         Assert.Equal("https://ejemplo.test/oferta", solicitud.EnlaceOferta);
         Assert.Equal("nota", solicitud.Notas);
-        Assert.Equal(@"C:\cv.pdf", solicitud.RutaCv);
-        Assert.Equal(@"C:\carta.pdf", solicitud.RutaCarta);
         Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
         Assert.Equal(fecha.AddDays(1), solicitud.FechaPrimeraRespuesta);
         Assert.Equal(fecha.AddDays(2), solicitud.FechaCierre);

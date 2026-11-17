@@ -136,7 +136,7 @@ public class SolicitudTests
         Assert.Null(copia.Requisitos);
         Assert.Null(copia.ContactoNombre);
         Assert.Null(copia.Notas);
-        Assert.Null(copia.RutaCv);
+        Assert.Null(copia.NombreOriginalCv);
         Assert.Empty(copia.Eventos);
         Assert.NotSame(origen, copia);
     }
@@ -1193,119 +1193,57 @@ public class SolicitudTests
     }
 
     [Fact]
-    public void AsignarCv_AsignaRutaYNombreOriginal()
+    public void AsignarCv_AsignaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder().Construir();
 
-        solicitud.AsignarCv(@"C:\adjuntos\a1b2.pdf", "mi-cv.pdf");
+        solicitud.AsignarCv("mi-cv.pdf");
 
-        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCv);
         Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
     }
 
     [Fact]
-    public void AsignarCv_RutaDemasiadoLarga_Lanza() =>
-        Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCv(new string('a', 501), null));
-
-    [Fact]
     public void AsignarCv_NombreDemasiadoLargo_Lanza() =>
         Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCv(null, new string('b', 261)));
+            () => new SolicitudBuilder().Construir().AsignarCv(new string('b', 261)));
 
     [Fact]
-    public void QuitarCv_LimpiaRutaYNombreOriginal()
+    public void QuitarCv_LimpiaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder()
-            .ConRutaCv(@"C:\adjuntos\a1b2.pdf")
             .ConNombreOriginalCv("mi-cv.pdf")
             .Construir();
 
         solicitud.QuitarCv();
 
-        Assert.Null(solicitud.RutaCv);
         Assert.Null(solicitud.NombreOriginalCv);
     }
 
     [Fact]
-    public void AsignarCarta_AsignaRutaYNombreOriginal()
+    public void AsignarCarta_AsignaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder().Construir();
 
-        solicitud.AsignarCarta(@"C:\adjuntos\a1b2.pdf", "mi-carta.pdf");
+        solicitud.AsignarCarta("mi-carta.pdf");
 
-        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCarta);
         Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
     }
 
     [Fact]
-    public void AsignarCarta_RutaDemasiadoLarga_Lanza() =>
-        Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCarta(new string('a', 501), null));
-
-    [Fact]
     public void AsignarCarta_NombreDemasiadoLargo_Lanza() =>
         Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCarta(null, new string('b', 261)));
+            () => new SolicitudBuilder().Construir().AsignarCarta(new string('b', 261)));
 
     [Fact]
-    public void QuitarCarta_LimpiaRutaYNombreOriginal()
+    public void QuitarCarta_LimpiaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder()
-            .ConRutaCarta(@"C:\adjuntos\a1b2.pdf")
             .ConNombreOriginalCarta("mi-carta.pdf")
             .Construir();
 
         solicitud.QuitarCarta();
 
-        Assert.Null(solicitud.RutaCarta);
         Assert.Null(solicitud.NombreOriginalCarta);
-    }
-
-    [Fact]
-    public void NombreCv_UsaNombreOriginalSiExiste()
-    {
-        var solicitud = new SolicitudBuilder()
-            .ConNombreOriginalCv("mi-cv-final.pdf")
-            .ConRutaCv(@"C:\cualquier\cosa\a1b2.pdf")
-            .Construir();
-        Assert.Equal("mi-cv-final.pdf", solicitud.NombreCv);
-    }
-
-    [Fact]
-    public void NombreCv_SinNombreOriginalUsaNombreDelFichero()
-    {
-        var solicitud = new SolicitudBuilder().ConRutaCv(@"C:\cualquier\cosa\a1b2.pdf").Construir();
-        Assert.Equal("a1b2.pdf", solicitud.NombreCv);
-    }
-
-    [Fact]
-    public void NombreCv_SinRutaEsNull()
-    {
-        Assert.Null(new SolicitudBuilder().Construir().NombreCv);
-    }
-
-    [Fact]
-    public void NombreCarta_UsaNombreOriginalSiExiste()
-    {
-        var solicitud = new SolicitudBuilder()
-            .ConNombreOriginalCarta("mi-carta-final.pdf")
-            .ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf")
-            .Construir();
-        Assert.Equal("mi-carta-final.pdf", solicitud.NombreCarta);
-    }
-
-    [Fact]
-    public void NombreCarta_SinNombreOriginalUsaNombreDelFichero()
-    {
-        var solicitud = new SolicitudBuilder().ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf").Construir();
-        Assert.Equal("a1b2.pdf", solicitud.NombreCarta);
-    }
-
-    [Fact]
-    public void NombreCarta_SinRutaEsNull()
-    {
-        Assert.Null(new SolicitudBuilder().Construir().NombreCarta);
     }
 
     [Fact]
@@ -1322,25 +1260,6 @@ public class SolicitudTests
     }
 
     [Fact]
-    public void TieneCv_SinNombreEsFalsoAunqueQuedeRuta()
-    {
-        var solicitud = new SolicitudBuilder().ConRutaCv(@"C:\adjuntos\abc.pdf").Construir();
-
-        Assert.False(solicitud.TieneCv);
-    }
-
-    [Fact]
-    public void AsignarCv_ConSoloNombreNoTocaLaRuta()
-    {
-        var solicitud = new SolicitudBuilder().ConRutaCv(@"C:\adjuntos\abc.pdf").Construir();
-
-        solicitud.AsignarCv("mi-cv.pdf");
-
-        Assert.True(solicitud.TieneCv);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
-    }
-
-    [Fact]
     public void TieneCarta_SigueAlNombreGuardado()
     {
         var solicitud = new SolicitudBuilder().ConNombreOriginalCarta("mi-carta.pdf").Construir();
@@ -1351,17 +1270,6 @@ public class SolicitudTests
         solicitud.QuitarCarta();
 
         Assert.False(solicitud.TieneCarta);
-    }
-
-    [Fact]
-    public void AsignarCarta_ConSoloNombreNoTocaLaRuta()
-    {
-        var solicitud = new SolicitudBuilder().ConRutaCarta(@"C:\adjuntos\abc.pdf").Construir();
-
-        solicitud.AsignarCarta("mi-carta.pdf");
-
-        Assert.True(solicitud.TieneCarta);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCarta);
     }
 
     [Fact]

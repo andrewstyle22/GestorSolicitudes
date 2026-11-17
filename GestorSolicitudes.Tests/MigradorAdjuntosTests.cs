@@ -3,6 +3,7 @@ namespace GestorSolicitudes.Tests;
 using System.IO;
 using GestorSolicitudes.Data;
 using GestorSolicitudes.Models;
+using Microsoft.Data.Sqlite;
 
 public class MigradorAdjuntosTests
 {
@@ -10,7 +11,7 @@ public class MigradorAdjuntosTests
     private const string NombreRegistro = "errores.log";
 
     [Fact]
-    public void Migrar_CopiaLosDocumentosYDejaLasRutasAnuladas()
+    public void Migrar_CopiaLosDocumentosYDejaLosNombres()
     {
         string carpeta = TestDb.NuevaCarpeta();
         string ficheroCv = CrearFichero(carpeta, NombreCv, [1, 2, 3]);
@@ -21,21 +22,17 @@ public class MigradorAdjuntosTests
 
         using (var db = TestDb.NuevoContexto(out ruta))
         {
-            var solicitud = new SolicitudBuilder()
-                .ConRutaCv(ficheroCv)
-                .ConRutaCarta(ficheroCarta)
-                .Construir();
+            var solicitud = new SolicitudBuilder().Construir();
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
             id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, ficheroCarta);
         }
 
         MigradorAdjuntos.Migrar(ruta, registro, carpeta);
 
         using var db2 = new AppDbContext(ruta);
         Solicitud migrada = db2.Solicitudes.Single(s => s.Id == id);
-        Assert.Null(migrada.RutaCv);
-        Assert.Null(migrada.RutaCarta);
         Assert.Equal(NombreCv, migrada.NombreOriginalCv);
         Assert.Equal("carta.pdf", migrada.NombreOriginalCarta);
 
@@ -58,9 +55,10 @@ public class MigradorAdjuntosTests
 
         using (var db = TestDb.NuevoContexto(out ruta))
         {
-            var solicitud = new SolicitudBuilder().ConRutaCv(ficheroCv).Construir();
+            var solicitud = new SolicitudBuilder().Construir();
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
+            ApuntarRutas(ruta, solicitud.Id, ficheroCv, null);
         }
 
         MigradorAdjuntos.Migrar(ruta, Path.Combine(origen, NombreRegistro), adjuntos);
@@ -79,12 +77,10 @@ public class MigradorAdjuntosTests
 
         using (var db = TestDb.NuevoContexto(out ruta))
         {
-            var solicitud = new SolicitudBuilder()
-                .ConRutaCv(ficheroCv)
-                .ConRutaCarta(ficheroCarta)
-                .Construir();
+            var solicitud = new SolicitudBuilder().Construir();
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
+            ApuntarRutas(ruta, solicitud.Id, ficheroCv, ficheroCarta);
         }
 
         // Sin FileShare.Delete, Windows no deja borrar el fichero mientras está abierto.
@@ -112,11 +108,11 @@ public class MigradorAdjuntosTests
         using (var db = TestDb.NuevoContexto(out ruta))
         {
             var solicitud = new SolicitudBuilder()
-                .ConRutaCv(ficheroCv)
                 .ConNombreOriginalCv("mi curriculum.pdf")
                 .Construir();
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
+            ApuntarRutas(ruta, solicitud.Id, ficheroCv, null);
         }
 
         MigradorAdjuntos.Migrar(ruta, Path.Combine(carpeta, NombreRegistro));
@@ -136,18 +132,17 @@ public class MigradorAdjuntosTests
         using (var db = TestDb.NuevoContexto(out ruta))
         {
             var solicitud = new SolicitudBuilder()
-                .ConRutaCv(rutaCv)
                 .ConNombreOriginalCv(NombreCv)
                 .Construir();
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
+            ApuntarRutas(ruta, solicitud.Id, rutaCv, null);
         }
 
         MigradorAdjuntos.Migrar(ruta, registro);
 
         using var db2 = new AppDbContext(ruta);
         Solicitud migrada = db2.Solicitudes.Single();
-        Assert.Null(migrada.RutaCv);
         Assert.Null(migrada.NombreOriginalCv);
         Assert.Empty(db2.Set<DocumentosSolicitud>());
         Assert.Contains("no se pudo migrar el CV", File.ReadAllText(registro));
@@ -163,9 +158,10 @@ public class MigradorAdjuntosTests
 
         using (var db = TestDb.NuevoContexto(out ruta))
         {
-            var solicitud = new SolicitudBuilder().ConRutaCv(ficheroCv).Construir();
+            var solicitud = new SolicitudBuilder().Construir();
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
+            ApuntarRutas(ruta, solicitud.Id, ficheroCv, null);
         }
 
         MigradorAdjuntos.Migrar(ruta, registro, carpeta);
@@ -177,6 +173,51 @@ public class MigradorAdjuntosTests
         Assert.Equal(NombreCv, db2.Solicitudes.Single().NombreOriginalCv);
         Assert.False(File.Exists(registro));
         Assert.False(File.Exists(ficheroCv));
+    }
+
+    [Fact]
+    public void Migrar_BaseSinColumnasDeRuta_NoHaceNada()
+    {
+        string registro = Path.Combine(TestDb.NuevaCarpeta(), NombreRegistro);
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir());
+            db.SaveChanges();
+        }
+
+        MigradorAdjuntos.Migrar(ruta, registro);
+
+        using var db2 = new AppDbContext(ruta);
+        Assert.Empty(db2.Set<DocumentosSolicitud>());
+        Assert.False(File.Exists(registro));
+    }
+
+    /// <summary>
+    /// Simula una base de la versión anterior: añade las columnas de ruta y las rellena por SQL,
+    /// fuera del modelo actual.
+    /// </summary>
+    private static void ApuntarRutas(string rutaBd, int id, string? cv, string? carta)
+    {
+        using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(rutaBd));
+        conexion.Open();
+
+        using (var columnas = conexion.CreateCommand())
+        {
+            columnas.CommandText = """
+                ALTER TABLE Solicitudes ADD COLUMN RutaCv TEXT NULL;
+                ALTER TABLE Solicitudes ADD COLUMN RutaCarta TEXT NULL;
+                """;
+            columnas.ExecuteNonQuery();
+        }
+
+        using var comando = conexion.CreateCommand();
+        comando.CommandText = "UPDATE Solicitudes SET RutaCv = $cv, RutaCarta = $carta WHERE Id = $id;";
+        comando.Parameters.AddWithValue("$cv", (object?)cv ?? DBNull.Value);
+        comando.Parameters.AddWithValue("$carta", (object?)carta ?? DBNull.Value);
+        comando.Parameters.AddWithValue("$id", id);
+        comando.ExecuteNonQuery();
     }
 
     private static string CrearFichero(string carpeta, string nombre, byte[] contenido)

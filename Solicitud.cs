@@ -3,7 +3,6 @@ namespace GestorSolicitudes.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
 using System.Reflection;
 
 /// <summary>
@@ -25,7 +24,6 @@ public class Solicitud
     // Prefijo del hito de reapertura: el editor lo quita para la franja de Seguimiento.
     public const string PrefijoHitoReapertura = "Reabierta. ";
 
-    private const int LongitudMaximaRutaAdjunto = 500;
     private const int LongitudMaximaNombreOriginalAdjunto = 260;
 
     private Solicitud()
@@ -432,14 +430,9 @@ public class Solicitud
     /// <summary>Actualiza las notas: recorta espacios y no impone límite de longitud.</summary>
     public void ActualizarNotas(string? notas) => this.Notas = notas?.Trim();
 
-    // --- Adjuntos (copias en %APPDATA%\GestorSolicitudes\adjuntos) ---
-    [MaxLength(LongitudMaximaRutaAdjunto)]
-    public string? RutaCv { get; private set; }
+    // --- Adjuntos (contenido en DocumentosSolicitud) ---
 
-    [MaxLength(LongitudMaximaRutaAdjunto)]
-    public string? RutaCarta { get; private set; }
-
-    /// <summary>Gets or sets nombre "bonito" del CV tal como lo eligió el usuario (el fichero en disco es un GUID).</summary>
+    /// <summary>Gets or sets nombre "bonito" del CV tal como lo eligió el usuario.</summary>
     [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
     public string? NombreOriginalCv { get; private set; }
 
@@ -447,47 +440,19 @@ public class Solicitud
     [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
     public string? NombreOriginalCarta { get; private set; }
 
-    /// <summary>
-    /// Asigna el CV: la ruta y el nombre original que vio el usuario van juntos,
-    /// y ninguno puede superar la longitud que admite la base de datos.
-    /// </summary>
-    public void AsignarCv(string? ruta, string? nombreOriginal)
-    {
-        this.RutaCv = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta del CV");
-        this.AsignarCv(nombreOriginal);
-    }
-
     /// <summary>Asigna el nombre del CV; su contenido vive aparte, en DocumentosSolicitud.</summary>
     public void AsignarCv(string? nombreOriginal) =>
         this.NombreOriginalCv = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original del CV");
 
-    /// <summary>Quita el CV: borra a la vez su ruta y su nombre original.</summary>
-    public void QuitarCv()
-    {
-        this.RutaCv = null;
-        this.NombreOriginalCv = null;
-    }
-
-    /// <summary>
-    /// Asigna la carta: la ruta y el nombre original que vio el usuario van juntos,
-    /// y ninguno puede superar la longitud que admite la base de datos.
-    /// </summary>
-    public void AsignarCarta(string? ruta, string? nombreOriginal)
-    {
-        this.RutaCarta = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta de la carta");
-        this.AsignarCarta(nombreOriginal);
-    }
+    /// <summary>Quita el CV: borra su nombre original; el contenido lo quita el editor al guardar.</summary>
+    public void QuitarCv() => this.NombreOriginalCv = null;
 
     /// <summary>Asigna el nombre de la carta; su contenido vive aparte, en DocumentosSolicitud.</summary>
     public void AsignarCarta(string? nombreOriginal) =>
         this.NombreOriginalCarta = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original de la carta");
 
-    /// <summary>Quita la carta: borra a la vez su ruta y su nombre original.</summary>
-    public void QuitarCarta()
-    {
-        this.RutaCarta = null;
-        this.NombreOriginalCarta = null;
-    }
+    /// <summary>Quita la carta: borra su nombre original; el contenido lo quita el editor al guardar.</summary>
+    public void QuitarCarta() => this.NombreOriginalCarta = null;
 
     private readonly List<Evento> eventos = [];
 
@@ -551,10 +516,6 @@ public class Solicitud
         && this.ProximoSeguimiento.HasValue
         && this.ProximoSeguimiento.Value.Date <= DateTime.Today;
 
-    /// <summary>Gets nombre a mostrar del CV: el original si se conserva, o el del disco si no.</summary>
-    [NotMapped]
-    public string? NombreCv => this.NombreOriginalCv ?? Archivo(this.RutaCv);
-
     /// <summary>Gets si hay CV guardado, según su nombre; el contenido se lee de la base al abrir.</summary>
     [NotMapped]
     public bool TieneCv => !string.IsNullOrWhiteSpace(this.NombreOriginalCv);
@@ -562,13 +523,6 @@ public class Solicitud
     /// <summary>Gets si hay carta guardada, según su nombre; el contenido se lee de la base al abrir.</summary>
     [NotMapped]
     public bool TieneCarta => !string.IsNullOrWhiteSpace(this.NombreOriginalCarta);
-
-    /// <summary>Gets nombre a mostrar de la carta: el original si se conserva, o el del disco si no.</summary>
-    [NotMapped]
-    public string? NombreCarta => this.NombreOriginalCarta ?? Archivo(this.RutaCarta);
-
-    private static string? Archivo(string? ruta) =>
-        string.IsNullOrWhiteSpace(ruta) ? null : Path.GetFileName(ruta);
 
     public override string ToString() => $"{this.Empresa} — {this.Puesto}";
 }

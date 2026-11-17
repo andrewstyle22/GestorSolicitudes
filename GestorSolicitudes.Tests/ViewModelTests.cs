@@ -717,7 +717,7 @@ public class ViewModelTests
             .ConPortal("LinkedIn")
             .ConFechaSolicitud(fechaGuardada)
             .ConContactoNombre("Ana")
-            .ConRutaCv(@"C:\adjuntos\abc.pdf")
+            .ConNombreOriginalCv("cv.pdf")
             .Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
@@ -729,14 +729,14 @@ public class ViewModelTests
         vm.Editor.Portal = "InfoJobs";
         vm.Editor.FechaSolicitud = new DateTime(2026, 2, 1);
         vm.Editor.ContactoNombre = "Luis";
-        vm.Editor.RutaCv = @"C:\adjuntos\def.pdf";
+        vm.Editor.NombreOriginalCv = "otro.pdf";
 
         Assert.Equal("ACME", solicitud.Empresa);
         Assert.Equal("Dev", solicitud.Puesto);
         Assert.Equal("LinkedIn", solicitud.Portal);
         Assert.Equal(fechaGuardada, solicitud.FechaSolicitud);
         Assert.Equal("Ana", solicitud.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("cv.pdf", solicitud.NombreOriginalCv);
 
         vm.CancelarCommand.Execute(null);
 
@@ -745,7 +745,7 @@ public class ViewModelTests
         Assert.Equal("LinkedIn", solicitud.Portal);
         Assert.Equal(fechaGuardada, solicitud.FechaSolicitud);
         Assert.Equal("Ana", solicitud.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("cv.pdf", solicitud.NombreOriginalCv);
 
         Solicitud guardada = db.Solicitudes.AsNoTracking().Single();
         Assert.Equal("ACME", guardada.Empresa);
@@ -753,7 +753,7 @@ public class ViewModelTests
         Assert.Equal("LinkedIn", guardada.Portal);
         Assert.Equal(fechaGuardada, guardada.FechaSolicitud);
         Assert.Equal("Ana", guardada.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", guardada.RutaCv);
+        Assert.Equal("cv.pdf", guardada.NombreOriginalCv);
     }
 
     [Fact]

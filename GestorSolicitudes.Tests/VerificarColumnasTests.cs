@@ -28,7 +28,7 @@ public class VerificarColumnasTests
                 columnas.Add(Convert.ToString(lector["name"])!);
             }
 
-            foreach (string esperada in new[] { "RutaCv", "RutaCarta", "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono", ColumnaFechaReapertura, ColumnaSolicitudAnteriorId })
+            foreach (string esperada in new[] { "NombreOriginalCv", "NombreOriginalCarta", "Requisitos", "MotivoRechazo", "Origen", "ContactoTelefono", ColumnaFechaReapertura, ColumnaSolicitudAnteriorId })
             {
                 Assert.Contains(esperada, columnas);
             }
@@ -37,7 +37,7 @@ public class VerificarColumnasTests
 
     [Theory]
     [InlineData("Requisitos")]
-    [InlineData("RutaCv")]
+    [InlineData("ContactoTelefono")]
     public void VerificarColumnas_EsIdempotente(string columnaYaPresente)
     {
         // Si ya existe, llamar dos veces no debe romper nada.

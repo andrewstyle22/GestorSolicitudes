@@ -116,9 +116,7 @@ public class AppDbContextTests
                 .ConContactoEmail("ana@ejemplo.test")
                 .ConContactoTelefono("600123456")
                 .ConNotas("Hablar el lunes")
-                .ConRutaCv(@"C:\adjuntos\cv.pdf")
                 .ConNombreOriginalCv("mi-cv.pdf")
-                .ConRutaCarta(@"C:\adjuntos\carta.pdf")
                 .ConNombreOriginalCarta("mi-carta.pdf")
                 .ConEventos(new Evento(DateTime.Today, TipoEvento.Nota, "Antes"))
                 .Construir();
@@ -161,9 +159,7 @@ public class AppDbContextTests
         Assert.Equal("ana@ejemplo.test", solicitudRecuperada.ContactoEmail);
         Assert.Equal("600123456", solicitudRecuperada.ContactoTelefono);
         Assert.Equal("Hablar el lunes", solicitudRecuperada.Notas);
-        Assert.Equal(@"C:\adjuntos\cv.pdf", solicitudRecuperada.RutaCv);
         Assert.Equal("mi-cv.pdf", solicitudRecuperada.NombreOriginalCv);
-        Assert.Equal(@"C:\adjuntos\carta.pdf", solicitudRecuperada.RutaCarta);
         Assert.Equal("mi-carta.pdf", solicitudRecuperada.NombreOriginalCarta);
 
         Evento recuperado = solicitudRecuperada.Eventos[0];

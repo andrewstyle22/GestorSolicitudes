@@ -9,7 +9,6 @@ using GestorSolicitudes.Data;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 /// <summary>Lo mínimo que necesita el aviso de la bandeja, sin arrastrar la entidad completa.</summary>
 internal sealed record SeguimientoVencido(int Id, string Empresa, string Puesto, DateTime? ProximoSeguimiento);
@@ -666,7 +665,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             editor.CvContenido = contenido;
             editor.NombreOriginalCv = nombre;
-            editor.RutaCv = null;
         });
 
     private static readonly DescriptorAdjunto DescriptorCarta = new(
@@ -674,7 +672,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             editor.CartaContenido = contenido;
             editor.NombreOriginalCarta = nombre;
-            editor.RutaCarta = null;
         });
 
     [RelayCommand]
@@ -721,10 +718,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void QuitarCarta() => this.QuitarAdjunto(DescriptorCarta);
 
-    /// <summary>
-    /// Quita el documento del editor. El cambio solo llega a la base al guardar; el
-    /// contenido anterior, si estaba en disco, se borra entonces.
-    /// </summary>
+    /// <summary>Quita el documento del editor; el cambio solo llega a la base al guardar.</summary>
     private void QuitarAdjunto(DescriptorAdjunto adjunto)
     {
         if (this.Editor is null)
@@ -790,18 +784,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         return tipo == TipoAdjunto.Cv
             ? fila.Select(d => d.Cv).FirstOrDefault()
             : fila.Select(d => d.Carta).FirstOrDefault();
-    }
-
-    /// <summary>
-    /// Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.
-    /// Exige que <paramref name="solicitud"/> esté en seguimiento por el contexto: si estuviera
-    /// separada, EF no conserva el valor original y devolvería el actual.
-    /// </summary>
-    private (string? Cv, string? Carta) RutasGuardadas(Solicitud solicitud)
-    {
-        EntityEntry<Solicitud> entrada = this.db.Entry(solicitud);
-        return (entrada.Property(s => s.RutaCv).OriginalValue,
-                entrada.Property(s => s.RutaCarta).OriginalValue);
     }
 
     [RelayCommand]
@@ -891,11 +873,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         bool esNueva = this.PrepararNueva(solicitud);
 
-        // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
-        (string? cvAnterior, string? cartaAnterior) = esNueva
-            ? (null, null)
-            : this.RutasGuardadas(solicitud);
-
         if (!this.Persistir(esNueva ? solicitud : null, esNueva ? this.Editor : null))
         {
             // La entidad ya tiene los efectos de CambiarEstado y Reabrir: recargar el búfer
@@ -919,7 +896,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return false;
         }
 
-        this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
+        this.adjuntos.DescartarCopias();
 
         // Se busca después de guardar: si la base no responde, el error ya lo ha contado Persistir.
         Solicitud? candidaturaRepetida = esNueva ? this.BuscarCandidaturaRepetida(solicitud) : null;
@@ -1184,20 +1161,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     private void DescartarCambios()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel edicion)
+        if (this.solicitudAbierta is null || this.Editor is null)
         {
             return;
         }
 
-        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
-        (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
-            ? (null, null)
-            : this.RutasGuardadas(solicitud);
-
-        this.adjuntos.DescartarNoGuardadas(
-            (edicion.RutaCv, edicion.RutaCarta),
-            (cvGuardado, cartaGuardada));
-
+        this.adjuntos.DescartarCopias();
         this.db.ChangeTracker.Clear();
     }
 
@@ -1218,9 +1187,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
-        (string? cv, string? carta) = this.RutasGuardadas(this.solicitudAbierta);
-
         if (!this.TryEliminarSolicitud(this.solicitudAbierta, out Exception? error))
         {
             this.dialogo.Error(
@@ -1229,8 +1195,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.adjuntos.Eliminar(cv);
-        this.adjuntos.Eliminar(carta);
         this.adjuntos.DescartarCopias();
 
         this.Abrir(null);

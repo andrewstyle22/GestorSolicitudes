@@ -34,7 +34,7 @@ public partial class FilaAdjunto : UserControl
         set => this.SetValue(EtiquetaProperty, value);
     }
 
-    /// <summary>Ruta + nombre del fichero; con null la fila enseña el texto de "sin adjuntar".</summary>
+    /// <summary>Nombre del fichero; con null la fila enseña el texto de "sin adjuntar".</summary>
     public Adjunto? Adjunto
     {
         get => (Adjunto?)this.GetValue(AdjuntoProperty);

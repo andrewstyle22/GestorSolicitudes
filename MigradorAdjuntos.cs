@@ -24,6 +24,12 @@ internal static class MigradorAdjuntos
         using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(ruta));
         conexion.Open();
 
+        // Una base creada por esta versión ya no tiene las columnas de ruta.
+        if (!TieneColumnasDeRuta(conexion))
+        {
+            return;
+        }
+
         List<FilaPendiente> pendientes = LeerPendientes(conexion);
         if (pendientes.Count == 0)
         {
@@ -115,6 +121,24 @@ internal static class MigradorAdjuntos
         string carpetaCompleta = Path.GetFullPath(carpeta) + Path.DirectorySeparatorChar;
         string rutaCompleta = Path.GetFullPath(ruta);
         return rutaCompleta.StartsWith(carpetaCompleta, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TieneColumnasDeRuta(SqliteConnection conexion)
+    {
+        using var comando = conexion.CreateCommand();
+        comando.CommandText = "PRAGMA table_info(Solicitudes);";
+        using var lector = comando.ExecuteReader();
+
+        bool cv = false;
+        bool carta = false;
+        while (lector.Read())
+        {
+            string nombre = Convert.ToString(lector["name"]) ?? string.Empty;
+            cv |= string.Equals(nombre, "RutaCv", StringComparison.OrdinalIgnoreCase);
+            carta |= string.Equals(nombre, "RutaCarta", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return cv && carta;
     }
 
     private static List<FilaPendiente> LeerPendientes(SqliteConnection conexion)
