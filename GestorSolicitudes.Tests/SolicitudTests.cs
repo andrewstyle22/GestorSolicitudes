@@ -136,7 +136,7 @@ public class SolicitudTests
         Assert.Null(copia.Requisitos);
         Assert.Null(copia.ContactoNombre);
         Assert.Null(copia.Notas);
-        Assert.Null(copia.RutaCv);
+        Assert.Null(copia.NombreOriginalCv);
         Assert.Empty(copia.Eventos);
         Assert.NotSame(origen, copia);
     }
@@ -411,6 +411,17 @@ public class SolicitudTests
 
         Assert.Equal(EstadoSolicitud.Retirada, solicitud.Estado);
         Assert.Equal(MotivoRechazo.YaNoMeInteresa, solicitud.MotivoRechazo);
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void CambiarEstado_OfertaAceptadaAOtroCierre_SePermite()
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.OfertaAceptada).Construir();
+
+        solicitud.CambiarEstado(EstadoSolicitud.Retirada, MotivoRechazo.YaNoMeInteresa, null);
+
+        Assert.Equal(EstadoSolicitud.Retirada, solicitud.Estado);
         Assert.Equal(DateTime.Today, solicitud.FechaCierre);
     }
 
@@ -766,6 +777,74 @@ public class SolicitudTests
     }
 
     [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorALaEntrevista_Lanza()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var envio = new DateTime(2026, 1, 10);
+
+        Assert.Throws<ArgumentException>(() =>
+            solicitud.ActualizarFechas(envio, envio.AddDays(-1), null));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorAlSeguimiento_Lanza()
+    {
+        var solicitud = new SolicitudBuilder().Construir();
+        var envio = new DateTime(2026, 1, 10);
+
+        Assert.Throws<ArgumentException>(() =>
+            solicitud.ActualizarFechas(envio, null, envio.AddDays(-1)));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorALaPrimeraRespuestaGuardada_Lanza()
+    {
+        var envio = new DateTime(2026, 1, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(envio.AddDays(-1))
+            .Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarFechas(envio, null, null));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudPosteriorAlCierreGuardado_Lanza()
+    {
+        var envio = new DateTime(2026, 1, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaCierre(envio.AddDays(-1))
+            .Construir();
+
+        Assert.Throws<ArgumentException>(() => solicitud.ActualizarFechas(envio, null, null));
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechaSolicitudIgualALosLimites_NoLanza()
+    {
+        var envio = new DateTime(2026, 1, 10);
+        var solicitud = new SolicitudBuilder()
+            .ConFechaPrimeraRespuesta(envio)
+            .ConFechaCierre(envio)
+            .Construir();
+
+        solicitud.ActualizarFechas(envio, envio, envio);
+
+        Assert.Equal(envio, solicitud.FechaSolicitud);
+    }
+
+    [Fact]
+    public void ActualizarFechas_FechasQueRellenaElModeloConHoy_NoLanza()
+    {
+        var solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var manana = DateTime.Today.AddDays(1);
+
+        solicitud.ActualizarFechas(manana, null, null);
+
+        Assert.Equal(DateTime.Today, solicitud.FechaCierre);
+        Assert.Equal(manana, solicitud.FechaSolicitud);
+    }
+
+    [Fact]
     public void ActualizarFechas_CambiaElEnvio_MueveElHitoDeSolicitudEnviada()
     {
         var anterior = new DateTime(2026, 1, 10);
@@ -984,6 +1063,29 @@ public class SolicitudTests
         Assert.Equal(esperado, estado.EstaCerrada());
     }
 
+    [Fact]
+    public void AdmiteTransicion_SoloProhibeLlegarAOfertaAceptadaDesdeOtroCierre()
+    {
+        var prohibidas = new HashSet<(EstadoSolicitud Origen, EstadoSolicitud Destino)>
+        {
+            (EstadoSolicitud.OfertaRechazada, EstadoSolicitud.OfertaAceptada),
+            (EstadoSolicitud.Rechazada, EstadoSolicitud.OfertaAceptada),
+            (EstadoSolicitud.Retirada, EstadoSolicitud.OfertaAceptada),
+        };
+
+        foreach (EstadoSolicitud origen in Enum.GetValues<EstadoSolicitud>())
+        {
+            foreach (EstadoSolicitud destino in Enum.GetValues<EstadoSolicitud>())
+            {
+                bool esperado = !prohibidas.Contains((origen, destino));
+
+                Assert.True(
+                    esperado == origen.AdmiteTransicion(destino),
+                    $"Transición {origen} -> {destino}: se esperaba {esperado}.");
+            }
+        }
+    }
+
     [Theory]
     [InlineData(EstadoSolicitud.Rechazada, true)]
     [InlineData(EstadoSolicitud.Retirada, true)]
@@ -1063,6 +1165,7 @@ public class SolicitudTests
     {
         var solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.Enviada)
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir();
         Assert.True(solicitud.SeguimientoPendiente);
@@ -1083,125 +1186,90 @@ public class SolicitudTests
     {
         var solicitud = new SolicitudBuilder()
             .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir();
         Assert.False(solicitud.SeguimientoPendiente);
     }
 
     [Fact]
-    public void AsignarCv_AsignaRutaYNombreOriginal()
+    public void AsignarCv_AsignaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder().Construir();
 
-        solicitud.AsignarCv(@"C:\adjuntos\a1b2.pdf", "mi-cv.pdf");
+        solicitud.AsignarCv("mi-cv.pdf");
 
-        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCv);
         Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
     }
 
     [Fact]
-    public void AsignarCv_RutaDemasiadoLarga_Lanza() =>
-        Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCv(new string('a', 501), null));
-
-    [Fact]
     public void AsignarCv_NombreDemasiadoLargo_Lanza() =>
         Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCv(null, new string('b', 261)));
+            () => new SolicitudBuilder().Construir().AsignarCv(new string('b', 261)));
 
     [Fact]
-    public void QuitarCv_LimpiaRutaYNombreOriginal()
+    public void QuitarCv_LimpiaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder()
-            .ConRutaCv(@"C:\adjuntos\a1b2.pdf")
             .ConNombreOriginalCv("mi-cv.pdf")
             .Construir();
 
         solicitud.QuitarCv();
 
-        Assert.Null(solicitud.RutaCv);
         Assert.Null(solicitud.NombreOriginalCv);
     }
 
     [Fact]
-    public void AsignarCarta_AsignaRutaYNombreOriginal()
+    public void AsignarCarta_AsignaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder().Construir();
 
-        solicitud.AsignarCarta(@"C:\adjuntos\a1b2.pdf", "mi-carta.pdf");
+        solicitud.AsignarCarta("mi-carta.pdf");
 
-        Assert.Equal(@"C:\adjuntos\a1b2.pdf", solicitud.RutaCarta);
         Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
     }
 
     [Fact]
-    public void AsignarCarta_RutaDemasiadoLarga_Lanza() =>
-        Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCarta(new string('a', 501), null));
-
-    [Fact]
     public void AsignarCarta_NombreDemasiadoLargo_Lanza() =>
         Assert.Throws<ArgumentException>(
-            () => new SolicitudBuilder().Construir().AsignarCarta(null, new string('b', 261)));
+            () => new SolicitudBuilder().Construir().AsignarCarta(new string('b', 261)));
 
     [Fact]
-    public void QuitarCarta_LimpiaRutaYNombreOriginal()
+    public void QuitarCarta_LimpiaElNombreOriginal()
     {
         var solicitud = new SolicitudBuilder()
-            .ConRutaCarta(@"C:\adjuntos\a1b2.pdf")
             .ConNombreOriginalCarta("mi-carta.pdf")
             .Construir();
 
         solicitud.QuitarCarta();
 
-        Assert.Null(solicitud.RutaCarta);
         Assert.Null(solicitud.NombreOriginalCarta);
     }
 
     [Fact]
-    public void NombreCv_UsaNombreOriginalSiExiste()
+    public void TieneCv_SigueAlNombreGuardado()
     {
-        var solicitud = new SolicitudBuilder()
-            .ConNombreOriginalCv("mi-cv-final.pdf")
-            .ConRutaCv(@"C:\cualquier\cosa\a1b2.pdf")
-            .Construir();
-        Assert.Equal("mi-cv-final.pdf", solicitud.NombreCv);
+        var solicitud = new SolicitudBuilder().ConNombreOriginalCv("mi-cv.pdf").Construir();
+
+        Assert.True(solicitud.TieneCv);
+        Assert.False(solicitud.TieneCarta);
+
+        solicitud.QuitarCv();
+
+        Assert.False(solicitud.TieneCv);
     }
 
     [Fact]
-    public void NombreCv_SinNombreOriginalUsaNombreDelFichero()
+    public void TieneCarta_SigueAlNombreGuardado()
     {
-        var solicitud = new SolicitudBuilder().ConRutaCv(@"C:\cualquier\cosa\a1b2.pdf").Construir();
-        Assert.Equal("a1b2.pdf", solicitud.NombreCv);
-    }
+        var solicitud = new SolicitudBuilder().ConNombreOriginalCarta("mi-carta.pdf").Construir();
 
-    [Fact]
-    public void NombreCv_SinRutaEsNull()
-    {
-        Assert.Null(new SolicitudBuilder().Construir().NombreCv);
-    }
+        Assert.True(solicitud.TieneCarta);
+        Assert.False(solicitud.TieneCv);
 
-    [Fact]
-    public void NombreCarta_UsaNombreOriginalSiExiste()
-    {
-        var solicitud = new SolicitudBuilder()
-            .ConNombreOriginalCarta("mi-carta-final.pdf")
-            .ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf")
-            .Construir();
-        Assert.Equal("mi-carta-final.pdf", solicitud.NombreCarta);
-    }
+        solicitud.QuitarCarta();
 
-    [Fact]
-    public void NombreCarta_SinNombreOriginalUsaNombreDelFichero()
-    {
-        var solicitud = new SolicitudBuilder().ConRutaCarta(@"C:\cualquier\cosa\a1b2.pdf").Construir();
-        Assert.Equal("a1b2.pdf", solicitud.NombreCarta);
-    }
-
-    [Fact]
-    public void NombreCarta_SinRutaEsNull()
-    {
-        Assert.Null(new SolicitudBuilder().Construir().NombreCarta);
+        Assert.False(solicitud.TieneCarta);
     }
 
     [Fact]

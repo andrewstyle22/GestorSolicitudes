@@ -20,6 +20,13 @@ public class AppDbContext : DbContext
         "GestorSolicitudes",
         "solicitudes.db");
 
+    /// <summary>
+    /// Cadena de conexión de una base concreta. El builder escapa rutas con ';' o comillas
+    /// que romperían la cadena.
+    /// </summary>
+    internal static string CadenaConexion(string ruta)
+        => new SqliteConnectionStringBuilder { DataSource = ruta }.ToString();
+
     private readonly string rutaBaseDatos;
 
     public AppDbContext()
@@ -41,9 +48,7 @@ public class AppDbContext : DbContext
             Directory.CreateDirectory(carpeta);
         }
 
-        // El builder escapa rutas con ';' o comillas que romperían la cadena de conexión.
-        string cadena = new SqliteConnectionStringBuilder { DataSource = this.rutaBaseDatos }.ToString();
-        optionsBuilder.UseSqlite(cadena);
+        optionsBuilder.UseSqlite(CadenaConexion(this.rutaBaseDatos));
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,6 +68,17 @@ public class AppDbContext : DbContext
             entidad.HasMany(s => s.Eventos)
                    .WithOne(e => e.Solicitud!)
                    .HasForeignKey(e => e.SolicitudId)
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Documentos en tabla aparte, sin navegación desde Solicitud: nada los carga al
+        // leer candidaturas. La clave es la propia clave foránea y se borran en cascada.
+        modelBuilder.Entity<DocumentosSolicitud>(entidad =>
+        {
+            entidad.HasKey(d => d.SolicitudId);
+            entidad.HasOne<Solicitud>()
+                   .WithOne()
+                   .HasForeignKey<DocumentosSolicitud>(d => d.SolicitudId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
 

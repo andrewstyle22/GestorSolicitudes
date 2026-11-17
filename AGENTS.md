@@ -13,7 +13,7 @@ Referencia completa: `README.md` (features, decisiones de diseño, lecciones apr
 
 ## Arquitectura (obligatoria: la vigila ArchUnitNET)
 
-Los ficheros viven físicamente en la raíz del proyecto, pero el **namespace** marca la capa. Las capas solo dependen "hacia abajo": `Models`, `Data`, `Helpers`, `Converters` → `ViewModels` → `Views` (`GestorSolicitudes.Tests/ArquitecturaTests.cs`). El namespace raíz `GestorSolicitudes` (App, Localizacion) es el "Núcleo": es el único que construye Vistas; los ViewModels tienen prohibido tocar `Views` y `Converters`. Los diálogos/avisos van por `IDialogoService` (ver Convenciones): un `MessageBox` en un ViewModel, o un using hacia una capa superior, reventará los tests.
+Los ficheros viven físicamente en la raíz del proyecto, pero el **namespace** marca la capa. Las capas solo dependen "hacia abajo": `Models`, `Data`, `Helpers`, `Converters` → `ViewModels` → `Views` (`GestorSolicitudes.Tests/ArquitecturaTests.cs`). El namespace raíz `GestorSolicitudes` (App, Localizacion, ManejadorErrores, MigradorAdjuntos) es el "Núcleo": es el único que construye Vistas; los ViewModels tienen prohibido tocar `Views` y `Converters`. Los diálogos/avisos van por `IDialogoService` (ver Convenciones): un `MessageBox` en un ViewModel, o un using hacia una capa superior, reventará los tests. Lo que combina base de datos con registro o diálogos (`ManejadorErrores`, `MigradorAdjuntos`) vive en el Núcleo, no en `Helpers`.
 
 Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no `GestorSolicitudes`). Los estáticos puros viven en el helper que les toca (Helpers no puede depender de ViewModels): `TextoHelper.NormalizarBusqueda` —minúsculas sin tildes— está ahí, y no en el ViewModel, porque es lógica de texto reutilizable; el filtro de búsqueda la llama desde `Recargar` y `TextoHelper.Escapar` la usa la exportación.
 
@@ -23,8 +23,17 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 - **Entidades POCO sin `INotifyPropertyChanged`**: el panel de detalle edita un búfer (`Editor`, `SolicitudEdicionViewModel`) y la entidad solo se escribe al pulsar Guardar (`Editor.AplicarA`). La UI no bindea contra la entidad: no expongas `Solicitud` para editar.
 - **Un solo `AppDbContext` durante toda la sesión** (explota el change tracking de EF).
 - **Los modelos no exponen setters públicos** (lo vigila un test por reflexión): `Solicitud` y `Evento` solo cambian por métodos de negocio (`Actualizar…`, `CambiarEstado`, `Reabrir`, `AgregarEvento`…) y EF escribe por campo.
-- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Su `set` es privado, así que se escribe desde un método de negocio de `Solicitud` (con su constante `LongitudMaximaX` si es texto, compartida por `[MaxLength]` y la validación). Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`), añadirla al editor (`CargarDesde`, su `Aplicar…` y la validación de longitud) y darle test y traducción si se ve. Los enums se guardan como entero.
+- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Su `set` es privado, así que se escribe desde un método de negocio de `Solicitud` (con su constante `LongitudMaximaX` si es texto, compartida por `[MaxLength]` y la validación). Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`), añadirla al editor (`CargarDesde`, su `Aplicar…` y la validación de longitud) y darle test y traducción si se ve. Los enums se guardan como entero. Un BLOB no va en `Solicitud`: va en `DocumentosSolicitud` y se lee solo al abrir.
 - **XAML nuevo**: el csproj declara las páginas a mano (`EnableDefaultPageItems=false`): hay que añadir el `<Page>` al csproj o no se compila a BAML y la app falla buscando el recurso.
+
+## Documentos, errores e instancia única
+
+- **Documentos en la base de datos:** `DocumentosSolicitud` (namespace `Models`) guarda el CV y la carta como BLOB, una fila por candidatura, sin navegación desde `Solicitud`. `Solicitud` solo conserva el nombre original, y `TieneCv`/`TieneCarta` salen de él. La fila se lee solo al abrir el documento y el contenido pendiente vive en el editor (`CvContenido`, `CartaContenido`) hasta que `Guardar` lo escribe; si el guardado falla, el búfer lo conserva. La fila de `DocumentosSolicitud` se crea después del primer `SaveChanges` (hace falta el `Id`).
+- **Límite de 2 MB:** `AdjuntosHelper.TamanoMaximoBytes` es la única fuente; `LectorAdjuntos.Leer` mide antes de reservar memoria y el ViewModel muestra el aviso.
+- **Abrir un documento:** `TemporalesAdjuntos` lo copia a `%TEMP%\GestorSolicitudes\adjuntos` y llama al visor; la carpeta se limpia al arrancar y al cerrar. El visor no vuelca a texto los tipos desconocidos y acota DOCX/ODT a 10 MB.
+- **Migración:** `MigradorAdjuntos` corre al arrancar tras `EsquemaDb`, es idempotente, ignora bases sin `RutaCv`/`RutaCarta`, registra los fallos y borra del disco solo los ficheros ya copiados a la base.
+- **Instancia única:** `InstanciaUnica` se crea antes de abrir la base; la segunda copia avisa a la primera, se cierra sin abrir base ni ventana, y se libera en `OnExit`.
+- **Errores:** `RegistroErrores` escribe en `%APPDATA%\GestorSolicitudes\errores.log`, nunca lanza y se recorta a 1 MB; `ManejadorErrores.Avisar` registra y avisa por `IDialogoService`.
 
 ## Decisiones vigentes (etapa R: estados y reapertura)
 
@@ -60,7 +69,7 @@ Resumen de `02-DOCS/decisiones/estados-y-reapertura.md`:
 
 ## Tests
 
-- xUnit + ArchUnitNET. Nunca toques `%APPDATA%`: usa los helpers de `TestDb.cs` (`NuevaRuta()`, `NuevaCarpeta()`, `NuevoContexto()`) con SQLite temporal.
+- xUnit + ArchUnitNET. Nunca toques `%APPDATA%` ni `%TEMP%`: usa los helpers de `TestDb.cs` (`NuevaRuta()`, `NuevaCarpeta()`, `NuevoContexto()`) con SQLite temporal, y las sobrecargas con ruta de `RegistroErrores` y `TemporalesAdjuntos`.
 - Todo cambio de función (crear/editar/eliminar) obliga a su test: carga la skill `tests-obligatorios` (`.opencode/skills/`) y deja `dotnet test` en verde.
 - Tests que dependen del dispatcher WPF usan `[StaFact]` (Xunit.StaFact).
 - Los tests ven miembros `internal` vía `InternalsVisibleTo("GestorSolicitudes.Tests")`.

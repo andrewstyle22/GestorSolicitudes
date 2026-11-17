@@ -78,12 +78,12 @@ public class PestanasTests
         Assert.Same(plantillaBoton, ValorDeEstilo((Style)app.Resources["BotonBase"]!, Control.TemplateProperty));
         Assert.Same(plantillaBoton, ValorDeEstilo(estiloBoton, Control.TemplateProperty));
 
-        // La fila de adjunto es un solo control para CV y carta: la etiqueta y el adjunto
-        // (ruta + nombre) llegan por propiedades de dependencia y el XAML los resuelve con ElementName.
+        // La fila de adjunto es un solo control para CV y carta: la etiqueta y el nombre
+        // llegan por propiedades de dependencia y el XAML los resuelve con ElementName.
         var fila = new FilaAdjunto
         {
             Etiqueta = "Currículum",
-            Adjunto = new Adjunto(@"C:\mi-cv.pdf", "mi-cv.pdf"),
+            Adjunto = new Adjunto(TipoAdjunto.Cv, "mi-cv.pdf"),
         };
         fila.Measure(new Size(500, 30));
         fila.Arrange(new Rect(0, 0, 500, 30));
@@ -132,14 +132,13 @@ public class PestanasTests
         using var vm = new MainViewModel(
             db,
             rutaColumnas: Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt"),
-            carpetaAdjuntos: TestDb.NuevaCarpeta(),
             dialogo: new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar });
         vm.SolicitudSeleccionada = new SolicitudBuilder()
             .ConEmpresa("ACME")
             .ConPuesto("Programador")
             .ConEnlaceOferta("https://ejemplo.test/oferta")
             .ConNotas("hablar el lunes")
-            .ConRutaCv(@"C:\cv.pdf")
+            .ConNombreOriginalCv("mi-cv.pdf")
             .Construir();
 
         var detalleOferta = new PestanaOferta { DataContext = vm };

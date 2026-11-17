@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
@@ -65,6 +64,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     [ObservableProperty]
     [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarReaperturaSinRespuesta))]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarTransicion))]
     [NotifyPropertyChangedFor(nameof(AdmiteMotivo))]
     [NotifyPropertyChangedFor(nameof(MotivosDelEstado))]
     private EstadoSolicitud estado = EstadoSolicitud.Enviada;
@@ -86,6 +86,14 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     /// <summary>Gets los motivos válidos para el estado actual, sin la entrada vacía del filtro.</summary>
     public IReadOnlyList<EnumItem> MotivosDelEstado => this.motivosDelEstado;
 
+    private IReadOnlyList<EnumItem> estadosDisponibles = [];
+
+    /// <summary>
+    /// Gets los destinos válidos desde el estado guardado. Los cerrados siguen ofreciendo
+    /// los estados abiertos: reabrir es una acción permitida.
+    /// </summary>
+    public IReadOnlyList<EnumItem> EstadosDisponibles => this.estadosDisponibles;
+
     [ObservableProperty]
     private DateTime fechaSolicitud = DateTime.Today;
 
@@ -94,12 +102,15 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
     private bool fueReabierta;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? fechaPrimeraRespuesta;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? fechaEntrevista;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? proximoSeguimiento;
 
     private DateTime? proximoSeguimientoOriginal;
@@ -109,6 +120,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ProximoSeguimiento != this.proximoSeguimientoOriginal ? this.ProximoSeguimiento : null;
 
     [ObservableProperty]
+    [CustomValidation(typeof(SolicitudEdicionViewModel), nameof(ValidarFechaPosteriorALaSolicitud))]
     private DateTime? fechaCierre;
 
     [ObservableProperty]
@@ -136,29 +148,29 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
-    private string? rutaCv;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AdjuntoCv))]
     private string? nombreOriginalCv;
 
+    /// <summary>CV pendiente de guardar: se escribe en DocumentosSolicitud al pulsar Guardar.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
-    private string? rutaCarta;
+    private byte[]? cvContenido;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AdjuntoCarta))]
     private string? nombreOriginalCarta;
 
-    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
-    public Adjunto AdjuntoCv => new(
-        this.RutaCv,
-        this.NombreOriginalCv ?? Path.GetFileName(this.RutaCv) ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
+    /// <summary>Carta pendiente de guardar: se escribe en DocumentosSolicitud al pulsar Guardar.</summary>
+    [ObservableProperty]
+    private byte[]? cartaContenido;
 
-    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay fichero.</summary>
+    /// <summary>CV de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
+    public Adjunto AdjuntoCv => new(
+        TipoAdjunto.Cv,
+        this.NombreOriginalCv ?? Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"));
+
+    /// <summary>Carta de la edición, con el texto de "sin adjuntar" si no hay nombre.</summary>
     public Adjunto AdjuntoCarta => new(
-        this.RutaCarta,
-        this.NombreOriginalCarta ?? Path.GetFileName(this.RutaCarta) ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
+        TipoAdjunto.Carta,
+        this.NombreOriginalCarta ?? Localizacion.Texto("Adjuntos.CartaSinAdjuntar"));
 
     /// <summary>Historial de la solicitud abierta, como copias editables.</summary>
     public ObservableCollection<EventoViewModel> EventosEdicion { get; } = [];
@@ -202,6 +214,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         nameof(ReaperturaPendiente),
         nameof(AdmiteMotivo),
         nameof(MotivosDelEstado),
+        nameof(EstadosDisponibles),
         nameof(ReaperturaResumen),
         nameof(AdjuntoCv),
         nameof(AdjuntoCarta),
@@ -270,6 +283,13 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             ? new ValidationResult(Localizacion.Texto("Mensaje.ReaperturaSinRespuesta"))
             : ValidationResult.Success;
 
+    /// <summary>El estado elegido tiene que ser un destino válido desde el estado guardado.</summary>
+    public static ValidationResult? ValidarTransicion(EstadoSolicitud valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && !editor.estadoOriginal.AdmiteTransicion(valor)
+            ? new ValidationResult(Localizacion.Texto("Mensaje.TransicionNoPermitida"))
+            : ValidationResult.Success;
+
     /// <summary>Una reapertura exige una nota.</summary>
     public static ValidationResult? ValidarNotaReaperturaObligatoria(string? valor, ValidationContext contexto) =>
         contexto.ObjectInstance is SolicitudEdicionViewModel editor
@@ -286,6 +306,24 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
             ? new ValidationResult(Localizacion.Texto("Mensaje.MotivoCierreNoValido"))
             : ValidationResult.Success;
 
+    /// <summary>Las fechas del seguimiento no pueden ser anteriores a la fecha de solicitud.</summary>
+    public static ValidationResult? ValidarFechaPosteriorALaSolicitud(DateTime? valor, ValidationContext contexto) =>
+        contexto.ObjectInstance is SolicitudEdicionViewModel editor
+        && valor is DateTime fecha
+        && fecha < editor.FechaSolicitud
+            ? new ValidationResult(string.Format(
+                Localizacion.Texto("Mensaje.FechaAnteriorASolicitud"),
+                Localizacion.Texto(ClaveDelCampoDeFecha(contexto.MemberName))))
+            : ValidationResult.Success;
+
+    private static string ClaveDelCampoDeFecha(string? miembro) => miembro switch
+    {
+        nameof(FechaPrimeraRespuesta) => "Seguimiento.PrimeraContestacion",
+        nameof(FechaEntrevista) => "Seguimiento.DiaEntrevista",
+        nameof(FechaCierre) => "Seguimiento.FechaCierre",
+        _ => "Seguimiento.ProximoSeguimiento",
+    };
+
     partial void OnEmpresaChanged(string value) => this.ValidateProperty(value, nameof(this.Empresa));
 
     partial void OnPuestoChanged(string value) => this.ValidateProperty(value, nameof(this.Puesto));
@@ -295,6 +333,18 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     partial void OnNotaReaperturaChanged(string? value) =>
         this.ValidateProperty(value, nameof(this.NotaReapertura));
+
+    partial void OnFechaPrimeraRespuestaChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.FechaPrimeraRespuesta));
+
+    partial void OnFechaEntrevistaChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.FechaEntrevista));
+
+    partial void OnProximoSeguimientoChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.ProximoSeguimiento));
+
+    partial void OnFechaCierreChanged(DateTime? value) =>
+        this.ValidateProperty(value, nameof(this.FechaCierre));
 
     /// <summary>
     /// Al cambiar la fecha de envío, el hito «Solicitud enviada» y el seguimiento propuesto
@@ -323,6 +373,11 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         {
             this.ProximoSeguimiento = value.AddDays(7);
         }
+
+        this.ValidateProperty(this.FechaPrimeraRespuesta, nameof(this.FechaPrimeraRespuesta));
+        this.ValidateProperty(this.FechaEntrevista, nameof(this.FechaEntrevista));
+        this.ValidateProperty(this.ProximoSeguimiento, nameof(this.ProximoSeguimiento));
+        this.ValidateProperty(this.FechaCierre, nameof(this.FechaCierre));
     }
 
     /// <summary>Ajusta el motivo al estado: preselecciona "No indicado" y lo limpia fuera de los cierres.</summary>
@@ -357,11 +412,20 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         return !this.HasErrors && this.EventosEdicion.All(e => !e.HasErrors);
     }
 
-    /// <summary>Relee los textos de los motivos del estado tras un cambio de idioma.</summary>
-    public void RefrescarMotivosDelEstado()
+    /// <summary>Relee los textos de los desplegables del estado tras un cambio de idioma.</summary>
+    public void RefrescarListasDelEstado()
     {
         this.motivosDelEstado = CrearMotivos(this.Estado);
         this.OnPropertyChanged(nameof(this.MotivosDelEstado));
+        this.RefrescarEstadosDisponibles();
+    }
+
+    private void RefrescarEstadosDisponibles()
+    {
+        this.estadosDisponibles = EnumHelper.Valores<EstadoSolicitud>()
+            .Where(item => this.estadoOriginal.AdmiteTransicion((EstadoSolicitud)item.Valor!))
+            .ToList();
+        this.OnPropertyChanged(nameof(this.EstadosDisponibles));
     }
 
     private static List<EnumItem> CrearMotivos(EstadoSolicitud estado) =>
@@ -388,6 +452,7 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.MotivoRechazo = solicitud.MotivoRechazo;
         this.estadoOriginal = solicitud.Estado;
         this.Estado = solicitud.Estado;
+        this.RefrescarEstadosDisponibles();
         this.OnPropertyChanged(nameof(this.ReaperturaPendiente));
         this.fechaSolicitudAnterior = solicitud.FechaSolicitud;
         this.fueReabierta = solicitud.FueReabierta;
@@ -403,10 +468,10 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
         this.ContactoTelefono = solicitud.ContactoTelefono;
         this.Notas = solicitud.Notas;
         this.NotaReapertura = null;
-        this.RutaCv = solicitud.RutaCv;
         this.NombreOriginalCv = solicitud.NombreOriginalCv;
-        this.RutaCarta = solicitud.RutaCarta;
+        this.CvContenido = null;
         this.NombreOriginalCarta = solicitud.NombreOriginalCarta;
+        this.CartaContenido = null;
         this.CargarEventos(solicitud);
         this.OnPropertyChanged(nameof(this.ReaperturaResumen));
         this.ValidateAllProperties();
@@ -478,8 +543,8 @@ public sealed partial class SolicitudEdicionViewModel : ObservableValidator
 
     public void AplicarAdjuntos(Solicitud solicitud)
     {
-        solicitud.AsignarCv(this.RutaCv, this.NombreOriginalCv);
-        solicitud.AsignarCarta(this.RutaCarta, this.NombreOriginalCarta);
+        solicitud.AsignarCv(this.NombreOriginalCv);
+        solicitud.AsignarCarta(this.NombreOriginalCarta);
     }
 
     /// <summary>

@@ -191,6 +191,7 @@ public static class Traducciones
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
+        ("Mensaje.AdjuntoDemasiadoGrande", "El documento no puede ser mayor a 2 megabytes."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
         ("Mensaje.NoSePudoAbrirFichero", "No se pudo abrir el fichero: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "No se puede previsualizar este formato. Usa Descargar para guardar una copia."),
@@ -209,8 +210,11 @@ public static class Traducciones
         ("Mensaje.SinMotivoCierre", "No aplica"),
         ("Mensaje.ReaperturaSinRespuesta", "No se puede reabrir a «Sin respuesta»: indica el estado al que vuelve la candidatura."),
         ("Mensaje.NotaReaperturaObligatoria", "La nota de la reapertura es obligatoria."),
+        ("Mensaje.FechaAnteriorASolicitud", "«{0}» no puede ser anterior a la fecha de solicitud."),
         ("Mensaje.MotivoCierreNoValido", "Elige un motivo de cierre válido para este estado."),
+        ("Mensaje.TransicionNoPermitida", "No se puede aceptar la oferta desde un proceso cerrado: reabre la candidatura a «Oferta recibida» y vuelve a intentarlo."),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
+        ("Mensaje.ErrorInesperado", "Se ha producido un error inesperado:\n\n{0}\n\nEl detalle se ha guardado en:\n{1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Adjunto"),
@@ -221,6 +225,7 @@ public static class Traducciones
         ("Titulo.CandidaturaRepetida", "Candidatura repetida"),
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
+        ("Titulo.ErrorInesperado", "Error inesperado"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Candidatura enviada"),
@@ -480,6 +485,7 @@ public static class Traducciones
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
+        ("Mensaje.AdjuntoDemasiadoGrande", "The document cannot be larger than 2 megabytes."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
         ("Mensaje.NoSePudoAbrirFichero", "Could not open the file: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "This format cannot be previewed. Use Download to save a copy."),
@@ -498,8 +504,11 @@ public static class Traducciones
         ("Mensaje.SinMotivoCierre", "Not applicable"),
         ("Mensaje.ReaperturaSinRespuesta", "Cannot reopen to \"No response\": choose the status the application returns to."),
         ("Mensaje.NotaReaperturaObligatoria", "The reopening note is required."),
+        ("Mensaje.FechaAnteriorASolicitud", "\"{0}\" cannot be earlier than the application date."),
         ("Mensaje.MotivoCierreNoValido", "Choose a valid closing reason for this status."),
+        ("Mensaje.TransicionNoPermitida", "You cannot accept the offer from a closed application: reopen it to \"Offer received\" and try again."),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
+        ("Mensaje.ErrorInesperado", "An unexpected error occurred:\n\n{0}\n\nThe details have been saved to:\n{1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Attachment"),
@@ -510,6 +519,7 @@ public static class Traducciones
         ("Titulo.CandidaturaRepetida", "Duplicate application"),
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
+        ("Titulo.ErrorInesperado", "Unexpected error"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Application sent"),
@@ -769,6 +779,7 @@ public static class Traducciones
 
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
+        ("Mensaje.AdjuntoDemasiadoGrande", "Das Dokument darf nicht größer als 2 Megabyte sein."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
         ("Mensaje.NoSePudoAbrirFichero", "Die Datei konnte nicht geöffnet werden: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "Dieses Format kann nicht angezeigt werden. Nutze Herunterladen, um eine Kopie zu speichern."),
@@ -787,8 +798,11 @@ public static class Traducciones
         ("Mensaje.SinMotivoCierre", "Nicht zutreffend"),
         ("Mensaje.ReaperturaSinRespuesta", "Eine Wiedereröffnung zu \"Keine Antwort\" ist nicht möglich: Wähle den Status, zu dem die Bewerbung zurückkehrt."),
         ("Mensaje.NotaReaperturaObligatoria", "Die Notiz zur Wiedereröffnung ist erforderlich."),
+        ("Mensaje.FechaAnteriorASolicitud", "„{0}“ darf nicht vor dem Bewerbungsdatum liegen."),
         ("Mensaje.MotivoCierreNoValido", "Wähle einen gültigen Abschlussgrund für diesen Status."),
+        ("Mensaje.TransicionNoPermitida", "Eine Zusage ist aus einer abgeschlossenen Bewerbung nicht möglich: Öffne sie zu \"Angebot erhalten\" wieder und versuche es erneut."),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
+        ("Mensaje.ErrorInesperado", "Ein unerwarteter Fehler ist aufgetreten:\n\n{0}\n\nDie Einzelheiten wurden gespeichert in:\n{1}"),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Anlage"),
@@ -799,6 +813,7 @@ public static class Traducciones
         ("Titulo.CandidaturaRepetida", "Doppelte Bewerbung"),
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),
+        ("Titulo.ErrorInesperado", "Unerwarteter Fehler"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Bewerbung gesendet"),

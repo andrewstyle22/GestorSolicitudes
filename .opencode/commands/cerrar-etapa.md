@@ -13,7 +13,7 @@ Lee CONTEXT.md y la sección de la etapa en curso de 02-DOCS/plan-refactor-edici
 3. No copies detalles técnicos de la etapa cerrada a CONTEXT.md. El detalle ya está en el plan y en git.
 
 Reglas:
-- CONTEXT.md debe ocupar menos de 300 palabras.
+- CONTEXT.md debe ocupar menos de 700 palabras.
 - No modifiques el plan ni ningún otro fichero.
 - No hagas commit.
 - Al terminar, enséñame el diff de CONTEXT.md para revisarlo.

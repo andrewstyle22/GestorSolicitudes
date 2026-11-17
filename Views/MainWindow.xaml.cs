@@ -39,9 +39,9 @@ public partial class MainWindow : Window
         // El icono de la ventana sale de la misma ruta que el de la bandeja: una sola fuente.
         this.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(RutaIcono);
 
-        // Ctrl+N nueva candidatura, Ctrl+S guardar.
-        this.InputBindings.Add(new KeyBinding(this.vm.NuevaCommand, Key.N, ModifierKeys.Control));
-        this.InputBindings.Add(new KeyBinding(this.vm.GuardarCommand, Key.S, ModifierKeys.Control));
+        // Ctrl+N nueva candidatura, Ctrl+S guardar. Van por PreviewKeyDown y no por
+        // KeyBinding: hay que volcar antes lo que el control activo aún no ha confirmado.
+        this.PreviewKeyDown += this.Atajos_PreviewKeyDown;
 
         this.flujoIcono = Application.GetResourceStream(RutaIcono)?.Stream;
 
@@ -57,6 +57,44 @@ public partial class MainWindow : Window
         // enlazar: la fija la vista al construirse y cada vez que cambia una casilla.
         this.vm.ColumnasVm.ColumnaVisibilidadCambiada += this.AplicarVisibilidadColumnas;
         this.AplicarVisibilidadColumnas();
+    }
+
+    private void Atajos_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.Control)
+        {
+            return;
+        }
+
+        ICommand? comando = e.Key switch
+        {
+            Key.S => this.vm.GuardarCommand,
+            Key.N => this.vm.NuevaCommand,
+            _ => null,
+        };
+
+        if (comando is null)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        this.VolcarEdicionPendiente();
+        comando.Execute(null);
+    }
+
+    /// <summary>
+    /// Lleva el foco a la ventana para que el control activo vuelque su valor al búfer:
+    /// los salarios y las fechas solo se confirman al perder el foco.
+    /// </summary>
+    private void VolcarEdicionPendiente()
+    {
+        if (!this.Focus())
+        {
+            // Con la ventana oculta (menú de la bandeja) no admite foco: basta con
+            // soltar el foco de teclado, que dispara la misma confirmación.
+            Keyboard.ClearFocus();
+        }
     }
 
     /// <summary>Muestra u oculta las columnas que el usuario puede decidir.</summary>
@@ -147,7 +185,7 @@ public partial class MainWindow : Window
 
     private void MenuSalir_Click(object? sender, RoutedEventArgs e) => this.Close();
 
-    private void MostrarVentana()
+    internal void MostrarVentana()
     {
         this.Show();
         if (this.WindowState == WindowState.Minimized)
@@ -163,7 +201,13 @@ public partial class MainWindow : Window
     {
         base.OnClosing(e);
 
-        if (!e.Cancel && !this.vm.ResolverCambiosPendientes())
+        if (e.Cancel)
+        {
+            return;
+        }
+
+        this.VolcarEdicionPendiente();
+        if (!this.vm.ResolverCambiosPendientes())
         {
             e.Cancel = true;
         }

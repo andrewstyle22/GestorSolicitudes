@@ -132,3 +132,10 @@ public enum Origen
     [Description("Otro")]
     Otro = 5,
 }
+
+/// <summary>Cuál de los dos documentos de la candidatura: el CV o la carta de presentación.</summary>
+public enum TipoAdjunto
+{
+    Cv = 0,
+    Carta = 1,
+}

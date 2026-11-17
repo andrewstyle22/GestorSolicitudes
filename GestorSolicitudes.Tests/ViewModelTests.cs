@@ -364,6 +364,7 @@ public class ViewModelTests
         db.Solicitudes.Add(new SolicitudBuilder()
             .ConEmpresa("Vencida")
             .ConPuesto("A")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir());
         db.Solicitudes.Add(new SolicitudBuilder()
@@ -463,6 +464,31 @@ public class ViewModelTests
         vm.SolicitudSeleccionada = vm.Solicitudes[0];
 
         Assert.Single(vm.SolicitudSeleccionada!.Eventos);
+    }
+
+    [Fact]
+    public void Recargar_ReponeLaFilaSeleccionadaSiSigueEnLaPagina()
+    {
+        using var db = TestDb.NuevoContexto();
+        var solicitud = new SolicitudBuilder().ConEmpresa("ACME").ConPuesto("Dev").Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        using var vm = new MainViewModel(db);
+        vm.Recargar();
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single();
+
+        // El DataGrid escribe null al recibir una colección nueva; aquí se simula ese paso.
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.Solicitudes))
+            {
+                vm.SolicitudSeleccionada = null;
+            }
+        };
+        vm.Recargar();
+
+        Assert.Same(vm.Solicitudes.Single(), vm.SolicitudSeleccionada);
+        Assert.NotNull(vm.Editor); // el panel de detalle no se cierra al repaginar
     }
 
     [Fact]
@@ -574,12 +600,14 @@ public class ViewModelTests
         db.Solicitudes.Add(new SolicitudBuilder()
             .ConEmpresa("Vencida abierta")
             .ConPuesto("A")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-1))
             .Construir());
         db.Solicitudes.Add(new SolicitudBuilder()
             .ConEmpresa("Cerrada vencida")
             .ConPuesto("B")
             .ConEstado(EstadoSolicitud.Rechazada)
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10))
             .ConProximoSeguimiento(DateTime.Today.AddDays(-2))
             .Construir());
         db.Solicitudes.Add(new SolicitudBuilder()
@@ -689,7 +717,7 @@ public class ViewModelTests
             .ConPortal("LinkedIn")
             .ConFechaSolicitud(fechaGuardada)
             .ConContactoNombre("Ana")
-            .ConRutaCv(@"C:\adjuntos\abc.pdf")
+            .ConNombreOriginalCv("cv.pdf")
             .Construir();
         db.Solicitudes.Add(solicitud);
         db.SaveChanges();
@@ -701,14 +729,14 @@ public class ViewModelTests
         vm.Editor.Portal = "InfoJobs";
         vm.Editor.FechaSolicitud = new DateTime(2026, 2, 1);
         vm.Editor.ContactoNombre = "Luis";
-        vm.Editor.RutaCv = @"C:\adjuntos\def.pdf";
+        vm.Editor.NombreOriginalCv = "otro.pdf";
 
         Assert.Equal("ACME", solicitud.Empresa);
         Assert.Equal("Dev", solicitud.Puesto);
         Assert.Equal("LinkedIn", solicitud.Portal);
         Assert.Equal(fechaGuardada, solicitud.FechaSolicitud);
         Assert.Equal("Ana", solicitud.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("cv.pdf", solicitud.NombreOriginalCv);
 
         vm.CancelarCommand.Execute(null);
 
@@ -717,7 +745,7 @@ public class ViewModelTests
         Assert.Equal("LinkedIn", solicitud.Portal);
         Assert.Equal(fechaGuardada, solicitud.FechaSolicitud);
         Assert.Equal("Ana", solicitud.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("cv.pdf", solicitud.NombreOriginalCv);
 
         Solicitud guardada = db.Solicitudes.AsNoTracking().Single();
         Assert.Equal("ACME", guardada.Empresa);
@@ -725,7 +753,7 @@ public class ViewModelTests
         Assert.Equal("LinkedIn", guardada.Portal);
         Assert.Equal(fechaGuardada, guardada.FechaSolicitud);
         Assert.Equal("Ana", guardada.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", guardada.RutaCv);
+        Assert.Equal("cv.pdf", guardada.NombreOriginalCv);
     }
 
     [Fact]

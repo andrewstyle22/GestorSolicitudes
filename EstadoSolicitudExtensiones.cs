@@ -41,6 +41,15 @@ public static class EstadoSolicitudExtensiones
     /// <summary>Indica si el proceso ya no sigue abierto con este estado.</summary>
     public static bool EstaCerrada(this EstadoSolicitud estado) => Cerrados.Contains(estado);
 
+    /// <summary>
+    /// Indica si se puede pasar de <paramref name="origen"/> a <paramref name="destino"/>.
+    /// «Oferta aceptada» no se alcanza desde otro cierre: se reabre antes a «Oferta recibida».
+    /// </summary>
+    public static bool AdmiteTransicion(this EstadoSolicitud origen, EstadoSolicitud destino) =>
+        !(destino == EstadoSolicitud.OfertaAceptada
+            && origen.EstaCerrada()
+            && origen != EstadoSolicitud.OfertaAceptada);
+
     /// <summary>Indica si el estado pertenece a la fase de entrevistas o pruebas técnicas.</summary>
     public static bool EsEntrevista(this EstadoSolicitud estado) => estado is
         EstadoSolicitud.PruebaTecnica

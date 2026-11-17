@@ -46,9 +46,9 @@ public class EstadisticasSolicitudTests
     {
         var solicitudes = new List<Solicitud>
         {
-            new SolicitudBuilder().ConEstado(EstadoSolicitud.Enviada).ConProximoSeguimiento(DateTime.Today.AddDays(-1)).Construir(),
+            new SolicitudBuilder().ConEstado(EstadoSolicitud.Enviada).ConFechaSolicitud(DateTime.Today.AddDays(-10)).ConProximoSeguimiento(DateTime.Today.AddDays(-1)).Construir(),
             new SolicitudBuilder().ConEstado(EstadoSolicitud.Enviada).ConProximoSeguimiento(DateTime.Today.AddDays(3)).Construir(),
-            new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).ConProximoSeguimiento(DateTime.Today.AddDays(-1)).Construir(),
+            new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).ConFechaSolicitud(DateTime.Today.AddDays(-10)).ConProximoSeguimiento(DateTime.Today.AddDays(-1)).Construir(),
         };
 
         Assert.Equal(1, EstadisticasSolicitud.Calcular(solicitudes).SeguimientosPendientes);

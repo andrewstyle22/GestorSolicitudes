@@ -1,6 +1,7 @@
 namespace GestorSolicitudes.Tests;
 
 using System.ComponentModel.DataAnnotations;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using GestorSolicitudes.ViewModels;
 
@@ -93,6 +94,77 @@ public class SolicitudEdicionTests
         Assert.Equal(
             Localizacion.Texto("Mensaje.SalarioMinimoMayor"),
             Assert.Single(editor.GetErrors(nameof(editor.SalarioMax)).Cast<ValidationResult>()).ErrorMessage);
+    }
+
+    public static TheoryData<string, string> FechasDelSeguimiento => new()
+    {
+        { nameof(SolicitudEdicionViewModel.FechaPrimeraRespuesta), "Seguimiento.PrimeraContestacion" },
+        { nameof(SolicitudEdicionViewModel.FechaEntrevista), "Seguimiento.DiaEntrevista" },
+        { nameof(SolicitudEdicionViewModel.FechaCierre), "Seguimiento.FechaCierre" },
+        { nameof(SolicitudEdicionViewModel.ProximoSeguimiento), "Seguimiento.ProximoSeguimiento" },
+    };
+
+    [Theory]
+    [MemberData(nameof(FechasDelSeguimiento))]
+    public void Validacion_FechaDelSeguimiento_SeComparaConLaFechaDeSolicitud(string propiedad, string clave)
+    {
+        DateTime fecha = new(2026, 2, 10);
+        var editor = EditorConFechaSolicitud(fecha);
+
+        PonerFecha(editor, propiedad, fecha.AddDays(-1));
+        editor.Validar();
+
+        Assert.Equal(
+            string.Format(Localizacion.Texto("Mensaje.FechaAnteriorASolicitud"), Localizacion.Texto(clave)),
+            Assert.Single(editor.GetErrors(propiedad).Cast<ValidationResult>()).ErrorMessage);
+
+        PonerFecha(editor, propiedad, fecha);
+        Assert.Empty(editor.GetErrors(propiedad));
+
+        PonerFecha(editor, propiedad, null);
+        Assert.Empty(editor.GetErrors(propiedad));
+    }
+
+    [Fact]
+    public void CambiarFechaSolicitud_RevalidaLasFechasDelSeguimiento()
+    {
+        DateTime fecha = new(2026, 2, 10);
+        var editor = EditorConFechaSolicitud(fecha);
+        editor.FechaEntrevista = fecha.AddDays(3);
+        Assert.Empty(editor.GetErrors(nameof(editor.FechaEntrevista)));
+
+        editor.FechaSolicitud = fecha.AddDays(5);
+        Assert.NotEmpty(editor.GetErrors(nameof(editor.FechaEntrevista)));
+
+        editor.FechaSolicitud = fecha.AddDays(1);
+        Assert.Empty(editor.GetErrors(nameof(editor.FechaEntrevista)));
+    }
+
+    private static SolicitudEdicionViewModel EditorConFechaSolicitud(DateTime fecha) =>
+        new()
+        {
+            Empresa = "ACME",
+            Puesto = "Dev",
+            FechaSolicitud = fecha,
+        };
+
+    private static void PonerFecha(SolicitudEdicionViewModel editor, string propiedad, DateTime? fecha)
+    {
+        switch (propiedad)
+        {
+            case nameof(SolicitudEdicionViewModel.FechaPrimeraRespuesta):
+                editor.FechaPrimeraRespuesta = fecha;
+                break;
+            case nameof(SolicitudEdicionViewModel.FechaEntrevista):
+                editor.FechaEntrevista = fecha;
+                break;
+            case nameof(SolicitudEdicionViewModel.FechaCierre):
+                editor.FechaCierre = fecha;
+                break;
+            default:
+                editor.ProximoSeguimiento = fecha;
+                break;
+        }
     }
 
     [Fact]
@@ -365,8 +437,8 @@ public class SolicitudEdicionTests
     {
         DateTime fecha = new(2026, 2, 1);
         Solicitud solicitud = new SolicitudBuilder()
-            .ConFechaPrimeraRespuesta(fecha.AddDays(-1))
-            .ConFechaCierre(fecha.AddDays(-2))
+            .ConFechaPrimeraRespuesta(fecha)
+            .ConFechaCierre(fecha.AddDays(1))
             .Construir();
         var editor = new SolicitudEdicionViewModel
         {
@@ -382,8 +454,40 @@ public class SolicitudEdicionTests
         Assert.Equal(fecha, solicitud.FechaSolicitud);
         Assert.Equal(fecha.AddDays(2), solicitud.FechaEntrevista);
         Assert.Equal(fecha.AddDays(3), solicitud.ProximoSeguimiento);
-        Assert.Equal(fecha.AddDays(-1), solicitud.FechaPrimeraRespuesta);
-        Assert.Equal(fecha.AddDays(-2), solicitud.FechaCierre);
+        Assert.Equal(fecha, solicitud.FechaPrimeraRespuesta);
+        Assert.Equal(fecha.AddDays(1), solicitud.FechaCierre);
+    }
+
+    [Fact]
+    public void AplicarA_FechaDeSolicitudPosteriorALaRespuesta_Lanza()
+    {
+        DateTime fecha = new(2026, 2, 1);
+        var solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            FechaSolicitud = fecha,
+            FechaPrimeraRespuesta = fecha.AddDays(-1),
+        };
+
+        // AplicarRespuesta va antes que AplicarFechas: si el orden se invierte,
+        // la validación mira la respuesta antigua (nula) y no lanza.
+        Assert.Throws<ArgumentException>(() => editor.AplicarA(solicitud));
+    }
+
+    [Fact]
+    public void AplicarA_FechaDeSolicitudPosteriorAlCierre_Lanza()
+    {
+        DateTime fecha = new(2026, 2, 1);
+        var solicitud = new SolicitudBuilder().Construir();
+        var editor = new SolicitudEdicionViewModel
+        {
+            Estado = EstadoSolicitud.Rechazada,
+            MotivoRechazo = MotivoRechazo.NoIndicado,
+            FechaSolicitud = fecha,
+            FechaCierre = fecha.AddDays(-1),
+        };
+
+        Assert.Throws<ArgumentException>(() => editor.AplicarA(solicitud));
     }
 
     [Fact]
@@ -711,69 +815,93 @@ public class SolicitudEdicionTests
     public void CargarDesde_CopiaLosAdjuntos()
     {
         Solicitud solicitud = new SolicitudBuilder()
-            .ConRutaCv(@"C:\adjuntos\abc.pdf")
             .ConNombreOriginalCv("mi-cv.pdf")
-            .ConRutaCarta(@"C:\adjuntos\def.pdf")
+            .ConNombreOriginalCarta("mi-carta.pdf")
             .Construir();
         var editor = new SolicitudEdicionViewModel();
 
         editor.CargarDesde(solicitud);
 
-        Assert.Equal(@"C:\adjuntos\abc.pdf", editor.RutaCv);
         Assert.Equal("mi-cv.pdf", editor.NombreOriginalCv);
-        Assert.Equal(@"C:\adjuntos\def.pdf", editor.RutaCarta);
-        Assert.Null(editor.NombreOriginalCarta);
+        Assert.Equal("mi-carta.pdf", editor.NombreOriginalCarta);
     }
 
     [Fact]
-    public void AdjuntoCv_SinRuta_MuestraElTextoDeSinAdjuntar()
+    public void AdjuntoCv_SinNombre_MuestraElTextoDeSinAdjuntar()
     {
         var editor = new SolicitudEdicionViewModel();
 
-        Assert.Null(editor.AdjuntoCv.Ruta);
         Assert.Equal(Localizacion.Texto("Adjuntos.CurriculumSinAdjuntar"), editor.AdjuntoCv.Nombre);
+        Assert.Equal(Localizacion.Texto("Adjuntos.CartaSinAdjuntar"), editor.AdjuntoCarta.Nombre);
     }
 
     [Fact]
-    public void AdjuntoCv_UsaElNombreOriginalYSinNoHayElDelFichero()
+    public void AdjuntoCv_UsaElNombreOriginal()
     {
-        var editor = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf", NombreOriginalCv = "mi-cv.pdf" };
-        var sinNombre = new SolicitudEdicionViewModel { RutaCv = @"C:\adjuntos\abc.pdf" };
+        var editor = new SolicitudEdicionViewModel { NombreOriginalCv = "mi-cv.pdf" };
 
-        Assert.Equal("mi-cv.pdf", editor.AdjuntoCv!.Nombre);
-        Assert.Equal("abc.pdf", sinNombre.AdjuntoCv!.Nombre);
+        Assert.Equal("mi-cv.pdf", editor.AdjuntoCv.Nombre);
     }
 
     [Fact]
-    public void AdjuntoCv_NotificaAlCambiarLaRutaONombre()
+    public void AdjuntoCarta_UsaElNombreOriginal()
+    {
+        var editor = new SolicitudEdicionViewModel { NombreOriginalCarta = "mi-carta.pdf" };
+
+        Assert.Equal("mi-carta.pdf", editor.AdjuntoCarta.Nombre);
+    }
+
+    [Fact]
+    public void CargarDesde_DejaVacioElContenidoPendienteDeLosAdjuntos()
+    {
+        var editor = new SolicitudEdicionViewModel { CvContenido = [1], CartaContenido = [2] };
+
+        editor.CargarDesde(new SolicitudBuilder().ConNombreOriginalCv("mi-cv.pdf").Construir());
+
+        Assert.Null(editor.CvContenido);
+        Assert.Null(editor.CartaContenido);
+    }
+
+    [Fact]
+    public void HayCambios_AlAdjuntarElContenido_EsTrue()
+    {
+        var editor = new SolicitudEdicionViewModel();
+
+        editor.CvContenido = [1];
+        Assert.True(editor.HayCambios);
+
+        editor.CargarDesde(new SolicitudBuilder().Construir());
+        Assert.False(editor.HayCambios);
+
+        editor.CartaContenido = [2];
+        Assert.True(editor.HayCambios);
+    }
+
+    [Fact]
+    public void AdjuntoCv_NotificaAlCambiarElNombre()
     {
         var editor = new SolicitudEdicionViewModel();
         var notificados = new List<string?>();
         editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
 
-        editor.RutaCv = @"C:\adjuntos\abc.pdf";
         editor.NombreOriginalCv = "mi-cv.pdf";
 
-        Assert.Equal(2, notificados.Count(nombre => nombre == nameof(editor.AdjuntoCv)));
+        Assert.Equal(1, notificados.Count(nombre => nombre == nameof(editor.AdjuntoCv)));
     }
 
     [Fact]
-    public void AplicarAdjuntos_VuelcaRutasYNombres()
+    public void AplicarAdjuntos_VuelcaNombres()
     {
         Solicitud solicitud = new SolicitudBuilder().Construir();
         var editor = new SolicitudEdicionViewModel
         {
-            RutaCv = @"C:\adjuntos\abc.pdf",
             NombreOriginalCv = "mi-cv.pdf",
-            RutaCarta = @"C:\adjuntos\def.pdf",
             NombreOriginalCarta = "mi-carta.pdf",
         };
 
         editor.AplicarAdjuntos(solicitud);
 
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
         Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
-        Assert.Equal(@"C:\adjuntos\def.pdf", solicitud.RutaCarta);
         Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
     }
 
@@ -783,17 +911,13 @@ public class SolicitudEdicionTests
         Solicitud solicitud = new SolicitudBuilder().Construir();
         var editor = new SolicitudEdicionViewModel
         {
-            RutaCv = @"  C:\adjuntos\abc.pdf  ",
             NombreOriginalCv = "  mi-cv.pdf  ",
-            RutaCarta = @"  C:\adjuntos\def.pdf  ",
             NombreOriginalCarta = "  mi-carta.pdf  ",
         };
 
         editor.AplicarAdjuntos(solicitud);
 
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
         Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
-        Assert.Equal(@"C:\adjuntos\def.pdf", solicitud.RutaCarta);
         Assert.Equal("mi-carta.pdf", solicitud.NombreOriginalCarta);
     }
 
@@ -811,7 +935,7 @@ public class SolicitudEdicionTests
             FechaSolicitud = fecha,
             RespuestaEmpresa = "Oferta enviada",
             ContactoNombre = "Ana",
-            RutaCv = @"C:\adjuntos\abc.pdf",
+            NombreOriginalCv = "mi-cv.pdf",
         };
 
         editor.AplicarA(solicitud);
@@ -823,7 +947,7 @@ public class SolicitudEdicionTests
         Assert.Equal(fecha, solicitud.FechaSolicitud);
         Assert.Equal("Oferta enviada", solicitud.RespuestaEmpresa);
         Assert.Equal("Ana", solicitud.ContactoNombre);
-        Assert.Equal(@"C:\adjuntos\abc.pdf", solicitud.RutaCv);
+        Assert.Equal("mi-cv.pdf", solicitud.NombreOriginalCv);
     }
 
     [Theory]
@@ -865,15 +989,46 @@ public class SolicitudEdicionTests
     }
 
     [Fact]
-    public void RefrescarMotivosDelEstado_NotificaLaLista()
+    public void RefrescarListasDelEstado_NotificaAmbasListas()
     {
         var editor = new SolicitudEdicionViewModel { Estado = EstadoSolicitud.Rechazada };
         var notificados = new List<string?>();
         editor.PropertyChanged += (_, e) => notificados.Add(e.PropertyName);
 
-        editor.RefrescarMotivosDelEstado();
+        editor.RefrescarListasDelEstado();
 
         Assert.Contains(nameof(editor.MotivosDelEstado), notificados);
+        Assert.Contains(nameof(editor.EstadosDisponibles), notificados);
+    }
+
+    [Fact]
+    public void EstadosDisponibles_DesdeUnCierre_NoOfreceOfertaAceptada()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.Rechazada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.DoesNotContain(editor.EstadosDisponibles, i => i.Valor is EstadoSolicitud.OfertaAceptada);
+        Assert.Equal(EstadoSolicitud.Rechazada, editor.Estado);
+    }
+
+    [Fact]
+    public void EstadosDisponibles_DesdeOfertaAceptada_OfreceLosDemasCierres()
+    {
+        Solicitud solicitud = new SolicitudBuilder().ConEstado(EstadoSolicitud.OfertaAceptada).Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud);
+
+        Assert.Contains(editor.EstadosDisponibles, i => i.Valor is EstadoSolicitud.OfertaRechazada);
+        Assert.Contains(editor.EstadosDisponibles, i => i.Valor is EstadoSolicitud.Retirada);
+    }
+
+    [Fact]
+    public void EstadosDisponibles_DesdeUnEstadoAbierto_OfreceTodos()
+    {
+        var editor = new SolicitudEdicionViewModel();
+
+        Assert.Equal(
+            EnumHelper.Valores<EstadoSolicitud>().Select(i => i.Valor),
+            editor.EstadosDisponibles.Select(i => i.Valor));
     }
 
     [Theory]
@@ -950,6 +1105,46 @@ public class SolicitudEdicionTests
         editor.Validar();
 
         Assert.False(editor.HasErrors);
+    }
+
+    [Fact]
+    public void Validar_OfertaAceptadaDesdeOtroCierre_EsError()
+    {
+        Solicitud solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConEstado(EstadoSolicitud.Rechazada)
+            .Construir();
+        var editor = new SolicitudEdicionViewModel(solicitud) { Estado = EstadoSolicitud.OfertaAceptada };
+
+        editor.Validar();
+
+        Assert.Contains(
+            editor.GetErrors(nameof(editor.Estado)),
+            error => error.ErrorMessage == Localizacion.Texto("Mensaje.TransicionNoPermitida"));
+    }
+
+    [Fact]
+    public void ValidarTransicion_SinEditorEnElContexto_NoEsError()
+    {
+        ValidationResult? resultado = SolicitudEdicionViewModel.ValidarTransicion(
+            EstadoSolicitud.OfertaAceptada,
+            new ValidationContext(new object()));
+
+        Assert.Equal(ValidationResult.Success, resultado);
+    }
+
+    [Fact]
+    public void ValidarFechaPosteriorALaSolicitud_SinEditorOSinFecha_NoEsError()
+    {
+        var editor = EditorConFechaSolicitud(new DateTime(2026, 2, 10));
+
+        Assert.Equal(
+            ValidationResult.Success,
+            SolicitudEdicionViewModel.ValidarFechaPosteriorALaSolicitud(null, new ValidationContext(new object())));
+        Assert.Equal(
+            ValidationResult.Success,
+            SolicitudEdicionViewModel.ValidarFechaPosteriorALaSolicitud(null, new ValidationContext(editor)));
     }
 
     [Fact]

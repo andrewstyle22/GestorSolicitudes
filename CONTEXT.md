@@ -1,45 +1,54 @@
 # Estado del proyecto
 
-Plan: `02-DOCS/plan-refactor-edicion.md`.
+Plan: `02-DOCS/plan-refactor-ponytail.md` (leer solo la etapa en curso; nace de `02-DOCS/auditoria-ponytail.md`). Anterior: `plan-refactor-edicion.md` (0–5; su 6 la sustituye A).
 
-## Etapas
-- ✅ 0: red de seguridad.
-- ✅ 1: editor con búfer; la UI no ve la entidad.
-- ✅ 2: historial de eventos (2.1–2.10).
-- ✅ 3: modelo cerrado con constructor, métodos de negocio y `set` privados (3.1–3.17).
-- ✅ R: estados y reapertura (R.1–R.22); detalle en `02-DOCS/decisiones/estados-y-reapertura.md`.
-- ✅ 4: cierre de la refactorización: modelos sin setters públicos, documentación al día y gate de Sonar en verde.
-- ✅ 5: correcciones tras la revisión final (5.1–5.20): guardado, cambios sin guardar, respuesta de la empresa, fecha de solicitud y CSV.
-- ✅ 6: dos fallos hallados al revisar la Etapa 5 (6.1 y 6.2).
+## Etapas Ponytail
+- ✅ A: guardado, navegación, errores y atajos (A.0–A.11). Falta prueba manual.
+- ✅ B: límite de 2 MB (B.1). Falta prueba manual.
+- ✅ C: instancia única y fechas (C.1–C.5).
+- ✅ D: detalles menores (D.1–D.3).
+- ✅ E: documentos en la base de datos (E.1–E.16). Faltan pruebas manuales E.6, E.12 y E.16.
+- ✅ F: documentación y cierre (F.1–F.4).
 
 ## Siguiente paso concreto
-Nada pendiente del plan. Queda, cuando se pida, el push y la revisión del gate de SonarCloud del PR.
+Hacer las pruebas manuales pendientes y mergear el PR #32 (Quality Gate en verde).
 
 ## Decisiones vigentes
-- Búfer: copia al abrir, vuelca al Guardar; Cancelar descarta. La UI no bindea la entidad.
-- `AplicarEventos` empareja por `EventoViewModel.Original` (nulo = nuevo), nunca por posición ni `Id`.
-- `MainViewModel.Guardar` borra los `EventosEliminados`; el búfer no conoce la base.
-- EF escribe por campo: `Eventos` es `IReadOnlyList` sobre campo privado y ningún modelo expone setters públicos.
-- La nota de reapertura vive en `NotaReapertura` (300), no en `Notas`: solo se guarda en el hito.
-- Si el guardado falla, el editor se recarga desde la entidad (que ya tiene los efectos de `CambiarEstado` y `Reabrir`) para que el reintento no los repita ni los pise. La recarga conserva `HayCambios` (`ConservarCambios`), porque la entidad sigue modificada en el contexto y salir de la candidatura debe avisar (6.1).
-- Los hitos del modelo guardan su texto en castellano con el prefijo `Reabierta. ` compartido; traducirlos al mostrar queda para otra refactorización.
-- Respuesta de la empresa (5.8): cuentan los estados abiertos distintos de «Enviada» y «Sin respuesta», y además «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Solo «Retirada por mí» no cuenta. Los datos antiguos no se corrigen automáticamente.
-- Cambios sin guardar: aviso con Guardar, Descartar y Cancelar al cambiar de fila, pulsar *Nueva* o *Duplicar* y cerrar la ventana; tras Guardar, la acción pedida solo sigue si el guardado fue bien (5.2 a 5.7).
-- CSV: separador a elegir (`;`, `,` o tabulador) en una ventana con Aceptar y Cancelar, recordado en `%APPDATA%`; columnas de motivo de cierre y fecha de reapertura; apóstrofo delante de los textos que empiezan por `=`, `+`, `-` o `@` (5.11 a 5.16).
-- Cambiar `FechaSolicitud` mueve el hito de envío y el seguimiento propuesto solo si coincidían con la fecha anterior; el seguimiento no se mueve si hay reapertura (5.9 y 5.10).
-- El aviso de candidatura repetida consulta la base sin seguimiento (`AsNoTracking`), después de guardar y descartando por `Id` la propia candidatura: no depende de lo que `Recargar` haya dejado en `Local` ni se dispara en guardados con la base rota (6.2).
+- Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
+- `AplicarEventos` empareja por `Original`, nunca por posición ni `Id`; `Guardar` borra los `EventosEliminados`.
+- Solo se prohíbe cerrado → «Oferta aceptada» (`AdmiteTransicion`); `EstadosDisponibles` sale de `estadoOriginal` y se recalcula al cambiar de idioma.
+- `ResolverCambiosPendientes` también mira `ChangeTracker.HasChanges()`: un guardado fallido deja la entidad sucia.
+- `RegistroErrores` nunca lanza y se recorta a 1 MB; solo `ManejadorErrores.Avisar` tiene test y los enganches de `App` van excluidos de cobertura.
+- Documentos: máximo 2 MB y `LectorAdjuntos` mide antes de reservar; el aviso lo pone el ViewModel.
+- `DocumentosSolicitud` (BLOB, sin navegación) se lee solo al abrir; `Solicitud` guarda el nombre y `TieneCv`/`TieneCarta` salen de él; el contenido pendiente vive en el editor y `Guardar` lo escribe tras el primer `SaveChanges`, conservándolo si falla.
+- Abrir usa `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al arrancar y al cerrar; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
+- `MigradorAdjuntos` corre al arrancar, es idempotente, ignora bases sin columnas de ruta, registra los fallos y borra los ficheros solo tras confirmar.
+- `InstanciaUnica`: la segunda copia avisa y se cierra sin abrir base ni ventana; `App` la crea antes de la base y la libera en `OnExit`.
+- Ninguna fecha anterior a `FechaSolicitud`; `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`.
+- `Paginar` repone la selección con `SeleccionarSinAviso` para no contradecir la fila resaltada.
+- Reapertura solo con `Reabrir`, con nota obligatoria y respetando el seguimiento editado; motivo de cierre obligatorio y filtrado en los tres cierres negativos.
+- Respuesta de la empresa: cuentan los abiertos salvo Enviada y Sin respuesta, más Descartado por la empresa y las dos ofertas.
+- Cambios sin guardar: Guardar/Descartar/Cancelar al cambiar de fila, Nueva, Duplicar y cerrar; tras Guardar la acción sigue solo si guardó.
+- CSV: separador recordado, motivo y reapertura, apóstrofo ante `= + - @`, tabulador o retorno, aun tras espacios.
+- `FechaSolicitud` mueve el hito de envío y el seguimiento solo si coincidían.
+- Atajos: `PropertyChanged` solo en texto; se confirma el control con el foco antes de Ctrl+S/N y cerrar.
+- Los hitos que crea el modelo guardan texto en castellano; traducirlos al mostrar queda pendiente.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
-- Antes de commitear: `sonarcloud-gate` local; el gate llega tras el push.
+- `sonarcloud-gate` local antes de commitear; el gate llega tras el push.
 - XAML nuevo: `<Page>` en el csproj; todo texto visible con clave es/en/de.
-- Mensaje en español; un commit, una idea reversible. No hacer push salvo que se pida.
-- Cada paso del plan, su commit con el mensaje del plan; no fusiones pasos.
-- Al terminar cada paso, actualiza este fichero en el mismo commit: marca el paso como hecho, deja el siguiente en «Siguiente paso concreto» y anota las decisiones o puntos de control nuevos; quita lo que ya no aplique.
+- Un commit, una idea reversible, mensaje en español; sin push salvo que se pida.
+- Cada paso del plan, su commit con su mensaje y su test; no fusiones pasos.
+- Al terminar cada paso, este fichero se actualiza en el mismo commit.
 
-## Mejoras futuras (fuera del plan)
-- Las copias de adjuntos que quedan en disco si se cierra la app antes de guardar o cancelar.
-- Si se vacía el seguimiento mucho después de reabrir, se propone `FechaReapertura + 7`, que puede estar en el pasado.
-- Guardar los hitos del modelo como valores únicos y traducirlos al mostrarlos.
-- Probar a mano el desplegable de motivos al cambiar de «Descartado» a «Retirada» (WPF puede vaciar `SelectedValue` al reemplazar `MotivosDelEstado`).
-- La preferencia del separador del CSV se guarda aunque luego se cancele la elección del destino.
+## Puntos de control
+- Pruebas manuales (sección 4): A.7, A.9–A.11, C.3, E.6, E.12 y E.16.
+- `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
+
+## Fuera del plan
+- Hallazgo 6 (CI duplicado) y protección de rama en GitHub.
+- Migración de adjuntos y vista previa de imágenes.
+- Seguimiento `FechaReapertura + 7` puede caer en el pasado.
+- Hitos como valores únicos traducidos al mostrar.
+- La preferencia del separador CSV se guarda aunque se cancele.

@@ -7,7 +7,7 @@
 
             <TextBlock Text="{DynamicResource Seguimiento.EstadoActual}" Style="{StaticResource Etiqueta}" Margin="9,10,0,3" />
             <ComboBox Style="{StaticResource CampoCombo}"
-                      ItemsSource="{Binding Estados}"
+                      ItemsSource="{Binding Editor.EstadosDisponibles}"
                       DisplayMemberPath="Descripcion"
                       SelectedValuePath="Valor"
                       SelectedValue="{Binding Editor.Estado}" Margin="9,0,9,0" />
@@ -22,7 +22,7 @@
             <StackPanel Visibility="{Binding Editor.ReaperturaPendiente, Converter={StaticResource BooleanoAVisibilidad}}">
                 <TextBlock Text="{DynamicResource Seguimiento.NotaReapertura}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
                 <TextBox x:Name="NotaReapertura" Style="{StaticResource CampoMultilinea}"
-                         Text="{Binding Editor.NotaReapertura}" Margin="9,0,9,0" />
+                         Text="{Binding Editor.NotaReapertura, UpdateSourceTrigger=PropertyChanged}" Margin="9,0,9,0" />
                 <TextBlock Text="{Binding ElementName=NotaReapertura, Path=(Validation.Errors)/ErrorContent}"
                            Foreground="{StaticResource Peligro}" FontSize="11" TextWrapping="Wrap"
                            Margin="9,3,9,0"
@@ -81,7 +81,7 @@
 
             <TextBlock Text="{DynamicResource Seguimiento.RespuestaEmpresa}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
             <TextBox Style="{StaticResource CampoMultilinea}"
-                     Text="{Binding Editor.RespuestaEmpresa}" Margin="9,0,9,0" />
+                     Text="{Binding Editor.RespuestaEmpresa, UpdateSourceTrigger=PropertyChanged}" Margin="9,0,9,0" />
 
             <TextBlock Text="{DynamicResource Seguimiento.Contacto}" Style="{StaticResource TituloSeccion}" Margin="9,18,9,2" />
 
@@ -95,20 +95,24 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{DynamicResource Campo.Nombre}" Style="{StaticResource Etiqueta}" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.ContactoNombre}" />
+                    <TextBox Style="{StaticResource Campo}"
+                             Text="{Binding Editor.ContactoNombre, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="{DynamicResource Campo.Email}" Style="{StaticResource Etiqueta}" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.ContactoEmail}" />
+                    <TextBox Style="{StaticResource Campo}"
+                             Text="{Binding Editor.ContactoEmail, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <StackPanel Grid.Column="4">
                     <TextBlock Text="{DynamicResource Campo.Telefono}" Style="{StaticResource Etiqueta}" />
-                    <TextBox Style="{StaticResource Campo}" Text="{Binding Editor.ContactoTelefono}" />
+                    <TextBox Style="{StaticResource Campo}"
+                             Text="{Binding Editor.ContactoTelefono, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
             </Grid>
 
             <TextBlock Text="{DynamicResource Campo.Notas}" Style="{StaticResource Etiqueta}" Margin="9,10,9,3" />
-            <TextBox Style="{StaticResource CampoMultilinea}" Text="{Binding Editor.Notas}" Margin="9,0,9,0" />
+            <TextBox Style="{StaticResource CampoMultilinea}"
+                     Text="{Binding Editor.Notas, UpdateSourceTrigger=PropertyChanged}" Margin="9,0,9,0" />
 
         </StackPanel>
     </ScrollViewer>

@@ -22,6 +22,66 @@ public partial class FuentesTests
 {
     private static readonly string Raiz = RaizDelProyecto();
 
+    private static readonly string[] CamposNumericos =
+    [
+        "Editor.SalarioMin",
+        "Editor.SalarioMax",
+        "Editor.PretensionSalarial",
+    ];
+
+    private static readonly string[] FicherosDelEditor =
+    [
+        "MainWindow.xaml",
+        "PestanaOferta.xaml",
+        "PestanaSeguimiento.xaml",
+    ];
+
+    [Fact]
+    public void LosCamposDeTextoEscribenEnElBuferConCadaPulsacion()
+    {
+        // El texto se vuelca al búfer sin esperar a perder el foco: si no, Ctrl+S y cerrar
+        // se llevan lo último escrito. Los salarios siguen en LostFocus para no validar
+        // números a medio escribir.
+        List<XElement> cajas = FicherosDelEditor
+            .SelectMany(nombre => XDocument.Load(Path.Combine(Raiz, "Views", nombre)).Descendants())
+            .Where(e => e.Name.LocalName == "TextBox"
+                && ((string?)e.Attribute("Text"))?.StartsWith("{Binding Editor.", StringComparison.Ordinal) == true)
+            .ToList();
+
+        bool EsSalario(XElement caja) => CamposNumericos.Any(campo =>
+            ((string?)caja.Attribute("Text"))!.StartsWith("{Binding " + campo, StringComparison.Ordinal));
+
+        Assert.NotEmpty(cajas);
+        Assert.All(
+            cajas.Where(caja => !EsSalario(caja)),
+            caja => Assert.Contains("UpdateSourceTrigger=PropertyChanged", (string?)caja.Attribute("Text")));
+        Assert.All(
+            cajas.Where(EsSalario),
+            caja => Assert.DoesNotContain("UpdateSourceTrigger", (string?)caja.Attribute("Text")));
+    }
+
+    [Fact]
+    public void LosAtajosYElCierreConfirmanLaEdicionPendiente()
+    {
+        // Salarios y fechas se vuelcan al búfer al perder el foco: los atajos y el cierre
+        // tienen que llevarlo antes a la ventana. Un KeyBinding guardaría sin ese valor.
+        string codeBehind = File.ReadAllText(Path.Combine(Raiz, "Views", "MainWindow.xaml.cs"));
+
+        Assert.DoesNotContain("new KeyBinding", codeBehind);
+
+        string atajos = codeBehind[codeBehind.IndexOf("private void Atajos_PreviewKeyDown", StringComparison.Ordinal)..];
+        Assert.True(
+            atajos.IndexOf("this.VolcarEdicionPendiente();", StringComparison.Ordinal)
+                < atajos.IndexOf("comando.Execute(null);", StringComparison.Ordinal),
+            "El atajo debe volcar la edición pendiente antes de ejecutar el comando.");
+
+        string cierre = codeBehind[codeBehind.IndexOf("protected override void OnClosing", StringComparison.Ordinal)..];
+        Assert.True(
+            cierre.IndexOf("this.VolcarEdicionPendiente();", StringComparison.Ordinal)
+                < cierre.IndexOf("this.vm.ResolverCambiosPendientes()", StringComparison.Ordinal),
+            "OnClosing debe volcar la edición pendiente antes de preguntar.");
+    }
+
     [Fact]
     public void LasClavesDeTextoUsadasEstanDefinidas()
     {

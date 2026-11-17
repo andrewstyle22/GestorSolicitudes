@@ -9,7 +9,6 @@ using GestorSolicitudes.Data;
 using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 /// <summary>Lo mínimo que necesita el aviso de la bandeja, sin arrastrar la entidad completa.</summary>
 internal sealed record SeguimientoVencido(int Id, string Empresa, string Puesto, DateTime? ProximoSeguimiento);
@@ -21,8 +20,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly AppDbContext db;
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
-    private readonly GestorAdjuntos adjuntos;
     private readonly string rutaPreferenciaCsv;
+    private readonly string carpetaTemporales;
     private bool actualizandoIdioma;
 
     // Constructor con base de datos, preferencias y servicios propios: los tests usan una base
@@ -32,17 +31,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     internal MainViewModel(
         AppDbContext db,
         string? rutaColumnas = null,
-        string? carpetaAdjuntos = null,
         IDialogoService? dialogo = null,
         Action<Idioma>? cambiarIdioma = null,
-        string? rutaPreferenciaCsv = null)
+        string? rutaPreferenciaCsv = null,
+        string? carpetaTemporales = null)
     {
         this.db = db;
         this.ColumnasVm = new ColumnasViewModel(rutaColumnas);
-        this.adjuntos = new GestorAdjuntos(carpetaAdjuntos ?? AdjuntosHelper.Carpeta);
         this.dialogo = dialogo ?? new DialogosNulos();
         this.cambiarIdioma = cambiarIdioma ?? (_ => { });
         this.rutaPreferenciaCsv = rutaPreferenciaCsv ?? PreferenciaCsv.Ruta;
+        this.carpetaTemporales = carpetaTemporales ?? TemporalesAdjuntos.Carpeta;
 
         this.CargarTextosLocalizados();
 
@@ -122,8 +121,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // se releen al cambiar de idioma.
         this.ColumnasVm.RefrescarNombres();
 
-        // El editor arma su lista de motivos al vuelo; hay que avisarle del cambio de idioma.
-        this.Editor?.RefrescarMotivosDelEstado();
+        // El editor arma sus listas de estado al vuelo; hay que avisarle del cambio de idioma.
+        this.Editor?.RefrescarListasDelEstado();
     }
 
     // ---------------------------------------------------------------- Columnas
@@ -243,6 +242,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             pagina ?? this.Pagina.PaginaActual);
 
         this.Solicitudes = new ObservableCollection<Solicitud>(this.Pagina.Elementos);
+
+        // La colección nueva hace que el DataGrid pierda la fila: se repone si sigue en la página,
+        // para que el panel abierto y la selección no se contradigan.
+        if (this.solicitudAbierta is Solicitud abierta && this.Pagina.Elementos.Contains(abierta))
+        {
+            this.SeleccionarSinAviso(abierta);
+        }
 
         // El rango es texto traducido: se recalcula aunque la página sea la misma (cambio de idioma).
         this.OnPropertyChanged(nameof(this.RangoPagina));
@@ -648,22 +654,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     // ---------------------------------------------------------------- Adjuntos
 
-    /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian la etiqueta del fichero y las propiedades.</summary>
-    private sealed record DescriptorAdjunto(string Etiqueta, Action<SolicitudEdicionViewModel, string?, string?> Asignar);
+    /// <summary>CV y carta se adjuntan y se quitan igual: sólo cambian el contenido y el nombre.</summary>
+    private sealed record DescriptorAdjunto(Action<SolicitudEdicionViewModel, byte[]?, string?> Asignar);
 
     private static readonly DescriptorAdjunto DescriptorCv = new(
-        "cv",
-        (editor, ruta, nombre) =>
+        (editor, contenido, nombre) =>
         {
-            editor.RutaCv = ruta;
+            editor.CvContenido = contenido;
             editor.NombreOriginalCv = nombre;
         });
 
     private static readonly DescriptorAdjunto DescriptorCarta = new(
-        "carta",
-        (editor, ruta, nombre) =>
+        (editor, contenido, nombre) =>
         {
-            editor.RutaCarta = ruta;
+            editor.CartaContenido = contenido;
             editor.NombreOriginalCarta = nombre;
         });
 
@@ -689,8 +693,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            string nuevaRuta = this.adjuntos.Copiar(origen, adjunto.Etiqueta);
-            adjunto.Asignar(editar, nuevaRuta, Path.GetFileName(origen));
+            adjunto.Asignar(editar, LectorAdjuntos.Leer(origen), Path.GetFileName(origen));
+        }
+        catch (DocumentoDemasiadoGrandeException)
+        {
+            this.dialogo.Avisar(
+                Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"),
+                Localizacion.Texto("Titulo.Adjunto"));
         }
         catch (Exception ex)
         {
@@ -706,10 +715,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void QuitarCarta() => this.QuitarAdjunto(DescriptorCarta);
 
-    /// <summary>
-    /// Quita la ruta del adjunto, pero no el fichero: si el usuario cancela, el que
-    /// había en disco sigue siendo el que apunta la base de datos.
-    /// </summary>
+    /// <summary>Quita el documento del editor; el cambio solo llega a la base al guardar.</summary>
     private void QuitarAdjunto(DescriptorAdjunto adjunto)
     {
         if (this.Editor is null)
@@ -721,24 +727,34 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Abre el CV o la carta en el visor. Avisa si el fichero ya no existe en disco.
-    /// Es un comando con parámetro: las dos filas de adjuntos usan el mismo.
+    /// Abre el CV o la carta en el visor. Usa el contenido pendiente del editor y, si no lo hay,
+    /// el guardado en la base; lo escribe en un temporal porque el visor abre ficheros. Avisa si
+    /// la candidatura no tiene ese documento.
     /// </summary>
     [RelayCommand]
-    private void AbrirAdjunto(Adjunto? adjunto)
+    private void AbrirAdjunto(TipoAdjunto? tipo)
     {
-        string? ruta = adjunto?.Ruta;
-        if (string.IsNullOrWhiteSpace(ruta) || !File.Exists(ruta))
+        if (this.Editor is not SolicitudEdicionViewModel edicion || tipo is not TipoAdjunto documento)
         {
-            this.dialogo.Informar(
-                Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
-                Localizacion.Texto("Titulo.Adjunto"));
             return;
         }
 
+        bool esCv = documento == TipoAdjunto.Cv;
+        byte[]? contenido = esCv ? edicion.CvContenido : edicion.CartaContenido;
+        string? nombre = esCv ? edicion.NombreOriginalCv : edicion.NombreOriginalCarta;
+
         try
         {
-            this.dialogo.VerAdjunto(ruta.Trim());
+            contenido ??= this.DocumentoGuardado(documento);
+            if (contenido is null || string.IsNullOrWhiteSpace(nombre))
+            {
+                this.dialogo.Informar(
+                    Localizacion.Texto("Mensaje.SinAdjuntoOYaNoExiste"),
+                    Localizacion.Texto("Titulo.Adjunto"));
+                return;
+            }
+
+            this.dialogo.VerAdjunto(TemporalesAdjuntos.Escribir(nombre, contenido, this.carpetaTemporales));
         }
         catch (Exception ex)
         {
@@ -749,15 +765,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Las rutas que apunta hoy la base de datos, no las que el usuario acaba de elegir.
-    /// Exige que <paramref name="solicitud"/> esté en seguimiento por el contexto: si estuviera
-    /// separada, EF no conserva el valor original y devolvería el actual.
+    /// Contenido guardado del documento, proyectando solo esa columna y sin seguimiento: la fila
+    /// no se necesita después y no debe quedar en el contexto.
     /// </summary>
-    private (string? Cv, string? Carta) RutasGuardadas(Solicitud solicitud)
+    private byte[]? DocumentoGuardado(TipoAdjunto tipo)
     {
-        EntityEntry<Solicitud> entrada = this.db.Entry(solicitud);
-        return (entrada.Property(s => s.RutaCv).OriginalValue,
-                entrada.Property(s => s.RutaCarta).OriginalValue);
+        if (this.solicitudAbierta is not Solicitud solicitud || solicitud.Id == 0)
+        {
+            return null;
+        }
+
+        IQueryable<DocumentosSolicitud> fila = this.db.Set<DocumentosSolicitud>()
+            .AsNoTracking()
+            .Where(d => d.SolicitudId == solicitud.Id);
+        return tipo == TipoAdjunto.Cv
+            ? fila.Select(d => d.Cv).FirstOrDefault()
+            : fila.Select(d => d.Carta).FirstOrDefault();
     }
 
     [RelayCommand]
@@ -847,18 +870,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         bool esNueva = this.PrepararNueva(solicitud);
 
-        // Lo que apunta hoy la base, para borrar el adjunto viejo solo si el guardado funciona.
-        (string? cvAnterior, string? cartaAnterior) = esNueva
-            ? (null, null)
-            : this.RutasGuardadas(solicitud);
-
-        if (!this.Persistir())
+        if (!this.Persistir(esNueva ? solicitud : null, esNueva ? this.Editor : null))
         {
             // La entidad ya tiene los efectos de CambiarEstado y Reabrir: recargar el búfer
             // evita que el reintento los repita o los pise con los valores antiguos.
             if (this.Editor is SolicitudEdicionViewModel recargado)
             {
+                // El contenido de un documento solo llega a la base al guardar, y una
+                // candidatura nueva no tiene fila donde esperar: sin conservarlo, el
+                // reintento guardaría el nombre sin el fichero.
+                byte[]? cvPendiente = recargado.CvContenido;
+                byte[]? cartaPendiente = recargado.CartaContenido;
                 recargado.CargarDesde(solicitud);
+                recargado.CvContenido = cvPendiente;
+                recargado.CartaContenido = cartaPendiente;
 
                 // La entidad sigue modificada en el contexto: el búfer recargado también tiene
                 // cambios pendientes y salir de la candidatura debe avisar.
@@ -867,8 +892,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
             return false;
         }
-
-        this.adjuntos.DescartarSustituidas((solicitud.RutaCv, solicitud.RutaCarta), (cvAnterior, cartaAnterior));
 
         // Se busca después de guardar: si la base no responde, el error ya lo ha contado Persistir.
         Solicitud? candidaturaRepetida = esNueva ? this.BuscarCandidaturaRepetida(solicitud) : null;
@@ -899,7 +922,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// </summary>
     internal bool ResolverCambiosPendientes()
     {
-        if (this.Editor?.HayCambios != true)
+        // Un guardado fallido deja la entidad modificada en EF aunque el búfer se haya recargado.
+        if (this.Editor is null || (!this.Editor.HayCambios && !this.db.ChangeTracker.HasChanges()))
         {
             return true;
         }
@@ -942,6 +966,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 edicionSolicitud.SeguimientoParaReapertura);
         }
 
+        this.AplicarDocumentos(solicitud, edicionSolicitud);
+
         // El búfer no tiene la base: aquí se marca lo borrado para que desaparezca al guardar.
         foreach (Evento eliminado in edicionSolicitud.EventosEliminados)
         {
@@ -949,6 +975,51 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Vuelca a <c>DocumentosSolicitud</c> el contenido pendiente del editor. La fila se busca
+    /// ahora y se crea si hace falta; sin contenido nuevo y sin nombre, el documento se quita.
+    /// La candidatura nueva aún no tiene <c>Id</c> al aplicar el editor: su fila se escribe
+    /// al guardar, ya con la clave asignada.
+    /// </summary>
+    private void AplicarDocumentos(Solicitud solicitud, SolicitudEdicionViewModel edicion)
+    {
+        if (solicitud.Id == 0)
+        {
+            return;
+        }
+
+        DocumentosSolicitud? documentos = this.db.Set<DocumentosSolicitud>().Find(solicitud.Id);
+        if (documentos is null)
+        {
+            // Sin fila, solo hay algo que escribir si llega contenido nuevo.
+            if (edicion.CvContenido is null && edicion.CartaContenido is null)
+            {
+                return;
+            }
+
+            documentos = new DocumentosSolicitud(solicitud.Id);
+            this.db.Set<DocumentosSolicitud>().Add(documentos);
+        }
+
+        if (edicion.CvContenido is byte[] cv)
+        {
+            documentos.AsignarCv(cv);
+        }
+        else if (string.IsNullOrEmpty(edicion.NombreOriginalCv))
+        {
+            documentos.QuitarCv();
+        }
+
+        if (edicion.CartaContenido is byte[] carta)
+        {
+            documentos.AsignarCarta(carta);
+        }
+        else if (string.IsNullOrEmpty(edicion.NombreOriginalCarta))
+        {
+            documentos.QuitarCarta();
+        }
     }
 
     private bool ConfirmarReapertura(Solicitud solicitud, SolicitudEdicionViewModel edicion)
@@ -1028,11 +1099,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>Escribe los cambios; si la base falla, avisa y deja el panel abierto.</summary>
-    private bool Persistir()
+    private bool Persistir(Solicitud? candidaturaNueva = null, SolicitudEdicionViewModel? edicion = null)
     {
         try
         {
             this.db.SaveChanges();
+
+            // La candidatura nueva recibe su Id en este primer guardado: sus documentos
+            // se escriben justo después, ya con la clave a la que apuntar.
+            if (candidaturaNueva is not null
+                && edicion is not null
+                && (edicion.CvContenido is not null || edicion.CartaContenido is not null))
+            {
+                this.AplicarDocumentos(candidaturaNueva, edicion);
+                this.db.SaveChanges();
+            }
+
             return true;
         }
         catch (Exception ex)
@@ -1069,24 +1151,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Tira los cambios del búfer: borra las copias de adjuntos que no llegaron a guardarse y
-    /// desengancha lo que EF tenía en seguimiento, para que la próxima consulta vuelva a leer disco.
+    /// Tira los cambios del búfer y desengancha lo que EF tenía en seguimiento, para que la
+    /// próxima consulta vuelva a leer de la base.
     /// </summary>
     private void DescartarCambios()
     {
-        if (this.solicitudAbierta is not Solicitud solicitud || this.Editor is not SolicitudEdicionViewModel edicion)
+        if (this.solicitudAbierta is null || this.Editor is null)
         {
             return;
         }
-
-        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
-        (string? cvGuardado, string? cartaGuardada) = solicitud.Id == 0
-            ? (null, null)
-            : this.RutasGuardadas(solicitud);
-
-        this.adjuntos.DescartarNoGuardadas(
-            (edicion.RutaCv, edicion.RutaCarta),
-            (cvGuardado, cartaGuardada));
 
         this.db.ChangeTracker.Clear();
     }
@@ -1108,9 +1181,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // Lo que apunta la base, no lo que el usuario acaba de cambiar sin guardar.
-        (string? cv, string? carta) = this.RutasGuardadas(this.solicitudAbierta);
-
         if (!this.TryEliminarSolicitud(this.solicitudAbierta, out Exception? error))
         {
             this.dialogo.Error(
@@ -1118,10 +1188,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
-
-        this.adjuntos.Eliminar(cv);
-        this.adjuntos.Eliminar(carta);
-        this.adjuntos.DescartarCopias();
 
         this.Abrir(null);
         this.SolicitudSeleccionada = null;

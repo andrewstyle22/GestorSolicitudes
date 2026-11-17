@@ -39,6 +39,8 @@ public class TextoYCsvTests
     [InlineData("@usuario", "\"'@usuario\"")]
     [InlineData("\ttexto", "\"'\ttexto\"")]
     [InlineData("\rtexto", "\"' texto\"")]
+    [InlineData(" =2+2", "\"' =2+2\"")]
+    [InlineData("  \ttexto", "\"'  \ttexto\"")]
     public void Escapar_NeutralizaLasCeldasQueEmpiezanPorFormula(string valor, string esperado)
     {
         Assert.Equal(esperado, TextoHelper.Escapar(valor));
@@ -55,5 +57,14 @@ public class TextoYCsvTests
     {
         Assert.Equal(string.Empty, TextoHelper.Escapar(null));
         Assert.Equal(string.Empty, TextoHelper.Escapar(string.Empty));
+    }
+
+    [Theory]
+    [InlineData("   ")]
+    [InlineData(" texto")]
+    [InlineData("1+1")]
+    public void Escapar_SinFormulaNoAnteponeApostrofo(string valor)
+    {
+        Assert.Equal($"\"{valor}\"", TextoHelper.Escapar(valor));
     }
 }

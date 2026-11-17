@@ -3,7 +3,6 @@ namespace GestorSolicitudes.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
 using System.Reflection;
 
 /// <summary>
@@ -25,7 +24,6 @@ public class Solicitud
     // Prefijo del hito de reapertura: el editor lo quita para la franja de Seguimiento.
     public const string PrefijoHitoReapertura = "Reabierta. ";
 
-    private const int LongitudMaximaRutaAdjunto = 500;
     private const int LongitudMaximaNombreOriginalAdjunto = 260;
 
     private Solicitud()
@@ -199,29 +197,53 @@ public class Solicitud
     /// <summary>
     /// Actualiza las fechas que se editan a mano: envío, entrevista y próximo seguimiento.
     /// Al cambiar la fecha de envío, el hito <see cref="TipoEvento.SolicitudEnviada"/> y el
-    /// seguimiento propuesto la siguen si conservaban la fecha anterior.
+    /// seguimiento propuesto la siguen si conservaban la fecha anterior. Exige que la fecha
+    /// de envío no sea posterior a la entrevista, al seguimiento, a la primera respuesta
+    /// ni al cierre.
     /// </summary>
     public void ActualizarFechas(DateTime fechaSolicitud, DateTime? fechaEntrevista, DateTime? proximoSeguimiento)
     {
         DateTime fechaAnterior = this.FechaSolicitud;
+        bool cambiaEnvio = fechaSolicitud != fechaAnterior;
 
-        if (fechaSolicitud != fechaAnterior)
+        if (cambiaEnvio && this.FechaReapertura is null && proximoSeguimiento == fechaAnterior.AddDays(7))
+        {
+            proximoSeguimiento = fechaSolicitud.AddDays(7);
+        }
+
+        this.ExigirFechasPosteriores(fechaSolicitud, fechaEntrevista, proximoSeguimiento);
+
+        if (cambiaEnvio)
         {
             foreach (Evento evento in this.eventos.Where(
                 e => e.Tipo == TipoEvento.SolicitudEnviada && e.Fecha == fechaAnterior))
             {
                 evento.Actualizar(fechaSolicitud, evento.Tipo, evento.Descripcion);
             }
-
-            if (this.FechaReapertura is null && proximoSeguimiento == fechaAnterior.AddDays(7))
-            {
-                proximoSeguimiento = fechaSolicitud.AddDays(7);
-            }
         }
 
         this.FechaSolicitud = fechaSolicitud;
         this.FechaEntrevista = fechaEntrevista;
         this.ProximoSeguimiento = proximoSeguimiento;
+    }
+
+    private void ExigirFechasPosteriores(DateTime fechaSolicitud, DateTime? fechaEntrevista, DateTime? proximoSeguimiento)
+    {
+        DateTime hoy = DateTime.Today;
+        bool incoherente = fechaEntrevista < fechaSolicitud
+            || proximoSeguimiento < fechaSolicitud
+
+            // El modelo rellena la primera respuesta y el cierre con hoy: no delatan
+            // una fecha de envío incoherente.
+            || (this.FechaPrimeraRespuesta is DateTime respuesta && respuesta != hoy && respuesta < fechaSolicitud)
+            || (this.FechaCierre is DateTime cierre && cierre != hoy && cierre < fechaSolicitud);
+
+        if (incoherente)
+        {
+            throw new ArgumentException(
+                "La fecha de solicitud no puede ser posterior a la primera respuesta, la entrevista, el cierre ni el seguimiento.",
+                nameof(fechaSolicitud));
+        }
     }
 
     /// <summary>
@@ -258,7 +280,7 @@ public class Solicitud
                 "Una candidatura cerrada solo se reabre con Reabrir.");
         }
 
-        if (esTransicion && estado == EstadoSolicitud.OfertaAceptada && this.Estado.EstaCerrada())
+        if (esTransicion && !this.Estado.AdmiteTransicion(estado))
         {
             throw new InvalidOperationException(
                 "Una oferta cerrada no se puede aceptar sin reabrirla a \"Oferta recibida\".");
@@ -408,14 +430,9 @@ public class Solicitud
     /// <summary>Actualiza las notas: recorta espacios y no impone límite de longitud.</summary>
     public void ActualizarNotas(string? notas) => this.Notas = notas?.Trim();
 
-    // --- Adjuntos (copias en %APPDATA%\GestorSolicitudes\adjuntos) ---
-    [MaxLength(LongitudMaximaRutaAdjunto)]
-    public string? RutaCv { get; private set; }
+    // --- Adjuntos (contenido en DocumentosSolicitud) ---
 
-    [MaxLength(LongitudMaximaRutaAdjunto)]
-    public string? RutaCarta { get; private set; }
-
-    /// <summary>Gets or sets nombre "bonito" del CV tal como lo eligió el usuario (el fichero en disco es un GUID).</summary>
+    /// <summary>Gets or sets nombre "bonito" del CV tal como lo eligió el usuario.</summary>
     [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
     public string? NombreOriginalCv { get; private set; }
 
@@ -423,39 +440,19 @@ public class Solicitud
     [MaxLength(LongitudMaximaNombreOriginalAdjunto)]
     public string? NombreOriginalCarta { get; private set; }
 
-    /// <summary>
-    /// Asigna el CV: la ruta y el nombre original que vio el usuario van juntos,
-    /// y ninguno puede superar la longitud que admite la base de datos.
-    /// </summary>
-    public void AsignarCv(string? ruta, string? nombreOriginal)
-    {
-        this.RutaCv = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta del CV");
+    /// <summary>Asigna el nombre del CV; su contenido vive aparte, en DocumentosSolicitud.</summary>
+    public void AsignarCv(string? nombreOriginal) =>
         this.NombreOriginalCv = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original del CV");
-    }
 
-    /// <summary>Quita el CV: borra a la vez su ruta y su nombre original.</summary>
-    public void QuitarCv()
-    {
-        this.RutaCv = null;
-        this.NombreOriginalCv = null;
-    }
+    /// <summary>Quita el CV: borra su nombre original; el contenido lo quita el editor al guardar.</summary>
+    public void QuitarCv() => this.NombreOriginalCv = null;
 
-    /// <summary>
-    /// Asigna la carta: la ruta y el nombre original que vio el usuario van juntos,
-    /// y ninguno puede superar la longitud que admite la base de datos.
-    /// </summary>
-    public void AsignarCarta(string? ruta, string? nombreOriginal)
-    {
-        this.RutaCarta = Recortar(ruta, LongitudMaximaRutaAdjunto, "La ruta de la carta");
+    /// <summary>Asigna el nombre de la carta; su contenido vive aparte, en DocumentosSolicitud.</summary>
+    public void AsignarCarta(string? nombreOriginal) =>
         this.NombreOriginalCarta = Recortar(nombreOriginal, LongitudMaximaNombreOriginalAdjunto, "El nombre original de la carta");
-    }
 
-    /// <summary>Quita la carta: borra a la vez su ruta y su nombre original.</summary>
-    public void QuitarCarta()
-    {
-        this.RutaCarta = null;
-        this.NombreOriginalCarta = null;
-    }
+    /// <summary>Quita la carta: borra su nombre original; el contenido lo quita el editor al guardar.</summary>
+    public void QuitarCarta() => this.NombreOriginalCarta = null;
 
     private readonly List<Evento> eventos = [];
 
@@ -519,16 +516,13 @@ public class Solicitud
         && this.ProximoSeguimiento.HasValue
         && this.ProximoSeguimiento.Value.Date <= DateTime.Today;
 
-    /// <summary>Gets nombre a mostrar del CV: el original si se conserva, o el del disco si no.</summary>
+    /// <summary>Gets si hay CV guardado, según su nombre; el contenido se lee de la base al abrir.</summary>
     [NotMapped]
-    public string? NombreCv => this.NombreOriginalCv ?? Archivo(this.RutaCv);
+    public bool TieneCv => !string.IsNullOrWhiteSpace(this.NombreOriginalCv);
 
-    /// <summary>Gets nombre a mostrar de la carta: el original si se conserva, o el del disco si no.</summary>
+    /// <summary>Gets si hay carta guardada, según su nombre; el contenido se lee de la base al abrir.</summary>
     [NotMapped]
-    public string? NombreCarta => this.NombreOriginalCarta ?? Archivo(this.RutaCarta);
-
-    private static string? Archivo(string? ruta) =>
-        string.IsNullOrWhiteSpace(ruta) ? null : Path.GetFileName(ruta);
+    public bool TieneCarta => !string.IsNullOrWhiteSpace(this.NombreOriginalCarta);
 
     public override string ToString() => $"{this.Empresa} — {this.Puesto}";
 }
