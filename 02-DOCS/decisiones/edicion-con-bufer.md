@@ -31,12 +31,17 @@ existentes y se borran los quitados; el búfer no conoce la base de datos.
 
 **El orden de `AplicarA` importa.** `AplicarRespuesta` va antes que `AplicarEstado`: al salir de «Sin
 respuesta» el modelo rellena `FechaPrimeraRespuesta`, y si el editor la escribiera después, la pisaría
-con el valor vacío.
+con el valor vacío. `AplicarFechas` va después de los dos porque `ActualizarFechas` compara la fecha
+de envío con `FechaPrimeraRespuesta` y `FechaCierre`, que el modelo acaba de actualizar.
 
 **Un guardado fallido no deja el editor desfasado.** Si `SaveChanges` falla, la entidad ya tiene los
 efectos de `CambiarEstado` y de `Reabrir` (por ejemplo `FechaCierre` o `FechaPrimeraRespuesta`, que el
 modelo solo rellena en la transición); el editor se recarga desde ella para que el reintento no los
-repita ni los pise con los valores antiguos del búfer.
+repita ni los pise con los valores antiguos del búfer. El contenido pendiente de CV y carta
+(`CvContenido` y `CartaContenido`) se conserva al recargar: en una candidatura nueva todavía no hay
+fila en `DocumentosSolicitud` y el reintento guardaría el nombre sin el fichero. Como la entidad sigue
+modificada en el contexto, el editor vuelve a marcar `HayCambios` y `ResolverCambiosPendientes()`
+también consulta `ChangeTracker.HasChanges()`.
 
 **El editor sabe si hay cambios.** `HayCambios` se activa al tocar cualquier campo editable o el
 historial y se apaga al cargar desde la entidad. Con él, `ResolverCambiosPendientes()` pregunta
@@ -48,8 +53,9 @@ ventana. Con Guardar, la acción pedida sigue solo si `TryGuardar()` terminó bi
 y no hay reapertura; el editor hace lo mismo sobre el búfer para que el panel lo muestre al instante
 y `AplicarEventos` no lo devuelva a su valor anterior.
 
-**Los ficheros adjuntos solo se borran tras guardar bien.** Quitar o sustituir un adjunto no toca el
-disco hasta que el guardado funciona; *Cancelar* borra las copias que no se llegaron a guardar.
+**Los documentos viven en el búfer hasta guardar.** Adjuntar lee el fichero entero a memoria (máximo
+2 MB) y lo deja en `CvContenido` o `CartaContenido` con su nombre; no hay copia en disco. Guardar lo
+escribe en `DocumentosSolicitud`, y *Cancelar* o *Descartar* solo sueltan la memoria.
 
 ## Consecuencias
 

@@ -14,15 +14,15 @@ El CV y la carta de presentación se guardaban como ficheros en `%APPDATA%\Gesto
 
 La entidad no tiene propiedad de navegación desde `Solicitud`: nada la carga al leer una candidatura.
 
-**Solo se lee al abrir el documento.** El botón de abrir hace una consulta sin seguimiento que proyecta únicamente la columna que se necesita. Ver una candidatura no toca la tabla.
+**El contenido se lee solo cuando hace falta.** Abrir el documento lanza una consulta sin seguimiento que proyecta únicamente su columna; ver una candidatura no toca la tabla. Guardar cambios en una candidatura existente sí carga su fila de `DocumentosSolicitud` para actualizarla o vaciarla.
 
 **`Solicitud` conserva el nombre del documento.** `NombreOriginalCv` y `NombreOriginalCarta` siguen en `Solicitudes`; `TieneCv` y `TieneCarta` salen de que ese nombre no sea nulo. Así la interfaz muestra el nombre y activa el botón sin cargar los bytes.
 
-**El contenido nuevo vive en el editor.** Al adjuntar, el fichero se lee entero a memoria (máximo 2 MB) y se guarda en `CvContenido` o `CartaContenido` del editor, junto con su nombre. No se copia nada a disco. Al guardar, se escribe en `DocumentosSolicitud` dentro del mismo `SaveChanges` que el resto de la candidatura. Cancelar o descartar solo tiene que soltar la memoria: ya no hay copias en disco que borrar.
+**El contenido nuevo vive en el editor.** Al adjuntar, el fichero se lee entero a memoria (máximo 2 MB) y se guarda en `CvContenido` o `CartaContenido` del editor, junto con su nombre. No se copia nada a disco. Al guardar, se escribe en `DocumentosSolicitud`: en una candidatura existente, en el mismo `SaveChanges` que el resto de sus datos; en una nueva, en un segundo `SaveChanges` inmediato, porque la fila necesita el `Id` que asigna el primero. Cancelar o descartar solo tiene que soltar la memoria: ya no hay copias en disco que borrar.
 
 **Límite de 2 MB.** 2 × 1024 × 1024 bytes; un fichero de exactamente ese tamaño se admite. Si pesa más, no se adjunta y sale el aviso «El documento no puede ser mayor a 2 megabytes». El límite se aplica al adjuntar y no a los ficheros que ya existían.
 
-**Abrir un documento escribe un fichero temporal.** El visor trabaja con una ruta, así que los bytes se dejan en `%TEMP%\GestorSolicitudes\adjuntos\<guid>\<nombre>`. La carpeta se limpia al cerrar la aplicación y al arrancar, por si la sesión anterior terminó mal.
+**Abrir un documento escribe un fichero temporal.** El visor trabaja con una ruta, así que los bytes se dejan en `%TEMP%\GestorSolicitudes\adjuntos\<guid>\<nombre saneado>`. La carpeta se limpia al cerrar la aplicación y al arrancar, por si la sesión anterior terminó mal.
 
 ## Qué aporta y qué no
 
@@ -33,11 +33,11 @@ La entidad no tiene propiedad de navegación desde `Solicitud`: nada la carga al
 
 Al arrancar, después de `EsquemaDb`:
 
-1. Se crea la tabla si no existe.
+1. Se crea la tabla si no existe. Si la base ya es de esta versión y no tiene `RutaCv` ni `RutaCarta`, no se hace nada.
 2. Con SQL (no con el modelo) se leen las filas que aún tienen `RutaCv` o `RutaCarta`.
 3. Para cada fichero que existe, se copian sus bytes a `DocumentosSolicitud` dentro de una transacción y se comprueba que el tamaño coincide. `NombreOriginalCv` o `NombreOriginalCarta` se rellenan con el nombre del fichero si estaban vacíos, y la ruta pasa a `NULL`.
 4. Un fichero que ya no existe deja el campo vacío y se registra en el fichero de errores.
-5. Solo tras confirmar la transacción se borra el fichero migrado y, si queda vacía, la carpeta `adjuntos`.
+5. Solo tras confirmar la transacción se borra el fichero migrado si está dentro de la carpeta `adjuntos` (nunca una ruta arbitraria de la base) y, si queda vacía, la carpeta.
 
 Es idempotente: una fila ya migrada tiene la ruta a `NULL` y no se vuelve a tocar. Los ficheros de más de 2 MB, si los hubiera, también se migran: el límite se aplica al adjuntar. Esta parte se mejorará en otra refactorización.
 
