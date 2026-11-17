@@ -31,6 +31,10 @@ public partial class App : Application
         // del arranque se quede sin registro ni aviso.
         this.RegistrarManejadoresDeErrores();
 
+        // Un cierre abrupto deja los temporales de adjuntos en disco: se borran aquí
+        // antes de abrir ningún documento.
+        TemporalesAdjuntos.Limpiar();
+
         // Una sola copia abierta: dos contextos sobre la misma base se pisan sin avisar.
         // La segunda avisa a la primera (que mostrará su ventana) y se cierra sin abrir nada.
         this.instancia = new InstanciaUnica();
@@ -153,6 +157,10 @@ public partial class App : Application
         this.viewModel?.Dispose();
         this.db?.Dispose();
         this.instancia?.Dispose();
+
+        // Los documentos abiertos se copiaron a %TEMP% para el visor: no deben sobrevivir
+        // a la sesión.
+        TemporalesAdjuntos.Limpiar();
         base.OnExit(e);
     }
 }

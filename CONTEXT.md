@@ -11,11 +11,11 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
 - ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.15 hechos; queda E.16.
+- ✅ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1–E.16. Hecho; pendiente la prueba manual de la sección 4 (E.12 y E.16).
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-E.16 (`feat: limpiar los temporales al cerrar y al arrancar`): llamar a `TemporalesAdjuntos.Limpiar()` en `App.OnExit` y en `App.OnStartup` (por si la aplicación se cerró mal), y hacer la prueba manual de la sección 4. No hacer push sin que se pida.
+F.1 (`docs: actualizar el README`): documentos en la base de datos con el límite de 2 MB, instancia única, manejador de errores y fichero de registro, fechas coherentes, atajos y estados. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
