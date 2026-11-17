@@ -8,10 +8,10 @@ Plan: `02-DOCS/plan-refactor-ponytail.md` (leer solo la etapa en curso; nace de 
 - ✅ C: instancia única y fechas (C.1–C.5).
 - ✅ D: detalles menores (D.1–D.3).
 - ✅ E: documentos en la base de datos (E.1–E.16). Faltan pruebas manuales E.6, E.12 y E.16.
-- 🔄 F: documentación y cierre (F.1–F.4). F.1–F.3 hechos; falta F.4.
+- ✅ F: documentación y cierre (F.1–F.4).
 
 ## Siguiente paso concreto
-F.4 `chore: pasada final de sonarcloud-gate`.
+Hacer las pruebas manuales pendientes y mergear el PR #32 (Quality Gate en verde).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
