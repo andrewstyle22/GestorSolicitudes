@@ -26,7 +26,7 @@ el comportamiento real.
 - Mira antes el fichero `*Tests.cs` que ya cubre esa clase o método
   (`ViewModelTests`, `TextoYCsvTests` —texto de búsqueda y CSV—,
   `EmbudoHelperTests`, `ConvertidorTests`, `LocalizacionTests`, `SolicitudTests`,
-  `AdjuntosHelperTests`, ...) y añade junto a los existentes. No crees un fichero
+  ...) y añade junto a los existentes. No crees un fichero
   nuevo si ya existe el natural.
 - Nombre del test: `Método_ComportamientoEsperado`.
 - Un método con varias ramas → `[Theory]`/`[InlineData]` con los casos borde, no

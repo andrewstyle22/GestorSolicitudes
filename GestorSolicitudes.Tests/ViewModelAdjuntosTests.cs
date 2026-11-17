@@ -198,11 +198,10 @@ public class ViewModelAdjuntosTests
     public void AdjuntarCv_YGuardar_PersisteElNombreSinRuta()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         string origen = Path.Combine(TestDb.NuevaCarpeta(), "mi-cv.pdf");
         File.WriteAllText(origen, "cv");
         var dialogo = new DialogoFalso { FicheroElegido = origen };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
         vm.RellenarObligatorios("ACME", "Dev");
 
@@ -214,22 +213,19 @@ public class ViewModelAdjuntosTests
         vm.GuardarCommand.Execute(null);
 
         Assert.Equal("mi-cv.pdf", db.Solicitudes.Single().NombreOriginalCv);
-        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]
     public void AdjuntarCv_ConDosMegasExactos_SeAdjunta()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes) };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCvCommand.Execute(null);
 
         Assert.Equal(AdjuntosHelper.TamanoMaximoBytes, vm.Editor!.CvContenido!.Length);
-        Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Empty(dialogo.Avisos);
     }
 
@@ -237,16 +233,14 @@ public class ViewModelAdjuntosTests
     public void AdjuntarCv_ConUnByteDeMas_AvisaYNoAdjunta()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes + 1) };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCvCommand.Execute(null);
 
         Assert.Null(vm.Editor!.CvContenido);
         Assert.Null(vm.Editor.NombreOriginalCv);
-        Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Equal(Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"), Assert.Single(dialogo.Avisos));
     }
 
@@ -254,15 +248,13 @@ public class ViewModelAdjuntosTests
     public void AdjuntarCarta_ConDosMegasExactos_SeAdjunta()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes) };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCartaCommand.Execute(null);
 
         Assert.Equal(AdjuntosHelper.TamanoMaximoBytes, vm.Editor!.CartaContenido!.Length);
-        Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Empty(dialogo.Avisos);
     }
 
@@ -270,16 +262,14 @@ public class ViewModelAdjuntosTests
     public void AdjuntarCarta_ConUnByteDeMas_AvisaYNoAdjunta()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         var dialogo = new DialogoFalso { FicheroElegido = CrearFicheroDeBytes(AdjuntosHelper.TamanoMaximoBytes + 1) };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCartaCommand.Execute(null);
 
         Assert.Null(vm.Editor!.CartaContenido);
         Assert.Null(vm.Editor.NombreOriginalCarta);
-        Assert.Empty(Directory.GetFiles(carpeta));
         Assert.Equal(Localizacion.Texto("Mensaje.AdjuntoDemasiadoGrande"), Assert.Single(dialogo.Avisos));
     }
 
@@ -450,16 +440,15 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
-    public void AdjuntarCv_DosVecesAntesDeGuardar_ConservaSoloElUltimoYNoCopiaNada()
+    public void AdjuntarCv_DosVecesAntesDeGuardar_ConservaSoloElUltimo()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         string primero = Path.Combine(TestDb.NuevaCarpeta(), "cv-1.pdf");
         string segundo = Path.Combine(TestDb.NuevaCarpeta(), "cv-2.pdf");
         File.WriteAllText(primero, "uno");
         File.WriteAllText(segundo, "dos");
         var dialogo = new DialogoFalso { FicheroElegido = primero };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
         vm.RellenarObligatorios("ACME", "Dev");
 
@@ -469,7 +458,6 @@ public class ViewModelAdjuntosTests
 
         Assert.Equal(File.ReadAllBytes(segundo), vm.Editor!.CvContenido);
         Assert.Equal("cv-2.pdf", vm.Editor.NombreOriginalCv);
-        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]

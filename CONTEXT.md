@@ -11,11 +11,11 @@ Plan anterior, ya terminado: `02-DOCS/plan-refactor-edicion.md` (etapas 0 a 5; s
 - ✅ B: límite de 2 MB para CV y carta, B.1. Hecho; pendiente la prueba manual de la sección 4.
 - ✅ C: instancia única y fechas coherentes (hallazgos 4 y 5), C.1–C.5. Hecho.
 - ✅ D: detalles menores (hallazgos 7, 9 y 10), D.1–D.3. Hecho.
-- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.14 hechos; quedan E.15–E.16.
+- ⬜ E: documentos en la base de datos (tabla `DocumentosSolicitud`, migración y limpieza), E.1 a E.15 hechos; queda E.16.
 - ⬜ F: documentación y cierre, F.1–F.4.
 
 ## Siguiente paso concreto
-E.15 (`refactor: eliminar GestorAdjuntos y las copias en disco`): se retira `GestorAdjuntos` con su lista de copias, y `Eliminar`, `Cancelar` y *Descartar* dejan de tocar ficheros. `AdjuntosHelper` conserva solo la constante de tamaño y la carpeta que usa la migración. Se adaptan el constructor de `MainViewModel` (`carpetaAdjuntos`), sus tests y `AdjuntosHelperTests`. No hacer push sin que se pida.
+E.16 (`feat: limpiar los temporales al cerrar y al arrancar`): llamar a `TemporalesAdjuntos.Limpiar()` en `App.OnExit` y en `App.OnStartup` (por si la aplicación se cerró mal), y hacer la prueba manual de la sección 4. No hacer push sin que se pida.
 
 ## Decisiones vigentes de esta refactorización
 - Etapa 6 anterior: se comprueba con tests (A.1). Los tests que ya pasan se commitean como regresión; los que fallen se commitean con su arreglo (A.2, A.3 o A.4). A.4 se hace siempre.
@@ -34,7 +34,8 @@ E.15 (`refactor: eliminar GestorAdjuntos y las copias en disco`): se retira `Ges
 - Selección y recarga: tras repaginar, `Paginar` repone `solicitudAbierta` con `SeleccionarSinAviso` si sigue en la página (D.2); el panel abierto y la fila resaltada no se contradicen.
 - Documentos en la base de datos: tabla aparte `DocumentosSolicitud` (`SolicitudId`, `Cv` y `Carta` BLOB anulables, borrado en cascada), sin navegación desde `Solicitud`, leída solo al pulsar «abrir». `Solicitud` conserva `NombreOriginalCv` y `NombreOriginalCarta`; `TieneCv` y `TieneCarta` salen de ellos. El contenido nuevo vive en el editor hasta guardar. Abrir escribe un temporal en `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al cerrar y al arrancar. No ahorra espacio; aporta copia de seguridad en un solo fichero.
 - Migración al arrancar (E.6): `App.OnStartup` la ejecuta con SQL, transacción, comprobación de tamaño y borrado de los ficheros antiguos tras confirmar, después de `EsquemaDb` y antes de crear el ViewModel. Un fallo se registra en `RegistroErrores` y no impide arrancar; las rutas quedan intactas y se reintenta en el siguiente inicio.
-- `RutaCv`, `RutaCarta`, la sobrecarga `AsignarCv(ruta, nombre)` y el respaldo `Archivo(ruta)` de `NombreCv` ya no existen (E.14). `EsquemaDb` deja de crear las columnas en bases nuevas; en las antiguas quedan sin usar. `Adjunto` ya no lleva `Ruta` y el editor ya no tiene `RutaCv`/`RutaCarta`. `GestorAdjuntos` sigue hasta E.15, pero sus llamadas ya no reciben rutas.
+- `RutaCv`, `RutaCarta`, la sobrecarga `AsignarCv(ruta, nombre)` y el respaldo `Archivo(ruta)` de `NombreCv` ya no existen (E.14). `EsquemaDb` deja de crear las columnas en bases nuevas; en las antiguas quedan sin usar. `Adjunto` ya no lleva `Ruta` y el editor ya no tiene `RutaCv`/`RutaCarta`.
+- `GestorAdjuntos` y las copias en disco ya no existen (E.15): `Eliminar`, `Cancelar` y *Descartar* solo limpian el búfer y el change tracker. `AdjuntosHelper` conserva `TamanoMaximoBytes` y `Carpeta` (esta solo la usa la migración).
 - `TieneCv` y `TieneCarta` (E.7) miran que `NombreOriginalCv`/`NombreOriginalCarta` no esté vacío. `AsignarCv(nombre)` y `AsignarCarta(nombre)` solo escriben el nombre (E.14).
 - Editor y documentos (E.8): `CvContenido` y `CartaContenido` (`byte[]?`) guardan el contenido pendiente y marcan `HayCambios`; `CargarDesde` los deja nulos porque la base no se lee al abrir. `AdjuntoCv` y `AdjuntoCarta` toman el nombre de `NombreOriginal…`, sin ruta (E.14).
 - Adjuntar (E.9): `LectorAdjuntos.Leer` deja los bytes y el nombre en el editor; no se copia nada a disco. El aviso de 2 MB sale de `DocumentoDemasiadoGrandeException`. `QuitarAdjunto` limpia contenido y nombre.

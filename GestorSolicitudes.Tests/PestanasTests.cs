@@ -132,7 +132,6 @@ public class PestanasTests
         using var vm = new MainViewModel(
             db,
             rutaColumnas: Path.Combine(TestDb.NuevaCarpeta(), "columnas.txt"),
-            carpetaAdjuntos: TestDb.NuevaCarpeta(),
             dialogo: new DialogoFalso { RespuestaPreguntarGuardar = ResultadoGuardar.Descartar });
         vm.SolicitudSeleccionada = new SolicitudBuilder()
             .ConEmpresa("ACME")

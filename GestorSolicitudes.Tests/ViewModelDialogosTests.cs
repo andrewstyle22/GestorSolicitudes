@@ -889,36 +889,32 @@ public class ViewModelDialogosTests
     public void AdjuntarCv_LeeElFicheroYPoneElNombreOriginal()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         string origen = Path.Combine(TestDb.NuevaCarpeta(), "mi-cv.pdf");
         File.WriteAllText(origen, "cv");
         var dialogo = new DialogoFalso { FicheroElegido = origen };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCvCommand.Execute(null);
 
         Assert.Equal(File.ReadAllBytes(origen), vm.Editor!.CvContenido);
         Assert.Equal("mi-cv.pdf", vm.Editor.NombreOriginalCv);
-        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]
     public void AdjuntarCarta_LeeElFicheroYPoneElNombreOriginal()
     {
         using var db = TestDb.NuevoContexto();
-        string carpeta = TestDb.NuevaCarpeta();
         string origen = Path.Combine(TestDb.NuevaCarpeta(), "carta.docx");
         File.WriteAllText(origen, "carta");
         var dialogo = new DialogoFalso { FicheroElegido = origen };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: carpeta, dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCartaCommand.Execute(null);
 
         Assert.Equal(File.ReadAllBytes(origen), vm.Editor!.CartaContenido);
         Assert.Equal("carta.docx", vm.Editor.NombreOriginalCarta);
-        Assert.Empty(Directory.GetFiles(carpeta));
     }
 
     [Fact]
@@ -943,7 +939,7 @@ public class ViewModelDialogosTests
         {
             FicheroElegido = Path.Combine(TestDb.NuevaCarpeta(), "no-existe.pdf"),
         };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: TestDb.NuevaCarpeta(), dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCvCommand.Execute(null);
@@ -962,7 +958,7 @@ public class ViewModelDialogosTests
         {
             FicheroElegido = Path.Combine(TestDb.NuevaCarpeta(), "no-existe.docx"),
         };
-        using var vm = new MainViewModel(db, carpetaAdjuntos: TestDb.NuevaCarpeta(), dialogo: dialogo);
+        using var vm = new MainViewModel(db, dialogo: dialogo);
         vm.NuevaCommand.Execute(null);
 
         vm.AdjuntarCartaCommand.Execute(null);

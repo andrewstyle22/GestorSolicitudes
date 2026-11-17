@@ -20,7 +20,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly AppDbContext db;
     private readonly IDialogoService dialogo;
     private readonly Action<Idioma> cambiarIdioma;
-    private readonly GestorAdjuntos adjuntos;
     private readonly string rutaPreferenciaCsv;
     private readonly string carpetaTemporales;
     private bool actualizandoIdioma;
@@ -32,7 +31,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     internal MainViewModel(
         AppDbContext db,
         string? rutaColumnas = null,
-        string? carpetaAdjuntos = null,
         IDialogoService? dialogo = null,
         Action<Idioma>? cambiarIdioma = null,
         string? rutaPreferenciaCsv = null,
@@ -40,7 +38,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         this.db = db;
         this.ColumnasVm = new ColumnasViewModel(rutaColumnas);
-        this.adjuntos = new GestorAdjuntos(carpetaAdjuntos ?? AdjuntosHelper.Carpeta);
         this.dialogo = dialogo ?? new DialogosNulos();
         this.cambiarIdioma = cambiarIdioma ?? (_ => { });
         this.rutaPreferenciaCsv = rutaPreferenciaCsv ?? PreferenciaCsv.Ruta;
@@ -896,8 +893,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return false;
         }
 
-        this.adjuntos.DescartarCopias();
-
         // Se busca después de guardar: si la base no responde, el error ya lo ha contado Persistir.
         Solicitud? candidaturaRepetida = esNueva ? this.BuscarCandidaturaRepetida(solicitud) : null;
         if (candidaturaRepetida is not null)
@@ -1156,8 +1151,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Tira los cambios del búfer: borra las copias de adjuntos que no llegaron a guardarse y
-    /// desengancha lo que EF tenía en seguimiento, para que la próxima consulta vuelva a leer disco.
+    /// Tira los cambios del búfer y desengancha lo que EF tenía en seguimiento, para que la
+    /// próxima consulta vuelva a leer de la base.
     /// </summary>
     private void DescartarCambios()
     {
@@ -1166,7 +1161,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.adjuntos.DescartarCopias();
         this.db.ChangeTracker.Clear();
     }
 
@@ -1194,8 +1188,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 Localizacion.Texto(Traducciones.ClaveError));
             return;
         }
-
-        this.adjuntos.DescartarCopias();
 
         this.Abrir(null);
         this.SolicitudSeleccionada = null;

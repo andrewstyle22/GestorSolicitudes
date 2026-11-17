@@ -197,8 +197,7 @@ PreferenciaCsv.cs → separador del CSV guardado en %APPDATA%\...\csv.txt
 EnumHelper.cs → enum → texto traducido (cae a [Description] si falta la clave)
 Convertidores.cs, ColoresEstado.cs → enum → texto, null → Visibility, estado → color, interés → estrellas
 
-AdjuntosHelper.cs → copia un fichero suelto a %APPDATA%\...\adjuntos y borra solo lo que vive ahí
-GestorAdjuntos.cs → ciclo de vida de los adjuntos de una edición (copias, sustituciones y descartes)
+AdjuntosHelper.cs → límite de 2 MB y carpeta de los adjuntos antiguos que usa la migración
 DocumentoHelper.cs → extrae el texto de DOCX/ODT para el visor de adjuntos
 ColumnasHelper.cs → lee/escribe las columnas visibles en %APPDATA%\...\columnas.txt
 Paginador.cs → recorte puro de una lista a la página actual (rango y flechas)

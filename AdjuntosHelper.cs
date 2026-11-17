@@ -1,66 +1,18 @@
 namespace GestorSolicitudes.Helpers;
 
-using System.Diagnostics;
 using System.IO;
 
 /// <summary>
-/// Copia y borra los adjuntos (CV, carta) en %APPDATA%\GestorSolicitudes\adjuntos.
-/// Se copian al adjuntar para que sobrevivan aunque se mueva o borre el original,
-/// y solo se borran ficheros que están dentro de esta carpeta: jamás uno arbitrario.
-/// El nombre en disco es solo un GUID (evita colisiones y problemas con caracteres raros);
-/// el nombre "bonito" que ve el usuario se guarda aparte, en Solicitud.NombreOriginalCv/Carta.
+/// Constante de tamaño de los documentos y carpeta donde vivían los adjuntos copiados en disco.
+/// La carpeta solo la usa la migración a la base de datos: ya no se copian ficheros ahí.
 /// </summary>
 public static class AdjuntosHelper
 {
-    /// <summary>Peso máximo de un adjunto (2 MB). El editor lo comprueba antes de copiar.</summary>
+    /// <summary>Peso máximo de un adjunto (2 MB). El editor lo comprueba antes de leer.</summary>
     public const int TamanoMaximoBytes = 2 * 1024 * 1024;
 
     public static string Carpeta { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "GestorSolicitudes",
         "adjuntos");
-
-    /// <summary>Copia el fichero elegido a la carpeta de adjuntos y devuelve su nueva ruta.</summary>
-    public static string Copiar(string origen, string etiqueta, string carpeta)
-    {
-        Directory.CreateDirectory(carpeta);
-
-        string extension = Path.GetExtension(origen);
-        string nombre = $"{etiqueta}-{Guid.NewGuid():N}{extension}";
-        string destino = Path.Combine(carpeta, nombre);
-
-        File.Copy(origen, destino);
-        return destino;
-    }
-
-    /// <summary>Borra un adjunto solo si es de la carpeta de adjuntos. Los errores se ignoran.</summary>
-    public static void Eliminar(string? ruta, string carpeta)
-    {
-        if (string.IsNullOrWhiteSpace(ruta))
-        {
-            return;
-        }
-
-        try
-        {
-            // Canonicalizar evita que "carpeta\..\otro" pase por estar dentro.
-            string carpetaCompleta = Path.GetFullPath(carpeta) + Path.DirectorySeparatorChar;
-            string rutaCompleta = Path.GetFullPath(ruta);
-
-            if (!rutaCompleta.StartsWith(carpetaCompleta, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            if (File.Exists(rutaCompleta))
-            {
-                File.Delete(rutaCompleta);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Dejar un fichero huérfano es mejor que romper la aplicación, pero se deja rastro.
-            Debug.WriteLine($"No se pudo borrar el adjunto '{ruta}': {ex}");
-        }
-    }
 }
