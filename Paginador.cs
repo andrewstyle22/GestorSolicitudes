@@ -8,7 +8,7 @@ public static class Paginador
 {
     /// <summary>
     /// Devuelve la página <paramref name="paginaActual"/> de <paramref name="elementos"/>.
-    /// La página se recorta al rango válido; un tamaño menor o igual que cero muestra todo.
+    /// La página se recorta al rango válido; un tamaño menor o igual que cero muestra la colección entera.
     /// </summary>
     public static ResultadoPagina<T> Paginar<T>(
         IReadOnlyList<T> elementos,

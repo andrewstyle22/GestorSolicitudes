@@ -4,7 +4,7 @@ using GestorSolicitudes.Helpers;
 
 public class PaginadorTests
 {
-    private static readonly IReadOnlyList<int> Veinticinco = Enumerable.Range(1, 25).ToList();
+    private static readonly List<int> Veinticinco = Enumerable.Range(1, 25).ToList();
 
     [Fact]
     public void Paginar_PrimeraPaginaRecortaYHabilitaSoloAvanzar()
