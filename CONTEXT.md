@@ -3,20 +3,20 @@
 Plan: `02-DOCS/plan-refactor-ponytail.md` (leer solo la etapa en curso; nace de `02-DOCS/auditoria-ponytail.md`). Anterior: `plan-refactor-edicion.md` (0–5; su 6 la sustituye A).
 
 ## Etapas Ponytail
-- ✅ A: guardado, navegación, errores y atajos (A.0–A.11). Falta prueba manual.
-- ✅ B: límite de 2 MB (B.1). Falta prueba manual.
+- ✅ A: guardado, navegación, errores y atajos (A.0–A.11).
+- ✅ B: límite de 2 MB (B.1).
 - ✅ C: instancia única y fechas (C.1–C.5).
 - ✅ D: detalles menores (D.1–D.3).
-- ✅ E: documentos en la base de datos (E.1–E.16). Faltan pruebas manuales E.6, E.12 y E.16.
+- ✅ E: documentos en la base de datos (E.1–E.16).
 - ✅ F: documentación y cierre (F.1–F.4).
 
 ## Siguiente paso concreto
-Hacer las pruebas manuales pendientes y mergear el PR #32 (Quality Gate en verde).
+Plan Ponytail terminado, con las pruebas manuales hechas. Mergear el PR #32 (Quality Gate en verde). Después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
 - `AplicarEventos` empareja por `Original`, nunca por posición ni `Id`; `Guardar` borra los `EventosEliminados`.
-- Solo se prohíbe cerrado → «Oferta aceptada» (`AdmiteTransicion`); `EstadosDisponibles` sale de `estadoOriginal` y se recalcula al cambiar de idioma.
+- Solo se prohíbe cerrado → «Oferta aceptada» (`AdmiteTransicion`); «Oferta aceptada» → otros cierres se permite como corrección; `EstadosDisponibles` sale de `estadoOriginal` y se recalcula al cambiar de idioma.
 - `ResolverCambiosPendientes` también mira `ChangeTracker.HasChanges()`: un guardado fallido deja la entidad sucia.
 - `RegistroErrores` nunca lanza y se recorta a 1 MB; solo `ManejadorErrores.Avisar` tiene test y los enganches de `App` van excluidos de cobertura.
 - Documentos: máximo 2 MB y `LectorAdjuntos` mide antes de reservar; el aviso lo pone el ViewModel.
@@ -32,7 +32,9 @@ Hacer las pruebas manuales pendientes y mergear el PR #32 (Quality Gate en verde
 - CSV: separador recordado, motivo y reapertura, apóstrofo ante `= + - @`, tabulador o retorno, aun tras espacios.
 - `FechaSolicitud` mueve el hito de envío y el seguimiento solo si coincidían.
 - Atajos: `PropertyChanged` solo en texto; se confirma el control con el foco antes de Ctrl+S/N y cerrar.
-- Los hitos que crea el modelo guardan texto en castellano; traducirlos al mostrar queda pendiente.
+- `RespuestaEmpresa` y `Notas` son texto libre sin límite.
+- La reapertura guarda la nota (`NotaReapertura`, 300 caracteres) solo en el hito, no admite «Sin respuesta» como destino y `FechaReapertura` (solo la última) alimenta `DiasProceso`, la insignia ↻ y el borde `#DB2777`.
+- Los hitos que crea el modelo guardan texto en castellano con el prefijo compartido `Reabierta. `; traducirlos al mostrar queda pendiente.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -43,10 +45,11 @@ Hacer las pruebas manuales pendientes y mergear el PR #32 (Quality Gate en verde
 - Al terminar cada paso, este fichero se actualiza en el mismo commit.
 
 ## Puntos de control
-- Pruebas manuales (sección 4): A.7, A.9–A.11, C.3, E.6, E.12 y E.16.
+- Pruebas manuales de la sección 4 del plan Ponytail: hechas y superadas.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
 
 ## Fuera del plan
+- Reorganización en carpetas, en una rama aparte tras mergear Ponytail, con los namespaces siguiendo las carpetas. Antes de mover nada hay que hacer `FuentesTests` independiente de la estructura (rutas fijas y `TopDirectoryOnly`) y actualizar los `<Page>` del csproj; `IDialogoService` y `DialogosNulos` se quedan en `ViewModels` y `DialogoService` en `Views`. Se activará IDE0130 como aviso al terminar.
 - Hallazgo 6 (CI duplicado) y protección de rama en GitHub.
 - Migración de adjuntos y vista previa de imágenes.
 - Seguimiento `FechaReapertura + 7` puede caer en el pasado.
