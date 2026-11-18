@@ -338,6 +338,120 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void FiltroSoloCerradas_ExcluyeLasAbiertas()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Abierta").ConPuesto("A").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Cerrada").ConPuesto("B").ConEstado(EstadoSolicitud.Rechazada).Construir());
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.SoloCerradas = true;
+
+        Assert.Single(vm.Solicitudes);
+        Assert.Equal("Cerrada", vm.Solicitudes[0].Empresa);
+    }
+
+    [Fact]
+    public void FiltroPorFechas_MuestraSoloElRangoInclusivo()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Antes").ConPuesto("A")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10)).Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Dentro").ConPuesto("B")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-5)).Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Despues").ConPuesto("C")
+            .ConFechaSolicitud(DateTime.Today.AddDays(1)).Construir());
+        db.SaveChanges();
+
+        vm.FechaDesde = DateTime.Today.AddDays(-5);
+        vm.FechaHasta = DateTime.Today;
+        vm.BuscarFechasCommand.Execute(null);
+
+        Assert.Single(vm.Solicitudes);
+        Assert.Equal("Dentro", vm.Solicitudes[0].Empresa);
+    }
+
+    [Fact]
+    public void FiltroPorFechas_NoSeAplicaHastaPulsarBuscar()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Antes").ConPuesto("A")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-10)).Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Hoy").ConPuesto("B").Construir());
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.FechaDesde = DateTime.Today;
+        vm.FechaHasta = DateTime.Today;
+
+        Assert.Equal(2, vm.Solicitudes.Count);
+
+        vm.BuscarFechasCommand.Execute(null);
+
+        Assert.Single(vm.Solicitudes);
+        Assert.Equal("Hoy", vm.Solicitudes[0].Empresa);
+    }
+
+    [Fact]
+    public void LimpiarFechas_QuitaElRangoYConservaLosDemasFiltros()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Hoy").ConPuesto("A").Construir());
+        db.Solicitudes.Add(new SolicitudBuilder().ConEmpresa("Antigua").ConPuesto("B")
+            .ConFechaSolicitud(DateTime.Today.AddDays(-20)).Construir());
+        db.SaveChanges();
+        vm.Recargar();
+
+        vm.SoloAbiertas = true;
+        vm.FechaDesde = DateTime.Today;
+        vm.FechaHasta = DateTime.Today;
+        vm.BuscarFechasCommand.Execute(null);
+
+        Assert.Single(vm.Solicitudes);
+
+        vm.LimpiarFechasCommand.Execute(null);
+
+        Assert.Equal(2, vm.Solicitudes.Count);
+        Assert.Equal(DateTime.Today, vm.FechaDesde);
+        Assert.Equal(DateTime.Today, vm.FechaHasta);
+    }
+
+    [Fact]
+    public void DesdeHoyYHastaHoy_PonenLaFechaActual()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        vm.DesdeHoyCommand.Execute(null);
+        vm.HastaHoyCommand.Execute(null);
+
+        Assert.Equal(DateTime.Today, vm.FechaDesde);
+        Assert.Equal(DateTime.Today, vm.FechaHasta);
+    }
+
+    [Fact]
+    public void PanelEstadosAbierto_EmpiezaCerradoYAbreAlPedirlo()
+    {
+        using var db = TestDb.NuevoContexto();
+        using var vm = new MainViewModel(db);
+
+        Assert.False(vm.PanelEstadosAbierto);
+
+        vm.PanelEstadosAbierto = true;
+
+        Assert.True(vm.PanelEstadosAbierto);
+    }
+
+    [Fact]
     public void Estadisticas_MidenLaBaseEnteraAunqueLaTablaEsteFiltrada()
     {
         using var db = TestDb.NuevoContexto();

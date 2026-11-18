@@ -68,13 +68,14 @@ public class PaginadorTests
     }
 
     [Fact]
-    public void Paginar_TamanoCeroSeTrataComoUno()
+    public void Paginar_TamanoCeroDevuelveTodosLosElementos()
     {
         ResultadoPagina<int> pagina = Paginador.Paginar(Veinticinco, 0, 1);
 
-        Assert.Single(pagina.Elementos);
-        Assert.Equal(25, pagina.TotalPaginas);
-        Assert.Equal(1, pagina.Hasta);
+        Assert.Equal(Veinticinco.Count, pagina.Elementos.Count);
+        Assert.Equal(1, pagina.TotalPaginas);
+        Assert.Equal(25, pagina.Hasta);
+        Assert.False(pagina.PuedeAvanzar);
     }
 
     [Fact]

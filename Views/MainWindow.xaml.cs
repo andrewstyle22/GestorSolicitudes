@@ -118,6 +118,13 @@ public partial class MainWindow : Window
         }
     }
 
+    // El calendario del filtro se cierra al elegir un día; el botón Hoy lo cierra el ViewModel.
+    private void CalendarioDesde_SelectedDatesChanged(object sender, SelectionChangedEventArgs e) =>
+        this.vm.PanelDesdeAbierto = false;
+
+    private void CalendarioHasta_SelectedDatesChanged(object sender, SelectionChangedEventArgs e) =>
+        this.vm.PanelHastaAbierto = false;
+
     // ------------------------------------------------------------ Recordatorios
 
     /// <summary>

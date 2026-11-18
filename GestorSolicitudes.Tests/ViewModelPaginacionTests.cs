@@ -5,7 +5,7 @@ using GestorSolicitudes.ViewModels;
 
 public class ViewModelPaginacionTests
 {
-    private static readonly int[] TamanosPaginaEsperados = { 5, 10, 20, 30 };
+    private static readonly int[] TamanosPaginaEsperados = { 5, 10, 20, 30, 0 };
 
     // ---------------------------------------------------------------- Paginación
 
@@ -153,6 +153,22 @@ public class ViewModelPaginacionTests
             // La página 5 ya no existe con 20 por página, así que se recorta a la última.
             Assert.Equal(2, vm.Pagina.PaginaActual);
             Assert.Equal(Rango(21, 25, 25), vm.RangoPagina);
+        }
+    }
+
+    [Fact]
+    public void Paginacion_TodasMuestraLasVeinticincoEnUnaSolaPagina()
+    {
+        var (db, vm) = ConVeinticincoSolicitudes();
+        using (db)
+        using (vm)
+        {
+            vm.TamanoPagina = 0;
+
+            Assert.Equal(1, vm.Pagina.TotalPaginas);
+            Assert.Equal(25, vm.Solicitudes.Count);
+            Assert.Equal(Rango(1, 25, 25), vm.RangoPagina);
+            Assert.False(vm.Pagina.PuedeAvanzar);
         }
     }
 
