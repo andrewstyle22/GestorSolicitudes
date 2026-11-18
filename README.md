@@ -297,7 +297,8 @@ nunca por el combo de estado. `CambiarEstado` rechaza el paso de cerrado a abier
 válido en los tres cierres negativos, lo limpia en el resto y fija hoy como fecha de cierre si
 falta. No se añaden estados nuevos: «Reabierta» es una acción, no un estado. Desde cualquier estado
 abierto se puede pasar a *Oferta aceptada* u *Oferta rechazada por mí*; una oferta ya cerrada se
-acepta reabriéndola antes a *Oferta recibida*. Las tablas de transiciones y las decisiones están en
+acepta reabriéndola antes a *Oferta recibida*. En cambio, una oferta aceptada sí puede pasar a *Descartado*,
+*Retirada* u *Oferta rechazada por mí* como corrección; el porqué se anota en las notas. Las tablas de transiciones y las decisiones están en
 [`02-DOCS/decisiones/estados-y-reapertura.md`](02-DOCS/decisiones/estados-y-reapertura.md).
 
 **El motivo de cierre sigue llamándose `MotivoRechazo`.** El enum y la propiedad no se renombraron
