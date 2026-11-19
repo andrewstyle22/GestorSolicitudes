@@ -47,6 +47,7 @@ Plan Ponytail terminado, con las pruebas manuales hechas. Mergear el PR #32 (Qua
 
 ## Puntos de control
 - Pruebas manuales de la sección 4 del plan Ponytail: hechas y superadas.
+- Segunda auditoría Ponytail evaluada: solo 2 de sus 15 hallazgos eran válidos, ya resueltos en los dos commits anteriores.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
 
 ## Fuera del plan

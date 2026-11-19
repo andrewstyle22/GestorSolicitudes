@@ -23,7 +23,7 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 - **Entidades POCO sin `INotifyPropertyChanged`**: el panel de detalle edita un búfer (`Editor`, `SolicitudEdicionViewModel`) y la entidad solo se escribe al pulsar Guardar (`Editor.AplicarA`). La UI no bindea contra la entidad: no expongas `Solicitud` para editar.
 - **Un solo `AppDbContext` durante toda la sesión** (explota el change tracking de EF).
 - **Los modelos no exponen setters públicos** (lo vigila un test por reflexión): `Solicitud` y `Evento` solo cambian por métodos de negocio (`Actualizar…`, `CambiarEstado`, `Reabrir`, `AgregarEvento`…) y EF escribe por campo.
-- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Su `set` es privado, así que se escribe desde un método de negocio de `Solicitud` (con su constante `LongitudMaximaX` si es texto, compartida por `[MaxLength]` y la validación). Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`), añadirla al editor (`CargarDesde`, su `Aplicar…` y la validación de longitud) y darle test y traducción si se ve. Los enums se guardan como entero. Un BLOB no va en `Solicitud`: va en `DocumentosSolicitud` y se lee solo al abrir.
+- **Añadir una propiedad a `Solicitud`**: no hay migraciones. Su `set` es privado, así que se escribe desde un método de negocio de `Solicitud` (con su constante `LongitudMaximaX` si es texto, compartida por `[MaxLength]` y la validación). Hay que registrarla en los arrays de `VerificarColumnasFaltantes` (`EsquemaDb.cs`, namespace `Data`); si se olvida, el test `VerificarColumnas_CubreTodasLasColumnasDelModelo` falla. Añadirla al editor (`CargarDesde`, su `Aplicar…` y la validación de longitud) y darle test y traducción si se ve. Los enums se guardan como entero. Un BLOB no va en `Solicitud`: va en `DocumentosSolicitud` y se lee solo al abrir.
 - **XAML nuevo**: el csproj declara las páginas a mano (`EnableDefaultPageItems=false`): hay que añadir el `<Page>` al csproj o no se compila a BAML y la app falla buscando el recurso.
 
 ## Documentos, errores e instancia única
@@ -56,6 +56,19 @@ Resumen de `02-DOCS/decisiones/estados-y-reapertura.md`:
 - **Respuesta de la empresa:** `EsRespuestaDeLaEmpresa` cuenta los estados abiertos salvo «Enviada» y «Sin respuesta», más «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Solo «Retirada por mí» no cuenta. Los datos antiguos no se corrigen.
 - **Descripción de eventos:** `Evento.LongitudMaximaDescripcion` (500) es la única fuente del `[MaxLength]` y de la validación del búfer; `Validar()` incluye los eventos.
 - **Hito `Rechazo`:** se fecha con la `FechaCierre` resultante, no con hoy.
+
+## Decisiones vigentes (deliberadas)
+
+Ninguna auditoría debe «arreglar» lo siguiente sin una razón nueva:
+
+- **`TextoHelper.Escapar`:** decide el apóstrofo con el primer carácter visible del valor original, y `\r` y `\n` ya se sustituyen en la salida.
+- **`PreferenciaCsv.LeerDe`:** no recorta la cadena; el tabulador es un separador válido.
+- **Duplicar:** no copia los adjuntos ni sus nombres; copiar el nombre dejaría `TieneCv` en verdadero sin fila en `DocumentosSolicitud`.
+- **`Recargar`:** lee toda la tabla y los filtros son en memoria; con cientos de filas es suficiente y conserva la identidad de las entidades rastreadas.
+- **`ColumnasHelper.CargarDe`:** ignora las claves desconocidas a propósito.
+- **`TryGuardar`:** recarga el editor desde la entidad tras un fallo; así conserva las ediciones y el contenido pendiente de los documentos.
+- **XAML:** se declaran a mano en el csproj; `FuentesTests` falla si falta alguno.
+- **Esquema:** se mantiene con `EsquemaDb` y no con migraciones; el test de esquema evita olvidos.
 
 ## UI y localización
 
