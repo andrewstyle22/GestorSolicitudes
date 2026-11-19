@@ -8,7 +8,7 @@ public static class Paginador
 {
     /// <summary>
     /// Devuelve la página <paramref name="paginaActual"/> de <paramref name="elementos"/>.
-    /// La página se recorta al rango válido; un tamaño menor que uno se trata como uno.
+    /// La página se recorta al rango válido; un tamaño menor o igual que cero muestra la colección entera.
     /// </summary>
     public static ResultadoPagina<T> Paginar<T>(
         IReadOnlyList<T> elementos,
@@ -17,7 +17,7 @@ public static class Paginador
     {
         ArgumentNullException.ThrowIfNull(elementos);
 
-        int tamano = Math.Max(1, tamanoPagina);
+        int tamano = tamanoPagina <= 0 ? Math.Max(1, elementos.Count) : tamanoPagina;
         int totalPaginas = elementos.Count == 0 ? 0 : ((elementos.Count - 1) / tamano) + 1;
         int pagina = Math.Clamp(paginaActual, 1, Math.Max(totalPaginas, 1));
         int desde = (pagina - 1) * tamano;

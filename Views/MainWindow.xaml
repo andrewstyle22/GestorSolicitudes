@@ -54,26 +54,22 @@
         <Border Grid.Row="0" Background="{StaticResource Panel}"
                 BorderBrush="{StaticResource Borde}" BorderThickness="0,0,0,1"
                 Padding="20,14">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            <Grid x:Name="Grid_Cabecera">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="{DynamicResource TituloVentana}" FontSize="18" FontWeight="Bold" />
                     <TextBlock Text="{DynamicResource SubtituloVentana}"
                                FontSize="12" Foreground="{StaticResource TextoSuave}" />
                 </StackPanel>
 
-                <views:CabeceraMetricas Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" />
+                <views:CabeceraMetricas Grid.Column="1" VerticalAlignment="Center" />
 
-                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel x:Name="StackPanelOpciones" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
                     <!-- Selector de idioma con banderas dibujadas en XAML -->
                     <ComboBox ItemsSource="{Binding IdiomasDisponibles}"
@@ -315,7 +311,7 @@
                     <!-- Filtros -->
                     <Grid Grid.Row="0" Margin="14,14,14,10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MinWidth="260" MaxWidth="360" />
+                            <ColumnDefinition Width="*" MinWidth="260" MaxWidth="320" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
@@ -357,9 +353,98 @@
                                     Command="{Binding LimpiarBusquedaCommand}" />
                         </Grid>
 
-                        <!-- Todo el grupo de la derecha, pegado al borde. -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal"
-                                    VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <!-- Todo el grupo de la derecha, pegado al borde. Al abrirse el detalle
+                             la lista se estrecha y los selectores no caben: se desplazan en horizontal. -->
+                        <ScrollViewer Grid.Column="1" VerticalAlignment="Center"
+                                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <ScrollViewer.Resources>
+                                <Style TargetType="ScrollBar">
+                                    <Style.Triggers>
+                                        <Trigger Property="Orientation" Value="Horizontal">
+                                            <Setter Property="Height" Value="9" />
+                                            <Setter Property="MinHeight" Value="9" />
+                                            <Setter Property="MaxHeight" Value="9" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ScrollViewer.Resources>
+                            <StackPanel x:Name="StackPanel_Selectores" Orientation="Horizontal"
+                                        VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <TextBlock Text="{DynamicResource Filtro.Desde}" FontSize="12" Margin="12,0,0,0"
+                                       Foreground="{StaticResource TextoSuave}" VerticalAlignment="Center" />
+                            <ToggleButton x:Name="BotonDesde" MinWidth="105" Margin="4,0,8,0"
+                                          Style="{StaticResource BotonDesplegable}"
+                                          IsChecked="{Binding PanelDesdeAbierto, Mode=TwoWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding FechaDesde, Converter={StaticResource FechaCorta}}" />
+                                    <TextBlock Text="▾" Margin="6,0,0,0" />
+                                    <Popup Placement="Bottom"
+                                           AllowsTransparency="True"
+                                           StaysOpen="False"
+                                           IsOpen="{Binding PanelDesdeAbierto, Mode=TwoWay}">
+                                        <Border Background="{StaticResource Panel}"
+                                                BorderBrush="{StaticResource Borde}"
+                                                BorderThickness="1" CornerRadius="6"
+                                                Padding="6">
+                                            <StackPanel>
+                                                <Calendar SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
+                                                          SelectedDatesChanged="CalendarioDesde_SelectedDatesChanged" />
+                                                <Button Content="{DynamicResource Filtro.Hoy}"
+                                                        Style="{StaticResource BotonSecundario}"
+                                                        HorizontalContentAlignment="Center"
+                                                        Margin="0,6,0,0"
+                                                        Command="{Binding DesdeHoyCommand}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <TextBlock Text="{DynamicResource Filtro.Hasta}" FontSize="12"
+                                       Foreground="{StaticResource TextoSuave}" VerticalAlignment="Center" />
+                            <ToggleButton x:Name="BotonHasta" MinWidth="105" Margin="4,0,8,0"
+                                          Style="{StaticResource BotonDesplegable}"
+                                          IsChecked="{Binding PanelHastaAbierto, Mode=TwoWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding FechaHasta, Converter={StaticResource FechaCorta}}" />
+                                    <TextBlock Text="▾" Margin="6,0,0,0" />
+                                    <Popup Placement="Bottom"
+                                           AllowsTransparency="True"
+                                           StaysOpen="False"
+                                           IsOpen="{Binding PanelHastaAbierto, Mode=TwoWay}">
+                                        <Border Background="{StaticResource Panel}"
+                                                BorderBrush="{StaticResource Borde}"
+                                                BorderThickness="1" CornerRadius="6"
+                                                Padding="6">
+                                            <StackPanel>
+                                                <Calendar SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
+                                                          SelectedDatesChanged="CalendarioHasta_SelectedDatesChanged" />
+                                                <Button Content="{DynamicResource Filtro.Hoy}"
+                                                        Style="{StaticResource BotonSecundario}"
+                                                        HorizontalContentAlignment="Center"
+                                                        Margin="0,6,0,0"
+                                                        Command="{Binding HastaHoyCommand}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <Button Content="{DynamicResource Filtro.BuscarFechas}" Padding="10,2" Margin="0,0,4,0"
+                                    Style="{StaticResource BotonPrimario}"
+                                    Command="{Binding BuscarFechasCommand}" />
+                            <Button Content="✕" Padding="8,2" Margin="0,0,20,0"
+                                    Style="{StaticResource BotonSecundario}"
+                                    ToolTip="{DynamicResource Filtro.BorrarFechas}"
+                                    AutomationProperties.Name="{DynamicResource Filtro.BorrarFechas}"
+                                    Command="{Binding LimpiarFechasCommand}" />
+
+                            <ComboBox Width="190" Margin="0,0,12,0"
+                                      Style="{StaticResource CampoCombo}"
+                                      ItemsSource="{Binding EstadosFiltro}"
+                                      DisplayMemberPath="Descripcion"
+                                      SelectedItem="{Binding EstadoFiltroItem}" />
+
                             <ToggleButton Margin="0,0,8,0"
                                           Style="{StaticResource BotonDesplegable}"
                                           IsChecked="{Binding ColumnasVm.PanelColumnasAbierto, Mode=TwoWay}">
@@ -391,21 +476,37 @@
                                 </StackPanel>
                             </ToggleButton>
 
-                            <ComboBox Width="190" Margin="0,0,12,0"
-                                      Style="{StaticResource CampoCombo}"
-                                      ItemsSource="{Binding EstadosFiltro}"
-                                      DisplayMemberPath="Descripcion"
-                                      SelectedItem="{Binding EstadoFiltroItem}" />
+                            <ToggleButton x:Name="BotonEstados" Margin="0,0,8,0"
+                                          Style="{StaticResource BotonDesplegable}"
+                                          IsChecked="{Binding PanelEstadosAbierto, Mode=TwoWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource Filtro.Estados}" />
+                                    <TextBlock Text="▾" Margin="6,0,0,0" />
 
-                            <CheckBox Content="{DynamicResource Filtro.SoloAbiertas}" VerticalAlignment="Center"
-                                      IsChecked="{Binding SoloAbiertas}" />
-                            <CheckBox Content="{DynamicResource Filtro.SeguimientoPendiente}" VerticalAlignment="Center"
-                                      Margin="12,0,0,0"
-                                      IsChecked="{Binding SoloConSeguimientoPendiente}" />
-                            <CheckBox Content="{DynamicResource Filtro.Reabiertas}" VerticalAlignment="Center"
-                                      Margin="12,0,0,0"
-                                      IsChecked="{Binding SoloReabiertas}" />
-                        </StackPanel>
+                                    <Popup Placement="Bottom"
+                                           AllowsTransparency="True"
+                                           StaysOpen="False"
+                                           IsOpen="{Binding PanelEstadosAbierto, Mode=TwoWay}">
+                                        <Border Background="{StaticResource Panel}"
+                                                BorderBrush="{StaticResource Borde}"
+                                                BorderThickness="1" CornerRadius="6"
+                                                Padding="12,8" MinWidth="190">
+                                            <StackPanel>
+                                                <CheckBox Content="{DynamicResource Filtro.SoloAbiertas}"
+                                                          IsChecked="{Binding SoloAbiertas}" Margin="0,5" />
+                                                <CheckBox Content="{DynamicResource Filtro.SeguimientoPendiente}"
+                                                          IsChecked="{Binding SoloConSeguimientoPendiente}" Margin="0,5" />
+                                                <CheckBox Content="{DynamicResource Filtro.Reabiertas}"
+                                                          IsChecked="{Binding SoloReabiertas}" Margin="0,5" />
+                                                <CheckBox Content="{DynamicResource Filtro.SoloCerradas}"
+                                                          IsChecked="{Binding SoloCerradas}" Margin="0,5" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
+                                </StackPanel>
+                            </ToggleButton>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
 
                     <!-- Tabla -->
@@ -600,7 +701,25 @@
                             <ComboBox Width="64"
                                       Style="{StaticResource CampoCombo}"
                                       ItemsSource="{Binding TamanosPagina}"
-                                      SelectedItem="{Binding TamanoPagina}" />
+                                      SelectedItem="{Binding TamanoPagina}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="{Binding}" />
+                                                    <Style.Triggers>
+                                                        <!-- 0 en la lista significa "Todas". -->
+                                                        <DataTrigger Binding="{Binding}" Value="0">
+                                                            <Setter Property="Text" Value="{DynamicResource Paginacion.Todas}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal"

@@ -71,8 +71,15 @@ public static class Traducciones
         ("Filtro.BuscarToolTip", "Busca por empresa, puesto, tecnología, ubicación o portal"),
         ("Filtro.BorrarBusqueda", "Borrar la búsqueda"),
         ("Filtro.SoloAbiertas", "Solo abiertas"),
+        ("Filtro.SoloCerradas", "Solo cerradas"),
         ("Filtro.SeguimientoPendiente", "Seguimiento pendiente"),
         ("Filtro.Reabiertas", "Reabiertas"),
+        ("Filtro.Estados", "Estados"),
+        ("Filtro.Desde", "Desde"),
+        ("Filtro.Hasta", "Hasta"),
+        ("Filtro.Hoy", "Hoy"),
+        ("Filtro.BuscarFechas", "Buscar"),
+        ("Filtro.BorrarFechas", "Quitar el filtro de fechas"),
         ("Filtro.TodosLosEstados", "Todos los estados"),
 
         // ----- Columnas de la tabla -----
@@ -93,6 +100,7 @@ public static class Traducciones
 
         // ----- Paginación de la tabla -----
         ("Paginacion.PorPagina", "Filas por página"),
+        ("Paginacion.Todas", "Todas"),
         ("Paginacion.Primero", "Primera página"),
         ("Paginacion.Anterior", "Página anterior"),
         ("Paginacion.Siguiente", "Página siguiente"),
@@ -365,8 +373,15 @@ public static class Traducciones
         ("Filtro.BuscarToolTip", "Search by company, position, technology, location or portal"),
         ("Filtro.BorrarBusqueda", "Clear search"),
         ("Filtro.SoloAbiertas", "Open only"),
+        ("Filtro.SoloCerradas", "Closed only"),
         ("Filtro.SeguimientoPendiente", "Follow-up due"),
         ("Filtro.Reabiertas", "Reopened"),
+        ("Filtro.Estados", "Statuses"),
+        ("Filtro.Desde", "From"),
+        ("Filtro.Hasta", "To"),
+        ("Filtro.Hoy", "Today"),
+        ("Filtro.BuscarFechas", "Search"),
+        ("Filtro.BorrarFechas", "Clear date filter"),
         ("Filtro.TodosLosEstados", "All statuses"),
 
         // ----- Columnas de la tabla -----
@@ -387,6 +402,7 @@ public static class Traducciones
 
         // ----- Paginación de la tabla -----
         ("Paginacion.PorPagina", "Rows per page"),
+        ("Paginacion.Todas", "All"),
         ("Paginacion.Primero", "First page"),
         ("Paginacion.Anterior", "Previous page"),
         ("Paginacion.Siguiente", "Next page"),
@@ -659,8 +675,15 @@ public static class Traducciones
         ("Filtro.BuscarToolTip", "Suche nach Unternehmen, Position, Technologie, Standort oder Portal"),
         ("Filtro.BorrarBusqueda", "Suche löschen"),
         ("Filtro.SoloAbiertas", "Nur offene"),
+        ("Filtro.SoloCerradas", "Nur geschlossene"),
         ("Filtro.SeguimientoPendiente", "Nachverfolgung fällig"),
         ("Filtro.Reabiertas", "Wieder geöffnet"),
+        ("Filtro.Estados", "Status"),
+        ("Filtro.Desde", "Von"),
+        ("Filtro.Hasta", "Bis"),
+        ("Filtro.Hoy", "Heute"),
+        ("Filtro.BuscarFechas", "Suchen"),
+        ("Filtro.BorrarFechas", "Datumsfilter entfernen"),
         ("Filtro.TodosLosEstados", "Alle Status"),
 
         // ----- Columnas de la tabla -----
@@ -681,6 +704,7 @@ public static class Traducciones
 
         // ----- Paginación de la tabla -----
         ("Paginacion.PorPagina", "Zeilen pro Seite"),
+        ("Paginacion.Todas", "Alle"),
         ("Paginacion.Primero", "Erste Seite"),
         ("Paginacion.Anterior", "Vorherige Seite"),
         ("Paginacion.Siguiente", "Nächste Seite"),

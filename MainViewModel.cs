@@ -183,8 +183,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     // ---------------------------------------------------------------- Paginación
 
-    /// <summary>Filas por página que ofrece el desplegable.</summary>
-    public IReadOnlyList<int> TamanosPagina { get; } = new[] { 5, 10, 20, 30 };
+    /// <summary>Filas por página que ofrece el desplegable; cero muestra todas.</summary>
+    public IReadOnlyList<int> TamanosPagina { get; } = new[] { 5, 10, 20, 30, 0 };
 
     [ObservableProperty]
     private int tamanoPagina = 10;
@@ -285,6 +285,68 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private bool soloReabiertas;
 
     partial void OnSoloReabiertasChanged(bool value) => Recargar();
+
+    [ObservableProperty]
+    private bool soloCerradas;
+
+    partial void OnSoloCerradasChanged(bool value) => Recargar();
+
+    /// <summary>
+    /// Abre y cierra el Popup de filtros de estado. Es solo estado de UI: no recarga nada.
+    /// </summary>
+    [ObservableProperty]
+    private bool panelEstadosAbierto;
+
+    // Rango de fechas de la solicitud. Se aplica al pulsar Buscar, no al elegir cada fecha:
+    // los calendarios muestran hoy, pero el filtro arranca en «sin rango».
+    [ObservableProperty]
+    private DateTime? fechaDesde = DateTime.Today;
+
+    [ObservableProperty]
+    private DateTime? fechaHasta = DateTime.Today;
+
+    private DateTime? desdeAplicada;
+    private DateTime? hastaAplicada;
+
+    /// <summary>Popups de los dos calendarios del filtro. Solo estado de UI.</summary>
+    [ObservableProperty]
+    private bool panelDesdeAbierto;
+
+    [ObservableProperty]
+    private bool panelHastaAbierto;
+
+    [RelayCommand]
+    private void BuscarFechas()
+    {
+        this.desdeAplicada = this.FechaDesde;
+        this.hastaAplicada = this.FechaHasta;
+        this.Recargar();
+    }
+
+    /// <summary>Quita el rango de fechas y recarga; los demás filtros siguen como estén.</summary>
+    [RelayCommand]
+    private void LimpiarFechas()
+    {
+        this.FechaDesde = DateTime.Today;
+        this.FechaHasta = DateTime.Today;
+        this.desdeAplicada = null;
+        this.hastaAplicada = null;
+        this.Recargar();
+    }
+
+    [RelayCommand]
+    private void DesdeHoy()
+    {
+        this.FechaDesde = DateTime.Today;
+        this.PanelDesdeAbierto = false;
+    }
+
+    [RelayCommand]
+    private void HastaHoy()
+    {
+        this.FechaHasta = DateTime.Today;
+        this.PanelHastaAbierto = false;
+    }
 
     // ---------------------------------------------------------------- Selección
     [ObservableProperty]
@@ -554,6 +616,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (this.SoloReabiertas)
         {
             lista = lista.Where(s => s.FueReabierta).ToList();
+        }
+
+        if (this.SoloCerradas)
+        {
+            lista = lista.Where(s => !s.EstaAbierta).ToList();
+        }
+
+        // Rango inclusivo sobre la fecha de envío; cada extremo es opcional y solo cuenta
+        // cuando se ha pulsado Buscar.
+        if (this.desdeAplicada is DateTime desde)
+        {
+            lista = lista.Where(s => s.FechaSolicitud >= desde).ToList();
+        }
+
+        if (this.hastaAplicada is DateTime hasta)
+        {
+            lista = lista.Where(s => s.FechaSolicitud <= hasta).ToList();
         }
 
         this.Paginar(lista, pagina);

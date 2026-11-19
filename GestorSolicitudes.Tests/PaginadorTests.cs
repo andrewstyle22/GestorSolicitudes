@@ -4,7 +4,7 @@ using GestorSolicitudes.Helpers;
 
 public class PaginadorTests
 {
-    private static readonly IReadOnlyList<int> Veinticinco = Enumerable.Range(1, 25).ToList();
+    private static readonly List<int> Veinticinco = Enumerable.Range(1, 25).ToList();
 
     [Fact]
     public void Paginar_PrimeraPaginaRecortaYHabilitaSoloAvanzar()
@@ -68,13 +68,14 @@ public class PaginadorTests
     }
 
     [Fact]
-    public void Paginar_TamanoCeroSeTrataComoUno()
+    public void Paginar_TamanoCeroDevuelveTodosLosElementos()
     {
         ResultadoPagina<int> pagina = Paginador.Paginar(Veinticinco, 0, 1);
 
-        Assert.Single(pagina.Elementos);
-        Assert.Equal(25, pagina.TotalPaginas);
-        Assert.Equal(1, pagina.Hasta);
+        Assert.Equal(Veinticinco.Count, pagina.Elementos.Count);
+        Assert.Equal(1, pagina.TotalPaginas);
+        Assert.Equal(25, pagina.Hasta);
+        Assert.False(pagina.PuedeAvanzar);
     }
 
     [Fact]
