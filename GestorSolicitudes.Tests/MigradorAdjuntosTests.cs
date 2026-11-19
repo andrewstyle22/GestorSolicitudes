@@ -149,6 +149,92 @@ public class MigradorAdjuntosTests
     }
 
     [Fact]
+    public void Migrar_FicheroQueExistePeroNoSePuedeLeer_ConservaLaRutaYLoReintentaEnElSiguienteArranque()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, [1, 2, 3]);
+        string registro = Path.Combine(TestDb.NuevaCarpeta(), NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder()
+                .ConNombreOriginalCv(NombreCv)
+                .Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, null);
+        }
+
+        using (new FileStream(ficheroCv, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+        }
+
+        using (var db2 = new AppDbContext(ruta))
+        {
+            Assert.Equal(NombreCv, db2.Solicitudes.Single().NombreOriginalCv);
+            Assert.Empty(db2.Set<DocumentosSolicitud>());
+        }
+
+        Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
+        Assert.True(File.Exists(ficheroCv));
+        Assert.Contains(ficheroCv, File.ReadAllText(registro));
+
+        // Sin el bloqueo, el siguiente arranque la reintenta.
+        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+
+        using var db3 = new AppDbContext(ruta);
+        Assert.Equal([1, 2, 3], db3.Set<DocumentosSolicitud>().Single().Cv);
+        Assert.Null(LeerRutas(ruta, id).Cv);
+        Assert.False(File.Exists(ficheroCv));
+    }
+
+    [Fact]
+    public void Migrar_UnDocumentoIlegible_NoImpideMigrarElOtro()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, [1, 2]);
+        string ficheroCarta = CrearFichero(carpeta, "carta.pdf", [3, 4]);
+        string registro = Path.Combine(TestDb.NuevaCarpeta(), NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, ficheroCarta);
+        }
+
+        using (new FileStream(ficheroCarta, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+        }
+
+        using (var db2 = new AppDbContext(ruta))
+        {
+            DocumentosSolicitud documentos = db2.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == id);
+            Assert.Equal([1, 2], documentos.Cv);
+            Assert.Null(documentos.Carta);
+
+            Solicitud migrada = db2.Solicitudes.Single();
+            Assert.Equal(NombreCv, migrada.NombreOriginalCv);
+            Assert.Null(migrada.NombreOriginalCarta);
+        }
+
+        Assert.Null(LeerRutas(ruta, id).Cv);
+        Assert.Equal(ficheroCarta, LeerRutas(ruta, id).Carta);
+        Assert.False(File.Exists(ficheroCv));
+        Assert.True(File.Exists(ficheroCarta));
+        Assert.Contains(ficheroCarta, File.ReadAllText(registro));
+    }
+
+    [Fact]
     public void Migrar_DosVeces_NoCambiaNadaLaSegundaVez()
     {
         string carpeta = TestDb.NuevaCarpeta();
@@ -225,5 +311,19 @@ public class MigradorAdjuntosTests
         string ruta = Path.Combine(carpeta, nombre);
         File.WriteAllBytes(ruta, contenido);
         return ruta;
+    }
+
+    private static (string? Cv, string? Carta) LeerRutas(string rutaBd, int id)
+    {
+        using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(rutaBd));
+        conexion.Open();
+        using var comando = conexion.CreateCommand();
+        comando.CommandText = "SELECT RutaCv, RutaCarta FROM Solicitudes WHERE Id = $id;";
+        comando.Parameters.AddWithValue("$id", id);
+        using var lector = comando.ExecuteReader();
+        lector.Read();
+        return (
+            lector.IsDBNull(0) ? null : lector.GetString(0),
+            lector.IsDBNull(1) ? null : lector.GetString(1));
     }
 }

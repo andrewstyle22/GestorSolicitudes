@@ -13,11 +13,18 @@ using Microsoft.Data.Sqlite;
 /// </summary>
 internal static class MigradorAdjuntos
 {
+    private const string SqlCv =
+        "UPDATE Solicitudes SET RutaCv = NULL, NombreOriginalCv = $nombre WHERE Id = $id;";
+
+    private const string SqlCarta =
+        "UPDATE Solicitudes SET RutaCarta = NULL, NombreOriginalCarta = $nombre WHERE Id = $id;";
+
     /// <summary>
     /// Migra las filas con ruta pendiente dentro de una transacción. Un fichero que ya no existe
-    /// deja su documento vacío y se registra, sin impedir que se migre el resto. Es idempotente:
-    /// una fila migrada queda sin ruta y no se vuelve a tocar. Tras confirmar la transacción,
-    /// borra los ficheros migrados de la carpeta de adjuntos y la carpeta si queda vacía.
+    /// deja su documento vacío y se registra, sin impedir que se migre el resto. Un fichero que
+    /// existe pero no se puede leer conserva su ruta y se reintenta en el siguiente arranque. Es
+    /// idempotente: una fila migrada queda sin ruta y no se vuelve a tocar. Tras confirmar la
+    /// transacción, borra los ficheros migrados de la carpeta de adjuntos y la carpeta si queda vacía.
     /// </summary>
     public static void Migrar(string ruta, string rutaRegistro, string? carpeta = null)
     {
@@ -55,24 +62,24 @@ internal static class MigradorAdjuntos
         string rutaRegistro,
         List<string> migradas)
     {
-        (byte[]? cv, string? nombreCv) = LeerAdjunto(
+        LecturaAdjunto cv = LeerAdjunto(
             fila.RutaCv, fila.NombreCv, $"el CV de la candidatura {fila.Id}", rutaRegistro, migradas);
-        (byte[]? carta, string? nombreCarta) = LeerAdjunto(
+        LecturaAdjunto carta = LeerAdjunto(
             fila.RutaCarta, fila.NombreCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro, migradas);
 
-        ActualizarSolicitud(conexion, transaccion, fila.Id, nombreCv, nombreCarta);
+        ActualizarSolicitud(conexion, transaccion, fila.Id, cv, carta);
 
-        if (cv is not null || carta is not null)
+        if (cv.Contenido is not null || carta.Contenido is not null)
         {
-            GuardarDocumentos(conexion, transaccion, fila.Id, cv, carta);
+            GuardarDocumentos(conexion, transaccion, fila.Id, cv.Contenido, carta.Contenido);
         }
     }
 
     /// <summary>
-    /// Lee un adjunto de la fila y deja apuntada su ruta si se pudo copiar. Sin ruta conserva el
-    /// nombre que ya tuviera; un fichero ilegible deja contenido y nombre vacíos.
+    /// Lee un adjunto de la fila. Sin ruta no hay nada que hacer; un fichero ausente deja el
+    /// documento vacío; uno ilegible no se toca para reintentarlo en el siguiente arranque.
     /// </summary>
-    private static (byte[]? Contenido, string? Nombre) LeerAdjunto(
+    private static LecturaAdjunto LeerAdjunto(
         string? ruta,
         string? nombreActual,
         string contexto,
@@ -81,16 +88,17 @@ internal static class MigradorAdjuntos
     {
         if (ruta is null)
         {
-            return (null, nombreActual);
+            return new LecturaAdjunto(EstadoAdjunto.SinRuta, null, null);
         }
 
-        byte[]? contenido = LeerFichero(ruta, contexto, rutaRegistro);
-        if (contenido is not null)
+        (EstadoAdjunto estado, byte[]? contenido) = LeerFichero(ruta, contexto, rutaRegistro);
+        if (estado != EstadoAdjunto.Leido)
         {
-            migradas.Add(ruta);
+            return new LecturaAdjunto(estado, null, null);
         }
 
-        return (contenido, Nombre(contenido, ruta, nombreActual));
+        migradas.Add(ruta);
+        return new LecturaAdjunto(estado, contenido, Nombre(ruta, nombreActual));
     }
 
     /// <summary>
@@ -181,10 +189,14 @@ internal static class MigradorAdjuntos
     }
 
     /// <summary>
-    /// Devuelve el contenido del fichero o <c>null</c> si falta o no se puede leer. Comprueba que
-    /// el tamaño leído sigue siendo el que tenía el fichero antes de abrirlo.
+    /// Devuelve el contenido del fichero y si se pudo leer. Distingue el fichero que ya no existe
+    /// (se puede dar por vacío) del que existe pero no se puede leer (se reintentará). Comprueba
+    /// que el tamaño leído sigue siendo el que tenía el fichero antes de abrirlo.
     /// </summary>
-    private static byte[]? LeerFichero(string ruta, string contexto, string rutaRegistro)
+    private static (EstadoAdjunto Estado, byte[]? Contenido) LeerFichero(
+        string ruta,
+        string contexto,
+        string rutaRegistro)
     {
         try
         {
@@ -195,42 +207,59 @@ internal static class MigradorAdjuntos
                 throw new IOException($"El fichero '{ruta}' cambió de tamaño durante la migración.");
             }
 
-            return contenido;
+            return (EstadoAdjunto.Leido, contenido);
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        {
+            // El fichero ya no está: se da por vacío, como siempre.
+            RegistroErrores.RegistrarEn(rutaRegistro, ex, $"no se pudo migrar {contexto} desde '{ruta}'");
+            return (EstadoAdjunto.Ausente, null);
         }
         catch (Exception ex)
         {
-            // Un fichero ausente o ilegible no puede dejar la aplicación sin arrancar.
-            RegistroErrores.RegistrarEn(rutaRegistro, ex, $"no se pudo migrar {contexto}");
-            return null;
+            // Un fichero ilegible no puede dejar la aplicación sin arrancar ni perder la ruta:
+            // la fila sigue pendiente y se reintenta en el siguiente arranque.
+            RegistroErrores.RegistrarEn(rutaRegistro, ex, $"no se pudo migrar {contexto} desde '{ruta}'");
+            return (EstadoAdjunto.Ilegible, null);
         }
     }
 
-    private static string? Nombre(byte[]? contenido, string ruta, string? nombreActual)
-    {
-        if (contenido is null)
-        {
-            return null;
-        }
+    private static string Nombre(string ruta, string? nombreActual) =>
+        string.IsNullOrWhiteSpace(nombreActual) ? Path.GetFileName(ruta) : nombreActual;
 
-        return string.IsNullOrWhiteSpace(nombreActual) ? Path.GetFileName(ruta) : nombreActual;
-    }
-
+    /// <summary>
+    /// Suelta la ruta y guarda el nombre de los documentos resueltos. El documento ilegible no se
+    /// toca, para no perder su ruta mientras se reintenta.
+    /// </summary>
     private static void ActualizarSolicitud(
         SqliteConnection conexion,
         SqliteTransaction transaccion,
         int id,
-        string? nombreCv,
-        string? nombreCarta)
+        LecturaAdjunto cv,
+        LecturaAdjunto carta)
+    {
+        if (cv.Resuelto)
+        {
+            EjecutarActualizacion(conexion, transaccion, SqlCv, id, cv.Nombre);
+        }
+
+        if (carta.Resuelto)
+        {
+            EjecutarActualizacion(conexion, transaccion, SqlCarta, id, carta.Nombre);
+        }
+    }
+
+    private static void EjecutarActualizacion(
+        SqliteConnection conexion,
+        SqliteTransaction transaccion,
+        string sql,
+        int id,
+        string? nombre)
     {
         using var comando = conexion.CreateCommand();
         comando.Transaction = transaccion;
-        comando.CommandText = """
-            UPDATE Solicitudes
-            SET RutaCv = NULL, RutaCarta = NULL, NombreOriginalCv = $cv, NombreOriginalCarta = $carta
-            WHERE Id = $id;
-            """;
-        comando.Parameters.AddWithValue("$cv", (object?)nombreCv ?? DBNull.Value);
-        comando.Parameters.AddWithValue("$carta", (object?)nombreCarta ?? DBNull.Value);
+        comando.CommandText = sql;
+        comando.Parameters.AddWithValue("$nombre", (object?)nombre ?? DBNull.Value);
         comando.Parameters.AddWithValue("$id", id);
         comando.ExecuteNonQuery();
     }
@@ -255,6 +284,20 @@ internal static class MigradorAdjuntos
         comando.Parameters.AddWithValue("$cv", (object?)cv ?? DBNull.Value);
         comando.Parameters.AddWithValue("$carta", (object?)carta ?? DBNull.Value);
         comando.ExecuteNonQuery();
+    }
+
+    private enum EstadoAdjunto
+    {
+        SinRuta,
+        Leido,
+        Ausente,
+        Ilegible,
+    }
+
+    private sealed record LecturaAdjunto(EstadoAdjunto Estado, byte[]? Contenido, string? Nombre)
+    {
+        /// <summary>La fila deja de estar pendiente para este documento.</summary>
+        public bool Resuelto => this.Estado is EstadoAdjunto.Leido or EstadoAdjunto.Ausente;
     }
 
     private sealed record FilaPendiente(
