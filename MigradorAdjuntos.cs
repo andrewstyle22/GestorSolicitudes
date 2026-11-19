@@ -240,12 +240,12 @@ internal static class MigradorAdjuntos
     {
         if (cv.Resuelto)
         {
-            EjecutarActualizacion(conexion, transaccion, SqlCv, id, cv.Nombre);
+            EjecutarActualizacion(conexion, transaccion, SqlCv, id, cv.NombreFichero);
         }
 
         if (carta.Resuelto)
         {
-            EjecutarActualizacion(conexion, transaccion, SqlCarta, id, carta.Nombre);
+            EjecutarActualizacion(conexion, transaccion, SqlCarta, id, carta.NombreFichero);
         }
     }
 
@@ -294,7 +294,7 @@ internal static class MigradorAdjuntos
         Ilegible,
     }
 
-    private sealed record LecturaAdjunto(EstadoAdjunto Estado, byte[]? Contenido, string? Nombre)
+    private sealed record LecturaAdjunto(EstadoAdjunto Estado, byte[]? Contenido, string? NombreFichero)
     {
         /// <summary>La fila deja de estar pendiente para este documento.</summary>
         public bool Resuelto => this.Estado is EstadoAdjunto.Leido or EstadoAdjunto.Ausente;
