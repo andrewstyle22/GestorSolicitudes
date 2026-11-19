@@ -2,12 +2,17 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Models;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 public class VerificarColumnasTests
 {
     private const string ColumnaFechaReapertura = "FechaReapertura";
     private const string ColumnaSolicitudAnteriorId = "SolicitudAnteriorId";
+    private const string TablaSolicitudes = "Solicitudes";
+    private const string TablaDocumentos = "DocumentosSolicitud";
 
     [Fact]
     public void VerificarColumnas_AñadeLasColumnasNuevasAUnaBaseVieja()
@@ -118,6 +123,54 @@ public class VerificarColumnasTests
         Assert.Equal("CASCADE", lector["on_delete"]);
     }
 
+    [Fact]
+    public void VerificarColumnas_CubreTodasLasColumnasDelModelo()
+    {
+        string ruta = CrearTablaSolicitudesVieja();
+
+        EsquemaDb.VerificarColumnasFaltantes(ruta);
+
+        var columnas = LeerColumnas(ruta, TablaSolicitudes);
+        foreach (string esperada in ColumnasDelModelo<Solicitud>(TablaSolicitudes))
+        {
+            Assert.Contains(esperada, columnas);
+        }
+
+        var columnasDocumentos = LeerColumnas(ruta, TablaDocumentos);
+        foreach (string esperada in ColumnasDelModelo<DocumentosSolicitud>(TablaDocumentos))
+        {
+            Assert.Contains(esperada, columnasDocumentos);
+        }
+    }
+
+    private static HashSet<string> LeerColumnas(string ruta, string tabla)
+    {
+        using var conexion = new SqliteConnection($"Data Source={ruta}");
+        conexion.Open();
+        using var comando = conexion.CreateCommand();
+        comando.CommandText = "SELECT name FROM pragma_table_info($tabla);";
+        comando.Parameters.AddWithValue("$tabla", tabla);
+        using var lector = comando.ExecuteReader();
+        var columnas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        while (lector.Read())
+        {
+            columnas.Add(Convert.ToString(lector["name"])!);
+        }
+
+        return columnas;
+    }
+
+    private static List<string> ColumnasDelModelo<T>(string tabla)
+    {
+        using var db = TestDb.NuevoContexto();
+        var entidad = db.Model.FindEntityType(typeof(T))!;
+        var objetivo = StoreObjectIdentifier.Table(tabla);
+        return entidad.GetProperties()
+            .Select(propiedad => propiedad.GetColumnName(objetivo))
+            .OfType<string>()
+            .ToList();
+    }
+
     /// <summary>
     /// Base de la primera versión (sin las columnas que añade <see cref="EsquemaDb"/>) con
     /// las columnas extra que pida el test, para simular una base que ya las tenía.
@@ -135,9 +188,27 @@ public class VerificarColumnasTests
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 Empresa TEXT NOT NULL,
                 Puesto TEXT NOT NULL,
+                EnlaceOferta TEXT NULL,
+                Portal TEXT NULL,
+                Ubicacion TEXT NULL,
+                Modalidad INTEGER NOT NULL,
+                Tecnologias TEXT NULL,
+                SalarioMin INTEGER NULL,
+                SalarioMax INTEGER NULL,
+                PretensionSalarial INTEGER NULL,
                 FechaSolicitud TEXT NOT NULL,
+                FechaPrimeraRespuesta TEXT NULL,
+                FechaEntrevista TEXT NULL,
+                FechaCierre TEXT NULL,
+                ProximoSeguimiento TEXT NULL,
                 Estado INTEGER NOT NULL,
-                Interes INTEGER NOT NULL DEFAULT 3{extra}
+                RespuestaEmpresa TEXT NULL,
+                ContactoNombre TEXT NULL,
+                ContactoEmail TEXT NULL,
+                Interes INTEGER NOT NULL DEFAULT 3,
+                Notas TEXT NULL,
+                RutaCv TEXT NULL,
+                RutaCarta TEXT NULL{extra}
             );
             """;
         crear.ExecuteNonQuery();

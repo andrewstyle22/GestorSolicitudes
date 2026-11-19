@@ -36,7 +36,7 @@ Al arrancar, después de `EsquemaDb`:
 1. Se crea la tabla si no existe. Si la base ya es de esta versión y no tiene `RutaCv` ni `RutaCarta`, no se hace nada.
 2. Con SQL (no con el modelo) se leen las filas que aún tienen `RutaCv` o `RutaCarta`.
 3. Para cada fichero que existe, se copian sus bytes a `DocumentosSolicitud` dentro de una transacción y se comprueba que el tamaño coincide. `NombreOriginalCv` o `NombreOriginalCarta` se rellenan con el nombre del fichero si estaban vacíos, y la ruta pasa a `NULL`.
-4. Un fichero que ya no existe deja el campo vacío y se registra en el fichero de errores.
+4. Un fichero que ya no existe deja el campo vacío y se registra en el fichero de errores. Un fichero que existe pero no se puede leer (bloqueado, antivirus) no se toca: conserva su ruta y su nombre y se reintenta en el siguiente arranque.
 5. Solo tras confirmar la transacción se borra el fichero migrado si está dentro de la carpeta `adjuntos` (nunca una ruta arbitraria de la base) y, si queda vacía, la carpeta.
 
 Es idempotente: una fila ya migrada tiene la ruta a `NULL` y no se vuelve a tocar. Los ficheros de más de 2 MB, si los hubiera, también se migran: el límite se aplica al adjuntar. Esta parte se mejorará en otra refactorización.
