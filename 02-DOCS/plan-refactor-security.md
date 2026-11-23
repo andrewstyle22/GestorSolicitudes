@@ -1,169 +1,139 @@
 # Plan de refactorización de seguridad
 
-## Evaluación de los documentos de auditoría
+Nace de la auditoría de seguridad de `REPORT.md`, `FINDINGS-DETAIL.md` y `NEEDS-VALIDATION.md`. La auditoría fue de fuente, perfil `quick`, y **no confirmó ninguna vulnerabilidad explotable**: lo que recoge son notas de endurecimiento, más un fallo funcional que descubrió de paso (la segunda copia de la aplicación borra los temporales de la primera). Este plan no trata ninguna nota como vulnerabilidad demostrada.
 
-**Conclusión:** no se confirmó ninguna vulnerabilidad explotable. La conclusión principal es razonable para una aplicación WPF local y mono-usuario; las recomendaciones del informe son endurecimiento, no hallazgos con severidad. El informe sí necesita correcciones antes de considerarse una descripción exacta y reproducible de la revisión.
+Se han contrastado las notas con el código antes de planificar. Dos correcciones respecto al informe y a su primer plan:
+- `MigradorAdjuntos.EstaDentro` **ya respeta los límites de directorio** (añade el separador final); solo faltan las uniones de directorio, que quedan fuera del modelo de amenaza.
+- El informe describe el borrado de temporales en el arranque, pero el mismo fallo existe en `OnExit`, así que la corrección tiene dos puntos.
 
-- **`FINDINGS-DETAIL.md`: correcto con el alcance declarado.** Indica cero hallazgos confirmados, coherente con `REPORT.md`. No aporta trazas porque no hubo candidatos ni ejecución del objetivo.
-- **`NEEDS-VALIDATION.md`: correcto respecto a los hallazgos.** No hay hipótesis de vulnerabilidad bloqueadas en los documentos. La nota del informe sobre perfiles móviles debe mantenerse como comprobación de despliegue/privacidad, no presentarse como una vulnerabilidad confirmada.
-- **`REPORT.md`: correcto en su conclusión principal, pero requiere correcciones.** Las observaciones de migración sin límite, previsualización sin límite, contención textual y fórmula CSV siguen presentes en el código consultado. Sin embargo:
-  1. La sección de método dice `PASS: 6 coverage units valid`, mientras que Cobertura afirma que hay 7 unidades cubiertas. Hay que reconciliar el libro de cobertura y el texto.
-  2. El informe identifica la revisión como `a8542b0…`; el repositorio está ahora en `acb9712…`. Hay cambios posteriores en `MigradorAdjuntos.cs` y `MainViewModel.cs`, entre otros. Por ello, no se debe atribuir al código actual una cobertura completa basada solo en esa revisión.
-  3. La falta de `permissions:` en los workflows sí es comprobable; los permisos efectivos del `GITHUB_TOKEN` dependen también de la configuración de GitHub, que el repositorio no muestra. El informe debe presentar el mínimo privilegio como recomendación, no afirmar una autoridad efectiva no verificada.
+Las correcciones del propio informe (6 frente a 7 unidades de cobertura, revisión `a8542b0` frente a `acb9712`) no son trabajo del proyecto: son notas sobre el informe y no forman parte de este plan.
 
-La auditoría fue de fuente, perfil `quick`; no ejecutó la aplicación. Este plan no trata ninguna nota de endurecimiento como una vulnerabilidad demostrada.
+---
 
-## Objetivo y límites
+## 1. Decisiones tomadas
 
-Cerrar primero los riesgos verificables de tamaño y ruta de adjuntos y endurecer el flujo de CI. Después, abordar mejoras locales de menor prioridad. Mantener el comportamiento mono-usuario previsto, la compatibilidad con bases heredadas y las reglas de arquitectura del proyecto. No cambiar ACL, política de datos, ni el comportamiento de temporales sin un requisito de despliegue que lo justifique.
+| # | Tema | Decisión |
+|---|------|----------|
+| 1 | Límite de 2 MB | Se aplica en **todas partes**: al adjuntar (ya hecho), al migrar ficheros antiguos y al abrir un documento guardado. Es una invariante del almacén. |
+| 2 | Ficheros antiguos de más de 2 MB | **No se migran**: se quedan pendientes con su ruta intacta (como los ilegibles), sin BLOB y sin borrar el fichero. Un único aviso agrupado por arranque y registro en el fichero de errores. Antes se migraban igualmente; esta decisión lo sustituye. |
+| 3 | Lectura en la migración | Se reutiliza `LectorAdjuntos.Leer` (tope de tamaño y `FileShare.Read`) en lugar de la lectura propia del migrador. |
+| 4 | Ficheros fuera de la carpeta de adjuntos | La migración no los lee ni los borra: quedan pendientes y registrados. |
+| 5 | CSV | Un valor que empieza por salto de línea seguido de una fórmula también se neutraliza. Es defensa en profundidad: el CSV lo teclea el mismo usuario que lo abre. |
+| 6 | Enlaces | Se rechazan los enlaces con credenciales embebidas y al shell se pasa la forma canónica (`AbsoluteUri`). |
+| 7 | CI | **Fuera de este plan** (opción C). Queda pendiente decidir si se borra `dotnet-desktop.yml`, y el endurecimiento de los workflows se hará después de esa decisión. |
 
-## Etapa 0: fijar la base de trabajo
+---
 
-### 0.1 Alinear el informe con el código actual
+## 2. Reglas de cada commit
 
-- Reconciliar el total de unidades de cobertura con el validador y corregir todas las referencias al número.
-- Registrar la revisión actual y repetir o acotar la comprobación de las rutas que cambiaron desde `a8542b0…`, en particular `MigradorAdjuntos.cs` y `MainViewModel.cs`.
-- Mantener separados los estados `confirmed`, `needs_validation` y las notas de endurecimiento; no elevar estas últimas a vulnerabilidades sin evidencia de una frontera cruzada.
+1. `dotnet test` en verde (los avisos son errores).
+2. `dotnet format GestorSolicitudes.slnx --verify-no-changes`.
+3. `sonarcloud-gate` local antes de commitear.
+4. Todo texto visible con clave en es/en/de; XAML nuevo declarado en el csproj.
+5. Mensaje en español; un commit, una idea reversible.
+6. El push lo hace el autor tras cada commit; el agente no hace push.
+7. Al terminar cada paso se actualiza `CONTEXT.md` en el mismo commit.
+8. Los tests de reproducción se commitean junto con su arreglo.
+9. Antes de tocar `MigradorAdjuntos`, leer su estado actual: el commit que conserva la ruta de un fichero ilegible ya cambió `LeerFichero` y `ActualizarSolicitud`. Los pasos de la Etapa S2 se adaptan a ese código.
 
-**Aceptación:** la revisión declara una sola referencia, el alcance coincide con esa referencia y las cifras de cobertura concuerdan con el libro validado.
+Tamaño estimado: **S** (<50 líneas), **M** (50-200).
 
-**Dependencia:** ninguna. Es requisito para interpretar los resultados de las etapas posteriores.
+---
 
-## Etapa 1: limitar y contener la migración de adjuntos
+## Etapa S0. Preparación
 
-### 1.1 Aplicar el límite antes de leer el fichero
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| S0.1 | `docs: plan de la refactorización de seguridad` | Este plan y `CONTEXT.md` (plan en curso, etapas, siguiente paso y decisiones). | S |
 
-Archivos principales: `MigradorAdjuntos.cs`, `AdjuntosHelper.cs` y `GestorSolicitudes.Tests/MigradorAdjuntosTests.cs`.
+---
 
-- Aplicar `AdjuntosHelper.TamanoMaximoBytes` dentro de la ruta de migración, antes de `File.ReadAllBytes` o de cualquier reserva proporcional al tamaño.
-- Si el fichero excede el máximo, registrar el caso, conservar la ruta pendiente para que no se pierda el documento ni se marque como migrado, y no guardar ningún BLOB parcial.
-- Revisar la compatibilidad con las bases heredadas y el flujo de transacción antes de cambiar el estado de la fila.
+## Etapa S1. Temporales y arranque (fallo funcional)
 
-**Aceptación y verificación:** casos en el límite exacto, un byte por encima, fichero ausente y fichero ilegible; en el caso excesivo, la ruta permanece pendiente, no se crea un BLOB y el resto de la migración conserva su comportamiento.
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| S1.1 | `fix: una segunda copia no borra los temporales de la primera` | Hoy `App.OnStartup` ejecuta `TemporalesAdjuntos.Limpiar()` **antes** de comprobar la instancia única, y `OnExit` lo ejecuta siempre, incluso cuando la segunda copia llama a `Shutdown()`. En los dos casos se borran los documentos que la primera tiene abiertos en el visor. Hay que mover la limpieza del arranque después de `EsPrimera` y, en `OnExit`, limpiar solo si esta copia era la primera (guardar el dato antes de liberar `instancia`). Prueba manual: abrir un documento en el visor, lanzar una segunda copia y comprobar que el documento sigue abierto y su fichero existe; al cerrar la primera, la carpeta se vacía. | S |
 
-### 1.2 Validar la ubicación y el borrado de rutas heredadas
+---
 
-Archivos principales: `MigradorAdjuntos.cs` y `GestorSolicitudes.Tests/MigradorAdjuntosTests.cs`.
+## Etapa S2. Migración de adjuntos antiguos
 
-- Antes de leer o borrar, validar que la ruta corresponde a la carpeta de adjuntos heredados esperada; ante una ruta externa, no leerla ni borrarla y conservarla para revisión.
-- Revisar el uso de `EstaDentro`, que hoy compara rutas completas mediante `StartsWith`. La comparación debe respetar límites de directorio y, si el modelo de amenaza incluye escrituras por otro principal o puntos de reanálisis, comprobar también estos últimos de forma segura para Windows. Una comprobación textual sola no debe describirse como protección contra uniones de directorios.
-- Mantener una prueba de regresión que confirme que un fichero externo nunca se borra.
+Archivos: `MigradorAdjuntos.cs`, `LectorAdjuntos.cs`, `AdjuntosHelper.cs` y `MigradorAdjuntosTests.cs`. En todos los pasos, un fichero que no se migra conserva `RutaCv` o `RutaCarta` y su nombre, no genera BLOB, no se borra y se registra con `RegistroErrores`; la fila sigue pendiente y se reintenta en el siguiente arranque.
 
-**Aceptación y verificación:** rutas dentro/fuera, prefijos que solo comparten texto con la carpeta, y puntos de reanálisis según el mecanismo elegido; nunca se elimina el destino externo. La migración de datos heredados válidos sigue funcionando.
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| S2.1 | `refactor: la migración lee los ficheros con LectorAdjuntos` | Sustituye la lectura propia (`File.ReadAllBytes` sin cota) por `LectorAdjuntos.Leer`. El resultado distingue cuatro casos: sin ruta, fichero que no existe (se vacía como hoy), fichero ilegible o bloqueado (pendiente) y **fichero que supera 2 MB** (pendiente, a partir de `DocumentoDemasiadoGrandeException`). Tests: exactamente 2 MB se migra; 2 MB más un byte queda pendiente con la ruta intacta, sin BLOB y con el fichero en disco; un documento grande no impide migrar el otro de la fila; los tests existentes siguen pasando. | M |
+| S2.2 | `feat: aviso agrupado de adjuntos antiguos que superan el límite` | El resultado de la migración incluye la lista de ficheros pendientes por tamaño. `App.OnStartup` muestra un único aviso (número de documentos y la carpeta, es/en/de) mientras quede alguno, y lo registra. Se resuelve reduciendo el fichero o moviéndolo. Tests del resultado y del texto. Prueba manual con un fichero de más de 2 MB. | S |
+| S2.3 | `fix: la migración solo lee y borra ficheros dentro de la carpeta de adjuntos` | Aplica `EstaDentro` **antes de leer** (hoy solo se comprueba antes de borrar). Una ruta externa no se lee ni se borra, queda pendiente y se registra. Tests: ruta dentro, ruta fuera, un prefijo que solo comparte texto (`adjuntos-otro`, que ya funcionaba: se deja como regresión) y una ruta con `..`. Un fichero externo nunca se elimina. Las uniones de directorio quedan fuera: se anota en la decisión, sin presentar la comprobación textual como protección frente a ellas. | S |
 
-**Dependencia:** 1.1. No adoptar comprobaciones de puntos de reanálisis que sigan dejando una carrera de tiempo entre validación y borrado; si no se puede garantizar el requisito, documentar el límite y mantener la operación segura por defecto.
+---
 
-## Etapa 2: hacer cumplir el tamaño al abrir documentos guardados
+## Etapa S3. Apertura de documentos guardados
 
-Archivos principales: `MainViewModel.cs`, `AdjuntosHelper.cs` y `GestorSolicitudes.Tests/ViewModelAdjuntosTests.cs`.
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| S3.1 | `feat: comprobar el tamaño guardado antes de leer un documento` | `AbrirAdjunto` consulta primero la longitud del BLOB (consulta sin seguimiento que proyecta solo la longitud) y, si supera `AdjuntosHelper.TamanoMaximoBytes`, no lo lee, no escribe el temporal ni abre el visor: avisa con `dialogo.Avisar` (clave nueva en es/en/de) y deja la fila intacta. Hoy el BLOB se materializa entero antes de cualquier comprobación. Tests: un BLOB justo en el límite se abre; otro mayor, sembrado directamente en la base de pruebas, no llega al visor y no se modifica ni se borra. | M |
 
-- Hacer que la cota de 2 MB se aplique también a documentos leídos desde SQLite, no solo a ficheros seleccionados para adjuntar.
-- Comprobar el tamaño almacenado antes de materializar el BLOB en memoria cuando sea posible; no basta con validar después de obtener el `byte[]`.
-- Si el BLOB supera el máximo, no escribirlo a `%TEMP%` ni pasarlo a los parsers. Informar al usuario mediante el servicio de diálogo y conservar intacta la fila almacenada.
+**Punto de control A.** Ejecutar los tests de migración y de apertura; comprobar que ningún fallo de migración limpia una ruta ni borra el fichero original, y que el tamaño máximo tiene una única fuente: `AdjuntosHelper.TamanoMaximoBytes`.
 
-**Aceptación y verificación:** prueba de un BLOB válido en el límite y otro mayor creado directamente en la base de pruebas; el segundo no llega al visor y no se modifica ni elimina.
+---
 
-**Dependencia:** 1.1, para que migración y lectura compartan el mismo límite.
+## Etapa S4. Exportación CSV
 
-## Punto de control A: adjuntos
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| S4.1 | `fix: el CSV neutraliza los textos que empiezan por un salto de línea y una fórmula` | `TextoHelper.Escapar` decide el apóstrofo con el primer carácter visible del valor original; `'\n'` no está entre los disparadores y `\n=1+1` sale como ` =1+1`. Se añade `'\n'` y la regresión `Escapar("\n=1+1")`. Tests para LF, CR, tabulador, espacios iniciales, fórmulas, comillas y los tres separadores; los valores no peligrosos salen igual que antes. Se actualiza la decisión de `AGENTS.md`. | S |
 
-- Ejecutar las pruebas específicas de migración y apertura de adjuntos.
-- Revisar que los fallos de migración no limpien la ruta ni borren el fichero original.
-- Confirmar que el tamaño máximo sigue teniendo una única fuente: `AdjuntosHelper.TamanoMaximoBytes`.
+---
 
-## Etapa 3: endurecer la exportación CSV
+## Etapa S5. Enlaces de oferta
 
-Archivos principales: `TextoHelper.cs` y `GestorSolicitudes.Tests/TextoYCsvTests.cs`.
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| S5.1 | `fix: no se abren enlaces con credenciales embebidas` | `Enlaces.EsWeb` rechaza una URI HTTP o HTTPS con `UserInfo` no vacío. Tests: `https://usuario:clave@host` se rechaza; los enlaces normales siguen pasando. | S |
+| S5.2 | `fix: al abrir un enlace se pasa al shell la forma canónica` | `DialogoService.AbrirEnlace` llama a `Process.Start` con `uri.AbsoluteUri`, resultado de un único análisis, en lugar de la cadena original. Tests: positivo con `HTTPS://` en mayúsculas; negativos con `ms-msdt:`, `C:\Windows\System32\calc.exe`, una ruta UNC, `//host` y un esquema codificado con porcentajes. | S |
 
-- Añadir una regresión para un valor que empieza por salto de línea y continúa con una fórmula, por ejemplo `\n=1+1`; la salida no debe poder convertirse en fórmula al abrirse en una hoja de cálculo.
-- Revisar el escapado después de la normalización de CR/LF y preservar las reglas existentes para comillas, separadores y apóstrofos.
-- Esta es una defensa local de profundidad: el contenido lo controla el mismo usuario y no se ha demostrado una frontera entre principales. Documentar la ampliación respecto a la decisión actual de `TextoHelper.Escapar`.
+---
 
-**Aceptación y verificación:** pruebas para LF, CR, tabulador, espacios iniciales, fórmulas, comillas y los tres separadores; exportación normal sin cambios para valores no peligrosos.
+## Etapa S6. Documentación y cierre
 
-**Dependencia:** ninguna tras la etapa 0.
+| # | Commit | Qué cambia | Tam. |
+|---|--------|-----------|------|
+| S6.1 | `docs: modelo de amenaza y decisiones de seguridad` | Sección «Modelo de amenaza» en `README.md` o `AGENTS.md`: aplicación local de un solo usuario; base, documentos en BLOB y registro viven en `%APPDATA%` (Roaming) con las ACL heredadas, de modo que con un perfil móvil el CV se replicaría fuera del equipo; el registro incluye rutas absolutas y SQL; las uniones de directorio están fuera del modelo; los temporales viven en el `%TEMP%` del usuario hasta salir. Actualiza `adjuntos-en-base-de-datos.md` (los ficheros de más de 2 MB y los externos quedan pendientes) y las decisiones de `AGENTS.md`. | S |
+| S6.2 | `chore: pasada final de sonarcloud-gate` | Verificar antes de abrir el PR. | S |
 
-## Etapa 4: reducir la exposición del CI y fijar sus entradas
+---
 
-Archivos principales: `.github/workflows/dotnet-desktop.yml`, `.github/workflows/sonarcloud.yml` y, si procede, el manifiesto de herramientas.
+## 3. Orden y dependencias
 
-### 4.1 Permisos mínimos y credenciales de `checkout`
+1. S0.1, y después S1.1 (el fallo funcional va primero).
+2. S2.1 antes de S2.2 y S2.3: los tres comparten el nuevo resultado de lectura.
+3. S3.1 después de S2.1, para que migración y apertura compartan el mismo límite; después, el punto de control A.
+4. S4.1, S5.1 y S5.2 son independientes entre sí.
+5. S6 al final.
 
-- Declarar permisos explícitos mínimos por workflow/job, empezando por `contents: read` cuando sea suficiente.
-- Desactivar `persist-credentials` en cada `actions/checkout` si los pasos posteriores no necesitan autenticarse con Git.
-- Comprobar por separado los eventos `push` y `pull_request`, incluidos PR de forks; no asumir permisos efectivos sin revisar la configuración del repositorio/organización.
+## 4. Pruebas manuales
 
-**Aceptación:** el CI sigue compilando y ejecutando tests con el token de menor alcance necesario, y el checkout no deja credenciales persistidas si no se requieren.
+| Paso | Qué comprobar |
+|------|---------------|
+| S1.1 | Con un documento abierto en el visor, lanzar una segunda copia: el documento sigue abierto y su temporal existe. Al cerrar la primera, la carpeta de temporales se vacía. |
+| S2.2 | Colocar un fichero de más de 2 MB en `adjuntos`, referenciado desde una base antigua, y arrancar: un solo aviso, el fichero no se borra y la ruta sigue en la base. |
 
-### 4.2 Fijar acciones, herramientas y SDK
+## 5. Riesgos
 
-- Fijar las acciones de terceros a SHA completo revisado y documentar cómo se actualizan.
-- Fijar una versión aprobada de `dotnet-sonarscanner` o incorporarla al mecanismo de herramientas del proyecto.
-- Alinear el SDK resuelto por `global.json` con el instalado en ambos workflows; eliminar diferencias implícitas que reduzcan la reproducibilidad.
+| Riesgo | Cuándo | Mitigación |
+|--------|--------|------------|
+| Un documento antiguo válido queda sin migrar | S2.1, S2.3 | Se conserva la ruta y el fichero, se registra y se avisa; nunca se borra ni se vacía. |
+| El aviso de ficheros grandes aparece en cada arranque | S2.2 | Es un único aviso agrupado y se resuelve reduciendo o moviendo el fichero. |
+| La consulta de longitud del BLOB no se traduce a SQL y lo carga entero | S3.1 | Comprobarlo con el test del BLOB sobredimensionado y revisar el SQL generado. |
+| El cambio del CSV altera valores o separadores existentes | S4.1 | Se mantienen los tests de paridad y solo se suma el caso del salto de línea. |
 
-**Aceptación:** las versiones ejecutadas por CI son deterministas y la compilación, formato, tests y análisis siguen usando versiones compatibles.
+## 6. Fuera de este plan
 
-### 4.3 Evitar pasar el secreto de Sonar en argumentos literales
-
-- Consumir `SONAR_TOKEN` desde el entorno en los pasos de inicio y cierre del análisis, sin interpolar el secreto directamente en el texto del comando.
-- Verificar que la configuración del scanner y el enmascaramiento de logs siguen funcionando; no imprimir el entorno ni el valor del secreto.
-
-**Aceptación:** los análisis de PR autorizado siguen completándose y el token no aparece como literal en el comando del workflow ni en los logs.
-
-**Dependencias:** 4.1 antes de 4.3; 4.2 puede prepararse en paralelo con 4.1, pero validar el workflow después de las tres subetapas.
-
-## Punto de control B: CI
-
-- Revisar permisos y condiciones de cada evento en la configuración de GitHub.
-- Validar los workflows en un PR de prueba autorizado sin exponer secretos.
-- Confirmar que los pasos de calidad existentes no se han eliminado ni debilitado.
-
-## Etapa 5: endurecimientos locales de prioridad menor
-
-### 5.1 Evitar que una segunda instancia limpie temporales activos
-
-Archivos principales: `App.xaml.cs`, `InstanciaUnica.cs` y tests apropiados para el ciclo de vida.
-
-- Comprobar que la instancia es única antes de limpiar `%TEMP%`; ahora la limpieza ocurre antes de la comprobación y una segunda apertura puede borrar archivos que usa la primera.
-- No resolver un fallo del mecanismo de instancia única abriendo otra instancia a ciegas: eso contradiría la decisión de mantener un solo `AppDbContext` y podría causar conflictos de datos.
-
-**Aceptación:** iniciar la ruta de segunda instancia no elimina documentos temporales usados por la instancia activa; la primera sigue pudiendo abrirlos y cerrarse normalmente.
-
-### 5.2 Endurecer el manejo de enlaces web
-
-Archivos principales: `Enlaces.cs`, `DialogoService.cs` y `GestorSolicitudes.Tests/EnlacesTests.cs`.
-
-- Rechazar URI HTTP/HTTPS con credenciales embebidas (`UserInfo`).
-- Pasar al shell la forma canónica validada (`AbsoluteUri`) en vez de la cadena original.
-- Añadir pruebas negativas para credenciales y esquemas/rutas no web relevantes, y positivas para HTTP/HTTPS con mayúsculas.
-
-**Aceptación:** solo URI absoluta HTTP/HTTPS sin credenciales llega al shell; las entradas inválidas se rechazan antes de `Process.Start`.
-
-**Prioridad:** posterior a adjuntos y CI; estas medidas no acreditan una vulnerabilidad en el escenario mono-usuario actual.
-
-## Mejoras no incluidas como refactor obligatorio
-
-- ACL explícitas para `%APPDATA%`, SQLite y el registro: primero definir un requisito de despliegue y comprobar perfiles móviles/redirección. No sustituir sin motivo las protecciones del perfil de Windows.
-- Limpiar temporales huérfanos al siguiente arranque: comportamiento documentado actualmente; no se propone acortar la vida del temporal sin comprobar el ciclo del visor.
-- Nombres reservados de Windows, detalles del mensaje de error del lanzador y lockfile de NuGet: son mejoras de robustez o reproducibilidad, no vulnerabilidades demostradas. Revisarlas si se amplía el modelo de amenaza o los requisitos de CI.
-
-## Riesgos y mitigaciones
-
-| Riesgo | Mitigación |
-|---|---|
-| Rechazar rutas heredadas válidas y dejar documentos sin migrar | Probar bases heredadas representativas; conservar la ruta y registrar el error en vez de borrar o descartar datos. |
-| Comprobar el tamaño después de cargar un BLOB grande | Consultar primero su longitud y probar con un BLOB sobredimensionado sembrado en SQLite. |
-| Cambiar el CSV rompe valores o separadores existentes | Mantener pruebas de paridad y sumar solo el caso LF-formula que hoy falta. |
-| Endurecer CI rompe PR de forks o análisis Sonar | Revisar permisos externos y validar cada tipo de evento sin imprimir secretos. |
-| Tratar hardening como vulnerabilidad confirmada | Mantener el informe sin severidad para notas locales y actualizar la cobertura en la revisión actual. |
-
-## Orden recomendado
-
-1. Etapa 0: fijar referencia y corregir cobertura.
-2. Etapas 1.1 y 1.2: migración segura de adjuntos.
-3. Etapa 2 y punto de control A.
-4. Etapas 4.1–4.3 y punto de control B.
-5. Etapa 3.
-6. Etapas 5.1 y 5.2, según prioridad y capacidad de prueba.
-
-Cada cambio de código debe incorporar pruebas xUnit focalizadas, respetar la arquitectura MVVM del proyecto y pasar `dotnet test` y `dotnet format GestorSolicitudes.slnx --verify-no-changes` antes de integrarse.
+- **CI (opción C).** Endurecer los workflows (`permissions: contents: read`, `persist-credentials: false`, acciones fijadas por SHA, versión fija de `dotnet-sonarscanner`, `SONAR_TOKEN` solo por entorno, SDK de `global.json` alineado) y decidir si se borra `dotnet-desktop.yml`, duplicado de `sonarcloud.yml`. Se hará después de esa decisión; si se borra, hay que revisar la protección de rama en GitHub.
+- **ACL explícitas** para `%APPDATA%`, la base y el registro: solo si aparece un requisito de despliegue.
+- **Nombres reservados de Windows** en los temporales: Windows no permite crear ficheros con esos nombres, y no hay ningún productor no confiable.
+- **`packages.lock.json`:** solo si el build pasa a un runner compartido.
+- **Instancia única pre-creable:** un proceso del mismo usuario puede degradar la disponibilidad; el manejador global ya evita que sea un cierre sin aviso. No se abre una segunda instancia a ciegas: contradice el contexto único.
+- **Temporales tras un cierre anómalo:** ya se limpian en el siguiente arranque.
+- **Mensaje del lanzador de enlaces** (`ex.Message`): solo lo ve el mismo usuario.
