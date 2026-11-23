@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Plan: `02-DOCS/plan-refactor-ponytail.md` (leer solo la etapa en curso; nace de `02-DOCS/auditoria-ponytail.md`). Anterior: `plan-refactor-edicion.md` (0–5; su 6 la sustituye A).
+Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace de la auditoría de seguridad de `REPORT.md`, `FINDINGS-DETAIL.md` y `NEEDS-VALIDATION.md`). Anterior: `02-DOCS/plan-refactor-ponytail.md`, con las etapas A–F hechas, y `plan-refactor-edicion.md` (0–5; su 6 la sustituye A).
 
 ## Etapas Ponytail
 - ✅ A: guardado, navegación, errores y atajos (A.0–A.11).
@@ -10,8 +10,17 @@ Plan: `02-DOCS/plan-refactor-ponytail.md` (leer solo la etapa en curso; nace de 
 - ✅ E: documentos en la base de datos (E.1–E.16).
 - ✅ F: documentación y cierre (F.1–F.4).
 
+## Etapas Seguridad
+- ✅ S0: preparación (S0.1).
+- ⬜ S1: temporales y arranque (S1.1).
+- ⬜ S2: migración de adjuntos antiguos (S2.1–S2.3).
+- ⬜ S3: apertura de documentos guardados (S3.1).
+- ⬜ S4: exportación CSV (S4.1).
+- ⬜ S5: enlaces de oferta (S5.1–S5.2).
+- ⬜ S6: documentación y cierre (S6.1–S6.2).
+
 ## Siguiente paso concreto
-Plan Ponytail terminado, con las pruebas manuales hechas. Mergear el PR #32 (Quality Gate en verde). Después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S1.1: una segunda copia no borra los temporales de la primera (mover `TemporalesAdjuntos.Limpiar()` del arranque detrás de `EsPrimera` y limpiar en `OnExit` solo si esta copia era la primera). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
@@ -36,6 +45,13 @@ Plan Ponytail terminado, con las pruebas manuales hechas. Mergear el PR #32 (Qua
 - `RespuestaEmpresa` y `Notas` son texto libre sin límite.
 - La reapertura guarda la nota (`NotaReapertura`, 300 caracteres) solo en el hito, no admite «Sin respuesta» como destino y `FechaReapertura` (solo la última) alimenta `DiasProceso`, la insignia ↻ y el borde `#DB2777`.
 - Los hitos que crea el modelo guardan texto en castellano con el prefijo compartido `Reabierta. `; traducirlos al mostrar queda pendiente.
+- El límite de 2 MB es una invariante del almacén: se aplica al adjuntar, al migrar ficheros antiguos y al abrir un documento guardado.
+- Un fichero antiguo de más de 2 MB no se migra: queda pendiente con su ruta intacta, sin BLOB y sin borrar el fichero, con un único aviso agrupado por arranque y registro en el fichero de errores (sustituye la migración sin tope anterior).
+- La migración lee con `LectorAdjuntos.Leer` (tope de tamaño y `FileShare.Read`), no con lectura propia.
+- La migración no lee ni borra ficheros fuera de la carpeta de adjuntos: quedan pendientes y registrados.
+- CSV: también se neutraliza un valor que empieza por salto de línea seguido de una fórmula (defensa en profundidad; el CSV lo teclea el mismo usuario que lo abre).
+- Enlaces: se rechazan los que llevan credenciales embebidas y al shell se le pasa la forma canónica (`AbsoluteUri`).
+- El CI queda fuera del plan de seguridad (opción C): el endurecimiento de los workflows va después de decidir si se borra `dotnet-desktop.yml`.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -57,3 +73,4 @@ Plan Ponytail terminado, con las pruebas manuales hechas. Mergear el PR #32 (Qua
 - Seguimiento `FechaReapertura + 7` puede caer en el pasado.
 - Hitos como valores únicos traducidos al mostrar.
 - La preferencia del separador CSV se guarda aunque se cancele.
+- Endurecimiento de los workflows del CI (`permissions: contents: read`, `persist-credentials: false`, acciones fijadas por SHA, versión fija de `dotnet-sonarscanner`, `SONAR_TOKEN` solo por entorno, SDK de `global.json` alineado), después de decidir si se borra `dotnet-desktop.yml` (duplicado de `sonarcloud.yml`); si se borra, revisar la protección de rama en GitHub.
