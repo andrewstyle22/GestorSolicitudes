@@ -13,14 +13,14 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 ## Etapas Seguridad
 - ✅ S0: preparación (S0.1).
 - ✅ S1: temporales y arranque (S1.1).
-- ⬜ S2: migración de adjuntos antiguos (S2.1–S2.3).
+- ⬜ S2: migración de adjuntos antiguos (S2.1 ✅; S2.2–S2.3 pendientes).
 - ⬜ S3: apertura de documentos guardados (S3.1).
 - ⬜ S4: exportación CSV (S4.1).
 - ⬜ S5: enlaces de oferta (S5.1–S5.2).
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S2.1: la migración lee los ficheros con `LectorAdjuntos.Leer` (tope de tamaño y `FileShare.Read`) y distingue ilegible, inexistente y mayor de 2 MB. Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S2.2: aviso agrupado por arranque de los adjuntos antiguos que superan los 2 MB (lista de pendientes por tamaño en el resultado de la migración, texto en es/en/de). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
@@ -32,7 +32,7 @@ Commit S2.1: la migración lee los ficheros con `LectorAdjuntos.Leer` (tope de t
 - `DocumentosSolicitud` (BLOB, sin navegación) se lee solo al abrir; `Solicitud` guarda el nombre y `TieneCv`/`TieneCarta` salen de él; el contenido pendiente vive en el editor y `Guardar` lo escribe tras el primer `SaveChanges`, conservándolo si falla.
 - `VerificarColumnas_CubreTodasLasColumnasDelModelo` contrasta el modelo de EF con la base tras `VerificarColumnasFaltantes`; el helper de la base vieja reproduce la primera versión real, para que una propiedad nueva sin registrar en `nuevas` rompa el test.
 - Abrir usa `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al arrancar y al cerrar solo por la copia principal (`TemporalesAdjuntos.LimpiarSiEsPrimera`): una segunda copia no borra los documentos que la primera tiene abiertos en el visor; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
-- `MigradorAdjuntos` corre al arrancar, es idempotente, ignora bases sin columnas de ruta, registra los fallos y borra los ficheros solo tras confirmar. Un fichero que existe pero no se puede leer (bloqueado, tamaño cambiado) conserva su ruta y su nombre y se reintenta en el siguiente arranque; CV y carta se resuelven por separado. Un fichero que ya no existe sí deja el documento vacío.
+- `MigradorAdjuntos` corre al arrancar, es idempotente, ignora bases sin columnas de ruta, registra los fallos y borra los ficheros solo tras confirmar. Un fichero que existe pero no se puede leer (bloqueado, tamaño cambiado) o supera los 2 MB conserva su ruta y su nombre y se reintenta en el siguiente arranque; CV y carta se resuelven por separado. Un fichero que ya no existe sí deja el documento vacío.
 - `InstanciaUnica`: la segunda copia avisa y se cierra sin abrir base ni ventana; `App` la crea antes de la base y la libera en `OnExit`.
 - Ninguna fecha anterior a `FechaSolicitud`; `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`.
 - `Paginar` repone la selección con `SeleccionarSinAviso` para no contradecir la fila resaltada.

@@ -2,6 +2,7 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using Microsoft.Data.Sqlite;
 
@@ -232,6 +233,97 @@ public class MigradorAdjuntosTests
         Assert.False(File.Exists(ficheroCv));
         Assert.True(File.Exists(ficheroCarta));
         Assert.Contains(ficheroCarta, File.ReadAllText(registro));
+    }
+
+    [Fact]
+    public void Migrar_FicheroDeExactamenteElLimite_SeMigra()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, new byte[AdjuntosHelper.TamanoMaximoBytes]);
+        string registro = Path.Combine(carpeta, NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, null);
+        }
+
+        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+
+        using var db2 = new AppDbContext(ruta);
+        DocumentosSolicitud documentos = db2.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == id);
+        Assert.Equal(AdjuntosHelper.TamanoMaximoBytes, documentos.Cv!.Length);
+        Assert.Null(LeerRutas(ruta, id).Cv);
+        Assert.False(File.Exists(ficheroCv));
+    }
+
+    [Fact]
+    public void Migrar_FicheroQueSuperaElLimite_QuedaPendienteSinBlobYConservaElFichero()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, new byte[AdjuntosHelper.TamanoMaximoBytes + 1]);
+        string registro = Path.Combine(TestDb.NuevaCarpeta(), NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, null);
+        }
+
+        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+
+        using (var db2 = new AppDbContext(ruta))
+        {
+            Assert.Empty(db2.Set<DocumentosSolicitud>());
+        }
+
+        Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
+        Assert.True(File.Exists(ficheroCv));
+        Assert.Contains(ficheroCv, File.ReadAllText(registro));
+    }
+
+    [Fact]
+    public void Migrar_UnDocumentoDemasiadoGrande_NoImpideMigrarElOtro()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, new byte[AdjuntosHelper.TamanoMaximoBytes + 1]);
+        string ficheroCarta = CrearFichero(carpeta, "carta.pdf", [3, 4]);
+        string registro = Path.Combine(TestDb.NuevaCarpeta(), NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, ficheroCarta);
+        }
+
+        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+
+        using (var db2 = new AppDbContext(ruta))
+        {
+            DocumentosSolicitud documentos = db2.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == id);
+            Assert.Null(documentos.Cv);
+            Assert.Equal([3, 4], documentos.Carta);
+        }
+
+        Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
+        Assert.Null(LeerRutas(ruta, id).Carta);
+        Assert.True(File.Exists(ficheroCv));
+        Assert.False(File.Exists(ficheroCarta));
     }
 
     [Fact]
