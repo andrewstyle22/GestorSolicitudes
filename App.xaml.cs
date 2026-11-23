@@ -49,6 +49,7 @@ public partial class App : Application
         }
 
         AppDbContext contexto = new();
+        IReadOnlyList<string> pendientesPorTamano = [];
         try
         {
             contexto.Database.EnsureCreated();
@@ -65,7 +66,7 @@ public partial class App : Application
             // antes de crear el ViewModel, que ya no los busca en ficheros.
             try
             {
-                MigradorAdjuntos.Migrar(AppDbContext.RutaBaseDatos, RegistroErrores.Ruta);
+                pendientesPorTamano = MigradorAdjuntos.Migrar(AppDbContext.RutaBaseDatos, RegistroErrores.Ruta);
             }
             catch (Exception ex)
             {
@@ -82,6 +83,18 @@ public partial class App : Application
                 Localizacion.Texto("Titulo.ErrorAlIniciar"), MessageBoxButton.OK, MessageBoxImage.Error);
             this.Shutdown();
             return;
+        }
+
+        // Un solo aviso por arranque: los documentos que no caben en la base se resuelven
+        // reduciendo el fichero o moviéndolo, y el siguiente arranque los reintenta.
+        if (pendientesPorTamano.Count > 0)
+        {
+            this.dialogo.Avisar(
+                string.Format(
+                    Localizacion.Texto("Mensaje.AdjuntosAntiguosDemasiadoGrandes"),
+                    pendientesPorTamano.Count,
+                    AdjuntosHelper.Carpeta),
+                Localizacion.Texto("Titulo.AdjuntosAntiguos"));
         }
 
         this.db = contexto;

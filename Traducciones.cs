@@ -223,6 +223,7 @@ public static class Traducciones
         ("Mensaje.TransicionNoPermitida", "No se puede aceptar la oferta desde un proceso cerrado: reabre la candidatura a «Oferta recibida» y vuelve a intentarlo."),
         ("Mensaje.ErrorBaseDatos", "No se pudo preparar la base de datos:\n\n{0}\n\nRuta: {1}"),
         ("Mensaje.ErrorInesperado", "Se ha producido un error inesperado:\n\n{0}\n\nEl detalle se ha guardado en:\n{1}"),
+        ("Mensaje.AdjuntosAntiguosDemasiadoGrandes", "Hay {0} documentos adjuntos de más de 2 MB que no se han importado a la base de datos. Reduce su tamaño o muévelos fuera de «{1}» y vuelve a abrir la aplicación."),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Adjunto"),
@@ -234,6 +235,7 @@ public static class Traducciones
         ("Titulo.ExportacionCompletada", "Exportación completada"),
         ("Titulo.ErrorAlIniciar", "Error al iniciar"),
         ("Titulo.ErrorInesperado", "Error inesperado"),
+        ("Titulo.AdjuntosAntiguos", "Adjuntos antiguos"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Candidatura enviada"),
@@ -525,6 +527,7 @@ public static class Traducciones
         ("Mensaje.TransicionNoPermitida", "You cannot accept the offer from a closed application: reopen it to \"Offer received\" and try again."),
         ("Mensaje.ErrorBaseDatos", "Could not prepare the database:\n\n{0}\n\nPath: {1}"),
         ("Mensaje.ErrorInesperado", "An unexpected error occurred:\n\n{0}\n\nThe details have been saved to:\n{1}"),
+        ("Mensaje.AdjuntosAntiguosDemasiadoGrandes", "There are {0} attached documents larger than 2 MB that have not been imported into the database. Reduce their size or move them out of \"{1}\" and reopen the application."),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Attachment"),
@@ -536,6 +539,7 @@ public static class Traducciones
         ("Titulo.ExportacionCompletada", "Export completed"),
         ("Titulo.ErrorAlIniciar", "Startup error"),
         ("Titulo.ErrorInesperado", "Unexpected error"),
+        ("Titulo.AdjuntosAntiguos", "Old attachments"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Application sent"),
@@ -827,6 +831,7 @@ public static class Traducciones
         ("Mensaje.TransicionNoPermitida", "Eine Zusage ist aus einer abgeschlossenen Bewerbung nicht möglich: Öffne sie zu \"Angebot erhalten\" wieder und versuche es erneut."),
         ("Mensaje.ErrorBaseDatos", "Die Datenbank konnte nicht vorbereitet werden:\n\n{0}\n\nPfad: {1}"),
         ("Mensaje.ErrorInesperado", "Ein unerwarteter Fehler ist aufgetreten:\n\n{0}\n\nDie Einzelheiten wurden gespeichert in:\n{1}"),
+        ("Mensaje.AdjuntosAntiguosDemasiadoGrandes", "Es gibt {0} Anlagen mit mehr als 2 MB, die nicht in die Datenbank importiert wurden. Verkleinere sie oder verschiebe sie aus „{1}“ und starte die Anwendung neu."),
 
         // ----- Títulos de avisos -----
         ("Titulo.Adjunto", "Anlage"),
@@ -838,6 +843,7 @@ public static class Traducciones
         ("Titulo.ExportacionCompletada", "Export abgeschlossen"),
         ("Titulo.ErrorAlIniciar", "Startfehler"),
         ("Titulo.ErrorInesperado", "Unerwarteter Fehler"),
+        ("Titulo.AdjuntosAntiguos", "Alte Anlagen"),
 
         // ----- Hitos del historial -----
         ("Evento.CandidaturaEnviada", "Bewerbung gesendet"),

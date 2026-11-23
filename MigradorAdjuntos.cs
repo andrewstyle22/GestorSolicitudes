@@ -25,9 +25,10 @@ internal static class MigradorAdjuntos
     /// existe pero no se puede leer, o que supera el límite de tamaño, conserva su ruta y se
     /// reintenta en el siguiente arranque. Es idempotente: una fila migrada queda sin ruta y no
     /// se vuelve a tocar. Tras confirmar la transacción, borra los ficheros migrados de la carpeta
-    /// de adjuntos y la carpeta si queda vacía.
+    /// de adjuntos y la carpeta si queda vacía. Devuelve las rutas que quedaron pendientes por
+    /// superar el límite, para que el arranque avise una sola vez.
     /// </summary>
-    public static void Migrar(string ruta, string rutaRegistro, string? carpeta = null)
+    public static IReadOnlyList<string> Migrar(string ruta, string rutaRegistro, string? carpeta = null)
     {
         using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(ruta));
         conexion.Open();
@@ -35,25 +36,27 @@ internal static class MigradorAdjuntos
         // Una base creada por esta versión ya no tiene las columnas de ruta.
         if (!TieneColumnasDeRuta(conexion))
         {
-            return;
+            return [];
         }
 
         List<FilaPendiente> pendientes = LeerPendientes(conexion);
         if (pendientes.Count == 0)
         {
-            return;
+            return [];
         }
 
         var migradas = new List<string>();
+        var demasiadoGrandes = new List<string>();
         using var transaccion = conexion.BeginTransaction();
         foreach (FilaPendiente fila in pendientes)
         {
-            MigrarFila(conexion, transaccion, fila, rutaRegistro, migradas);
+            MigrarFila(conexion, transaccion, fila, rutaRegistro, migradas, demasiadoGrandes);
         }
 
         transaccion.Commit();
 
         BorrarMigrados(migradas, carpeta ?? AdjuntosHelper.Carpeta, rutaRegistro);
+        return demasiadoGrandes;
     }
 
     private static void MigrarFila(
@@ -61,12 +64,13 @@ internal static class MigradorAdjuntos
         SqliteTransaction transaccion,
         FilaPendiente fila,
         string rutaRegistro,
-        List<string> migradas)
+        List<string> migradas,
+        List<string> demasiadoGrandes)
     {
         LecturaAdjunto cv = LeerAdjunto(
-            fila.RutaCv, fila.NombreCv, $"el CV de la candidatura {fila.Id}", rutaRegistro, migradas);
+            fila.RutaCv, fila.NombreCv, $"el CV de la candidatura {fila.Id}", rutaRegistro, migradas, demasiadoGrandes);
         LecturaAdjunto carta = LeerAdjunto(
-            fila.RutaCarta, fila.NombreCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro, migradas);
+            fila.RutaCarta, fila.NombreCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro, migradas, demasiadoGrandes);
 
         ActualizarSolicitud(conexion, transaccion, fila.Id, cv, carta);
 
@@ -86,7 +90,8 @@ internal static class MigradorAdjuntos
         string? nombreActual,
         string contexto,
         string rutaRegistro,
-        List<string> migradas)
+        List<string> migradas,
+        List<string> demasiadoGrandes)
     {
         if (ruta is null)
         {
@@ -94,6 +99,11 @@ internal static class MigradorAdjuntos
         }
 
         (EstadoAdjunto estado, byte[]? contenido) = LeerFichero(ruta, contexto, rutaRegistro);
+        if (estado == EstadoAdjunto.DemasiadoGrande)
+        {
+            demasiadoGrandes.Add(ruta);
+        }
+
         if (estado != EstadoAdjunto.Leido)
         {
             return new LecturaAdjunto(estado, null, null);

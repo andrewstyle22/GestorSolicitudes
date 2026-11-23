@@ -13,14 +13,14 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 ## Etapas Seguridad
 - ✅ S0: preparación (S0.1).
 - ✅ S1: temporales y arranque (S1.1).
-- ⬜ S2: migración de adjuntos antiguos (S2.1 ✅; S2.2–S2.3 pendientes).
+- ⬜ S2: migración de adjuntos antiguos (S2.1 ✅, S2.2 ✅; S2.3 pendiente).
 - ⬜ S3: apertura de documentos guardados (S3.1).
 - ⬜ S4: exportación CSV (S4.1).
 - ⬜ S5: enlaces de oferta (S5.1–S5.2).
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S2.2: aviso agrupado por arranque de los adjuntos antiguos que superan los 2 MB (lista de pendientes por tamaño en el resultado de la migración, texto en es/en/de). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S2.3: `EstaDentro` antes de leer, para que la migración no lea ni borre ficheros fuera de la carpeta de adjuntos (quedan pendientes y registrados). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.

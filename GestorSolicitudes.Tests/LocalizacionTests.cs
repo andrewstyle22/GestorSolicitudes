@@ -147,6 +147,25 @@ public class LocalizacionTests
         Assert.DoesNotContain(duplicada, titulo);
     }
 
+    [Theory]
+    [InlineData(Idioma.Castellano, "Adjuntos antiguos")]
+    [InlineData(Idioma.Ingles, "Old attachments")]
+    [InlineData(Idioma.Aleman, "Alte Anlagen")]
+    public void AvisoDeAdjuntosAntiguosDemasiadoGrandes_SeTraduceYFormatea(Idioma idioma, string titulo)
+    {
+        string carpeta = @"C:\datos\adjuntos";
+
+        string mensaje = string.Format(
+            Localizacion.Cultura(idioma),
+            Localizacion.Texto(idioma, "Mensaje.AdjuntosAntiguosDemasiadoGrandes"),
+            3,
+            carpeta);
+
+        Assert.Equal(titulo, Localizacion.Texto(idioma, "Titulo.AdjuntosAntiguos"));
+        Assert.Contains("3", mensaje);
+        Assert.Contains(carpeta, mensaje);
+    }
+
     [Fact]
     public void EnumHelper_UsaLasTraduccionesDeLocalizacion()
     {

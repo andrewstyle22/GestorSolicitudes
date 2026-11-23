@@ -30,12 +30,13 @@ public class MigradorAdjuntosTests
             ApuntarRutas(ruta, id, ficheroCv, ficheroCarta);
         }
 
-        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+        IReadOnlyList<string> pendientes = MigradorAdjuntos.Migrar(ruta, registro, carpeta);
 
         using var db2 = new AppDbContext(ruta);
         Solicitud migrada = db2.Solicitudes.Single(s => s.Id == id);
         Assert.Equal(NombreCv, migrada.NombreOriginalCv);
         Assert.Equal("carta.pdf", migrada.NombreOriginalCarta);
+        Assert.Empty(pendientes);
 
         DocumentosSolicitud documentos = db2.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == id);
         Assert.Equal([1, 2, 3], documentos.Cv);
@@ -280,13 +281,14 @@ public class MigradorAdjuntosTests
             ApuntarRutas(ruta, id, ficheroCv, null);
         }
 
-        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+        IReadOnlyList<string> pendientes = MigradorAdjuntos.Migrar(ruta, registro, carpeta);
 
         using (var db2 = new AppDbContext(ruta))
         {
             Assert.Empty(db2.Set<DocumentosSolicitud>());
         }
 
+        Assert.Equal([ficheroCv], pendientes);
         Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
         Assert.True(File.Exists(ficheroCv));
         Assert.Contains(ficheroCv, File.ReadAllText(registro));
@@ -311,7 +313,7 @@ public class MigradorAdjuntosTests
             ApuntarRutas(ruta, id, ficheroCv, ficheroCarta);
         }
 
-        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+        IReadOnlyList<string> pendientes = MigradorAdjuntos.Migrar(ruta, registro, carpeta);
 
         using (var db2 = new AppDbContext(ruta))
         {
@@ -320,6 +322,7 @@ public class MigradorAdjuntosTests
             Assert.Equal([3, 4], documentos.Carta);
         }
 
+        Assert.Equal([ficheroCv], pendientes);
         Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
         Assert.Null(LeerRutas(ruta, id).Carta);
         Assert.True(File.Exists(ficheroCv));
