@@ -5,7 +5,7 @@ using System.IO;
 
 /// <summary>
 /// Escribe un documento en una subcarpeta temporal única para abrirlo en su visor sin tocar
-/// los ficheros del usuario. La carpeta se borra al cerrar y al arrancar la aplicación.
+/// los ficheros del usuario. La copia principal borra la carpeta al cerrar y al arrancar.
 /// </summary>
 public static class TemporalesAdjuntos
 {
@@ -43,6 +43,18 @@ public static class TemporalesAdjuntos
         {
             // Dejar un temporal huérfano es mejor que tumbar la aplicación al cerrarse.
             Debug.WriteLine($"No se pudo limpiar '{destino}': {ex}");
+        }
+    }
+
+    /// <summary>
+    /// Limpia solo si esta copia es la principal: una segunda copia no debe borrar los
+    /// documentos que la primera tiene abiertos en el visor.
+    /// </summary>
+    public static void LimpiarSiEsPrimera(bool esPrimera, string? carpeta = null)
+    {
+        if (esPrimera)
+        {
+            Limpiar(carpeta);
         }
     }
 

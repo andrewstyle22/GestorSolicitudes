@@ -81,4 +81,17 @@ public class TemporalesAdjuntosTests
 
         Assert.False(Directory.Exists(carpeta));
     }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void LimpiarSiEsPrimera_SoloLaPrimeraBorraLosTemporales(bool esPrimera, bool sobrevive)
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        TemporalesAdjuntos.Escribir(NombreCv, [1], carpeta);
+
+        TemporalesAdjuntos.LimpiarSiEsPrimera(esPrimera, carpeta);
+
+        Assert.Equal(sobrevive, Directory.Exists(carpeta));
+    }
 }

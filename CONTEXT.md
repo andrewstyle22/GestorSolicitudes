@@ -12,7 +12,7 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 
 ## Etapas Seguridad
 - ✅ S0: preparación (S0.1).
-- ⬜ S1: temporales y arranque (S1.1).
+- ✅ S1: temporales y arranque (S1.1).
 - ⬜ S2: migración de adjuntos antiguos (S2.1–S2.3).
 - ⬜ S3: apertura de documentos guardados (S3.1).
 - ⬜ S4: exportación CSV (S4.1).
@@ -20,7 +20,7 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S1.1: una segunda copia no borra los temporales de la primera (mover `TemporalesAdjuntos.Limpiar()` del arranque detrás de `EsPrimera` y limpiar en `OnExit` solo si esta copia era la primera). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S2.1: la migración lee los ficheros con `LectorAdjuntos.Leer` (tope de tamaño y `FileShare.Read`) y distingue ilegible, inexistente y mayor de 2 MB. Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
@@ -31,7 +31,7 @@ Commit S1.1: una segunda copia no borra los temporales de la primera (mover `Tem
 - Documentos: máximo 2 MB y `LectorAdjuntos` mide antes de reservar; el aviso lo pone el ViewModel.
 - `DocumentosSolicitud` (BLOB, sin navegación) se lee solo al abrir; `Solicitud` guarda el nombre y `TieneCv`/`TieneCarta` salen de él; el contenido pendiente vive en el editor y `Guardar` lo escribe tras el primer `SaveChanges`, conservándolo si falla.
 - `VerificarColumnas_CubreTodasLasColumnasDelModelo` contrasta el modelo de EF con la base tras `VerificarColumnasFaltantes`; el helper de la base vieja reproduce la primera versión real, para que una propiedad nueva sin registrar en `nuevas` rompa el test.
-- Abrir usa `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al arrancar y al cerrar; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
+- Abrir usa `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al arrancar y al cerrar solo por la copia principal (`TemporalesAdjuntos.LimpiarSiEsPrimera`): una segunda copia no borra los documentos que la primera tiene abiertos en el visor; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
 - `MigradorAdjuntos` corre al arrancar, es idempotente, ignora bases sin columnas de ruta, registra los fallos y borra los ficheros solo tras confirmar. Un fichero que existe pero no se puede leer (bloqueado, tamaño cambiado) conserva su ruta y su nombre y se reintenta en el siguiente arranque; CV y carta se resuelven por separado. Un fichero que ya no existe sí deja el documento vacío.
 - `InstanciaUnica`: la segunda copia avisa y se cierra sin abrir base ni ventana; `App` la crea antes de la base y la libera en `OnExit`.
 - Ninguna fecha anterior a `FechaSolicitud`; `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`.
