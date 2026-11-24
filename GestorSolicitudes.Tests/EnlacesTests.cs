@@ -20,6 +20,15 @@ public class EnlacesTests
     [InlineData("example.com")]
     [InlineData("mailto:alguien@example.com")]
     [InlineData("https://usuario:clave@example.com/oferta")]
+    [InlineData("ms-msdt:/id PCWDiagnostic")]
+    [InlineData(@"C:\Windows\System32\calc.exe")]
+    [InlineData(@"\\servidor\recurso")]
+    [InlineData("//host")]
+    [InlineData("https%3A%2F%2Fexample.com")]
     public void EsWeb_RechazaLoQueNoEsWeb(string? url) =>
         Assert.False(Enlaces.EsWeb(url));
+
+    [Fact]
+    public void Canonica_DevuelveLaFormaCanonica() =>
+        Assert.Equal("https://example.com/Oferta", Enlaces.Canonica("HTTPS://EXAMPLE.COM/Oferta"));
 }

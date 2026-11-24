@@ -17,11 +17,11 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 - ✅ S3: apertura de documentos guardados (S3.1).
 - ✅ S4: exportación CSV (S4.1).
 - ✅ S5.1: enlaces con credenciales embebidas.
-- ⬜ S5.2: forma canónica al shell.
+- ✅ S5.2: forma canónica al shell.
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S5.2: `DialogoService.AbrirEnlace` pasa a `Process.Start` el `AbsoluteUri` de un único análisis, con tests de `HTTPS://` en mayúsculas y negativos (`ms-msdt:`, ruta absoluta, UNC, `//host`, esquema codificado). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S6.1: sección «Modelo de amenaza» en `README.md` o `AGENTS.md` (app local de un solo usuario, datos en `%APPDATA%` con ACL heredadas, registro con rutas y SQL, uniones de directorio fuera del modelo, temporales hasta salir), actualizar `adjuntos-en-base-de-datos.md` (los ficheros de más de 2 MB y los externos quedan pendientes) y las decisiones de `AGENTS.md`. Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
