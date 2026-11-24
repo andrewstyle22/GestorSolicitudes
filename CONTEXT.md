@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace de la auditoría de seguridad de `REPORT.md`, `FINDINGS-DETAIL.md` y `NEEDS-VALIDATION.md`). Anterior: `02-DOCS/plan-refactor-ponytail.md`, con las etapas A–F hechas, y `plan-refactor-edicion.md` (0–5; su 6 la sustituye A).
+Plan cerrado: `02-DOCS/plan-refactor-security.md` (S0–S6). Anteriores: `plan-refactor-ponytail.md` (A–F) y `plan-refactor-edicion.md` (0–5; su 6 lo sustituye A).
 
 ## Etapas Ponytail
 - ✅ A: guardado, navegación, errores y atajos (A.0–A.11).
@@ -18,43 +18,39 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 - ✅ S4: exportación CSV (S4.1).
 - ✅ S5.1: enlaces con credenciales embebidas.
 - ✅ S5.2: forma canónica al shell.
-- ✅ S6.1: modelo de amenaza y decisiones de seguridad.
-- ✅ S6.2: pasada final de sonarcloud-gate (98,9 % de cobertura en código nuevo, 0 issues).
+- ✅ S6: documentación y cierre (S6.1–S6.2).
+- 🔄 Fuera del plan: cierre del PR #35 y reorganización en carpetas.
 
 ## Siguiente paso concreto
-Mergear el PR #35 (Quality Gate en verde) y, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+No hay etapa siguiente en el plan: mergear el PR #35 (Quality Gate en verde) y, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
-- Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
-- `AplicarEventos` empareja por `Original`, nunca por posición ni `Id`; `Guardar` borra los `EventosEliminados`.
-- Solo se prohíbe cerrado → «Oferta aceptada» (`AdmiteTransicion`); «Oferta aceptada» → otros cierres se permite como corrección; `EstadosDisponibles` sale de `estadoOriginal` y se recalcula al cambiar de idioma.
-- `ResolverCambiosPendientes` también mira `ChangeTracker.HasChanges()`: un guardado fallido deja la entidad sucia.
-- `RegistroErrores` nunca lanza y se recorta a 1 MB; solo `ManejadorErrores.Avisar` tiene test y los enganches de `App` van excluidos de cobertura.
-- Documentos: máximo 2 MB y `LectorAdjuntos` mide antes de reservar; el aviso lo pone el ViewModel.
-- `DocumentosSolicitud` (BLOB, sin navegación) se lee solo al abrir; `Solicitud` guarda el nombre y `TieneCv`/`TieneCarta` salen de él; el contenido pendiente vive en el editor y `Guardar` lo escribe tras el primer `SaveChanges`, conservándolo si falla.
-- `VerificarColumnas_CubreTodasLasColumnasDelModelo` contrasta el modelo de EF con la base tras `VerificarColumnasFaltantes`; el helper de la base vieja reproduce la primera versión real, para que una propiedad nueva sin registrar en `nuevas` rompa el test.
-- Abrir usa `%TEMP%\GestorSolicitudes\adjuntos`, limpiado al arrancar y al cerrar solo por la copia principal (`TemporalesAdjuntos.LimpiarSiEsPrimera`): una segunda copia no borra los documentos que la primera tiene abiertos en el visor; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
-- `MigradorAdjuntos` corre al arrancar, es idempotente, ignora bases sin columnas de ruta, registra los fallos y borra los ficheros solo tras confirmar. Un fichero que existe pero no se puede leer (bloqueado, tamaño cambiado) o supera los 2 MB conserva su ruta y su nombre y se reintenta en el siguiente arranque; CV y carta se resuelven por separado. Un fichero que ya no existe sí deja el documento vacío.
-- `InstanciaUnica`: la segunda copia avisa y se cierra sin abrir base ni ventana; `App` la crea antes de la base y la libera en `OnExit`.
-- Ninguna fecha anterior a `FechaSolicitud`; `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`.
-- `Paginar` repone la selección con `SeleccionarSinAviso` para no contradecir la fila resaltada.
-- Reapertura solo con `Reabrir`, con nota obligatoria y respetando el seguimiento editado; motivo de cierre obligatorio y filtrado en los tres cierres negativos.
-- Respuesta de la empresa: cuentan los abiertos salvo Enviada y Sin respuesta, más Descartado por la empresa y las dos ofertas.
-- Cambios sin guardar: Guardar/Descartar/Cancelar al cambiar de fila, Nueva, Duplicar y cerrar; tras Guardar la acción sigue solo si guardó.
-- CSV: separador recordado, motivo y reapertura, apóstrofo ante `= + - @`, tabulador o retorno, aun tras espacios.
-- `FechaSolicitud` mueve el hito de envío y el seguimiento solo si coincidían.
-- Atajos: `PropertyChanged` solo en texto; se confirma el control con el foco antes de Ctrl+S/N y cerrar.
-- `RespuestaEmpresa` y `Notas` son texto libre sin límite.
-- La reapertura guarda la nota (`NotaReapertura`, 300 caracteres) solo en el hito, no admite «Sin respuesta» como destino y `FechaReapertura` (solo la última) alimenta `DiasProceso`, la insignia ↻ y el borde `#DB2777`.
-- Los hitos que crea el modelo guardan texto en castellano con el prefijo compartido `Reabierta. `; traducirlos al mostrar queda pendiente.
-- El límite de 2 MB es una invariante del almacén: se aplica al adjuntar, al migrar ficheros antiguos y al abrir un documento guardado; al abrir se consulta primero la longitud sin traer el BLOB.
-- Un fichero antiguo de más de 2 MB no se migra: queda pendiente con su ruta intacta, sin BLOB y sin borrar el fichero, con un único aviso agrupado por arranque y registro en el fichero de errores (sustituye la migración sin tope anterior).
-- La migración lee con `LectorAdjuntos.Leer` (tope de tamaño y `FileShare.Read`), no con lectura propia.
-- La migración no lee ni borra ficheros fuera de la carpeta de adjuntos: quedan pendientes y registrados. `EstaDentro` es una comprobación textual (`Path.GetFullPath`); no detecta un enlace o unión de directorio dentro de la carpeta, que quedan fuera del modelo de amenaza.
-- CSV: también se neutraliza un valor que empieza por salto de línea seguido de una fórmula (defensa en profundidad; el CSV lo teclea el mismo usuario que lo abre).
-- Enlaces: se rechazan los que llevan credenciales embebidas y al shell se le pasa la forma canónica (`AbsoluteUri`).
-- Modelo de amenaza documentado en `README.md`: app local de un solo usuario, datos en `%APPDATA%` Roaming con ACL heredadas (un perfil móvil replica el CV fuera del equipo), registro con rutas absolutas y SQL, uniones de directorio fuera del modelo, temporales sin cifrar hasta salir.
-- El CI queda fuera del plan de seguridad (opción C): el endurecimiento de los workflows va después de decidir si se borra `dotnet-desktop.yml`.
+- Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo, para proteger las reglas de negocio.
+- `AplicarEventos` empareja por `Original`, no por posición ni `Id`, para conservar los hitos al reordenar.
+- Cerrado → abierto solo por `Reabrir`; «Oferta aceptada» puede corregirse a otro cierre, pero «Oferta rechazada por mí» no pasa a «Oferta aceptada»; el motivo es obligatorio en los tres cierres negativos, para impedir transiciones inválidas.
+- `ResolverCambiosPendientes` mira también `ChangeTracker.HasChanges()`: un guardado fallido deja la entidad sucia y debe avisar.
+- `RegistroErrores` nunca lanza y se recorta a 1 MB, para que un fallo al registrar no tumbe la aplicación.
+- Los documentos van en `DocumentosSolicitud` como BLOB sin navegación: se leen solo al abrir y el contenido pendiente vive en el editor, para no cargarlos al listar ni perderlos si falla Guardar.
+- El límite de 2 MB es invariante del almacén: se aplica al adjuntar, migrar y abrir, para tener un solo tope.
+- `VerificarColumnas_CubreTodasLasColumnasDelModelo` contrasta modelo y base tras `VerificarColumnasFaltantes`, para detectar columnas nuevas sin registrar.
+- Los temporales se limpian al arrancar y al cerrar solo la copia principal, para no borrar documentos abiertos por otra instancia; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
+- `MigradorAdjuntos` es idempotente y solo borra un fichero tras copiarlo a la base, para no perder documentos.
+- Lo que no se puede migrar (ilegible, mayor de 2 MB o fuera de la carpeta) conserva su ruta y su nombre, sin BLOB y registrado, para reintentarlo en el próximo arranque; las uniones de directorio quedan fuera del modelo de amenaza.
+- La migración reutiliza `LectorAdjuntos.Leer`, para compartir tope de tamaño y `FileShare.Read`.
+- `InstanciaUnica` se crea antes de abrir la base: la segunda copia avisa y se cierra, para mantener una sola sesión.
+- Ninguna fecha anterior a `FechaSolicitud`; `AplicarFechas` va después de `AplicarRespuesta` y `AplicarEstado`, para no pisar la primera respuesta.
+- `Paginar` repone la selección con `SeleccionarSinAviso`, para que la fila resaltada no contradiga la selección.
+- La reapertura exige nota (300 caracteres, solo en el hito), no admite «Sin respuesta» como destino y respeta el seguimiento editado; `FechaReapertura` alimenta `DiasProceso`, insignia y borde, para no confundir reapertura con un estado.
+- Respuesta de la empresa: cuentan los abiertos salvo Enviada y Sin respuesta, más Descartado y las dos ofertas; «Retirada por mí» no, porque la decide el usuario.
+- Cambios sin guardar: Guardar/Descartar/Cancelar al cambiar de fila, Nueva, Duplicar o cerrar; la acción sigue solo si guardó, para no perder ediciones.
+- CSV: separador recordado, motivo y reapertura, apóstrofo ante fórmulas o saltos de línea, para neutralizar celdas peligrosas.
+- `FechaSolicitud` mueve el hito de envío y el seguimiento solo si coincidían, para no alterar lo editado a mano.
+- Atajos: `PropertyChanged` solo en texto y se confirma el control con el foco antes de Ctrl+S/N y cerrar, para no perder la edición en curso.
+- `RespuestaEmpresa` y `Notas` siguen siendo texto libre sin límite, porque esa fue la decisión de negocio.
+- Los hitos del modelo se guardan en castellano con el prefijo `Reabierta. `; traducirlos al mostrar queda pendiente.
+- Enlaces: se rechazan credenciales embebidas y al shell se pasa `AbsoluteUri`, para evitar interpretaciones distintas del URL.
+- Modelo de amenaza en `README.md`: app local de un solo usuario, datos en `%APPDATA%` Roaming con ACL heredadas, registro con rutas y SQL, uniones de directorio fuera del modelo y temporales sin cifrar hasta salir.
+- El CI queda fuera del plan (opción C): hay que decidir si se borra `dotnet-desktop.yml` antes de endurecer los workflows.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
@@ -64,15 +60,15 @@ Mergear el PR #35 (Quality Gate en verde) y, en una rama aparte, la reorganizaci
 - Cada paso del plan, su commit con su mensaje y su test; no fusiones pasos.
 - Al terminar cada paso, este fichero se actualiza en el mismo commit.
 
-## Puntos de control
-- Pruebas manuales de la sección 4 del plan Ponytail: hechas y superadas.
-- Segunda auditoría Ponytail evaluada: solo 2 de sus 15 hallazgos eran válidos, ya resueltos en los dos commits anteriores.
+## Puntos de control pendientes
+- Pruebas manuales S1.1 y S2.2 del plan de seguridad: sin registro de ejecución.
+- Punto de control A (migración y apertura, sin pérdida de rutas ni ficheros y un solo tope de 2 MB): sin registro de ejecución.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
 
 ## Fuera del plan
 - Reorganización en carpetas, en una rama aparte tras mergear Ponytail, con los namespaces siguiendo las carpetas. Antes de mover nada hay que hacer `FuentesTests` independiente de la estructura (rutas fijas y `TopDirectoryOnly`) y actualizar los `<Page>` del csproj; `IDialogoService` y `DialogosNulos` se quedan en `ViewModels` y `DialogoService` en `Views`. Se activará IDE0130 como aviso al terminar.
 - Hallazgo 6 (CI duplicado) y protección de rama en GitHub.
-- Migración de adjuntos y vista previa de imágenes.
+- Vista previa de imágenes.
 - Seguimiento `FechaReapertura + 7` puede caer en el pasado.
 - Hitos como valores únicos traducidos al mostrar.
 - La preferencia del separador CSV se guarda aunque se cancele.
