@@ -19,10 +19,10 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 - ✅ S5.1: enlaces con credenciales embebidas.
 - ✅ S5.2: forma canónica al shell.
 - ✅ S6.1: modelo de amenaza y decisiones de seguridad.
-- ⬜ S6.2: pasada final de sonarcloud-gate.
+- ✅ S6.2: pasada final de sonarcloud-gate (98,9 % de cobertura en código nuevo, 0 issues).
 
 ## Siguiente paso concreto
-Commit S6.2: pasada final de `sonarcloud-gate` antes de abrir el PR. Después, mergear el PR #32 (Quality Gate en verde) y, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Mergear el PR #35 (Quality Gate en verde) y, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
