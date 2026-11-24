@@ -200,6 +200,7 @@ public static class Traducciones
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "No se pudo adjuntar el fichero:\n\n{0}"),
         ("Mensaje.AdjuntoDemasiadoGrande", "El documento no puede ser mayor a 2 megabytes."),
+        ("Mensaje.AdjuntoGuardadoDemasiadoGrande", "El documento guardado supera los 2 megabytes y no se puede abrir."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "No hay un fichero adjunto, o ya no existe en disco."),
         ("Mensaje.NoSePudoAbrirFichero", "No se pudo abrir el fichero: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "No se puede previsualizar este formato. Usa Descargar para guardar una copia."),
@@ -504,6 +505,7 @@ public static class Traducciones
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Could not attach the file:\n\n{0}"),
         ("Mensaje.AdjuntoDemasiadoGrande", "The document cannot be larger than 2 megabytes."),
+        ("Mensaje.AdjuntoGuardadoDemasiadoGrande", "The saved document is larger than 2 megabytes and cannot be opened."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "There is no attached file, or it no longer exists on disk."),
         ("Mensaje.NoSePudoAbrirFichero", "Could not open the file: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "This format cannot be previewed. Use Download to save a copy."),
@@ -808,6 +810,7 @@ public static class Traducciones
         // ----- Mensajes -----
         ("Mensaje.NoSePudoAdjuntar", "Anhängen nicht möglich:\n\n{0}"),
         ("Mensaje.AdjuntoDemasiadoGrande", "Das Dokument darf nicht größer als 2 Megabyte sein."),
+        ("Mensaje.AdjuntoGuardadoDemasiadoGrande", "Das gespeicherte Dokument ist größer als 2 Megabyte und kann nicht geöffnet werden."),
         ("Mensaje.SinAdjuntoOYaNoExiste", "Keine Anlage vorhanden oder die Datei ist nicht mehr verfügbar."),
         ("Mensaje.NoSePudoAbrirFichero", "Die Datei konnte nicht geöffnet werden: {0}"),
         ("Mensaje.NoSePuedePrevisualizar", "Dieses Format kann nicht angezeigt werden. Nutze Herunterladen, um eine Kopie zu speichern."),

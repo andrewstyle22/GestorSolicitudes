@@ -536,6 +536,62 @@ public class ViewModelAdjuntosTests
     }
 
     [Fact]
+    public void AbrirAdjunto_ConBlobJustoEnElLimite_LoAbre()
+    {
+        using var db = TestDb.NuevoContexto();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo, carpetaTemporales: TestDb.NuevaCarpeta());
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConNombreOriginalCv("mi-cv.pdf")
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        byte[] justoEnElLimite = new byte[AdjuntosHelper.TamanoMaximoBytes];
+        GuardarDocumentos(db, solicitud.Id, justoEnElLimite, null);
+        db.ChangeTracker.Clear();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single(s => s.Id == solicitud.Id);
+
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
+
+        string ruta = Assert.Single(dialogo.AdjuntosAbiertos);
+        Assert.Equal(AdjuntosHelper.TamanoMaximoBytes, new FileInfo(ruta).Length);
+    }
+
+    [Fact]
+    public void AbrirAdjunto_ConBlobDemasiadoGrande_AvisaYNoLoAbreNiLoModifica()
+    {
+        using var db = TestDb.NuevoContexto();
+        string carpeta = TestDb.NuevaCarpeta();
+        var dialogo = new DialogoFalso();
+        using var vm = new MainViewModel(db, dialogo: dialogo, carpetaTemporales: carpeta);
+        var solicitud = new SolicitudBuilder()
+            .ConEmpresa("ACME")
+            .ConPuesto("Dev")
+            .ConNombreOriginalCv("mi-cv.pdf")
+            .Construir();
+        db.Solicitudes.Add(solicitud);
+        db.SaveChanges();
+        byte[] demasiadoGrande = new byte[AdjuntosHelper.TamanoMaximoBytes + 1];
+        GuardarDocumentos(db, solicitud.Id, demasiadoGrande, null);
+        db.ChangeTracker.Clear();
+        vm.Recargar();
+        vm.SolicitudSeleccionada = vm.Solicitudes.Single(s => s.Id == solicitud.Id);
+
+        vm.AbrirAdjuntoCommand.Execute(TipoAdjunto.Cv);
+
+        Assert.Equal(
+            Localizacion.Texto("Mensaje.AdjuntoGuardadoDemasiadoGrande"),
+            Assert.Single(dialogo.Avisos));
+        Assert.Empty(dialogo.AdjuntosAbiertos);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(carpeta));
+        DocumentosSolicitud guardado = db.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == solicitud.Id);
+        Assert.Equal(AdjuntosHelper.TamanoMaximoBytes + 1, guardado.Cv!.Length);
+    }
+
+    [Fact]
     public void AbrirAdjunto_ConContenidoPendiente_LoAbreSinGuardar()
     {
         using var db = TestDb.NuevoContexto();

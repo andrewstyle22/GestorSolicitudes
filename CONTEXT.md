@@ -14,13 +14,13 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 - ✅ S0: preparación (S0.1).
 - ✅ S1: temporales y arranque (S1.1).
 - ✅ S2: migración de adjuntos antiguos (S2.1–S2.3).
-- ⬜ S3: apertura de documentos guardados (S3.1).
+- ✅ S3: apertura de documentos guardados (S3.1).
 - ⬜ S4: exportación CSV (S4.1).
 - ⬜ S5: enlaces de oferta (S5.1–S5.2).
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S3.1: `AbrirAdjunto` comprueba la longitud del BLOB antes de leerlo y avisa si supera `AdjuntosHelper.TamanoMaximoBytes`; después, punto de control A. Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S4.1: `TextoHelper.Escapar` neutraliza también un texto que empieza por salto de línea y fórmula, con sus tests. Punto de control A superado con los tests de migración y apertura (706 pruebas). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
@@ -45,7 +45,7 @@ Commit S3.1: `AbrirAdjunto` comprueba la longitud del BLOB antes de leerlo y avi
 - `RespuestaEmpresa` y `Notas` son texto libre sin límite.
 - La reapertura guarda la nota (`NotaReapertura`, 300 caracteres) solo en el hito, no admite «Sin respuesta» como destino y `FechaReapertura` (solo la última) alimenta `DiasProceso`, la insignia ↻ y el borde `#DB2777`.
 - Los hitos que crea el modelo guardan texto en castellano con el prefijo compartido `Reabierta. `; traducirlos al mostrar queda pendiente.
-- El límite de 2 MB es una invariante del almacén: se aplica al adjuntar, al migrar ficheros antiguos y al abrir un documento guardado.
+- El límite de 2 MB es una invariante del almacén: se aplica al adjuntar, al migrar ficheros antiguos y al abrir un documento guardado; al abrir se consulta primero la longitud sin traer el BLOB.
 - Un fichero antiguo de más de 2 MB no se migra: queda pendiente con su ruta intacta, sin BLOB y sin borrar el fichero, con un único aviso agrupado por arranque y registro en el fichero de errores (sustituye la migración sin tope anterior).
 - La migración lee con `LectorAdjuntos.Leer` (tope de tamaño y `FileShare.Read`), no con lectura propia.
 - La migración no lee ni borra ficheros fuera de la carpeta de adjuntos: quedan pendientes y registrados. `EstaDentro` es una comprobación textual (`Path.GetFullPath`); no detecta un enlace o unión de directorio dentro de la carpeta, que quedan fuera del modelo de amenaza.
