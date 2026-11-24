@@ -808,7 +808,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Abre el CV o la carta en el visor. Usa el contenido pendiente del editor y, si no lo hay,
     /// el guardado en la base; lo escribe en un temporal porque el visor abre ficheros. Avisa si
-    /// la candidatura no tiene ese documento.
+    /// la candidatura no tiene ese documento o si el guardado supera el límite de tamaño.
     /// </summary>
     [RelayCommand]
     private void AbrirAdjunto(TipoAdjunto? tipo)
@@ -835,6 +835,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
             this.dialogo.VerAdjunto(TemporalesAdjuntos.Escribir(nombre, contenido, this.carpetaTemporales));
         }
+        catch (DocumentoDemasiadoGrandeException)
+        {
+            this.dialogo.Avisar(
+                Localizacion.Texto("Mensaje.AdjuntoGuardadoDemasiadoGrande"),
+                Localizacion.Texto("Titulo.Adjunto"));
+        }
         catch (Exception ex)
         {
             this.dialogo.Avisar(
@@ -845,7 +851,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     /// <summary>
     /// Contenido guardado del documento, proyectando solo esa columna y sin seguimiento: la fila
-    /// no se necesita después y no debe quedar en el contexto.
+    /// no se necesita después y no debe quedar en el contexto. La longitud se comprueba antes de
+    /// traer el BLOB y se lanza <see cref="DocumentoDemasiadoGrandeException"/> si supera el límite.
     /// </summary>
     private byte[]? DocumentoGuardado(TipoAdjunto tipo)
     {
@@ -857,6 +864,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         IQueryable<DocumentosSolicitud> fila = this.db.Set<DocumentosSolicitud>()
             .AsNoTracking()
             .Where(d => d.SolicitudId == solicitud.Id);
+        int? longitud = tipo == TipoAdjunto.Cv
+            ? fila.Select(d => d.Cv == null ? (int?)null : d.Cv.Length).FirstOrDefault()
+            : fila.Select(d => d.Carta == null ? (int?)null : d.Carta.Length).FirstOrDefault();
+        if (longitud > AdjuntosHelper.TamanoMaximoBytes)
+        {
+            throw new DocumentoDemasiadoGrandeException();
+        }
+
         return tipo == TipoAdjunto.Cv
             ? fila.Select(d => d.Cv).FirstOrDefault()
             : fila.Select(d => d.Carta).FirstOrDefault();

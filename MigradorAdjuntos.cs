@@ -22,11 +22,13 @@ internal static class MigradorAdjuntos
     /// <summary>
     /// Migra las filas con ruta pendiente dentro de una transacción. Un fichero que ya no existe
     /// deja su documento vacío y se registra, sin impedir que se migre el resto. Un fichero que
-    /// existe pero no se puede leer conserva su ruta y se reintenta en el siguiente arranque. Es
-    /// idempotente: una fila migrada queda sin ruta y no se vuelve a tocar. Tras confirmar la
-    /// transacción, borra los ficheros migrados de la carpeta de adjuntos y la carpeta si queda vacía.
+    /// existe pero no se puede leer, que supera el límite de tamaño o que está fuera de la carpeta
+    /// de adjuntos conserva su ruta y se reintenta en el siguiente arranque. Es idempotente: una
+    /// fila migrada queda sin ruta y no se vuelve a tocar. Tras confirmar la transacción, borra los
+    /// ficheros migrados de la carpeta de adjuntos y la carpeta si queda vacía. Devuelve las rutas
+    /// que quedaron pendientes por superar el límite, para que el arranque avise una sola vez.
     /// </summary>
-    public static void Migrar(string ruta, string rutaRegistro, string? carpeta = null)
+    public static IReadOnlyList<string> Migrar(string ruta, string rutaRegistro, string? carpeta = null)
     {
         using var conexion = new SqliteConnection(AppDbContext.CadenaConexion(ruta));
         conexion.Open();
@@ -34,25 +36,28 @@ internal static class MigradorAdjuntos
         // Una base creada por esta versión ya no tiene las columnas de ruta.
         if (!TieneColumnasDeRuta(conexion))
         {
-            return;
+            return [];
         }
 
         List<FilaPendiente> pendientes = LeerPendientes(conexion);
         if (pendientes.Count == 0)
         {
-            return;
+            return [];
         }
 
+        string carpetaAdjuntos = carpeta ?? AdjuntosHelper.Carpeta;
         var migradas = new List<string>();
+        var demasiadoGrandes = new List<string>();
         using var transaccion = conexion.BeginTransaction();
         foreach (FilaPendiente fila in pendientes)
         {
-            MigrarFila(conexion, transaccion, fila, rutaRegistro, migradas);
+            MigrarFila(conexion, transaccion, fila, rutaRegistro, carpetaAdjuntos, migradas, demasiadoGrandes);
         }
 
         transaccion.Commit();
 
-        BorrarMigrados(migradas, carpeta ?? AdjuntosHelper.Carpeta, rutaRegistro);
+        BorrarMigrados(migradas, carpetaAdjuntos, rutaRegistro);
+        return demasiadoGrandes;
     }
 
     private static void MigrarFila(
@@ -60,12 +65,14 @@ internal static class MigradorAdjuntos
         SqliteTransaction transaccion,
         FilaPendiente fila,
         string rutaRegistro,
-        List<string> migradas)
+        string carpeta,
+        List<string> migradas,
+        List<string> demasiadoGrandes)
     {
         LecturaAdjunto cv = LeerAdjunto(
-            fila.RutaCv, fila.NombreCv, $"el CV de la candidatura {fila.Id}", rutaRegistro, migradas);
+            fila.RutaCv, fila.NombreCv, $"el CV de la candidatura {fila.Id}", rutaRegistro, carpeta, migradas, demasiadoGrandes);
         LecturaAdjunto carta = LeerAdjunto(
-            fila.RutaCarta, fila.NombreCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro, migradas);
+            fila.RutaCarta, fila.NombreCarta, $"la carta de la candidatura {fila.Id}", rutaRegistro, carpeta, migradas, demasiadoGrandes);
 
         ActualizarSolicitud(conexion, transaccion, fila.Id, cv, carta);
 
@@ -77,21 +84,39 @@ internal static class MigradorAdjuntos
 
     /// <summary>
     /// Lee un adjunto de la fila. Sin ruta no hay nada que hacer; un fichero ausente deja el
-    /// documento vacío; uno ilegible no se toca para reintentarlo en el siguiente arranque.
+    /// documento vacío; uno ilegible, mayor que el límite o fuera de la carpeta de adjuntos no se
+    /// toca para reintentarlo en el siguiente arranque.
     /// </summary>
     private static LecturaAdjunto LeerAdjunto(
         string? ruta,
         string? nombreActual,
         string contexto,
         string rutaRegistro,
-        List<string> migradas)
+        string carpeta,
+        List<string> migradas,
+        List<string> demasiadoGrandes)
     {
         if (ruta is null)
         {
             return new LecturaAdjunto(EstadoAdjunto.SinRuta, null, null);
         }
 
+        // Una ruta externa no se lee ni se borra: la base antigua no manda sobre el disco.
+        if (!EstaDentro(ruta, carpeta))
+        {
+            RegistroErrores.RegistrarEn(
+                rutaRegistro,
+                new IOException($"El adjunto '{ruta}' está fuera de la carpeta de adjuntos '{carpeta}'."),
+                $"no se migró {contexto}: el fichero está fuera de la carpeta de adjuntos");
+            return new LecturaAdjunto(EstadoAdjunto.Fuera, null, null);
+        }
+
         (EstadoAdjunto estado, byte[]? contenido) = LeerFichero(ruta, contexto, rutaRegistro);
+        if (estado == EstadoAdjunto.DemasiadoGrande)
+        {
+            demasiadoGrandes.Add(ruta);
+        }
+
         if (estado != EstadoAdjunto.Leido)
         {
             return new LecturaAdjunto(estado, null, null);
@@ -139,6 +164,7 @@ internal static class MigradorAdjuntos
         }
     }
 
+    // shortcut: comprobación textual de rutas; un enlace o unión de directorio dentro de la carpeta no se detecta, revisar si el modelo de amenaza incluye enlaces.
     private static bool EstaDentro(string ruta, string carpeta)
     {
         string carpetaCompleta = Path.GetFullPath(carpeta) + Path.DirectorySeparatorChar;
@@ -190,8 +216,9 @@ internal static class MigradorAdjuntos
 
     /// <summary>
     /// Devuelve el contenido del fichero y si se pudo leer. Distingue el fichero que ya no existe
-    /// (se puede dar por vacío) del que existe pero no se puede leer (se reintentará). Comprueba
-    /// que el tamaño leído sigue siendo el que tenía el fichero antes de abrirlo.
+    /// (se puede dar por vacío) del que existe pero no se puede leer o supera el límite (se
+    /// reintentará). Comprueba que el tamaño leído sigue siendo el que tenía el fichero antes de
+    /// abrirlo.
     /// </summary>
     private static (EstadoAdjunto Estado, byte[]? Contenido) LeerFichero(
         string ruta,
@@ -201,13 +228,20 @@ internal static class MigradorAdjuntos
         try
         {
             long longitud = new FileInfo(ruta).Length;
-            byte[] contenido = File.ReadAllBytes(ruta);
+            byte[] contenido = LectorAdjuntos.Leer(ruta);
             if (contenido.LongLength != longitud)
             {
                 throw new IOException($"El fichero '{ruta}' cambió de tamaño durante la migración.");
             }
 
             return (EstadoAdjunto.Leido, contenido);
+        }
+        catch (DocumentoDemasiadoGrandeException ex)
+        {
+            // Un fichero antiguo mayor que el límite no se migra: conserva su ruta y el fichero,
+            // y se avisa y reintenta en el siguiente arranque.
+            RegistroErrores.RegistrarEn(rutaRegistro, ex, $"no se pudo migrar {contexto} desde '{ruta}': supera el tamaño máximo");
+            return (EstadoAdjunto.DemasiadoGrande, null);
         }
         catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
         {
@@ -292,6 +326,8 @@ internal static class MigradorAdjuntos
         Leido,
         Ausente,
         Ilegible,
+        DemasiadoGrande,
+        Fuera,
     }
 
     private sealed record LecturaAdjunto(EstadoAdjunto Estado, byte[]? Contenido, string? NombreFichero)

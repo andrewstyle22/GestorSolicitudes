@@ -31,13 +31,14 @@ public partial class App : Application
         // del arranque se quede sin registro ni aviso.
         this.RegistrarManejadoresDeErrores();
 
-        // Un cierre abrupto deja los temporales de adjuntos en disco: se borran aquí
-        // antes de abrir ningún documento.
-        TemporalesAdjuntos.Limpiar();
-
         // Una sola copia abierta: dos contextos sobre la misma base se pisan sin avisar.
         // La segunda avisa a la primera (que mostrará su ventana) y se cierra sin abrir nada.
         this.instancia = new InstanciaUnica();
+
+        // Un cierre abrupto deja los temporales de adjuntos en disco: los borra la copia
+        // principal antes de abrir ningún documento; la segunda no toca los de la primera.
+        TemporalesAdjuntos.LimpiarSiEsPrimera(this.instancia.EsPrimera);
+
         if (!this.instancia.EsPrimera)
         {
             this.instancia.AvisarALaPrimera();
@@ -48,6 +49,7 @@ public partial class App : Application
         }
 
         AppDbContext contexto = new();
+        IReadOnlyList<string> pendientesPorTamano = [];
         try
         {
             contexto.Database.EnsureCreated();
@@ -64,7 +66,7 @@ public partial class App : Application
             // antes de crear el ViewModel, que ya no los busca en ficheros.
             try
             {
-                MigradorAdjuntos.Migrar(AppDbContext.RutaBaseDatos, RegistroErrores.Ruta);
+                pendientesPorTamano = MigradorAdjuntos.Migrar(AppDbContext.RutaBaseDatos, RegistroErrores.Ruta);
             }
             catch (Exception ex)
             {
@@ -81,6 +83,18 @@ public partial class App : Application
                 Localizacion.Texto("Titulo.ErrorAlIniciar"), MessageBoxButton.OK, MessageBoxImage.Error);
             this.Shutdown();
             return;
+        }
+
+        // Un solo aviso por arranque: los documentos que no caben en la base se resuelven
+        // reduciendo el fichero o moviéndolo, y el siguiente arranque los reintenta.
+        if (pendientesPorTamano.Count > 0)
+        {
+            this.dialogo.Avisar(
+                string.Format(
+                    Localizacion.Texto("Mensaje.AdjuntosAntiguosDemasiadoGrandes"),
+                    pendientesPorTamano.Count,
+                    AdjuntosHelper.Carpeta),
+                Localizacion.Texto("Titulo.AdjuntosAntiguos"));
         }
 
         this.db = contexto;
@@ -154,13 +168,18 @@ public partial class App : Application
     [ExcludeFromCodeCoverage]
     protected override void OnExit(ExitEventArgs e)
     {
+        // Solo la copia principal limpia los temporales: la segunda se cierra aquí
+        // mientras la primera puede tener documentos abiertos en el visor.
+        bool eraPrimera = this.instancia?.EsPrimera == true;
+
         this.viewModel?.Dispose();
         this.db?.Dispose();
         this.instancia?.Dispose();
 
-        // Los documentos abiertos se copiaron a %TEMP% para el visor: no deben sobrevivir
-        // a la sesión.
-        TemporalesAdjuntos.Limpiar();
+        // Los documentos abiertos se copiaron a %TEMP% para el visor: no deben
+        // sobrevivir a la sesión.
+        TemporalesAdjuntos.LimpiarSiEsPrimera(eraPrimera);
+
         base.OnExit(e);
     }
 }

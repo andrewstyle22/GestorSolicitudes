@@ -97,7 +97,8 @@ moverlo o borrarlo. El contenido se lee solo al abrir el documento y se copia a
 borran junto con la candidatura, o si cancelas una candidatura nueva sin llegar a guardarla. Al
 sustituir o quitar uno, el cambio no se aplica hasta que guardas: si cancelas, la candidatura sigue
 teniendo su documento. Las bases de versiones anteriores, que guardaban ficheros en
-`%APPDATA%\GestorSolicitudes\adjuntos`, se migran solas en el primer arranque.
+`%APPDATA%\GestorSolicitudes\adjuntos`, se migran solas en el primer arranque si el fichero no supera
+los 2 MB; los mayores quedan pendientes, con un aviso y sin borrar el original.
 
 ## Detalles que quizá no se vean a simple vista
 
@@ -230,7 +231,7 @@ TextoHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqued
 CsvExportador.cs → exportación CSV pura (cabecera + filas)
 EmbudoHelper.cs, EmbudoPeriodo.cs → lógica del embudo (máximo, periodos, rangos, conteos)
 EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
-Enlaces.cs → validación de los enlaces que se abren (solo http y https)
+Enlaces.cs → validación de los enlaces que se abren (solo http y https, sin credenciales embebidas)
 
 ColumnaItem.cs, ColumnasViewModel.cs → columna ocultable y su preferencia guardada (namespace ViewModels)
 IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces
@@ -256,6 +257,29 @@ GestorSolicitudes.Tests/ → xUnit: modelo, helpers, localización, contexto SQL
 02-DOCS/ → revisiones y decisiones de diseño
 .opencode/skills/ → skills del repo: tests-obligatorios y sonarcloud-gate
 ```
+
+## Modelo de amenaza
+
+Aplicación local de un solo usuario: no hay servidor ni red. La frontera de confianza es la cuenta de
+Windows que la ejecuta.
+
+- **Dónde viven los datos.** La base (`solicitudes.db`, con los documentos en BLOB), el registro de
+  errores y las preferencias están en `%APPDATA%\GestorSolicitudes`, con las ACL que hereda el perfil;
+  no se endurecen. Ese directorio es *Roaming*: con un perfil móvil, el CV y la carta se replican al
+  servidor de perfiles y salen del equipo. Si eso importa, no uses perfil móvil; mover los datos a
+  `%LOCALAPPDATA%` queda fuera de alcance.
+- **El registro no es para compartir.** `errores.log` incluye rutas absolutas y, en los fallos de EF,
+  el SQL. Revisa lo que envías antes de pegarlo en un informe.
+- **Temporales.** Abrir un documento deja una copia sin cifrar en `%TEMP%\GestorSolicitudes\adjuntos`
+  mientras el visor la usa; se borra al cerrar y al arrancar. Una segunda copia de la app no borra la
+  carpeta de la primera.
+- **Lo que sí se mitiga.** Los documentos se limitan a 2 MB al adjuntar, al migrar y al abrir; la
+  migración solo lee y borra ficheros dentro de la carpeta `adjuntos`; el visor no vuelca tipos
+  desconocidos; el CSV neutraliza fórmulas; los enlaces solo se abren si son `http`/`https` sin
+  credenciales y al shell se le pasa la forma canónica.
+- **Fuera del modelo.** Un enlace o unión de directorio dentro de `adjuntos`: `EstaDentro` compara
+  rutas como texto. También quedan fuera un proceso del mismo usuario, las ACL explícitas y el
+  endurecimiento del CI.
 
 ## Decisiones que conviene conocer antes de tocarlo
 

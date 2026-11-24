@@ -20,9 +20,9 @@ La entidad no tiene propiedad de navegación desde `Solicitud`: nada la carga al
 
 **El contenido nuevo vive en el editor.** Al adjuntar, el fichero se lee entero a memoria (máximo 2 MB) y se guarda en `CvContenido` o `CartaContenido` del editor, junto con su nombre. No se copia nada a disco. Al guardar, se escribe en `DocumentosSolicitud`: en una candidatura existente, en el mismo `SaveChanges` que el resto de sus datos; en una nueva, en un segundo `SaveChanges` inmediato, porque la fila necesita el `Id` que asigna el primero. Cancelar o descartar solo tiene que soltar la memoria: ya no hay copias en disco que borrar.
 
-**Límite de 2 MB.** 2 × 1024 × 1024 bytes; un fichero de exactamente ese tamaño se admite. Si pesa más, no se adjunta y sale el aviso «El documento no puede ser mayor a 2 megabytes». El límite se aplica al adjuntar y no a los ficheros que ya existían.
+**Límite de 2 MB.** 2 × 1024 × 1024 bytes; un fichero de exactamente ese tamaño se admite. Si pesa más, no se adjunta y sale el aviso «El documento no puede ser mayor a 2 megabytes». El límite es una invariante del almacén: se aplica al adjuntar, al migrar ficheros antiguos y al abrir un documento guardado. Un fichero antiguo de más de 2 MB no se migra: queda pendiente con su ruta intacta.
 
-**Abrir un documento escribe un fichero temporal.** El visor trabaja con una ruta, así que los bytes se dejan en `%TEMP%\GestorSolicitudes\adjuntos\<guid>\<nombre saneado>`. La carpeta se limpia al cerrar la aplicación y al arrancar, por si la sesión anterior terminó mal.
+**Abrir un documento escribe un fichero temporal.** El visor trabaja con una ruta, así que los bytes se dejan en `%TEMP%\GestorSolicitudes\adjuntos\<guid>\<nombre saneado>`. La carpeta se limpia al cerrar la aplicación y al arrancar, por si la sesión anterior terminó mal. Solo la copia principal limpia: una segunda instancia no borra los documentos que la primera tiene abiertos.
 
 ## Qué aporta y qué no
 
@@ -36,10 +36,10 @@ Al arrancar, después de `EsquemaDb`:
 1. Se crea la tabla si no existe. Si la base ya es de esta versión y no tiene `RutaCv` ni `RutaCarta`, no se hace nada.
 2. Con SQL (no con el modelo) se leen las filas que aún tienen `RutaCv` o `RutaCarta`.
 3. Para cada fichero que existe, se copian sus bytes a `DocumentosSolicitud` dentro de una transacción y se comprueba que el tamaño coincide. `NombreOriginalCv` o `NombreOriginalCarta` se rellenan con el nombre del fichero si estaban vacíos, y la ruta pasa a `NULL`.
-4. Un fichero que ya no existe deja el campo vacío y se registra en el fichero de errores. Un fichero que existe pero no se puede leer (bloqueado, antivirus) no se toca: conserva su ruta y su nombre y se reintenta en el siguiente arranque.
+4. Un fichero que ya no existe deja el campo vacío y se registra en el fichero de errores. Un fichero que existe pero no se puede leer (bloqueado, antivirus, tamaño cambiado), supera los 2 MB o está fuera de la carpeta `adjuntos` no se toca: conserva su ruta y su nombre y se reintenta en el siguiente arranque. Los que superan el tamaño producen además un único aviso agrupado por arranque; todos quedan en el registro.
 5. Solo tras confirmar la transacción se borra el fichero migrado si está dentro de la carpeta `adjuntos` (nunca una ruta arbitraria de la base) y, si queda vacía, la carpeta.
 
-Es idempotente: una fila ya migrada tiene la ruta a `NULL` y no se vuelve a tocar. Los ficheros de más de 2 MB, si los hubiera, también se migran: el límite se aplica al adjuntar. Esta parte se mejorará en otra refactorización.
+Es idempotente: una fila ya migrada tiene la ruta a `NULL` y no se vuelve a tocar. Los ficheros de más de 2 MB y los externos quedan pendientes, sin BLOB y sin borrar el original; el de tamaño se resuelve reduciéndolo o moviéndolo, y el externo copiándolo dentro de la carpeta.
 
 ## Consecuencias
 

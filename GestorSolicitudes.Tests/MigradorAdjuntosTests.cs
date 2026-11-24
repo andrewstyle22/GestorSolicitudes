@@ -2,6 +2,7 @@ namespace GestorSolicitudes.Tests;
 
 using System.IO;
 using GestorSolicitudes.Data;
+using GestorSolicitudes.Helpers;
 using GestorSolicitudes.Models;
 using Microsoft.Data.Sqlite;
 
@@ -29,12 +30,13 @@ public class MigradorAdjuntosTests
             ApuntarRutas(ruta, id, ficheroCv, ficheroCarta);
         }
 
-        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+        IReadOnlyList<string> pendientes = MigradorAdjuntos.Migrar(ruta, registro, carpeta);
 
         using var db2 = new AppDbContext(ruta);
         Solicitud migrada = db2.Solicitudes.Single(s => s.Id == id);
         Assert.Equal(NombreCv, migrada.NombreOriginalCv);
         Assert.Equal("carta.pdf", migrada.NombreOriginalCarta);
+        Assert.Empty(pendientes);
 
         DocumentosSolicitud documentos = db2.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == id);
         Assert.Equal([1, 2, 3], documentos.Cv);
@@ -46,11 +48,13 @@ public class MigradorAdjuntosTests
     }
 
     [Fact]
-    public void Migrar_NoBorraLosFicherosFueraDeLaCarpetaDeAdjuntos()
+    public void Migrar_NoLeeNiBorraLosFicherosFueraDeLaCarpetaDeAdjuntos()
     {
         string origen = TestDb.NuevaCarpeta();
         string adjuntos = TestDb.NuevaCarpeta();
         string ficheroCv = CrearFichero(origen, NombreCv, [9]);
+        string registro = Path.Combine(origen, NombreRegistro);
+        int id;
         string ruta;
 
         using (var db = TestDb.NuevoContexto(out ruta))
@@ -58,12 +62,74 @@ public class MigradorAdjuntosTests
             var solicitud = new SolicitudBuilder().Construir();
             db.Solicitudes.Add(solicitud);
             db.SaveChanges();
-            ApuntarRutas(ruta, solicitud.Id, ficheroCv, null);
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, null);
         }
 
-        MigradorAdjuntos.Migrar(ruta, Path.Combine(origen, NombreRegistro), adjuntos);
+        MigradorAdjuntos.Migrar(ruta, registro, adjuntos);
 
         Assert.True(File.Exists(ficheroCv));
+        Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
+        Assert.Contains(ficheroCv, File.ReadAllText(registro));
+
+        using var db2 = new AppDbContext(ruta);
+        Assert.Empty(db2.Set<DocumentosSolicitud>());
+    }
+
+    [Fact]
+    public void Migrar_UnaCarpetaHermanaConPrefijoComun_NoSeLee()
+    {
+        string padre = TestDb.NuevaCarpeta();
+        string adjuntos = Path.Combine(padre, "adjuntos");
+        string hermana = Path.Combine(padre, "adjuntos-otro");
+        Directory.CreateDirectory(adjuntos);
+        Directory.CreateDirectory(hermana);
+        string ficheroCv = CrearFichero(hermana, NombreCv, [7]);
+        string registro = Path.Combine(padre, NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, null);
+        }
+
+        MigradorAdjuntos.Migrar(ruta, registro, adjuntos);
+
+        Assert.True(File.Exists(ficheroCv));
+        Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
+    }
+
+    [Fact]
+    public void Migrar_UnaRutaConPuntosSuspensivosQueSaleDeLaCarpeta_NoSeLee()
+    {
+        string padre = TestDb.NuevaCarpeta();
+        string adjuntos = Path.Combine(padre, "adjuntos");
+        Directory.CreateDirectory(adjuntos);
+        string ficheroFuera = CrearFichero(padre, NombreCv, [5]);
+        string registro = Path.Combine(padre, NombreRegistro);
+        string rutaCv = Path.Combine(adjuntos, "..", NombreCv);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, rutaCv, null);
+        }
+
+        MigradorAdjuntos.Migrar(ruta, registro, adjuntos);
+
+        Assert.True(File.Exists(ficheroFuera));
+        Assert.Equal(rutaCv, LeerRutas(ruta, id).Cv);
+        Assert.Contains(rutaCv, File.ReadAllText(registro));
     }
 
     [Fact]
@@ -115,7 +181,7 @@ public class MigradorAdjuntosTests
             ApuntarRutas(ruta, solicitud.Id, ficheroCv, null);
         }
 
-        MigradorAdjuntos.Migrar(ruta, Path.Combine(carpeta, NombreRegistro));
+        MigradorAdjuntos.Migrar(ruta, Path.Combine(carpeta, NombreRegistro), carpeta);
 
         using var db2 = new AppDbContext(ruta);
         Assert.Equal("mi curriculum.pdf", db2.Solicitudes.Single().NombreOriginalCv);
@@ -139,7 +205,7 @@ public class MigradorAdjuntosTests
             ApuntarRutas(ruta, solicitud.Id, rutaCv, null);
         }
 
-        MigradorAdjuntos.Migrar(ruta, registro);
+        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
 
         using var db2 = new AppDbContext(ruta);
         Solicitud migrada = db2.Solicitudes.Single();
@@ -232,6 +298,99 @@ public class MigradorAdjuntosTests
         Assert.False(File.Exists(ficheroCv));
         Assert.True(File.Exists(ficheroCarta));
         Assert.Contains(ficheroCarta, File.ReadAllText(registro));
+    }
+
+    [Fact]
+    public void Migrar_FicheroDeExactamenteElLimite_SeMigra()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, new byte[AdjuntosHelper.TamanoMaximoBytes]);
+        string registro = Path.Combine(carpeta, NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, null);
+        }
+
+        MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+
+        using var db2 = new AppDbContext(ruta);
+        DocumentosSolicitud documentos = db2.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == id);
+        Assert.Equal(AdjuntosHelper.TamanoMaximoBytes, documentos.Cv!.Length);
+        Assert.Null(LeerRutas(ruta, id).Cv);
+        Assert.False(File.Exists(ficheroCv));
+    }
+
+    [Fact]
+    public void Migrar_FicheroQueSuperaElLimite_QuedaPendienteSinBlobYConservaElFichero()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, new byte[AdjuntosHelper.TamanoMaximoBytes + 1]);
+        string registro = Path.Combine(TestDb.NuevaCarpeta(), NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, null);
+        }
+
+        IReadOnlyList<string> pendientes = MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+
+        using (var db2 = new AppDbContext(ruta))
+        {
+            Assert.Empty(db2.Set<DocumentosSolicitud>());
+        }
+
+        Assert.Equal([ficheroCv], pendientes);
+        Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
+        Assert.True(File.Exists(ficheroCv));
+        Assert.Contains(ficheroCv, File.ReadAllText(registro));
+    }
+
+    [Fact]
+    public void Migrar_UnDocumentoDemasiadoGrande_NoImpideMigrarElOtro()
+    {
+        string carpeta = TestDb.NuevaCarpeta();
+        string ficheroCv = CrearFichero(carpeta, NombreCv, new byte[AdjuntosHelper.TamanoMaximoBytes + 1]);
+        string ficheroCarta = CrearFichero(carpeta, "carta.pdf", [3, 4]);
+        string registro = Path.Combine(TestDb.NuevaCarpeta(), NombreRegistro);
+        int id;
+        string ruta;
+
+        using (var db = TestDb.NuevoContexto(out ruta))
+        {
+            var solicitud = new SolicitudBuilder().Construir();
+            db.Solicitudes.Add(solicitud);
+            db.SaveChanges();
+            id = solicitud.Id;
+            ApuntarRutas(ruta, id, ficheroCv, ficheroCarta);
+        }
+
+        IReadOnlyList<string> pendientes = MigradorAdjuntos.Migrar(ruta, registro, carpeta);
+
+        using (var db2 = new AppDbContext(ruta))
+        {
+            DocumentosSolicitud documentos = db2.Set<DocumentosSolicitud>().Single(d => d.SolicitudId == id);
+            Assert.Null(documentos.Cv);
+            Assert.Equal([3, 4], documentos.Carta);
+        }
+
+        Assert.Equal([ficheroCv], pendientes);
+        Assert.Equal(ficheroCv, LeerRutas(ruta, id).Cv);
+        Assert.Null(LeerRutas(ruta, id).Carta);
+        Assert.True(File.Exists(ficheroCv));
+        Assert.False(File.Exists(ficheroCarta));
     }
 
     [Fact]

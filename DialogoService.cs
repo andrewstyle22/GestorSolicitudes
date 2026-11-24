@@ -68,12 +68,12 @@ internal sealed class DialogoService : IDialogoService
 
     public void AbrirEnlace(string url)
     {
-        if (!Enlaces.EsWeb(url))
+        if (Enlaces.Canonica(url) is not { } canonica)
         {
             return;
         }
 
-        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(canonica) { UseShellExecute = true });
     }
 
     public void VerAdjunto(string ruta) =>

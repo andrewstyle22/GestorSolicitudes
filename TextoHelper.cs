@@ -39,7 +39,7 @@ public static class TextoHelper
 
         // Una hoja de cálculo ignora los espacios iniciales e interpreta el primer carácter visible
         // como fórmula: el apóstrofo la neutraliza.
-        if (valor.AsSpan().TrimStart(' ') is [var primero, ..] && primero is '=' or '+' or '-' or '@' or '\t' or '\r')
+        if (valor.AsSpan().TrimStart(' ') is [var primero, ..] && primero is '=' or '+' or '-' or '@' or '\t' or '\r' or '\n')
         {
             limpio = "'" + limpio;
         }
