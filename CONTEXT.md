@@ -16,11 +16,12 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 - ✅ S2: migración de adjuntos antiguos (S2.1–S2.3).
 - ✅ S3: apertura de documentos guardados (S3.1).
 - ✅ S4: exportación CSV (S4.1).
-- ⬜ S5: enlaces de oferta (S5.1–S5.2).
+- ✅ S5.1: enlaces con credenciales embebidas.
+- ⬜ S5.2: forma canónica al shell.
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S5.1: `Enlaces.EsWeb` rechaza una URI HTTP o HTTPS con `UserInfo` no vacío, con sus tests. Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S5.2: `DialogoService.AbrirEnlace` pasa a `Process.Start` el `AbsoluteUri` de un único análisis, con tests de `HTTPS://` en mayúsculas y negativos (`ms-msdt:`, ruta absoluta, UNC, `//host`, esquema codificado). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.

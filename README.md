@@ -230,7 +230,7 @@ TextoHelper.cs → escapa los campos del CSV y normaliza el texto de la búsqued
 CsvExportador.cs → exportación CSV pura (cabecera + filas)
 EmbudoHelper.cs, EmbudoPeriodo.cs → lógica del embudo (máximo, periodos, rangos, conteos)
 EstadisticasSolicitud.cs → cabecera de estadísticas (total, abiertas, tasa, media)
-Enlaces.cs → validación de los enlaces que se abren (solo http y https)
+Enlaces.cs → validación de los enlaces que se abren (solo http y https, sin credenciales embebidas)
 
 ColumnaItem.cs, ColumnasViewModel.cs → columna ocultable y su preferencia guardada (namespace ViewModels)
 IDialogoService.cs → lo que el ViewModel le pide al usuario: avisos, confirmar, ficheros, enlaces

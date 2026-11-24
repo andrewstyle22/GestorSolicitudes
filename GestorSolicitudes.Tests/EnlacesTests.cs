@@ -7,6 +7,7 @@ public class EnlacesTests
     [Theory]
     [InlineData("https://example.com/oferta")]
     [InlineData("http://example.com")]
+    [InlineData("https://example.com/@usuario")]
     public void EsWeb_AceptaHttpYHttps(string url) =>
         Assert.True(Enlaces.EsWeb(url));
 
@@ -18,6 +19,7 @@ public class EnlacesTests
     [InlineData("javascript:alert(1)")]
     [InlineData("example.com")]
     [InlineData("mailto:alguien@example.com")]
+    [InlineData("https://usuario:clave@example.com/oferta")]
     public void EsWeb_RechazaLoQueNoEsWeb(string? url) =>
         Assert.False(Enlaces.EsWeb(url));
 }

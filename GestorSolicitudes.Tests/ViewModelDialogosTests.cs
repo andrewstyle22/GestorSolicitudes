@@ -1161,6 +1161,7 @@ public class ViewModelDialogosTests
     [Theory]
     [InlineData("mailto:alguien@example.com")]
     [InlineData("ejemplo.com")]
+    [InlineData("https://usuario:clave@example.com")]
     public void AbrirEnlace_ConEnlaceQueNoEsWeb_AvisaYNoLoAbre(string enlace)
     {
         using var db = TestDb.NuevoContexto();
