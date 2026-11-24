@@ -13,14 +13,14 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 ## Etapas Seguridad
 - ✅ S0: preparación (S0.1).
 - ✅ S1: temporales y arranque (S1.1).
-- ⬜ S2: migración de adjuntos antiguos (S2.1 ✅, S2.2 ✅; S2.3 pendiente).
+- ✅ S2: migración de adjuntos antiguos (S2.1–S2.3).
 - ⬜ S3: apertura de documentos guardados (S3.1).
 - ⬜ S4: exportación CSV (S4.1).
 - ⬜ S5: enlaces de oferta (S5.1–S5.2).
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S2.3: `EstaDentro` antes de leer, para que la migración no lea ni borre ficheros fuera de la carpeta de adjuntos (quedan pendientes y registrados). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S3.1: `AbrirAdjunto` comprueba la longitud del BLOB antes de leerlo y avisa si supera `AdjuntosHelper.TamanoMaximoBytes`; después, punto de control A. Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.
@@ -48,7 +48,7 @@ Commit S2.3: `EstaDentro` antes de leer, para que la migración no lea ni borre 
 - El límite de 2 MB es una invariante del almacén: se aplica al adjuntar, al migrar ficheros antiguos y al abrir un documento guardado.
 - Un fichero antiguo de más de 2 MB no se migra: queda pendiente con su ruta intacta, sin BLOB y sin borrar el fichero, con un único aviso agrupado por arranque y registro en el fichero de errores (sustituye la migración sin tope anterior).
 - La migración lee con `LectorAdjuntos.Leer` (tope de tamaño y `FileShare.Read`), no con lectura propia.
-- La migración no lee ni borra ficheros fuera de la carpeta de adjuntos: quedan pendientes y registrados.
+- La migración no lee ni borra ficheros fuera de la carpeta de adjuntos: quedan pendientes y registrados. `EstaDentro` es una comprobación textual (`Path.GetFullPath`); no detecta un enlace o unión de directorio dentro de la carpeta, que quedan fuera del modelo de amenaza.
 - CSV: también se neutraliza un valor que empieza por salto de línea seguido de una fórmula (defensa en profundidad; el CSV lo teclea el mismo usuario que lo abre).
 - Enlaces: se rechazan los que llevan credenciales embebidas y al shell se le pasa la forma canónica (`AbsoluteUri`).
 - El CI queda fuera del plan de seguridad (opción C): el endurecimiento de los workflows va después de decidir si se borra `dotnet-desktop.yml`.
