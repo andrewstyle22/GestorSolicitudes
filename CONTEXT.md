@@ -19,10 +19,10 @@ Plan cerrado: `02-DOCS/plan-refactor-security.md` (S0–S6). Anteriores: `plan-r
 - ✅ S5.1: enlaces con credenciales embebidas.
 - ✅ S5.2: forma canónica al shell.
 - ✅ S6: documentación y cierre (S6.1–S6.2).
-- 🔄 Fuera del plan: cierre del PR #35 y reorganización en carpetas.
+- 🔄 Fuera del plan: reorganización en carpetas.
 
 ## Siguiente paso concreto
-No hay etapa siguiente en el plan: mergear el PR #35 (Quality Gate en verde) y, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Sin etapa en curso. Pendientes: las pruebas manuales S1.1 y S2.2 (ver «Puntos de control pendientes»), y, cuando se decida, el CI y la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo, para proteger las reglas de negocio.
@@ -66,7 +66,7 @@ No hay etapa siguiente en el plan: mergear el PR #35 (Quality Gate en verde) y, 
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
 
 ## Fuera del plan
-- Reorganización en carpetas, en una rama aparte tras mergear Ponytail, con los namespaces siguiendo las carpetas. Antes de mover nada hay que hacer `FuentesTests` independiente de la estructura (rutas fijas y `TopDirectoryOnly`) y actualizar los `<Page>` del csproj; `IDialogoService` y `DialogosNulos` se quedan en `ViewModels` y `DialogoService` en `Views`. Se activará IDE0130 como aviso al terminar.
+- Reorganización en carpetas, en una rama aparte, con los namespaces siguiendo las carpetas. Antes de mover nada hay que hacer `FuentesTests` independiente de la estructura (rutas fijas y `TopDirectoryOnly`) y actualizar los `<Page>` del csproj; `IDialogoService` y `DialogosNulos` se quedan en `ViewModels` y `DialogoService` en `Views`. Se activará IDE0130 como aviso al terminar.
 - Hallazgo 6 (CI duplicado) y protección de rama en GitHub.
 - Vista previa de imágenes.
 - Seguimiento `FechaReapertura + 7` puede caer en el pasado.
