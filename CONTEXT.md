@@ -15,12 +15,12 @@ Plan: `02-DOCS/plan-refactor-security.md` (leer solo la sección en curso; nace 
 - ✅ S1: temporales y arranque (S1.1).
 - ✅ S2: migración de adjuntos antiguos (S2.1–S2.3).
 - ✅ S3: apertura de documentos guardados (S3.1).
-- ⬜ S4: exportación CSV (S4.1).
+- ✅ S4: exportación CSV (S4.1).
 - ⬜ S5: enlaces de oferta (S5.1–S5.2).
 - ⬜ S6: documentación y cierre (S6.1–S6.2).
 
 ## Siguiente paso concreto
-Commit S4.1: `TextoHelper.Escapar` neutraliza también un texto que empieza por salto de línea y fórmula, con sus tests. Punto de control A superado con los tests de migración y apertura (706 pruebas). Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
+Commit S5.1: `Enlaces.EsWeb` rechaza una URI HTTP o HTTPS con `UserInfo` no vacío, con sus tests. Pendiente también mergear el PR #32 (Quality Gate en verde) y, después, en una rama aparte, la reorganización en carpetas (ver «Fuera del plan»).
 
 ## Decisiones vigentes
 - Ningún modelo expone setters públicos ni la UI bindea la entidad: la edición va por el búfer del editor y EF escribe por campo.

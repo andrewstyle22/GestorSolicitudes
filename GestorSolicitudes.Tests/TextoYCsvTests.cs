@@ -39,6 +39,8 @@ public class TextoYCsvTests
     [InlineData("@usuario", "\"'@usuario\"")]
     [InlineData("\ttexto", "\"'\ttexto\"")]
     [InlineData("\rtexto", "\"' texto\"")]
+    [InlineData("\ntexto", "\"' texto\"")]
+    [InlineData("\n=1+1", "\"' =1+1\"")]
     [InlineData(" =2+2", "\"' =2+2\"")]
     [InlineData("  \ttexto", "\"'  \ttexto\"")]
     public void Escapar_NeutralizaLasCeldasQueEmpiezanPorFormula(string valor, string esperado)

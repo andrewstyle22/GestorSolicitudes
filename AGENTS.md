@@ -51,7 +51,7 @@ Resumen de `02-DOCS/decisiones/estados-y-reapertura.md`:
 ## Decisiones vigentes (etapa 5: correcciones)
 
 - **Cambios sin guardar:** `ResolverCambiosPendientes()` pregunta Guardar/Descartar/Cancelar al cambiar de fila, pulsar *Nueva* o *Duplicar* y cerrar la ventana. Con Guardar, la acción pedida sigue solo si `TryGuardar()` fue bien; Descartar hace la misma limpieza que *Cancelar*. Todo `Persistir()` fallido recarga el editor desde la entidad.
-- **CSV:** `ExportarCsv` pregunta el separador (`;`, `,` o tabulador) antes del destino y lo recuerda en `%APPDATA%\GestorSolicitudes\csv.txt` (`PreferenciaCsv`; `EsValido` es la única lista y el patrón es el de `PreferenciaIdioma`). `CsvExportador.Construir` recibe el separador (`;` por defecto) e incluye motivo de cierre y reapertura. `TextoHelper.Escapar` antepone `'` a los textos que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro; fechas y números no pasan por él. El ViewModel recibe la ruta de la preferencia en el constructor para no tocar `%APPDATA%` en los tests.
+- **CSV:** `ExportarCsv` pregunta el separador (`;`, `,` o tabulador) antes del destino y lo recuerda en `%APPDATA%\GestorSolicitudes\csv.txt` (`PreferenciaCsv`; `EsValido` es la única lista y el patrón es el de `PreferenciaIdioma`). `CsvExportador.Construir` recibe el separador (`;` por defecto) e incluye motivo de cierre y reapertura. `TextoHelper.Escapar` antepone `'` a los textos que empiezan por `=`, `+`, `-`, `@`, tabulador, retorno de carro o salto de línea; fechas y números no pasan por él. El ViewModel recibe la ruta de la preferencia en el constructor para no tocar `%APPDATA%` en los tests.
 - **Fecha de solicitud:** cambiarla mueve el hito `SolicitudEnviada` y el seguimiento propuesto solo si coincidían con la fecha anterior; el seguimiento no se mueve con reapertura. Se aplica en `ActualizarFechas` y en `OnFechaSolicitudChanged`.
 - **Respuesta de la empresa:** `EsRespuestaDeLaEmpresa` cuenta los estados abiertos salvo «Enviada» y «Sin respuesta», más «Descartado por la empresa», «Oferta aceptada» y «Oferta rechazada por mí». Solo «Retirada por mí» no cuenta. Los datos antiguos no se corrigen.
 - **Descripción de eventos:** `Evento.LongitudMaximaDescripcion` (500) es la única fuente del `[MaxLength]` y de la validación del búfer; `Validar()` incluye los eventos.
@@ -61,7 +61,7 @@ Resumen de `02-DOCS/decisiones/estados-y-reapertura.md`:
 
 Ninguna auditoría debe «arreglar» lo siguiente sin una razón nueva:
 
-- **`TextoHelper.Escapar`:** decide el apóstrofo con el primer carácter visible del valor original, y `\r` y `\n` ya se sustituyen en la salida.
+- **`TextoHelper.Escapar`:** decide el apóstrofo con el primer carácter visible del valor original, y `\r` y `\n` ya se sustituyen en la salida. El salto de línea (`\r` o `\n`) también dispara el apóstrofo: tras sustituirse por un espacio dejaría la fórmula como primer carácter visible de la celda.
 - **`PreferenciaCsv.LeerDe`:** no recorta la cadena; el tabulador es un separador válido.
 - **Duplicar:** no copia los adjuntos ni sus nombres; copiar el nombre dejaría `TieneCv` en verdadero sin fila en `DocumentosSolicitud`.
 - **`Recargar`:** lee toda la tabla y los filtros son en memoria; con cientos de filas es suficiente y conserva la identidad de las entidades rastreadas.
