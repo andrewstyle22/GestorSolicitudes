@@ -30,10 +30,10 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 
 - **Documentos en la base de datos:** `DocumentosSolicitud` (namespace `Models`) guarda el CV y la carta como BLOB, una fila por candidatura, sin navegación desde `Solicitud`. `Solicitud` solo conserva el nombre original, y `TieneCv`/`TieneCarta` salen de él. La fila se lee solo al abrir el documento y el contenido pendiente vive en el editor (`CvContenido`, `CartaContenido`) hasta que `Guardar` lo escribe; si el guardado falla, el búfer lo conserva. La fila de `DocumentosSolicitud` se crea después del primer `SaveChanges` (hace falta el `Id`).
 - **Límite de 2 MB:** `AdjuntosHelper.TamanoMaximoBytes` es la única fuente; `LectorAdjuntos.Leer` mide antes de reservar memoria y el ViewModel muestra el aviso.
-- **Abrir un documento:** `TemporalesAdjuntos` lo copia a `%TEMP%\GestorSolicitudes\adjuntos` y llama al visor; la carpeta se limpia al arrancar y al cerrar. El visor no vuelca a texto los tipos desconocidos y acota DOCX/ODT a 10 MB.
-- **Migración:** `MigradorAdjuntos` corre al arrancar tras `EsquemaDb`, es idempotente, ignora bases sin `RutaCv`/`RutaCarta`, registra los fallos y borra del disco solo los ficheros ya copiados a la base.
+- **Abrir un documento:** `TemporalesAdjuntos` lo copia a `%TEMP%\GestorSolicitudes\adjuntos` y llama al visor; la carpeta se limpia al arrancar y al cerrar solo por la copia principal (`LimpiarSiEsPrimera`), para no borrar lo que otra instancia tiene abierto. El visor no vuelca a texto los tipos desconocidos y acota DOCX/ODT a 10 MB.
+- **Migración:** `MigradorAdjuntos` corre al arrancar tras `EsquemaDb`, es idempotente, ignora bases sin `RutaCv`/`RutaCarta`, registra los fallos y borra del disco solo los ficheros ya copiados a la base. Solo migra ficheros dentro de la carpeta de adjuntos y de hasta 2 MB; el resto queda pendiente con su ruta intacta, se registra y se reintenta en el siguiente arranque (los grandes, con un aviso agrupado por arranque).
 - **Instancia única:** `InstanciaUnica` se crea antes de abrir la base; la segunda copia avisa a la primera, se cierra sin abrir base ni ventana, y se libera en `OnExit`.
-- **Errores:** `RegistroErrores` escribe en `%APPDATA%\GestorSolicitudes\errores.log`, nunca lanza y se recorta a 1 MB; `ManejadorErrores.Avisar` registra y avisa por `IDialogoService`.
+- **Errores:** `RegistroErrores` escribe en `%APPDATA%\GestorSolicitudes\errores.log`, nunca lanza y se recorta a 1 MB; `ManejadorErrores.Avisar` registra y avisa por `IDialogoService`. El registro incluye rutas absolutas y, en los fallos de EF, el SQL.
 
 ## Decisiones vigentes (etapa R: estados y reapertura)
 
@@ -69,6 +69,8 @@ Ninguna auditoría debe «arreglar» lo siguiente sin una razón nueva:
 - **`TryGuardar`:** recarga el editor desde la entidad tras un fallo; así conserva las ediciones y el contenido pendiente de los documentos.
 - **XAML:** se declaran a mano en el csproj; `FuentesTests` falla si falta alguno.
 - **Esquema:** se mantiene con `EsquemaDb` y no con migraciones; el test de esquema evita olvidos.
+- **Enlaces:** solo se abren `http`/`https` sin credenciales embebidas; al shell se le pasa `AbsoluteUri`.
+- **Modelo de amenaza:** el de `README.md` (app local de un solo usuario, datos en `%APPDATA%` Roaming con ACL heredadas, registro con rutas y SQL, uniones de directorio fuera del modelo, temporales hasta salir). No añadas defensas para lo que ese modelo deja fuera sin una razón nueva.
 
 ## UI y localización
 
