@@ -1,0 +1,824 @@
+{
+  ".github/workflows/dotnet-desktop.yml": {
+    "mtime": 1793369340.57324,
+    "seen": 1795727116.0312068,
+    "ast_hash": "d406a5745a558b746371416410ad18df",
+    "semantic_hash": "d406a5745a558b746371416410ad18df"
+  },
+  ".github/workflows/sonarcloud.yml": {
+    "mtime": 1793369340.5742373,
+    "seen": 1795727116.0312135,
+    "ast_hash": "c853bd911f7eedbe059b7f88323b8d07",
+    "semantic_hash": "c853bd911f7eedbe059b7f88323b8d07"
+  },
+  "Adjunto.cs": {
+    "mtime": 1794921644.0643785,
+    "seen": 1795727116.0312166,
+    "ast_hash": "a7991ce45ccf4bf36245aebeede67988",
+    "semantic_hash": "a7991ce45ccf4bf36245aebeede67988"
+  },
+  "AdjuntosHelper.cs": {
+    "mtime": 1794921644.0653756,
+    "seen": 1795727116.0312188,
+    "ast_hash": "7f7a8333a9019495320c8ea8e7cec702",
+    "semantic_hash": "7f7a8333a9019495320c8ea8e7cec702"
+  },
+  "App.xaml": {
+    "mtime": 1794218559.892812,
+    "seen": 1795727116.0312204,
+    "ast_hash": "24ce85741db7087c0f1842a9a5c4e28b",
+    "semantic_hash": "24ce85741db7087c0f1842a9a5c4e28b"
+  },
+  "App.xaml.cs": {
+    "mtime": 1795530441.3126526,
+    "seen": 1795727116.0312219,
+    "ast_hash": "8567b6d21221c9e958a692c95ef1064b",
+    "semantic_hash": "8567b6d21221c9e958a692c95ef1064b"
+  },
+  "AppDbContext.cs": {
+    "mtime": 1794921644.0693648,
+    "seen": 1795727116.0312235,
+    "ast_hash": "0dc1376a2b771301b6c5e576c4619c94",
+    "semantic_hash": "0dc1376a2b771301b6c5e576c4619c94"
+  },
+  "ColoresEstado.cs": {
+    "mtime": 1793544051.5483115,
+    "seen": 1795727116.0312247,
+    "ast_hash": "776b1e846c3b953a67d8f30eb4477fcf",
+    "semantic_hash": "776b1e846c3b953a67d8f30eb4477fcf"
+  },
+  "ColumnaItem.cs": {
+    "mtime": 1793184459.8566315,
+    "seen": 1795727116.0312262,
+    "ast_hash": "1d46aee60e2b1518a47d90e0a3afed2c",
+    "semantic_hash": "1d46aee60e2b1518a47d90e0a3afed2c"
+  },
+  "ColumnasHelper.cs": {
+    "mtime": 1793033239.5487435,
+    "seen": 1795727116.0312274,
+    "ast_hash": "78f2f1a09460627ea739677cb5363540",
+    "semantic_hash": "78f2f1a09460627ea739677cb5363540"
+  },
+  "ColumnasViewModel.cs": {
+    "mtime": 1793184459.857629,
+    "seen": 1795727116.0312288,
+    "ast_hash": "ea0d6150ce604c5ad06f3ab45e8d5ae6",
+    "semantic_hash": "ea0d6150ce604c5ad06f3ab45e8d5ae6"
+  },
+  "Convertidores.cs": {
+    "mtime": 1794218559.8999853,
+    "seen": 1795727116.0312302,
+    "ast_hash": "5cd9b6c9bf0c9e683bbec1f27a300d6e",
+    "semantic_hash": "5cd9b6c9bf0c9e683bbec1f27a300d6e"
+  },
+  "CsvExportador.cs": {
+    "mtime": 1794506365.180983,
+    "seen": 1795727116.0312314,
+    "ast_hash": "3d08a43fdde2d858778de791698fe3db",
+    "semantic_hash": "3d08a43fdde2d858778de791698fe3db"
+  },
+  "CulturaApp.cs": {
+    "mtime": 1793369340.594538,
+    "seen": 1795727116.031233,
+    "ast_hash": "0ef99d9dd70a0816efc2ed211ab88aa9",
+    "semantic_hash": "0ef99d9dd70a0816efc2ed211ab88aa9"
+  },
+  "DatosOferta.cs": {
+    "mtime": 1793878234.9416645,
+    "seen": 1795727116.0312343,
+    "ast_hash": "0e7ab8b6944ae24668421a32c68ebf84",
+    "semantic_hash": "0e7ab8b6944ae24668421a32c68ebf84"
+  },
+  "DialogoService.cs": {
+    "mtime": 1795530441.3156445,
+    "seen": 1795727116.0312357,
+    "ast_hash": "e97a7a2695014a5916f02fe11bb262e1",
+    "semantic_hash": "e97a7a2695014a5916f02fe11bb262e1"
+  },
+  "DialogosNulos.cs": {
+    "mtime": 1794506365.1839743,
+    "seen": 1795727116.0312366,
+    "ast_hash": "391aaf7151382725929b978888191b86",
+    "semantic_hash": "391aaf7151382725929b978888191b86"
+  },
+  "DocumentoDemasiadoGrandeException.cs": {
+    "mtime": 1794921644.0723562,
+    "seen": 1795727116.0312378,
+    "ast_hash": "82cb2af51747f92dbd05dc151b97d9c6",
+    "semantic_hash": "82cb2af51747f92dbd05dc151b97d9c6"
+  },
+  "DocumentoHelper.cs": {
+    "mtime": 1794921644.0743504,
+    "seen": 1795727116.0312388,
+    "ast_hash": "fbc8a071edfca2f6b46b4028e84eb15d",
+    "semantic_hash": "fbc8a071edfca2f6b46b4028e84eb15d"
+  },
+  "DocumentosSolicitud.cs": {
+    "mtime": 1794921644.0753481,
+    "seen": 1795727116.0312402,
+    "ast_hash": "42b79d50c3ec7e32a310ac6951039793",
+    "semantic_hash": "42b79d50c3ec7e32a310ac6951039793"
+  },
+  "EmbudoHelper.cs": {
+    "mtime": 1793369340.5995233,
+    "seen": 1795727116.0312412,
+    "ast_hash": "f5c47e80ee5b4973c3b23aabbc7063ba",
+    "semantic_hash": "f5c47e80ee5b4973c3b23aabbc7063ba"
+  },
+  "EmbudoPeriodo.cs": {
+    "mtime": 1793033239.5632832,
+    "seen": 1795727116.0312426,
+    "ast_hash": "caad5edf2e44625358648ec6a2181fc2",
+    "semantic_hash": "caad5edf2e44625358648ec6a2181fc2"
+  },
+  "Enlaces.cs": {
+    "mtime": 1795530441.317639,
+    "seen": 1795727116.0312443,
+    "ast_hash": "d7f3733be8eb0c7fea8ea0f829fce9ce",
+    "semantic_hash": "d7f3733be8eb0c7fea8ea0f829fce9ce"
+  },
+  "EnumHelper.cs": {
+    "mtime": 1793369340.6005204,
+    "seen": 1795727116.0312455,
+    "ast_hash": "8dd4ff74074a88bb6f119b860d64cb6f",
+    "semantic_hash": "8dd4ff74074a88bb6f119b860d64cb6f"
+  },
+  "Enumeraciones.cs": {
+    "mtime": 1794921644.0773425,
+    "seen": 1795727116.0312467,
+    "ast_hash": "23c785272ddb19b90248aab0be58710c",
+    "semantic_hash": "23c785272ddb19b90248aab0be58710c"
+  },
+  "EsquemaDb.cs": {
+    "mtime": 1795098195.6164346,
+    "seen": 1795727116.0312479,
+    "ast_hash": "d90d36b8708164edc2c7ab10658aae17",
+    "semantic_hash": "d90d36b8708164edc2c7ab10658aae17"
+  },
+  "EstadisticasSolicitud.cs": {
+    "mtime": 1793369340.6015184,
+    "seen": 1795727116.031249,
+    "ast_hash": "746e95a95bbdd975876ec968940c8eae",
+    "semantic_hash": "746e95a95bbdd975876ec968940c8eae"
+  },
+  "EstadoSolicitudExtensiones.cs": {
+    "mtime": 1794921644.081332,
+    "seen": 1795727116.0312502,
+    "ast_hash": "ecfd809ae07496d6383a0d29674b5233",
+    "semantic_hash": "ecfd809ae07496d6383a0d29674b5233"
+  },
+  "Evento.cs": {
+    "mtime": 1794506365.186968,
+    "seen": 1795727116.0312514,
+    "ast_hash": "51ae0e8659b6f95e51422744501c951e",
+    "semantic_hash": "51ae0e8659b6f95e51422744501c951e"
+  },
+  "EventoViewModel.cs": {
+    "mtime": 1794506365.1889641,
+    "seen": 1795727116.0312524,
+    "ast_hash": "4e2c5bcee9bcef5452a73b62548665a8",
+    "semantic_hash": "4e2c5bcee9bcef5452a73b62548665a8"
+  },
+  "GestorSolicitudes.Tests/AppDbContextTests.cs": {
+    "mtime": 1794921644.0833273,
+    "seen": 1795727116.0312538,
+    "ast_hash": "9613d224015be7319c511af7d3aac7d5",
+    "semantic_hash": "9613d224015be7319c511af7d3aac7d5"
+  },
+  "GestorSolicitudes.Tests/ArquitecturaTests.cs": {
+    "mtime": 1794297558.909389,
+    "seen": 1795727116.031255,
+    "ast_hash": "c75e2bd252882edc3bb492d4b14b7562",
+    "semantic_hash": "c75e2bd252882edc3bb492d4b14b7562"
+  },
+  "GestorSolicitudes.Tests/ColumnasTests.cs": {
+    "mtime": 1793369340.6085007,
+    "seen": 1795727116.0312564,
+    "ast_hash": "9d12316d4e7998e83a5eebec7b24953f",
+    "semantic_hash": "9d12316d4e7998e83a5eebec7b24953f"
+  },
+  "GestorSolicitudes.Tests/ConvertidorTests.cs": {
+    "mtime": 1794218559.907964,
+    "seen": 1795727116.0312576,
+    "ast_hash": "b1e070444d22f48384751e92ab771c29",
+    "semantic_hash": "b1e070444d22f48384751e92ab771c29"
+  },
+  "GestorSolicitudes.Tests/CsvExportadorTests.cs": {
+    "mtime": 1794506365.19161,
+    "seen": 1795727116.0312586,
+    "ast_hash": "eb8932e253df00d4c0a1edbd20e899d9",
+    "semantic_hash": "eb8932e253df00d4c0a1edbd20e899d9"
+  },
+  "GestorSolicitudes.Tests/DialogoFalso.cs": {
+    "mtime": 1794506365.193605,
+    "seen": 1795727116.03126,
+    "ast_hash": "cc3acd9c63be0a92ce9dd3ca62f6b115",
+    "semantic_hash": "cc3acd9c63be0a92ce9dd3ca62f6b115"
+  },
+  "GestorSolicitudes.Tests/DialogosNulosTests.cs": {
+    "mtime": 1794506365.1946025,
+    "seen": 1795727116.0312612,
+    "ast_hash": "9e5066d5cc3f692a5f8c13bdd3f5a3b8",
+    "semantic_hash": "9e5066d5cc3f692a5f8c13bdd3f5a3b8"
+  },
+  "GestorSolicitudes.Tests/DocumentoHelperTests.cs": {
+    "mtime": 1794921644.0853212,
+    "seen": 1795727116.0312622,
+    "ast_hash": "88b3126a8d66b626c2a43129e63c10af",
+    "semantic_hash": "88b3126a8d66b626c2a43129e63c10af"
+  },
+  "GestorSolicitudes.Tests/DocumentosSolicitudTests.cs": {
+    "mtime": 1794921644.087316,
+    "seen": 1795727116.0312636,
+    "ast_hash": "5d45728f2dec0df2fa99437a109efc26",
+    "semantic_hash": "5d45728f2dec0df2fa99437a109efc26"
+  },
+  "GestorSolicitudes.Tests/EmbudoHelperTests.cs": {
+    "mtime": 1793624252.69266,
+    "seen": 1795727116.0312648,
+    "ast_hash": "2a95d6dc0acf6489e7e253813e01e3e6",
+    "semantic_hash": "2a95d6dc0acf6489e7e253813e01e3e6"
+  },
+  "GestorSolicitudes.Tests/EnlacesTests.cs": {
+    "mtime": 1795530441.3196342,
+    "seen": 1795727116.0312657,
+    "ast_hash": "82dbfed97b0c6bffc75ae59554a0217a",
+    "semantic_hash": "82dbfed97b0c6bffc75ae59554a0217a"
+  },
+  "GestorSolicitudes.Tests/EnumHelperTests.cs": {
+    "mtime": 1793369340.6224606,
+    "seen": 1795727116.0312672,
+    "ast_hash": "7160e85ad9a31979821b02eba32bed88",
+    "semantic_hash": "7160e85ad9a31979821b02eba32bed88"
+  },
+  "GestorSolicitudes.Tests/EstadisticasConsultaTests.cs": {
+    "mtime": 1793529046.414742,
+    "seen": 1795727116.0312684,
+    "ast_hash": "47b4c819f4f10dbd024b6d56f72ee18c",
+    "semantic_hash": "47b4c819f4f10dbd024b6d56f72ee18c"
+  },
+  "GestorSolicitudes.Tests/EstadisticasSolicitudTests.cs": {
+    "mtime": 1794921644.0893111,
+    "seen": 1795727116.0312705,
+    "ast_hash": "93027119e6aab3e25f2a662be8d11472",
+    "semantic_hash": "93027119e6aab3e25f2a662be8d11472"
+  },
+  "GestorSolicitudes.Tests/EventoViewModelTests.cs": {
+    "mtime": 1794506365.1965976,
+    "seen": 1795727116.0312717,
+    "ast_hash": "b65ad21896cdef43c4477e88c0b9e032",
+    "semantic_hash": "b65ad21896cdef43c4477e88c0b9e032"
+  },
+  "GestorSolicitudes.Tests/FuentesTests.cs": {
+    "mtime": 1794921644.0913048,
+    "seen": 1795727116.031273,
+    "ast_hash": "cb14623ae8bfea6479cc5ee8739196f6",
+    "semantic_hash": "cb14623ae8bfea6479cc5ee8739196f6"
+  },
+  "GestorSolicitudes.Tests/GestorSolicitudes.Tests.csproj": {
+    "mtime": 1794856302.623127,
+    "seen": 1795727116.0312743,
+    "ast_hash": "d9aadf2aec3dff5412f7957f329b354f",
+    "semantic_hash": "d9aadf2aec3dff5412f7957f329b354f"
+  },
+  "GestorSolicitudes.Tests/InstanciaUnicaTests.cs": {
+    "mtime": 1794921644.0923035,
+    "seen": 1795727116.0312755,
+    "ast_hash": "e48de5b925673d772bcb68a6df0cab18",
+    "semantic_hash": "e48de5b925673d772bcb68a6df0cab18"
+  },
+  "GestorSolicitudes.Tests/LectorAdjuntosTests.cs": {
+    "mtime": 1794921644.0932999,
+    "seen": 1795727116.0312767,
+    "ast_hash": "8a09f602e02815936b3cdef3772c7bdb",
+    "semantic_hash": "8a09f602e02815936b3cdef3772c7bdb"
+  },
+  "GestorSolicitudes.Tests/LocalizacionTests.cs": {
+    "mtime": 1795530441.3216288,
+    "seen": 1795727116.031278,
+    "ast_hash": "854a83a71e756a0e0003a632aa73ca5e",
+    "semantic_hash": "854a83a71e756a0e0003a632aa73ca5e"
+  },
+  "GestorSolicitudes.Tests/ManejadorErroresTests.cs": {
+    "mtime": 1794921644.0942972,
+    "seen": 1795727116.031279,
+    "ast_hash": "7367ca6ee68454f3f3001763c9dd4a82",
+    "semantic_hash": "7367ca6ee68454f3f3001763c9dd4a82"
+  },
+  "GestorSolicitudes.Tests/MigradorAdjuntosTests.cs": {
+    "mtime": 1795530441.3236232,
+    "seen": 1795727116.0312803,
+    "ast_hash": "e0ea24eb76562c1ea2773f53ba10ce8d",
+    "semantic_hash": "e0ea24eb76562c1ea2773f53ba10ce8d"
+  },
+  "GestorSolicitudes.Tests/NormalizarMotivosTests.cs": {
+    "mtime": 1794218559.9139478,
+    "seen": 1795727116.0312817,
+    "ast_hash": "e315b1ff615bb2cea539c8434a5f4cce",
+    "semantic_hash": "e315b1ff615bb2cea539c8434a5f4cce"
+  },
+  "GestorSolicitudes.Tests/PaginadorTests.cs": {
+    "mtime": 1795080660.7157595,
+    "seen": 1795727116.0312827,
+    "ast_hash": "a48a7eb73fa1f43b88ce2c8b7b82fc90",
+    "semantic_hash": "a48a7eb73fa1f43b88ce2c8b7b82fc90"
+  },
+  "GestorSolicitudes.Tests/PestanasTests.cs": {
+    "mtime": 1794921644.0982864,
+    "seen": 1795727116.0312839,
+    "ast_hash": "682de407c2bc570444c51cfe047dc16c",
+    "semantic_hash": "682de407c2bc570444c51cfe047dc16c"
+  },
+  "GestorSolicitudes.Tests/PreferenciaCsvTests.cs": {
+    "mtime": 1794506365.2010422,
+    "seen": 1795727116.0312853,
+    "ast_hash": "538f9b2ee472867b733066f2f871634a",
+    "semantic_hash": "538f9b2ee472867b733066f2f871634a"
+  },
+  "GestorSolicitudes.Tests/PreferenciaIdiomaTests.cs": {
+    "mtime": 1793369340.6384192,
+    "seen": 1795727116.0312862,
+    "ast_hash": "224eb4888962b8292b03afcf68fb77a4",
+    "semantic_hash": "224eb4888962b8292b03afcf68fb77a4"
+  },
+  "GestorSolicitudes.Tests/RegistroErroresTests.cs": {
+    "mtime": 1794921644.1002815,
+    "seen": 1795727116.0312877,
+    "ast_hash": "28c605bf7ef7b4fb0f85298739ba61ad",
+    "semantic_hash": "28c605bf7ef7b4fb0f85298739ba61ad"
+  },
+  "GestorSolicitudes.Tests/SolicitudBuilder.cs": {
+    "mtime": 1794921644.1012793,
+    "seen": 1795727116.0312889,
+    "ast_hash": "9312bdece4ad5ff6f6ee180927c32a9b",
+    "semantic_hash": "9312bdece4ad5ff6f6ee180927c32a9b"
+  },
+  "GestorSolicitudes.Tests/SolicitudBuilderTests.cs": {
+    "mtime": 1794921644.1032743,
+    "seen": 1795727116.0312898,
+    "ast_hash": "c11365262736b9d9738be36a3bfc2276",
+    "semantic_hash": "c11365262736b9d9738be36a3bfc2276"
+  },
+  "GestorSolicitudes.Tests/SolicitudEdicionTests.cs": {
+    "mtime": 1794921644.1052687,
+    "seen": 1795727116.0312912,
+    "ast_hash": "c222d74b2ebe1284356ab4247010707d",
+    "semantic_hash": "c222d74b2ebe1284356ab4247010707d"
+  },
+  "GestorSolicitudes.Tests/SolicitudTests.cs": {
+    "mtime": 1794921644.1072624,
+    "seen": 1795727116.0312922,
+    "ast_hash": "2cab275db056612cbb76d9881fa0014e",
+    "semantic_hash": "2cab275db056612cbb76d9881fa0014e"
+  },
+  "GestorSolicitudes.Tests/TemporalesAdjuntosTests.cs": {
+    "mtime": 1795530441.3246205,
+    "seen": 1795727116.0312934,
+    "ast_hash": "db08235e315eb710bcc9a768be6e1c17",
+    "semantic_hash": "db08235e315eb710bcc9a768be6e1c17"
+  },
+  "GestorSolicitudes.Tests/TestDb.cs": {
+    "mtime": 1794921644.1102543,
+    "seen": 1795727116.0312948,
+    "ast_hash": "094321246d942bbe3f54a726b71784d3",
+    "semantic_hash": "094321246d942bbe3f54a726b71784d3"
+  },
+  "GestorSolicitudes.Tests/TextoYCsvTests.cs": {
+    "mtime": 1795530441.3276148,
+    "seen": 1795727116.0312958,
+    "ast_hash": "9ccdf1ca52dc80ff6ec20fb086ab8d2d",
+    "semantic_hash": "9ccdf1ca52dc80ff6ec20fb086ab8d2d"
+  },
+  "GestorSolicitudes.Tests/VerificarColumnasTests.cs": {
+    "mtime": 1795100300.5205827,
+    "seen": 1795727116.031297,
+    "ast_hash": "9eeb67df851951444182bcbee00ed216",
+    "semantic_hash": "9eeb67df851951444182bcbee00ed216"
+  },
+  "GestorSolicitudes.Tests/ViewModelAdjuntosTests.cs": {
+    "mtime": 1795530441.3286102,
+    "seen": 1795727116.0313203,
+    "ast_hash": "1f4d4e3626d53b82987547e11cac91e0",
+    "semantic_hash": "1f4d4e3626d53b82987547e11cac91e0"
+  },
+  "GestorSolicitudes.Tests/ViewModelCsvTests.cs": {
+    "mtime": 1794506365.2100163,
+    "seen": 1795727116.0313215,
+    "ast_hash": "17dd2cb911f269de6594ca73e210715f",
+    "semantic_hash": "17dd2cb911f269de6594ca73e210715f"
+  },
+  "GestorSolicitudes.Tests/ViewModelDialogosTests.cs": {
+    "mtime": 1795530441.3306577,
+    "seen": 1795727116.031323,
+    "ast_hash": "8f402596192a4ad9030ee1ceded9b5f4",
+    "semantic_hash": "8f402596192a4ad9030ee1ceded9b5f4"
+  },
+  "GestorSolicitudes.Tests/ViewModelEmbudoTests.cs": {
+    "mtime": 1794921644.1202278,
+    "seen": 1795727116.0313241,
+    "ast_hash": "19dc586db3ec0efdd80adb8fe5743b99",
+    "semantic_hash": "19dc586db3ec0efdd80adb8fe5743b99"
+  },
+  "GestorSolicitudes.Tests/ViewModelPaginacionTests.cs": {
+    "mtime": 1795080660.7177546,
+    "seen": 1795727116.0313253,
+    "ast_hash": "74d95ef365ae79cd2fd927f5fbf89511",
+    "semantic_hash": "74d95ef365ae79cd2fd927f5fbf89511"
+  },
+  "GestorSolicitudes.Tests/ViewModelTestExtensions.cs": {
+    "mtime": 1793529046.4336908,
+    "seen": 1795727116.0313268,
+    "ast_hash": "f037765a823956c317fa2c41b87565d7",
+    "semantic_hash": "f037765a823956c317fa2c41b87565d7"
+  },
+  "GestorSolicitudes.Tests/ViewModelTests.cs": {
+    "mtime": 1795080660.7197495,
+    "seen": 1795727116.031328,
+    "ast_hash": "f9227492081080dedc21f1d36ce400ba",
+    "semantic_hash": "f9227492081080dedc21f1d36ce400ba"
+  },
+  "GestorSolicitudes.csproj": {
+    "mtime": 1795022189.53822,
+    "seen": 1795727116.031329,
+    "ast_hash": "3ed91b287e09d6520976d469072f3388",
+    "semantic_hash": "3ed91b287e09d6520976d469072f3388"
+  },
+  "GestorSolicitudes.slnx": {
+    "mtime": 1794856077.0584726,
+    "seen": 1795727116.0313306,
+    "ast_hash": "47b54f68dec7f7cba2f1908d16ed0667",
+    "semantic_hash": "47b54f68dec7f7cba2f1908d16ed0667"
+  },
+  "IDialogoService.cs": {
+    "mtime": 1794506365.2169983,
+    "seen": 1795727116.0313318,
+    "ast_hash": "c26a449d880c531ff8d4a13c45aa5587",
+    "semantic_hash": "c26a449d880c531ff8d4a13c45aa5587"
+  },
+  "InstanciaUnica.cs": {
+    "mtime": 1794921644.1242168,
+    "seen": 1795727116.0313332,
+    "ast_hash": "bb6b1e196495875c0b6630d8a57a3d5b",
+    "semantic_hash": "bb6b1e196495875c0b6630d8a57a3d5b"
+  },
+  "InternalsVisibleTo.cs": {
+    "mtime": 1793369340.659484,
+    "seen": 1795727116.0313344,
+    "ast_hash": "5e66934a6d32301c3cd18e37444a4e14",
+    "semantic_hash": "5e66934a6d32301c3cd18e37444a4e14"
+  },
+  "LectorAdjuntos.cs": {
+    "mtime": 1794921644.1242168,
+    "seen": 1795727116.0313356,
+    "ast_hash": "130b5e15d77dcf2725e66b63a2bd85bd",
+    "semantic_hash": "130b5e15d77dcf2725e66b63a2bd85bd"
+  },
+  "Localizacion.cs": {
+    "mtime": 1793369340.660482,
+    "seen": 1795727116.031337,
+    "ast_hash": "0d8cb75df2a98a4c248537de3167c5c3",
+    "semantic_hash": "0d8cb75df2a98a4c248537de3167c5c3"
+  },
+  "MainViewModel.cs": {
+    "mtime": 1795530441.3326504,
+    "seen": 1795727116.031338,
+    "ast_hash": "5829d1d74ad546fbda7a9cfc586a8559",
+    "semantic_hash": "5829d1d74ad546fbda7a9cfc586a8559"
+  },
+  "ManejadorErrores.cs": {
+    "mtime": 1794921644.1282072,
+    "seen": 1795727116.0313394,
+    "ast_hash": "a362b4887f5334f072f8e725c63472e1",
+    "semantic_hash": "a362b4887f5334f072f8e725c63472e1"
+  },
+  "MigradorAdjuntos.cs": {
+    "mtime": 1795530441.3346443,
+    "seen": 1795727116.0313406,
+    "ast_hash": "5cb530c8369e418276d8914f4411ff25",
+    "semantic_hash": "5cb530c8369e418276d8914f4411ff25"
+  },
+  "Paginador.cs": {
+    "mtime": 1795080660.723761,
+    "seen": 1795727116.0313418,
+    "ast_hash": "9ef7f533bae6ed723a5824db20daf073",
+    "semantic_hash": "9ef7f533bae6ed723a5824db20daf073"
+  },
+  "PreferenciaCsv.cs": {
+    "mtime": 1794506365.220987,
+    "seen": 1795727116.0313432,
+    "ast_hash": "642177ed0b6f86e34a85ba9e5a1f7bb9",
+    "semantic_hash": "642177ed0b6f86e34a85ba9e5a1f7bb9"
+  },
+  "PreferenciaIdioma.cs": {
+    "mtime": 1793369340.663473,
+    "seen": 1795727116.0313613,
+    "ast_hash": "6047993429a49f27f2e619a199058059",
+    "semantic_hash": "6047993429a49f27f2e619a199058059"
+  },
+  "RegistroErrores.cs": {
+    "mtime": 1794921644.1331928,
+    "seen": 1795727116.0313697,
+    "ast_hash": "d3e336af526affcbf5bf0d2c48cf6ac1",
+    "semantic_hash": "d3e336af526affcbf5bf0d2c48cf6ac1"
+  },
+  "Solicitud.cs": {
+    "mtime": 1794921644.1354382,
+    "seen": 1795727116.031371,
+    "ast_hash": "d79c04a4f3d51609f113e16bcc9a41ca",
+    "semantic_hash": "d79c04a4f3d51609f113e16bcc9a41ca"
+  },
+  "SolicitudEdicionViewModel.cs": {
+    "mtime": 1794921644.1374273,
+    "seen": 1795727116.0313723,
+    "ast_hash": "4223e2d7316d39133307714de72f1341",
+    "semantic_hash": "4223e2d7316d39133307714de72f1341"
+  },
+  "TemporalesAdjuntos.cs": {
+    "mtime": 1795530441.3386335,
+    "seen": 1795727116.0313735,
+    "ast_hash": "873f967047e53433f005151f61fe5857",
+    "semantic_hash": "873f967047e53433f005151f61fe5857"
+  },
+  "TextoHelper.cs": {
+    "mtime": 1795530441.340629,
+    "seen": 1795727116.031375,
+    "ast_hash": "420c03d3210486d96ad852708403db28",
+    "semantic_hash": "420c03d3210486d96ad852708403db28"
+  },
+  "Traducciones.cs": {
+    "mtime": 1795530441.3426278,
+    "seen": 1795727116.0313761,
+    "ast_hash": "7214fe8cec980b412fd2b155884c0d0d",
+    "semantic_hash": "7214fe8cec980b412fd2b155884c0d0d"
+  },
+  "Views/CabeceraMetricas.xaml": {
+    "mtime": 1793184459.9094913,
+    "seen": 1795727116.031377,
+    "ast_hash": "ac8e1ae2fcc7bf256bae0288ed7bcd9e",
+    "semantic_hash": "ac8e1ae2fcc7bf256bae0288ed7bcd9e"
+  },
+  "Views/CabeceraMetricas.xaml.cs": {
+    "mtime": 1793184459.9105027,
+    "seen": 1795727116.0313785,
+    "ast_hash": "ec376d1dc86b5ae966b9a55c2cfaeabe",
+    "semantic_hash": "ec376d1dc86b5ae966b9a55c2cfaeabe"
+  },
+  "Views/FilaAdjunto.xaml": {
+    "mtime": 1794921644.1444094,
+    "seen": 1795727116.0313797,
+    "ast_hash": "8fbab3d4969da483149bd1ce978b6770",
+    "semantic_hash": "8fbab3d4969da483149bd1ce978b6770"
+  },
+  "Views/FilaAdjunto.xaml.cs": {
+    "mtime": 1794921644.147401,
+    "seen": 1795727116.031381,
+    "ast_hash": "a08dee17d80b7c9e914346610d941b8c",
+    "semantic_hash": "a08dee17d80b7c9e914346610d941b8c"
+  },
+  "Views/MainWindow.xaml": {
+    "mtime": 1795080660.7277308,
+    "seen": 1795727116.0313823,
+    "ast_hash": "688d5fd3451e996b22b65c53820aa95f",
+    "semantic_hash": "688d5fd3451e996b22b65c53820aa95f"
+  },
+  "Views/MainWindow.xaml.cs": {
+    "mtime": 1795080660.7297225,
+    "seen": 1795727116.0313833,
+    "ast_hash": "56c0a4c17d5b89e499c721638ca56891",
+    "semantic_hash": "56c0a4c17d5b89e499c721638ca56891"
+  },
+  "Views/PestanaAdjuntos.xaml": {
+    "mtime": 1793624252.7185895,
+    "seen": 1795727116.0313845,
+    "ast_hash": "ada59ee1d347cf9d015240efbf189f5a",
+    "semantic_hash": "ada59ee1d347cf9d015240efbf189f5a"
+  },
+  "Views/PestanaAdjuntos.xaml.cs": {
+    "mtime": 1793369340.6791644,
+    "seen": 1795727116.031386,
+    "ast_hash": "1f3511a6570aa5352bb97146fc30def7",
+    "semantic_hash": "1f3511a6570aa5352bb97146fc30def7"
+  },
+  "Views/PestanaOferta.xaml": {
+    "mtime": 1794921644.1548657,
+    "seen": 1795727116.031387,
+    "ast_hash": "3e9d5024d10239202adf45310c36f9d0",
+    "semantic_hash": "3e9d5024d10239202adf45310c36f9d0"
+  },
+  "Views/PestanaOferta.xaml.cs": {
+    "mtime": 1793529046.4466555,
+    "seen": 1795727116.0313885,
+    "ast_hash": "0469753a5a087250cd010fa308b5f062",
+    "semantic_hash": "0469753a5a087250cd010fa308b5f062"
+  },
+  "Views/PestanaSeguimiento.xaml": {
+    "mtime": 1794921644.1578574,
+    "seen": 1795727116.0313897,
+    "ast_hash": "533bd8013afdb38c070340b3a98530b5",
+    "semantic_hash": "533bd8013afdb38c070340b3a98530b5"
+  },
+  "Views/PestanaSeguimiento.xaml.cs": {
+    "mtime": 1793184459.9204607,
+    "seen": 1795727116.0313911,
+    "ast_hash": "420007ce93a6b82737581e93b7a14a08",
+    "semantic_hash": "420007ce93a6b82737581e93b7a14a08"
+  },
+  "Views/VentanaRequisitos.xaml": {
+    "mtime": 1789916589.3754861,
+    "seen": 1795727116.0313928,
+    "ast_hash": "9a99cd737a3d5f384218180f3702a1ca",
+    "semantic_hash": "9a99cd737a3d5f384218180f3702a1ca"
+  },
+  "Views/VentanaRequisitos.xaml.cs": {
+    "mtime": 1793369340.6811597,
+    "seen": 1795727116.0313938,
+    "ast_hash": "147f92b1b7e4ba7da82091e903aedc5e",
+    "semantic_hash": "147f92b1b7e4ba7da82091e903aedc5e"
+  },
+  "Views/VentanaSeparadorCsv.xaml": {
+    "mtime": 1794506365.2339535,
+    "seen": 1795727116.031395,
+    "ast_hash": "a122e5c580d97460505d94a489076d62",
+    "semantic_hash": "a122e5c580d97460505d94a489076d62"
+  },
+  "Views/VentanaSeparadorCsv.xaml.cs": {
+    "mtime": 1794506365.2349496,
+    "seen": 1795727116.0313964,
+    "ast_hash": "c2eef7aa62b06f337e9cdacde21abdae",
+    "semantic_hash": "c2eef7aa62b06f337e9cdacde21abdae"
+  },
+  "Views/VisorAdjuntoWindow.xaml": {
+    "mtime": 1793184459.9224563,
+    "seen": 1795727116.0313976,
+    "ast_hash": "6c86ac35eda09e5653ffe5f30682f770",
+    "semantic_hash": "6c86ac35eda09e5653ffe5f30682f770"
+  },
+  "Views/VisorAdjuntoWindow.xaml.cs": {
+    "mtime": 1794921644.1598516,
+    "seen": 1795727116.031399,
+    "ast_hash": "a699d974b0884d6248afc70748e8370f",
+    "semantic_hash": "a699d974b0884d6248afc70748e8370f"
+  },
+  "global.json": {
+    "mtime": 1793369340.6831534,
+    "seen": 1795727116.0314,
+    "ast_hash": "a62022e8191a55e5d49dd0847ffc2113",
+    "semantic_hash": "a62022e8191a55e5d49dd0847ffc2113"
+  },
+  "opencode.json": {
+    "mtime": 1793624252.7195866,
+    "seen": 1795727116.0314012,
+    "ast_hash": "0ea34a065ca0303d09ba70e3a66ce376",
+    "semantic_hash": "0ea34a065ca0303d09ba70e3a66ce376"
+  },
+  "stylecop.json": {
+    "mtime": 1789823098.8856902,
+    "seen": 1795727116.0314023,
+    "ast_hash": "f0e5779a839d49b8bb9d7644e010870e",
+    "semantic_hash": "f0e5779a839d49b8bb9d7644e010870e"
+  },
+  ".github/copilot-instructions.md": {
+    "mtime": 1793878234.9306946,
+    "seen": 1795727116.0314035,
+    "ast_hash": "06190306802afaa6eaca57250c8ac9e5",
+    "semantic_hash": "06190306802afaa6eaca57250c8ac9e5"
+  },
+  ".opencode/commands/avanzar-paso.md": {
+    "mtime": 1793624252.6747067,
+    "seen": 1795727116.0314047,
+    "ast_hash": "43811f118da998e30ff172ade07d5e2c",
+    "semantic_hash": "43811f118da998e30ff172ade07d5e2c"
+  },
+  ".opencode/commands/cerrar-etapa.md": {
+    "mtime": 1795530286.8683574,
+    "seen": 1795727116.0314062,
+    "ast_hash": "e0aca3a9d4618002eb96995a6703124b",
+    "semantic_hash": "e0aca3a9d4618002eb96995a6703124b"
+  },
+  ".opencode/commands/commit-paso.md": {
+    "mtime": 1793624252.6777005,
+    "seen": 1795727116.0314074,
+    "ast_hash": "b9f8ecd632ea6f7f35b907514ea09097",
+    "semantic_hash": "b9f8ecd632ea6f7f35b907514ea09097"
+  },
+  ".opencode/skills/sonarcloud-gate/SKILL.md": {
+    "mtime": 1793624252.680691,
+    "seen": 1795727116.0314083,
+    "ast_hash": "58f612f6c4bced704d029665685d3f57",
+    "semantic_hash": "58f612f6c4bced704d029665685d3f57"
+  },
+  ".opencode/skills/sonarcloud-gate/referencia.md": {
+    "mtime": 1793624252.6826856,
+    "seen": 1795727116.03141,
+    "ast_hash": "d90fe617c1116f5b7d8f406e96cd1304",
+    "semantic_hash": "d90fe617c1116f5b7d8f406e96cd1304"
+  },
+  ".opencode/skills/tests-obligatorios/SKILL.md": {
+    "mtime": 1794921644.0518305,
+    "seen": 1795727116.0314112,
+    "ast_hash": "c3c1efe7a135120be781326788d15134",
+    "semantic_hash": "c3c1efe7a135120be781326788d15134"
+  },
+  "02-DOCS/auditoria-ponytail.md": {
+    "mtime": 1794921644.0528295,
+    "seen": 1795727116.0314124,
+    "ast_hash": "067b11836f89e7a5cb67cf87af1e7d90",
+    "semantic_hash": "067b11836f89e7a5cb67cf87af1e7d90"
+  },
+  "02-DOCS/decisiones/adjuntos-en-base-de-datos.md": {
+    "mtime": 1795530441.3076656,
+    "seen": 1795727116.031414,
+    "ast_hash": "0c014c3f99a21c5e5211bf5dc7ca5429",
+    "semantic_hash": "0c014c3f99a21c5e5211bf5dc7ca5429"
+  },
+  "02-DOCS/decisiones/cabecera-columnas.md": {
+    "mtime": 1790511482.1050582,
+    "seen": 1795727116.0314152,
+    "ast_hash": "678e3b09cd1d8f7dc4907a9f86979e62",
+    "semantic_hash": "678e3b09cd1d8f7dc4907a9f86979e62"
+  },
+  "02-DOCS/decisiones/edicion-con-bufer.md": {
+    "mtime": 1794921644.0568173,
+    "seen": 1795727116.0314164,
+    "ast_hash": "8655700d95e2ff343714506cef8f5baa",
+    "semantic_hash": "8655700d95e2ff343714506cef8f5baa"
+  },
+  "02-DOCS/decisiones/estados-y-reapertura.md": {
+    "mtime": 1794921644.057815,
+    "seen": 1795727116.0314176,
+    "ast_hash": "a775c2f4eb67b08d6e7f249c987c1a72",
+    "semantic_hash": "a775c2f4eb67b08d6e7f249c987c1a72"
+  },
+  "02-DOCS/decisiones/paginacion-tabla.md": {
+    "mtime": 1793369340.580221,
+    "seen": 1795727116.0314188,
+    "ast_hash": "02f4d09fb61d2b504309850ea6484c45",
+    "semantic_hash": "02f4d09fb61d2b504309850ea6484c45"
+  },
+  "02-DOCS/decisiones/selector-columnas.md": {
+    "mtime": 1793369340.5822313,
+    "seen": 1795727116.03142,
+    "ast_hash": "b29f50483ef2ae80a08d8da317c7c244",
+    "semantic_hash": "b29f50483ef2ae80a08d8da317c7c244"
+  },
+  "02-DOCS/plan-refactor-edicion.md": {
+    "mtime": 1794921644.0593934,
+    "seen": 1795727116.0314212,
+    "ast_hash": "cafe9bc914259557fa7be545c5e1d416",
+    "semantic_hash": "cafe9bc914259557fa7be545c5e1d416"
+  },
+  "02-DOCS/plan-refactor-ponytail.md": {
+    "mtime": 1794921644.060388,
+    "seen": 1795727116.0314252,
+    "ast_hash": "028fe1cbecdef125394acb54429ae87c",
+    "semantic_hash": "028fe1cbecdef125394acb54429ae87c"
+  },
+  "02-DOCS/plan-refactor-security.md": {
+    "mtime": 1795530441.309661,
+    "seen": 1795727116.0314267,
+    "ast_hash": "8f9e95ded69e5716dbd34e073c7ea02d",
+    "semantic_hash": "8f9e95ded69e5716dbd34e073c7ea02d"
+  },
+  "02-DOCS/revision-clean-code-2.md": {
+    "mtime": 1793184459.845662,
+    "seen": 1795727116.0314279,
+    "ast_hash": "1e8892f1ff54f8b9225420245277825a",
+    "semantic_hash": "1e8892f1ff54f8b9225420245277825a"
+  },
+  "02-DOCS/revision-clean-code-3.md": {
+    "mtime": 1793369340.5842123,
+    "seen": 1795727116.031429,
+    "ast_hash": "c641e1aa9a4d7ccd202eeb69ad5667fe",
+    "semantic_hash": "c641e1aa9a4d7ccd202eeb69ad5667fe"
+  },
+  "02-DOCS/revision-clean-code.md": {
+    "mtime": 1793184459.848653,
+    "seen": 1795727116.0314305,
+    "ast_hash": "ac71300e7be49aba37128933abab35df",
+    "semantic_hash": "ac71300e7be49aba37128933abab35df"
+  },
+  "AGENTS.md": {
+    "mtime": 1795726129.2681322,
+    "seen": 1795727116.0314314,
+    "ast_hash": "0d466ce5a44dc6a601ffa9e9a8bf71ad",
+    "semantic_hash": "0d466ce5a44dc6a601ffa9e9a8bf71ad"
+  },
+  "CONTEXT.md": {
+    "mtime": 1795550007.661129,
+    "seen": 1795727116.0314326,
+    "ast_hash": "a1f1f249578d7331ad0fd927991ac504",
+    "semantic_hash": "a1f1f249578d7331ad0fd927991ac504"
+  },
+  "LICENSE.txt": {
+    "mtime": 1789754093.9577794,
+    "seen": 1795727116.0314343,
+    "ast_hash": "d229da563da18fe5d58cd95a6467d584",
+    "semantic_hash": "d229da563da18fe5d58cd95a6467d584"
+  },
+  "README.md": {
+    "mtime": 1795530441.3366387,
+    "seen": 1795727116.0314355,
+    "ast_hash": "229b9d69c01bd127f433a3a5f398be4c",
+    "semantic_hash": "229b9d69c01bd127f433a3a5f398be4c"
+  }
+}
