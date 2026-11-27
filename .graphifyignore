@@ -1,0 +1,6 @@
+bin/
+obj/
+.vs/
+.opencode/
+graphify-out/
+LICENSE.txt
