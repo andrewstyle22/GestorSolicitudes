@@ -3,4 +3,5 @@ obj/
 .vs/
 .opencode/
 graphify-out/
+graphify.js
 LICENSE.txt

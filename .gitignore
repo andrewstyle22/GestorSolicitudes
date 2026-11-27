@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # Graphify (grafo de conocimiento generado)
 graphify-out/
+graphify.js
