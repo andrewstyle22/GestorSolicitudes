@@ -51,6 +51,7 @@ Sin etapa en curso. Pendientes: las pruebas manuales S1.1 y S2.2 (ver «Puntos d
 - Enlaces: se rechazan credenciales embebidas y al shell se pasa `AbsoluteUri`, para evitar interpretaciones distintas del URL.
 - Modelo de amenaza en `README.md`: app local de un solo usuario, datos en `%APPDATA%` Roaming con ACL heredadas, registro con rutas y SQL, uniones de directorio fuera del modelo y temporales sin cifrar hasta salir.
 - El CI queda fuera del plan (opción C): hay que decidir si se borra `dotnet-desktop.yml` antes de endurecer los workflows.
+- Graphify: graphify-out/ no se versiona y Sonar la excluye.
 
 ## Reglas de cada commit
 - `dotnet test` en verde (avisos son errores) y `dotnet format --verify-no-changes`.
