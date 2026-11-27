@@ -196,7 +196,7 @@ Todos los textos nuevos necesitan clave en es/en/de en `Traducciones.cs` (el tes
 
 ## 9. Plan de commits
 
-Detalle completo en `02-DOCS/plan-refactor-edicion.md` (Etapa R, R.1 a R.22). Resumen del orden y por qué:
+El detalle de los commits está en el historial de git. Resumen del orden y por qué:
 
 1. **R.1 a R.4:** hito `Reapertura`, valores nuevos del motivo, tabla de motivos permitidos y relleno de datos antiguos.
 2. **R.5 a R.7:** `FechaReapertura`, `DiasProceso` y `Reabrir` en el modelo.

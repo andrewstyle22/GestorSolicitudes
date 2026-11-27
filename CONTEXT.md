@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Plan cerrado: `02-DOCS/plan-refactor-security.md` (S0–S6). Anteriores: `plan-refactor-ponytail.md` (A–F) y `plan-refactor-edicion.md` (0–5; su 6 lo sustituye A).
+Sin plan en curso. Los planes completados y las revisiones de clean code se retiraron; su historial está en git.
 
 ## Etapas Ponytail
 - ✅ A: guardado, navegación, errores y atajos (A.0–A.11).
@@ -62,15 +62,22 @@ Sin etapa en curso. Pendientes: las pruebas manuales S1.1 y S2.2 (ver «Puntos d
 - Al terminar cada paso, este fichero se actualiza en el mismo commit.
 
 ## Puntos de control pendientes
-- Pruebas manuales S1.1 y S2.2 del plan de seguridad: sin registro de ejecución.
+- S1.1: con un documento abierto en el visor, lanzar una segunda copia; el documento sigue abierto y, al cerrar la primera, la carpeta de temporales se vacía.
+- S2.2: con un fichero de más de 2 MB referenciado desde una base antigua, un solo aviso al arrancar, el fichero no se borra y la ruta sigue en la base.
 - Punto de control A (migración y apertura, sin pérdida de rutas ni ficheros y un solo tope de 2 MB): sin registro de ejecución.
 - `TreatWarningsAsErrors`: no dejar miembros sin usar entre commits.
 
 ## Fuera del plan
 - Reorganización en carpetas, en una rama aparte, con los namespaces siguiendo las carpetas. Antes de mover nada hay que hacer `FuentesTests` independiente de la estructura (rutas fijas y `TopDirectoryOnly`) y actualizar los `<Page>` del csproj; `IDialogoService` y `DialogosNulos` se quedan en `ViewModels` y `DialogoService` en `Views`. Se activará IDE0130 como aviso al terminar.
 - Hallazgo 6 (CI duplicado) y protección de rama en GitHub.
-- Vista previa de imágenes.
+- Vista previa de imágenes en el visor.
 - Seguimiento `FechaReapertura + 7` puede caer en el pasado.
 - Hitos como valores únicos traducidos al mostrar.
 - La preferencia del separador CSV se guarda aunque se cancele.
 - Endurecimiento de los workflows del CI (`permissions: contents: read`, `persist-credentials: false`, acciones fijadas por SHA, versión fija de `dotnet-sonarscanner`, `SONAR_TOKEN` solo por entorno, SDK de `global.json` alineado), después de decidir si se borra `dotnet-desktop.yml` (duplicado de `sonarcloud.yml`); si se borra, revisar la protección de rama en GitHub.
+- `DialogosNulos` es el valor por defecto del constructor de `MainViewModel` y escribe un `Debug.WriteLine`; lo correcto es hacer el servicio obligatorio y mover `DialogosNulos` a los tests (hay unos 149 `new MainViewModel(` en los tests: usar un helper).
+- `DateTime.Today` (20 usos en producción): refactor aparte, solo del reloj (`TimeProvider` o un reloj estático); hay que decidir cómo llega a `DiasProceso` y `SeguimientoPendiente`.
+- `Paginador.PuedeIrAInicio` y `PuedeRetroceder` son la misma expresión: derivar una de la otra.
+- `MainViewModel` tiene más de 1400 líneas. Una clase `partial` no lo resuelve; candidatos a extraer: `EmbudoViewModel`, paginación, flujo de guardado y reapertura, exportación CSV y documentos.
+- Mejora de la migración de adjuntos.
+- Probar a mano el desplegable de motivos al pasar de «Descartado» a «Retirada».

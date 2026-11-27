@@ -1,6 +1,6 @@
 # Documentos en la base de datos
 
-El CV y la carta de presentación se guardaban como ficheros en `%APPDATA%\GestorSolicitudes\adjuntos`, y la base de datos solo apuntaba a ellos con una ruta. Pasan a guardarse dentro de la base de datos, en una tabla aparte. Esta decisión forma parte de `plan-refactor-ponytail.md` (Etapa E).
+El CV y la carta de presentación se guardaban como ficheros en `%APPDATA%\GestorSolicitudes\adjuntos`, y la base de datos solo apuntaba a ellos con una ruta. Pasan a guardarse dentro de la base de datos, en una tabla aparte.
 
 ## Decisiones
 

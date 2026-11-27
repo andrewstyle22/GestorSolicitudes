@@ -1,7 +1,7 @@
 ---
 description: Actualiza solo el siguiente paso concreto en CONTEXT.md
 ---
-Lee CONTEXT.md y la sección de la etapa en curso de 02-DOCS/plan-refactor-edicion.md.
+Lee CONTEXT.md y el plan en curso que indique CONTEXT.md; si CONTEXT.md dice que no hay plan en curso, dímelo y no cambies nada.
 
 1. Ejecuta `git log --oneline` y averigua cuál fue el último commit del plan que se hizo.
 2. En CONTEXT.md cambia solo la sección "Siguiente paso concreto": pon el siguiente commit pendiente del plan, con su número y una descripción de una línea.

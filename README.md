@@ -313,8 +313,7 @@ EF accede a sus propiedades por campo (`UsePropertyAccessMode(Field)`).
 parámetros es privado para EF. Los setters de sus propiedades son privados y los cambios pasan por
 métodos de negocio (`ActualizarOferta`, `ActualizarCondiciones`, `CambiarEstado`, entre otros), que
 aplican las validaciones y longitudes admitidas. `Solicitud.CrearCopia()` centraliza la duplicación de
-la parte reutilizable de una oferta. El plan completo y el estado de cada etapa están en
-[`02-DOCS/plan-refactor-edicion.md`](02-DOCS/plan-refactor-edicion.md).
+la parte reutilizable de una oferta. El historial de las refactorizaciones está en git; las decisiones de diseño, en `02-DOCS/decisiones/`.
 
 **Estados y reapertura.** Una candidatura cerrada solo vuelve a abrirse con `Solicitud.Reabrir`,
 nunca por el combo de estado. `CambiarEstado` rechaza el paso de cerrado a abierto, exige un motivo
