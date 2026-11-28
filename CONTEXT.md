@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Sin plan en curso. Los planes completados y las revisiones de clean code se retiraron; su historial está en git.
+Sin plan en curso. Los planes completados, las revisiones de clean code y la auditoría Ponytail se retiraron; su historial está en git.
 
 ## Etapas Ponytail
 - ✅ A: guardado, navegación, errores y atajos (A.0–A.11).
