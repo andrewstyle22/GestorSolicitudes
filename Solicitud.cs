@@ -516,13 +516,5 @@ public class Solicitud
         && this.ProximoSeguimiento.HasValue
         && this.ProximoSeguimiento.Value.Date <= DateTime.Today;
 
-    /// <summary>Gets si hay CV guardado, según su nombre; el contenido se lee de la base al abrir.</summary>
-    [NotMapped]
-    public bool TieneCv => !string.IsNullOrWhiteSpace(this.NombreOriginalCv);
-
-    /// <summary>Gets si hay carta guardada, según su nombre; el contenido se lee de la base al abrir.</summary>
-    [NotMapped]
-    public bool TieneCarta => !string.IsNullOrWhiteSpace(this.NombreOriginalCarta);
-
     public override string ToString() => $"{this.Empresa} — {this.Puesto}";
 }

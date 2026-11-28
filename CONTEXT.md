@@ -31,6 +31,7 @@ Sin etapa en curso. Pendientes: las pruebas manuales S1.1 y S2.2 (ver «Puntos d
 - `ResolverCambiosPendientes` mira también `ChangeTracker.HasChanges()`: un guardado fallido deja la entidad sucia y debe avisar.
 - `RegistroErrores` nunca lanza y se recorta a 1 MB, para que un fallo al registrar no tumbe la aplicación.
 - Los documentos van en `DocumentosSolicitud` como BLOB sin navegación: se leen solo al abrir y el contenido pendiente vive en el editor, para no cargarlos al listar ni perderlos si falla Guardar.
+- `Solicitud` no expone `TieneCv`/`TieneCarta`: el nombre del documento se consulta en `NombreOriginalCv`/`NombreOriginalCarta` y la interfaz activa el botón con `AdjuntoCv`/`AdjuntoCarta` del editor, para no duplicar la regla.
 - El límite de 2 MB es invariante del almacén: se aplica al adjuntar, migrar y abrir, para tener un solo tope.
 - `VerificarColumnas_CubreTodasLasColumnasDelModelo` contrasta modelo y base tras `VerificarColumnasFaltantes`, para detectar columnas nuevas sin registrar.
 - Los temporales se limpian al arrancar y al cerrar solo la copia principal, para no borrar documentos abiertos por otra instancia; el visor no vuelca tipos desconocidos y acota DOCX/ODT a 10 MB.
