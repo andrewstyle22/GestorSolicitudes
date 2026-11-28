@@ -28,7 +28,7 @@ Regla práctica: un helper nuevo va en `namespace GestorSolicitudes.Helpers` (no
 
 ## Documentos, errores e instancia única
 
-- **Documentos en la base de datos:** `DocumentosSolicitud` (namespace `Models`) guarda el CV y la carta como BLOB, una fila por candidatura, sin navegación desde `Solicitud`. `Solicitud` solo conserva el nombre original, y `TieneCv`/`TieneCarta` salen de él. La fila se lee solo al abrir el documento y el contenido pendiente vive en el editor (`CvContenido`, `CartaContenido`) hasta que `Guardar` lo escribe; si el guardado falla, el búfer lo conserva. La fila de `DocumentosSolicitud` se crea después del primer `SaveChanges` (hace falta el `Id`).
+- **Documentos en la base de datos:** `DocumentosSolicitud` (namespace `Models`) guarda el CV y la carta como BLOB, una fila por candidatura, sin navegación desde `Solicitud`. `Solicitud` solo conserva el nombre original. La interfaz muestra el nombre y activa el botón a partir de `AdjuntoCv` y `AdjuntoCarta` del editor, sin cargar los bytes. La fila se lee solo al abrir el documento y el contenido pendiente vive en el editor (`CvContenido`, `CartaContenido`) hasta que `Guardar` lo escribe; si el guardado falla, el búfer lo conserva. La fila de `DocumentosSolicitud` se crea después del primer `SaveChanges` (hace falta el `Id`).
 - **Límite de 2 MB:** `AdjuntosHelper.TamanoMaximoBytes` es la única fuente; `LectorAdjuntos.Leer` mide antes de reservar memoria y el ViewModel muestra el aviso.
 - **Abrir un documento:** `TemporalesAdjuntos` lo copia a `%TEMP%\GestorSolicitudes\adjuntos` y llama al visor; la carpeta se limpia al arrancar y al cerrar solo por la copia principal (`LimpiarSiEsPrimera`), para no borrar lo que otra instancia tiene abierto. El visor no vuelca a texto los tipos desconocidos y acota DOCX/ODT a 10 MB.
 - **Migración:** `MigradorAdjuntos` corre al arrancar tras `EsquemaDb`, es idempotente, ignora bases sin `RutaCv`/`RutaCarta`, registra los fallos y borra del disco solo los ficheros ya copiados a la base. Solo migra ficheros dentro de la carpeta de adjuntos y de hasta 2 MB; el resto queda pendiente con su ruta intacta, se registra y se reintenta en el siguiente arranque (los grandes, con un aviso agrupado por arranque).
@@ -63,7 +63,7 @@ Ninguna auditoría debe «arreglar» lo siguiente sin una razón nueva:
 
 - **`TextoHelper.Escapar`:** decide el apóstrofo con el primer carácter visible del valor original, y `\r` y `\n` ya se sustituyen en la salida. El salto de línea (`\r` o `\n`) también dispara el apóstrofo: tras sustituirse por un espacio dejaría la fórmula como primer carácter visible de la celda.
 - **`PreferenciaCsv.LeerDe`:** no recorta la cadena; el tabulador es un separador válido.
-- **Duplicar:** no copia los adjuntos ni sus nombres; copiar el nombre dejaría `TieneCv` en verdadero sin fila en `DocumentosSolicitud`.
+- **Duplicar:** no copia los adjuntos ni sus nombres; copiar el nombre dejaría el nombre del documento sin fila en `DocumentosSolicitud`.
 - **`Recargar`:** lee toda la tabla y los filtros son en memoria; con cientos de filas es suficiente y conserva la identidad de las entidades rastreadas.
 - **`ColumnasHelper.CargarDe`:** ignora las claves desconocidas a propósito.
 - **`TryGuardar`:** recarga el editor desde la entidad tras un fallo; así conserva las ediciones y el contenido pendiente de los documentos.

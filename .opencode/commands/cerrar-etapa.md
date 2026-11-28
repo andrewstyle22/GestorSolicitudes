@@ -1,7 +1,7 @@
 ---
 description: Cierra la etapa en curso y prepara la siguiente
 ---
-Lee CONTEXT.md y la sección de la etapa en curso de 02-DOCS/plan-refactor-edicion.md.
+Lee CONTEXT.md y el plan en curso que indique CONTEXT.md; si CONTEXT.md dice que no hay plan en curso, dímelo y no cambies nada.
 
 1. Ejecuta `git log --oneline` y comprueba que los commits de esa etapa están hechos. Si falta alguno, dímelo y no cambies nada.
 2. Actualiza CONTEXT.md:

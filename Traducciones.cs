@@ -108,7 +108,6 @@ public static class Traducciones
         ("Paginacion.De", "de"),
 
         // ----- Panel de detalle -----
-        ("Detalle.Vacio", "Selecciona una candidatura de la lista\n o crea una nueva."),
         ("Detalle.Empresa", "Empresa *"),
         ("Detalle.Puesto", "Puesto *"),
         ("Detalle.VerTodas", "Ver todas"),
@@ -413,7 +412,6 @@ public static class Traducciones
         ("Paginacion.De", "of"),
 
         // ----- Panel de detalle -----
-        ("Detalle.Vacio", "Select an application from the list\nor create a new one."),
         ("Detalle.Empresa", "Company *"),
         ("Detalle.Puesto", "Position *"),
         ("Detalle.VerTodas", "View all"),
@@ -718,7 +716,6 @@ public static class Traducciones
         ("Paginacion.De", "von"),
 
         // ----- Panel de detalle -----
-        ("Detalle.Vacio", "Wähle eine Bewerbung aus der Liste\noder erstelle eine neue."),
         ("Detalle.Empresa", "Unternehmen *"),
         ("Detalle.Puesto", "Position *"),
         ("Detalle.VerTodas", "Alle anzeigen"),

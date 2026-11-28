@@ -1,6 +1,6 @@
 # Documentos en la base de datos
 
-El CV y la carta de presentación se guardaban como ficheros en `%APPDATA%\GestorSolicitudes\adjuntos`, y la base de datos solo apuntaba a ellos con una ruta. Pasan a guardarse dentro de la base de datos, en una tabla aparte. Esta decisión forma parte de `plan-refactor-ponytail.md` (Etapa E).
+El CV y la carta de presentación se guardaban como ficheros en `%APPDATA%\GestorSolicitudes\adjuntos`, y la base de datos solo apuntaba a ellos con una ruta. Pasan a guardarse dentro de la base de datos, en una tabla aparte.
 
 ## Decisiones
 
@@ -16,7 +16,7 @@ La entidad no tiene propiedad de navegación desde `Solicitud`: nada la carga al
 
 **El contenido se lee solo cuando hace falta.** Abrir el documento lanza una consulta sin seguimiento que proyecta únicamente su columna; ver una candidatura no toca la tabla. Guardar cambios en una candidatura existente sí carga su fila de `DocumentosSolicitud` para actualizarla o vaciarla.
 
-**`Solicitud` conserva el nombre del documento.** `NombreOriginalCv` y `NombreOriginalCarta` siguen en `Solicitudes`; `TieneCv` y `TieneCarta` salen de que ese nombre no sea nulo. Así la interfaz muestra el nombre y activa el botón sin cargar los bytes.
+**`Solicitud` conserva el nombre del documento.** `NombreOriginalCv` y `NombreOriginalCarta` siguen en `Solicitudes`. La interfaz muestra el nombre y activa el botón a partir de `AdjuntoCv` y `AdjuntoCarta` del editor, sin cargar los bytes.
 
 **El contenido nuevo vive en el editor.** Al adjuntar, el fichero se lee entero a memoria (máximo 2 MB) y se guarda en `CvContenido` o `CartaContenido` del editor, junto con su nombre. No se copia nada a disco. Al guardar, se escribe en `DocumentosSolicitud`: en una candidatura existente, en el mismo `SaveChanges` que el resto de sus datos; en una nueva, en un segundo `SaveChanges` inmediato, porque la fila necesita el `Id` que asigna el primero. Cancelar o descartar solo tiene que soltar la memoria: ya no hay copias en disco que borrar.
 

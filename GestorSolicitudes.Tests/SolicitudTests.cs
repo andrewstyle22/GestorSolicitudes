@@ -1247,32 +1247,6 @@ public class SolicitudTests
     }
 
     [Fact]
-    public void TieneCv_SigueAlNombreGuardado()
-    {
-        var solicitud = new SolicitudBuilder().ConNombreOriginalCv("mi-cv.pdf").Construir();
-
-        Assert.True(solicitud.TieneCv);
-        Assert.False(solicitud.TieneCarta);
-
-        solicitud.QuitarCv();
-
-        Assert.False(solicitud.TieneCv);
-    }
-
-    [Fact]
-    public void TieneCarta_SigueAlNombreGuardado()
-    {
-        var solicitud = new SolicitudBuilder().ConNombreOriginalCarta("mi-carta.pdf").Construir();
-
-        Assert.True(solicitud.TieneCarta);
-        Assert.False(solicitud.TieneCv);
-
-        solicitud.QuitarCarta();
-
-        Assert.False(solicitud.TieneCarta);
-    }
-
-    [Fact]
     public void ToString_DevuelveEmpresaYPuesto()
     {
         var solicitud = new Solicitud("ACME", "Dev");

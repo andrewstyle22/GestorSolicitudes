@@ -117,9 +117,13 @@ y su arreglo para no repetirlo:
   `VisorAdjuntoWindow` con `"Mensaje.NoSePuedePrevisualizar"` (4 veces). Las claves
   repetidas en los tres diccionarios de `Traducciones.cs` no cuentan, y `MainViewModel`
   ya tiene `ClaveError` para `"Error"`.
+- **S1144 (`Remove the unused private ...`)**: un miembro privado sin referencias (método,
+  campo, constante) se elimina; si era código muerto intencionado, mejor borrarlo que
+  dejarlo comentado. Ejemplo genérico: si `MiServicio.LimpiarTemporal()` ya no tiene
+  llamadas, se borra el método y sus tests asociados.
 - **S3267 (`Loops should be simplified using the 'Where' LINQ method`)**: un `foreach`
   cuya única lógica es un `if`, o un `if (...) continue;`, se sustituye por `Where`.
-  Ya pasó en `GestorAdjuntos.DescartarCopias`, `MainWindow.ComprobarSeguimientosVencidos`,
+  Ya pasó en `MainWindow.ComprobarSeguimientosVencidos`,
   `EsquemaDb.VerificarColumnasFaltantes` y `TextoHelper.NormalizarBusqueda`. Cuidado con
   los efectos secundarios: en `MainWindow` el arreglo es
   `Where(v => this.idsVencidosAvisados.Add(v.Id))`, que filtra y marca en la misma
